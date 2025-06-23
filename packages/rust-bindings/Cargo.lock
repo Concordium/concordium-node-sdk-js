@@ -350,7 +350,7 @@ dependencies = [
 
 [[package]]
 name = "concordium-contracts-common"
-version = "9.1.0"
+version = "9.2.0"
 dependencies = [
  "base64",
  "bs58",
@@ -379,7 +379,7 @@ dependencies = [
 
 [[package]]
 name = "concordium_base"
-version = "5.0.0"
+version = "6.0.0"
 dependencies = [
  "anyhow",
  "ark-bls12-381",
@@ -1818,7 +1818,7 @@ checksum = "49874b5167b65d7193b8aba1567f5c7d93d001cafc34600cee003eda787e483f"
 
 [[package]]
 name = "wallet_library"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "anyhow",
  "chrono",

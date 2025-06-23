@@ -1,5 +1,26 @@
 # Changelog
 
+## Unreleased
+
+## 3.3.0
+
+### Added
+- The `@concordium/rust-bindings/wallet` entrypoint now supports react-native.
+
+## 3.2.1
+
+### Fixed
+
+- The build pipeline was using rust version `1.79` instead of the version specified as part of the workflow.
+  This caused runtime error `unreachable` for the WebAssembly module for certain operations.
+  Fixing the pipeline to use `1.73` as intended, resolved the issue.
+
+## 3.2.0
+
+### Added
+
+- Support creating account with company related attributes: `lei`, `legalName`, `legalCountry`, `businessNumber` and `registrationAuth`, allow for company account creation.
+
 ## 3.1.0
 
 ### Added

@@ -5,7 +5,17 @@ import {
     ContractUpdateTransactionWithSchema,
     CreateContractTransactionMetadata,
 } from '../GenericContract.js';
+import { ensureMatchesInput } from '../deserializationHelpers.js';
+import { ConcordiumGRPCClient } from '../grpc/GRPCClient.js';
+import { AccountSigner } from '../signHelpers.js';
 import { InvokeContractResult } from '../types.js';
+import * as AccountAddress from '../types/AccountAddress.js';
+import * as BlockHash from '../types/BlockHash.js';
+import * as ContractAddress from '../types/ContractAddress.js';
+import * as ContractName from '../types/ContractName.js';
+import * as EntrypointName from '../types/EntrypointName.js';
+import * as TransactionHash from '../types/TransactionHash.js';
+import { makeDynamicFunction } from '../util.js';
 import {
     CIS3,
     deserializeCIS3SupportsPermitResponse,
@@ -13,16 +23,6 @@ import {
     serializeCIS3PermitParam,
     serializeCIS3SupportsPermitQueryParams,
 } from './util.js';
-import * as BlockHash from '../types/BlockHash.js';
-import * as ContractAddress from '../types/ContractAddress.js';
-import * as AccountAddress from '../types/AccountAddress.js';
-import * as EntrypointName from '../types/EntrypointName.js';
-import * as ContractName from '../types/ContractName.js';
-import * as TransactionHash from '../types/TransactionHash.js';
-import { ConcordiumGRPCClient } from '../grpc/GRPCClient.js';
-import { AccountSigner } from '../signHelpers.js';
-import { makeDynamicFunction } from '../util.js';
-import { ensureMatchesInput } from '../deserializationHelpers.js';
 
 type View = 'supportsPermit';
 type Update = 'permit';
@@ -80,10 +80,7 @@ export class CIS3Contract extends CISContract<Update, View, CIS3DryRun> {
         grpcClient: ConcordiumGRPCClient,
         contractAddress: ContractAddress.Type
     ): Promise<CIS3Contract> {
-        const contractName = await super.getContractName(
-            grpcClient,
-            contractAddress
-        );
+        const contractName = await super.getContractName(grpcClient, contractAddress);
         return new CIS3Contract(grpcClient, contractAddress, contractName);
     }
 
@@ -146,10 +143,7 @@ export class CIS3Contract extends CISContract<Update, View, CIS3DryRun> {
      *
      * @returns {Promise<boolean>} Whether the contract supports the entrypoint.
      */
-    public supportsPermit(
-        entrypoint: EntrypointName.Type,
-        blockHash?: BlockHash.Type
-    ): Promise<boolean>;
+    public supportsPermit(entrypoint: EntrypointName.Type, blockHash?: BlockHash.Type): Promise<boolean>;
     /**
      * Queries the contract with a list of entrypoints to determine if the `permit` function
      * supports the given entrypoints. Returns an array of booleans indicating support for each entrypoint.
@@ -159,21 +153,13 @@ export class CIS3Contract extends CISContract<Update, View, CIS3DryRun> {
      *
      * @returns {Promise<boolean[]>} An array of booleans indicating support for each given entrypoint.
      */
-    public supportsPermit(
-        entrypoints: EntrypointName.Type[],
-        blockHash?: BlockHash.Type
-    ): Promise<boolean[]>;
+    public supportsPermit(entrypoints: EntrypointName.Type[], blockHash?: BlockHash.Type): Promise<boolean[]>;
     public supportsPermit(
         entrypoints: EntrypointName.Type | EntrypointName.Type[],
         blockHash?: BlockHash.Type
     ): Promise<boolean | boolean[]> {
-        const serialize = makeDynamicFunction(
-            serializeCIS3SupportsPermitQueryParams
-        );
-        const deserialize = ensureMatchesInput(
-            entrypoints,
-            deserializeCIS3SupportsPermitResponse
-        );
+        const serialize = makeDynamicFunction(serializeCIS3SupportsPermitQueryParams);
+        const deserialize = ensureMatchesInput(entrypoints, deserializeCIS3SupportsPermitResponse);
         return this.invokeView(
             EntrypointName.fromStringUnchecked('supportsPermit'),
             serialize,

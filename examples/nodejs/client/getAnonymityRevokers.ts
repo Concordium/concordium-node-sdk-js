@@ -1,9 +1,9 @@
-import { parseEndpoint } from '../shared/util.js';
 import { ArInfo, BlockHash } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
-
 import meow from 'meow';
+
+import { parseEndpoint } from '../shared/util.js';
 
 const cli = meow(
     `
@@ -33,11 +33,7 @@ const cli = meow(
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
 
-const client = new ConcordiumGRPCNodeClient(
-    address,
-    Number(port),
-    credentials.createInsecure()
-);
+const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.createInsecure());
 
 /**
  * Get the anonymity revokers registered as of the end of a given block as
@@ -49,20 +45,13 @@ const client = new ConcordiumGRPCNodeClient(
 
 (async () => {
     // #region documentation-snippet
-    const blockHash =
-        cli.flags.block === undefined
-            ? undefined
-            : BlockHash.fromHexString(cli.flags.block);
+    const blockHash = cli.flags.block === undefined ? undefined : BlockHash.fromHexString(cli.flags.block);
     const ars: AsyncIterable<ArInfo> = client.getAnonymityRevokers(blockHash);
 
     for await (const ar of ars) {
         console.log('Anonymity Revoker ID:', ar.arIdentity);
         console.log('Anonymity Revoker name:', ar.arDescription.name);
-        console.log(
-            'Anonymity Revoker description:',
-            ar.arDescription.description,
-            '\n'
-        );
+        console.log('Anonymity Revoker description:', ar.arDescription.description, '\n');
     }
     // #endregion documentation-snippet
 })();

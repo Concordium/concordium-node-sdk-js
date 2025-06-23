@@ -1,13 +1,7 @@
 import { CIS4Contract } from '../cis4/CIS4Contract.js';
 import { CIS4 } from '../cis4/util.js';
 import { ConcordiumGRPCClient } from '../grpc/GRPCClient.js';
-import {
-    BlockHash,
-    VerifiablePresentation,
-    Network,
-    CredentialRegistrationId,
-    ContractAddress,
-} from '../pub/types.js';
+import { BlockHash, ContractAddress, CredentialRegistrationId, Network, VerifiablePresentation } from '../pub/types.js';
 import {
     VerifiableCredentialProof,
     VerifiableCredentialProofAccount,
@@ -16,11 +10,7 @@ import {
 } from '../types/VerifiablePresentation.js';
 import { bail } from '../util.js';
 import { parseYearMonth } from './helpers.js';
-import {
-    CredentialWithMetadata,
-    CredentialsInputsAccount,
-    CredentialsInputsWeb3,
-} from './types.js';
+import { CredentialWithMetadata, CredentialsInputsAccount, CredentialsInputsWeb3 } from './types.js';
 
 function parseAccountProofMetadata(cred: VerifiableCredentialProofAccount): {
     credId: CredentialRegistrationId.Type;
@@ -41,8 +31,7 @@ function parseWeb3IdProofMetadata(cred: VerifiableCredentialProofWeb3Id): {
     holder: string;
 } {
     const _bail = () => bail('Failed to parse metedata from credential proof');
-    const [, index, subindex] =
-        cred.issuer.match(/.*:sci:(\d*):(\d*)\/issuer$/) ?? _bail();
+    const [, index, subindex] = cred.issuer.match(/.*:sci:(\d*):(\d*)\/issuer$/) ?? _bail();
     const [, h] = cred.credentialSubject.id.match(/.*:pkc:(.*)$/) ?? _bail();
 
     const contract = ContractAddress.create(BigInt(index), BigInt(subindex));
@@ -69,8 +58,7 @@ export async function verifyCredentialMetadata(
     blockHash?: BlockHash.Type
 ): Promise<CredentialWithMetadata> {
     const [, parsedNetwork] =
-        credential.credentialSubject.id.match(/did:ccd:(.*):.*:.*/) ??
-        bail('Failed to parse network from credential');
+        credential.credentialSubject.id.match(/did:ccd:(.*):.*:.*/) ?? bail('Failed to parse network from credential');
     if (parsedNetwork.toLowerCase() !== network.toLowerCase()) {
         bail(
             `Network found in credential (${parsedNetwork.toLowerCase()}) did not match expected network (${network.toLowerCase()})`
@@ -92,24 +80,16 @@ export async function verifyCredentialMetadata(
 
         const cred =
             Object.values(ai.accountCredentials).find((c) => {
-                const _credId =
-                    c.value.type === 'initial'
-                        ? c.value.contents.regId
-                        : c.value.contents.credId;
+                const _credId = c.value.type === 'initial' ? c.value.contents.regId : c.value.contents.credId;
                 return credId.credId === _credId;
-            }) ??
-            bail(`Could not find credential for account ${ai.accountAddress}`);
+            }) ?? bail(`Could not find credential for account ${ai.accountAddress}`);
 
         if (cred.value.type === 'initial') {
-            throw new Error(
-                `Initial credential ${cred.value.contents.regId} cannot be used`
-            );
+            throw new Error(`Initial credential ${cred.value.contents.regId} cannot be used`);
         }
         const { ipIdentity, policy, commitments } = cred.value.contents;
         if (ipIdentity !== issuer) {
-            throw new Error(
-                'Mismatch between expected issuer and found issuer for credential'
-            );
+            throw new Error('Mismatch between expected issuer and found issuer for credential');
         }
 
         // At this point, we know we're dealing with a "normal" account credential.

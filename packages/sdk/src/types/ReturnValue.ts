@@ -1,16 +1,9 @@
 import { Buffer } from 'buffer/index.js';
-import { SchemaType, serializeSchemaType } from '../schemaTypes.js';
+
 import { deserializeTypeValue } from '../schema.js';
-import type {
-    Base64String,
-    HexString,
-    SmartContractTypeValues,
-} from '../types.js';
-import {
-    TypedJson,
-    TypedJsonDiscriminator,
-    makeFromTypedJson,
-} from './util.js';
+import { SchemaType, serializeSchemaType } from '../schemaTypes.js';
+import type { Base64String, HexString, SmartContractTypeValues } from '../types.js';
+import { TypedJson, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
@@ -130,10 +123,7 @@ export function toBuffer(parameter: ReturnValue): Uint8Array {
  * @param {SchemaType} schemaType The schema type for the return value.
  * @returns {SmartContractTypeValues}
  */
-export function parseWithSchemaType(
-    returnValue: ReturnValue,
-    schemaType: SchemaType
-): SmartContractTypeValues {
+export function parseWithSchemaType(returnValue: ReturnValue, schemaType: SchemaType): SmartContractTypeValues {
     const schemaBytes = serializeSchemaType(schemaType);
     return deserializeTypeValue(returnValue.buffer, schemaBytes);
 }
@@ -172,7 +162,4 @@ export function toTypedJSON(value: ReturnValue): TypedJson<Serializable> {
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */
-export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(
-    JSON_DISCRIMINATOR,
-    fromHexString
-);
+export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(JSON_DISCRIMINATOR, fromHexString);

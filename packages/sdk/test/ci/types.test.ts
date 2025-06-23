@@ -1,4 +1,4 @@
-import { isRpcError, RpcError } from '../../src/index.js';
+import { RpcError, isRpcError } from '../../src/index.js';
 
 test('RPCError', () => {
     const rpcError: unknown = new RpcError('This is an RpcError');

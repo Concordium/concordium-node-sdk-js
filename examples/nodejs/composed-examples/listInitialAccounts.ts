@@ -1,9 +1,9 @@
 import { unwrap } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
-import { parseEndpoint } from '../shared/util.js';
-
 import meow from 'meow';
+
+import { parseEndpoint } from '../shared/util.js';
 
 const cli = meow(
     `
@@ -39,11 +39,7 @@ const cli = meow(
 );
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
-const client = new ConcordiumGRPCNodeClient(
-    address,
-    Number(port),
-    credentials.createInsecure()
-);
+const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.createInsecure());
 
 /**
  * List all initial account creations in a given time span.
@@ -56,12 +52,8 @@ const client = new ConcordiumGRPCNodeClient(
     const from = cli.flags.from ? new Date(cli.flags.from) : cs.genesisTime;
     const to = cli.flags.to ? new Date(cli.flags.to) : lastFinal.blockSlotTime;
 
-    const fromHeight = unwrap(
-        await client.findFirstFinalizedBlockNoLaterThan(from)
-    ).blockHeight;
-    const toHeight = unwrap(
-        await client.findFirstFinalizedBlockNoLaterThan(to)
-    ).blockHeight;
+    const fromHeight = unwrap(await client.findFirstFinalizedBlockNoLaterThan(from)).blockHeight;
+    const toHeight = unwrap(await client.findFirstFinalizedBlockNoLaterThan(to)).blockHeight;
 
     const blockStream = client.getFinalizedBlocksFrom(fromHeight, toHeight);
 
@@ -74,29 +66,19 @@ const client = new ConcordiumGRPCNodeClient(
     //Iterate over all blocks
     console.log('Processing blocks...');
     for await (const block of blockStream) {
-        progress =
-            ((block.height - fromHeight) * 100n) / (toHeight - fromHeight);
+        progress = ((block.height - fromHeight) * 100n) / (toHeight - fromHeight);
 
         // Get transactions for block
         const trxStream = client.getBlockTransactionEvents(block.hash);
         for await (const trx of trxStream) {
-            if (
-                trx.type === 'accountCreation' &&
-                trx.credentialType === 'initial'
-            ) {
+            if (trx.type === 'accountCreation' && trx.credentialType === 'initial') {
                 initAccounts.push(trx.address);
             }
         }
     }
 
     console.log('Done!');
-    console.log(
-        initAccounts.length,
-        'initial accounts created between',
-        from,
-        'to',
-        to
-    );
+    console.log(initAccounts.length, 'initial accounts created between', from, 'to', to);
     console.dir(initAccounts);
 
     process.exit(0);

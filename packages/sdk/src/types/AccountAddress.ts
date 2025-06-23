@@ -1,12 +1,9 @@
 import bs58check from 'bs58check';
 import { Buffer } from 'buffer/index.js';
+
 import type * as Proto from '../grpc-api/v2/concordium/types.js';
-import {
-    TypedJson,
-    TypedJsonDiscriminator,
-    makeFromTypedJson,
-} from './util.js';
 import { Base58String } from '../types.js';
+import { TypedJson, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
@@ -95,14 +92,10 @@ export function instanceOf(value: unknown): value is AccountAddress {
  */
 export function fromBuffer(buffer: ArrayBuffer): AccountAddress {
     if (buffer.byteLength !== 32) {
-        throw new Error(
-            `The provided buffer '${buffer}' is invalid as its length was not 32`
-        );
+        throw new Error(`The provided buffer '${buffer}' is invalid as its length was not 32`);
     }
 
-    const address = bs58check.encode(
-        Buffer.concat([Uint8Array.of(1), new Uint8Array(buffer)])
-    );
+    const address = bs58check.encode(Buffer.concat([Uint8Array.of(1), new Uint8Array(buffer)]));
     return new AccountAddress(address, new Uint8Array(buffer));
 }
 
@@ -114,16 +107,12 @@ export function fromBuffer(buffer: ArrayBuffer): AccountAddress {
  */
 export function fromBase58(address: string): AccountAddress {
     if (address.length !== 50) {
-        throw new Error(
-            `The provided address '${address}' is invalid as its length was not 50`
-        );
+        throw new Error(`The provided address '${address}' is invalid as its length was not 50`);
     }
     const buffer = bs58check.decode(address);
     const versionByte = buffer.at(0);
     if (versionByte !== 1) {
-        throw new Error(
-            `The provided address '${address}' does not use version byte with value of 1`
-        );
+        throw new Error(`The provided address '${address}' does not use version byte with value of 1`);
     }
     const decodedAddress = buffer.subarray(1, 33); // Ensure only the 32 bytes for the address is kept.
     return new AccountAddress(address, new Uint8Array(decodedAddress));
@@ -176,19 +165,10 @@ const maxCount = 16777215; // 2^(8 * 3) - 1
  * @param alias another AccountAddress
  * @returns boolean that indicates whether address and alias are aliases
  */
-export function isAlias(
-    address: AccountAddress,
-    alias: AccountAddress
-): boolean {
+export function isAlias(address: AccountAddress, alias: AccountAddress): boolean {
     return (
         0 ===
-        Buffer.from(address.decodedAddress).compare(
-            alias.decodedAddress,
-            0,
-            commonBytesLength,
-            0,
-            commonBytesLength
-        )
+        Buffer.from(address.decodedAddress).compare(alias.decodedAddress, 0, commonBytesLength, 0, commonBytesLength)
     );
 }
 
@@ -199,10 +179,7 @@ export function isAlias(
  * If a counter outside this scope is given, then the function will throw an exception
  * @returns an AccountAddress, which is an alias to the given address
  */
-export function getAlias(
-    address: AccountAddress,
-    counter: number
-): AccountAddress {
+export function getAlias(address: AccountAddress, counter: number): AccountAddress {
     if (counter < 0 || counter > maxCount) {
         throw new Error(
             `An invalid counter value was given: ${counter}. The value has to satisfy that 0 <= counter < 2^24`
@@ -219,9 +196,7 @@ export function getAlias(
  * @param {Proto.AccountAddress} accountAddress The account address in protobuf.
  * @returns {AccountAddress} The account address
  */
-export function fromProto(
-    accountAddress: Proto.AccountAddress
-): AccountAddress {
+export function fromProto(accountAddress: Proto.AccountAddress): AccountAddress {
     return fromBuffer(accountAddress.value);
 }
 
@@ -266,7 +241,4 @@ export function toTypedJSON(value: AccountAddress): TypedJson<Serializable> {
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */
-export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(
-    JSON_DISCRIMINATOR,
-    fromBase58
-);
+export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(JSON_DISCRIMINATOR, fromBase58);

@@ -70,11 +70,7 @@ export function getContractNameFromInit(initName: string): ContractName {
 
 /** Check if a string is a valid smart contract receive name. */
 export function isReceiveName(string: string): boolean {
-    return (
-        string.length <= 100 &&
-        string.includes('.') &&
-        isAsciiAlphaNumericPunctuation(string)
-    );
+    return string.length <= 100 && string.includes('.') && isAsciiAlphaNumericPunctuation(string);
 }
 
 /** Get the contract name and entrypoint name from a string. Assumes the string is a valid receive name. */

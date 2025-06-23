@@ -1,52 +1,36 @@
-import * as v1 from '../../src/index.js';
-import * as v2 from '../../src/grpc-api/v2/concordium/types.js';
-import { testnetBulletproofGenerators } from './resources/bulletproofgenerators.js';
-import {
-    buildBasicAccountSigner,
-    calculateEnergyCost,
-    getAccountTransactionHandler,
-    getCredentialDeploymentSignDigest,
-    sha256,
-    signTransaction,
-    serializeAccountTransactionPayload,
-    createCredentialDeploymentTransaction,
-    serializeAccountTransaction,
-    streamToList,
-    BlockHash,
-} from '../../src/index.js';
-import {
-    getIdentityInput,
-    getNodeClientV2,
-    getNodeClientWeb,
-} from './testHelpers.js';
 // self-referencing not allowed by eslint resolver
 // eslint-disable-next-line import/no-extraneous-dependencies
 import * as ed from '@concordium/web-sdk/shims/ed25519';
-import * as expected from './resources/expectedJsons.js';
 
+import * as v2 from '../../src/grpc-api/v2/concordium/types.js';
+import * as v1 from '../../src/index.js';
+import {
+    BlockHash,
+    buildBasicAccountSigner,
+    calculateEnergyCost,
+    createCredentialDeploymentTransaction,
+    getAccountTransactionHandler,
+    getCredentialDeploymentSignDigest,
+    serializeAccountTransaction,
+    serializeAccountTransactionPayload,
+    sha256,
+    signTransaction,
+    streamToList,
+} from '../../src/index.js';
 import { getModuleBuffer } from '../../src/nodejs/index.js';
 import { testEnvironment } from '../globals.ts';
+import { testnetBulletproofGenerators } from './resources/bulletproofgenerators.js';
+import * as expected from './resources/expectedJsons.js';
+import { getIdentityInput, getNodeClientV2, getNodeClientWeb } from './testHelpers.js';
 
 const clientV2 = getNodeClientV2();
 const clientWeb = getNodeClientWeb();
-const clients =
-    testEnvironment === 'node' ? [clientV2, clientWeb] : [clientWeb];
+const clients = testEnvironment === 'node' ? [clientV2, clientWeb] : [clientWeb];
 
-const testAccount = v1.AccountAddress.fromBase58(
-    '3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G'
-);
-const testCredId = v1.CredentialRegistrationId.fromHexString(
-    'aa730045bcd20bb5c24349db29d949f767e72f7cce459dc163c4b93c780a7d7f65801dda8ff7e4fc06fdf1a1b246276f'
-);
-const testAccBaker = v1.AccountAddress.fromBase58(
-    '4EJJ1hVhbVZT2sR9xPzWUwFcJWK3fPX54z94zskTozFVk8Xd4L'
-);
-const testAccDeleg = v1.AccountAddress.fromBase58(
-    '3bFo43GiPnkk5MmaSdsRVboaX2DNSKaRkLseQbyB3WPW1osPwh'
-);
-const testBlockHash = v1.BlockHash.fromHexString(
-    'fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e'
-);
+const testAccount = v1.AccountAddress.fromBase58('3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G');
+const testAccBaker = v1.AccountAddress.fromBase58('4EJJ1hVhbVZT2sR9xPzWUwFcJWK3fPX54z94zskTozFVk8Xd4L');
+const testAccDeleg = v1.AccountAddress.fromBase58('3bFo43GiPnkk5MmaSdsRVboaX2DNSKaRkLseQbyB3WPW1osPwh');
+const testBlockHash = v1.BlockHash.fromHexString('fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e');
 
 // Retrieves the account info for the given account in the GRPCv2 type format.
 function getAccountInfoV2(
@@ -91,9 +75,7 @@ test.each(clients)('getAccountInfo for baker', async (client) => {
 
     if (accInfo.stake && accountIndexInfo.stake) {
         const stake = v2.AccountStakingInfo.toJson(accInfo.stake);
-        const stakeAccountIndex = v2.AccountStakingInfo.toJson(
-            accountIndexInfo.stake
-        );
+        const stakeAccountIndex = v2.AccountStakingInfo.toJson(accountIndexInfo.stake);
         expect(stake).toEqual(expected.stakingInfoBaker);
         expect(stake).toEqual(stakeAccountIndex);
     } else {
@@ -105,97 +87,57 @@ test.each(clients)('getAccountInfo for delegator', async (client) => {
     const accInfo = await getAccountInfoV2(client, testAccDeleg);
 
     if (accInfo.stake) {
-        expect(v2.AccountStakingInfo.toJson(accInfo.stake)).toEqual(
-            expected.stakingInfoDelegator
-        );
+        expect(v2.AccountStakingInfo.toJson(accInfo.stake)).toEqual(expected.stakingInfoDelegator);
     } else {
         throw Error('Stake field not found in accountInfo.');
     }
 });
 
 test.each(clients)(
-    'getAccountInfo: Account Address and CredentialRegistrationId is equal',
-    async (client) => {
-        const accInfo = await client.getAccountInfo(testAccount, testBlockHash);
-        const credIdInfo = await client.getAccountInfo(
-            testCredId,
-            testBlockHash
-        );
-
-        expect(accInfo).toEqual(credIdInfo);
-    }
-);
-
-test.each(clients)(
     // TODO: fails..
     'accountInfo implementations is the same',
     async (client) => {
         const regular = await client.getAccountInfo(testAccount, testBlockHash);
-        const credId = await client.getAccountInfo(testCredId, testBlockHash);
         const baker = await client.getAccountInfo(testAccBaker, testBlockHash);
         const deleg = await client.getAccountInfo(testAccDeleg, testBlockHash);
         expect(regular).toEqual(expected.regularAccountInfo);
-        expect(credId).toEqual(expected.credIdAccountInfo);
         expect(baker).toEqual(expected.bakerAccountInfo);
         expect(deleg).toEqual(expected.delegatorAccountInfo);
     }
 );
 
-test.each(clients)(
-    'getChainParameters corresponds to GetBlockSummary subset',
-    async (client) => {
-        const chainParameters = await client.getBlockChainParameters(
-            testBlockHash
-        );
+test.each(clients)('getChainParameters corresponds to GetBlockSummary subset', async (client) => {
+    const chainParameters = await client.getBlockChainParameters(testBlockHash);
 
-        expect(chainParameters).toEqual(expected.chainParameters);
-    }
-);
+    expect(chainParameters).toEqual(expected.chainParameters);
+});
 
-test.each(clients)(
-    'getChainParameters corresponds to GetBlockSummary subset on protocol level < 4',
-    async (client) => {
-        const oldBlockHash = v1.BlockHash.fromHexString(
-            'ed2507c4d05108038741e87757ab1c3acdeeb3327027cd2972666807c9c4a20d'
-        );
-        const oldChainParameters = await client.getBlockChainParameters(
-            oldBlockHash
-        );
+test.each(clients)('getChainParameters corresponds to GetBlockSummary subset on protocol level < 4', async (client) => {
+    const oldBlockHash = v1.BlockHash.fromHexString('ed2507c4d05108038741e87757ab1c3acdeeb3327027cd2972666807c9c4a20d');
+    const oldChainParameters = await client.getBlockChainParameters(oldBlockHash);
 
-        expect(oldChainParameters).toEqual(expected.oldChainParameters);
-    }
-);
+    expect(oldChainParameters).toEqual(expected.oldChainParameters);
+});
 
-test.each(clients)(
-    'getPoolInfo corresponds to getPoolStatus with a bakerId',
-    async (client) => {
-        const bakerPoolStatus = await client.getPoolInfo(1n, testBlockHash);
+test.each(clients)('getPoolInfo corresponds to getPoolStatus with a bakerId', async (client) => {
+    const bakerPoolStatus = await client.getPoolInfo(1n, testBlockHash);
 
-        expect(bakerPoolStatus).toEqual(expected.bakerPoolStatus);
-    }
-);
+    expect(bakerPoolStatus).toEqual(expected.bakerPoolStatus);
+});
 
-test.each(clients)(
-    'getPassiveDelegationInfo corresponds to getPoolStatus with no bakerId',
-    async (client) => {
-        const status = await client.getPassiveDelegationInfo(testBlockHash);
-        expect(status).toEqual(expected.passiveDelegationStatus);
-    }
-);
+test.each(clients)('getPassiveDelegationInfo corresponds to getPoolStatus with no bakerId', async (client) => {
+    const status = await client.getPassiveDelegationInfo(testBlockHash);
+    expect(status).toEqual(expected.passiveDelegationStatus);
+});
 
-test.each(clients)(
-    'getPoolInfo corresponds to getPoolStatus with bakerId (with pending change)',
-    async (client) => {
-        const changeHash = v1.BlockHash.fromHexString(
-            '2aa7c4a54ad403a9f9b48de2469e5f13a64c95f2cf7a8e72c0f9f7ae0718f642'
-        );
-        const changedAccount = 1879n;
+test.each(clients)('getPoolInfo corresponds to getPoolStatus with bakerId (with pending change)', async (client) => {
+    const changeHash = v1.BlockHash.fromHexString('2aa7c4a54ad403a9f9b48de2469e5f13a64c95f2cf7a8e72c0f9f7ae0718f642');
+    const changedAccount = 1879n;
 
-        const poolStatus = await client.getPoolInfo(changedAccount, changeHash);
+    const poolStatus = await client.getPoolInfo(changedAccount, changeHash);
 
-        expect(poolStatus).toEqual(expected.bakerPoolStatusWithPendingChange);
-    }
-);
+    expect(poolStatus).toEqual(expected.bakerPoolStatusWithPendingChange);
+});
 
 test.each(clients)('getBlockItemStatus on chain update', async (client) => {
     const transactionHash = v1.TransactionHash.fromHexString(
@@ -217,10 +159,7 @@ test.each(clients)('getBlockItemStatus on simple transfer', async (client) => {
 
 test.each(clients)('getInstanceInfo', async (client) => {
     const contractAddress = v1.ContractAddress.create(0, 0);
-    const instanceInfo = await client.getInstanceInfo(
-        contractAddress,
-        testBlockHash
-    );
+    const instanceInfo = await client.getInstanceInfo(contractAddress, testBlockHash);
 
     expect(instanceInfo).toEqual(expected.instanceInfo);
 });
@@ -262,47 +201,35 @@ test.each(clients)('Invoke contract on v0 contract', async (client) => {
     expect(result).toEqual(expected.invokeInstanceResponseV0);
 });
 
-test.each(clients)(
-    'Invoke contract same in v1 and v2 on v1 contract',
-    async (client) => {
-        const context = {
-            invoker: testAccount,
-            contract: v1.ContractAddress.create(81),
-            method: v1.ReceiveName.fromStringUnchecked('PiggyBank.view'),
-            amount: v1.CcdAmount.zero(),
-            parameter: undefined,
-            energy: v1.Energy.create(30000),
-        };
-        const result = await client.invokeContract(context, testBlockHash);
+test.each(clients)('Invoke contract same in v1 and v2 on v1 contract', async (client) => {
+    const context = {
+        invoker: testAccount,
+        contract: v1.ContractAddress.create(81),
+        method: v1.ReceiveName.fromStringUnchecked('PiggyBank.view'),
+        amount: v1.CcdAmount.zero(),
+        parameter: undefined,
+        energy: v1.Energy.create(30000),
+    };
+    const result = await client.invokeContract(context, testBlockHash);
 
-        expect(result).toEqual(expected.invokeContractResult);
-    }
-);
+    expect(result).toEqual(expected.invokeContractResult);
+});
 
 test.each(clients)('getModuleSource', async (client) => {
-    const localModuleBytes = getModuleBuffer(
-        'test/client/resources/piggy_bank.wasm'
-    );
+    const localModuleBytes = getModuleBuffer('test/client/resources/piggy_bank.wasm');
     const moduleRef = v1.ModuleReference.fromBuffer(
         Buffer.from('foOYrcQGqX202GnD/XrcgToxg2Z6On2weOuub33OX2Q=', 'base64')
     );
 
     const localModuleHex = Buffer.from(localModuleBytes);
-    const versionedModuleSource = await client.getModuleSource(
-        moduleRef,
-        testBlockHash
-    );
+    const versionedModuleSource = await client.getModuleSource(moduleRef, testBlockHash);
 
     expect(versionedModuleSource.version).toEqual(0);
-    expect(new Uint8Array(localModuleHex)).toEqual(
-        new Uint8Array(versionedModuleSource.source)
-    );
+    expect(new Uint8Array(localModuleHex)).toEqual(new Uint8Array(versionedModuleSource.source));
 });
 
 test.each(clients)('getConsensusStatus', async (client) => {
-    const genesisBlock = v1.BlockHash.fromHexString(
-        '4221332d34e1694168c2a0c0b3fd0f273809612cb13d000d5c2e00e85f50f796'
-    );
+    const genesisBlock = v1.BlockHash.fromHexString('4221332d34e1694168c2a0c0b3fd0f273809612cb13d000d5c2e00e85f50f796');
 
     const ci = await client.getConsensusStatus();
 
@@ -312,11 +239,8 @@ test.each(clients)('getConsensusStatus', async (client) => {
 });
 
 test.each(clients)('sendBlockItem', async (client) => {
-    const senderAccount = v1.AccountAddress.fromBase58(
-        '37TRfx9PqFX386rFcNThyA3zdoWsjF8Koy6Nh3i8VrPy4duEsA'
-    );
-    const privateKey =
-        '1f7d20585457b542b22b51f218f0636c8e05ead4b64074e6eafd1d418b04e4ac';
+    const senderAccount = v1.AccountAddress.fromBase58('37TRfx9PqFX386rFcNThyA3zdoWsjF8Koy6Nh3i8VrPy4duEsA');
+    const privateKey = '1f7d20585457b542b22b51f218f0636c8e05ead4b64074e6eafd1d418b04e4ac';
     const nextNonce = await client.getNextAccountNonce(senderAccount);
 
     // Create local transaction
@@ -337,22 +261,14 @@ test.each(clients)('sendBlockItem', async (client) => {
 
     // Sign transaction
     const signer = buildBasicAccountSigner(privateKey);
-    const signature: v1.AccountTransactionSignature = await signTransaction(
-        accountTransaction,
-        signer
-    );
+    const signature: v1.AccountTransactionSignature = await signTransaction(accountTransaction, signer);
 
-    expect(
-        client.sendAccountTransaction(accountTransaction, signature)
-    ).rejects.toThrow('costs');
+    expect(client.sendAccountTransaction(accountTransaction, signature)).rejects.toThrow('costs');
 });
 
 test.each(clients)('transactionHash', async (client) => {
-    const senderAccount = v1.AccountAddress.fromBase58(
-        '37TRfx9PqFX386rFcNThyA3zdoWsjF8Koy6Nh3i8VrPy4duEsA'
-    );
-    const privateKey =
-        '1f7d20585457b542b22b51f218f0636c8e05ead4b64074e6eafd1d418b04e4ac';
+    const senderAccount = v1.AccountAddress.fromBase58('37TRfx9PqFX386rFcNThyA3zdoWsjF8Koy6Nh3i8VrPy4duEsA');
+    const privateKey = '1f7d20585457b542b22b51f218f0636c8e05ead4b64074e6eafd1d418b04e4ac';
     const nextNonce = await client.getNextAccountNonce(senderAccount);
 
     // Create local transaction
@@ -374,24 +290,13 @@ test.each(clients)('transactionHash', async (client) => {
     const rawPayload = serializeAccountTransactionPayload(transaction);
 
     // Energy cost
-    const accountTransactionHandler = getAccountTransactionHandler(
-        transaction.type
-    );
-    const baseEnergyCost = accountTransactionHandler.getBaseEnergyCost(
-        transaction.payload
-    );
-    const energyCost = calculateEnergyCost(
-        1n,
-        BigInt(rawPayload.length),
-        baseEnergyCost
-    );
+    const accountTransactionHandler = getAccountTransactionHandler(transaction.type);
+    const baseEnergyCost = accountTransactionHandler.getBaseEnergyCost(transaction.payload);
+    const energyCost = calculateEnergyCost(1n, BigInt(rawPayload.length), baseEnergyCost);
 
     // Sign transaction
     const signer = buildBasicAccountSigner(privateKey);
-    const signature: v1.AccountTransactionSignature = await signTransaction(
-        transaction,
-        signer
-    );
+    const signature: v1.AccountTransactionSignature = await signTransaction(transaction, signer);
 
     // Put together sendBlockItemRequest
     const header: v2.AccountTransactionHeader = {
@@ -407,16 +312,9 @@ test.each(clients)('transactionHash', async (client) => {
         },
     };
 
-    const serializedAccountTransaction = serializeAccountTransaction(
-        transaction,
-        signature
-    ).slice(71);
-    const localHash = Buffer.from(
-        sha256([serializedAccountTransaction])
-    ).toString('hex');
-    const nodeHash = await client.client.getAccountTransactionSignHash(
-        accountTransaction
-    ).response;
+    const serializedAccountTransaction = serializeAccountTransaction(transaction, signature).slice(71);
+    const localHash = Buffer.from(sha256([serializedAccountTransaction])).toString('hex');
+    const nodeHash = await client.client.getAccountTransactionSignHash(accountTransaction).response;
 
     expect(localHash).toEqual(Buffer.from(nodeHash.value).toString('hex'));
 });
@@ -424,18 +322,13 @@ test.each(clients)('transactionHash', async (client) => {
 // Todo: verify that accounts can actually be created.
 test.each(clients)('createAccount', async (client) => {
     // Get information from node
-    const lastFinalizedBlockHash = (await client.getConsensusStatus())
-        .lastFinalizedBlock;
+    const lastFinalizedBlockHash = (await client.getConsensusStatus()).lastFinalizedBlock;
     if (!lastFinalizedBlockHash) {
         throw new Error('Could not find latest finalized block.');
     }
-    const cryptoParams = await client.getCryptographicParameters(
-        lastFinalizedBlockHash
-    );
+    const cryptoParams = await client.getCryptographicParameters(lastFinalizedBlockHash);
     if (!cryptoParams) {
-        throw new Error(
-            'Cryptographic parameters were not found on a block that has been finalized.'
-        );
+        throw new Error('Cryptographic parameters were not found on a block that has been finalized.');
     }
 
     // Create credentialDeploymentTransaction
@@ -447,40 +340,28 @@ test.each(clients)('createAccount', async (client) => {
     const publicKeys: v1.VerifyKey[] = [
         {
             schemeId: 'Ed25519',
-            verifyKey:
-                'c8cd7623c5a9316d8e2fccb51e1deee615bdb5d324fb4a6d33801848fb5e459e',
+            verifyKey: 'c8cd7623c5a9316d8e2fccb51e1deee615bdb5d324fb4a6d33801848fb5e459e',
         },
     ];
 
-    const credentialDeploymentTransaction: v1.CredentialDeploymentTransaction =
-        createCredentialDeploymentTransaction(
-            identityInput,
-            cryptoParams,
-            threshold,
-            publicKeys,
-            credentialIndex,
-            revealedAttributes,
-            expiry
-        );
+    const credentialDeploymentTransaction: v1.CredentialDeploymentTransaction = createCredentialDeploymentTransaction(
+        identityInput,
+        cryptoParams,
+        threshold,
+        publicKeys,
+        credentialIndex,
+        revealedAttributes,
+        expiry
+    );
 
     // Sign transaction
-    const hashToSign = getCredentialDeploymentSignDigest(
-        credentialDeploymentTransaction
-    );
-    const signingKey1 =
-        '1053de23867e0f92a48814aabff834e2ca0b518497abaef71cad4e1be506334a';
-    const signature = Buffer.from(
-        await ed.signAsync(hashToSign, signingKey1)
-    ).toString('hex');
+    const hashToSign = getCredentialDeploymentSignDigest(credentialDeploymentTransaction);
+    const signingKey1 = '1053de23867e0f92a48814aabff834e2ca0b518497abaef71cad4e1be506334a';
+    const signature = Buffer.from(await ed.signAsync(hashToSign, signingKey1)).toString('hex');
     const signatures: string[] = [signature];
-    const payload = v1.serializeCredentialDeploymentPayload(
-        signatures,
-        credentialDeploymentTransaction
-    );
+    const payload = v1.serializeCredentialDeploymentPayload(signatures, credentialDeploymentTransaction);
 
-    expect(
-        client.sendCredentialDeploymentTransaction(payload, expiry)
-    ).rejects.toThrow('expired');
+    expect(client.sendCredentialDeploymentTransaction(payload, expiry)).rejects.toThrow('expired');
 });
 
 test.each(clients)('getAccountList', async (client) => {
@@ -517,11 +398,7 @@ test.each(clients)('instanceStateLookup', async (client) => {
     const key = '0000000000000000';
     const expectedValue = '0800000000000000';
     const contract = v1.ContractAddress.create(601);
-    const value = await client.instanceStateLookup(
-        contract,
-        key,
-        testBlockHash
-    );
+    const value = await client.instanceStateLookup(contract, key, testBlockHash);
 
     expect(value).toEqual(expectedValue);
 });
@@ -567,30 +444,20 @@ test.each(clients)('getBlockInfo', async (client) => {
     const blockInfo = await client.getBlockInfo(testBlockHash);
 
     expect(blockInfo.blockParent).toEqual(
-        BlockHash.fromHexString(
-            '28d92ec42dbda119f0b0207d3400b0573fe8baf4b0d3dbe44b86781ad6b655cf'
-        )
+        BlockHash.fromHexString('28d92ec42dbda119f0b0207d3400b0573fe8baf4b0d3dbe44b86781ad6b655cf')
     );
     expect(blockInfo.blockHash).toEqual(
-        BlockHash.fromHexString(
-            'fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e'
-        )
+        BlockHash.fromHexString('fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e')
     );
-    expect(blockInfo.blockStateHash).toEqual(
-        '6e602157d76677fc4b630b2701571d2b0166e2b08e0afe8ab92356e4d0b88a6a'
-    );
+    expect(blockInfo.blockStateHash).toEqual('6e602157d76677fc4b630b2701571d2b0166e2b08e0afe8ab92356e4d0b88a6a');
     expect(blockInfo.blockLastFinalized).toEqual(
-        BlockHash.fromHexString(
-            '28d92ec42dbda119f0b0207d3400b0573fe8baf4b0d3dbe44b86781ad6b655cf'
-        )
+        BlockHash.fromHexString('28d92ec42dbda119f0b0207d3400b0573fe8baf4b0d3dbe44b86781ad6b655cf')
     );
     expect(blockInfo.blockHeight).toEqual(1259179n);
     expect(blockInfo.blockBaker).toEqual(4n);
     expect(blockInfo.blockArriveTime).toBeDefined();
     expect(blockInfo.blockReceiveTime).toBeDefined();
-    expect(blockInfo.blockSlotTime).toEqual(
-        new Date('2022-11-07T10:54:10.750Z')
-    );
+    expect(blockInfo.blockSlotTime).toEqual(new Date('2022-11-07T10:54:10.750Z'));
     expect(blockInfo.finalized).toEqual(true);
     expect(blockInfo.transactionCount).toEqual(0n);
     expect(blockInfo.transactionsSize).toEqual(0n);
@@ -615,10 +482,7 @@ test.each(clients)('getPoolDelegators', async (client) => {
 });
 
 test.each(clients)('getPoolDelegatorsRewardPeriod', async (client) => {
-    const delegatorInfoStream = client.getPoolDelegatorsRewardPeriod(
-        15n,
-        testBlockHash
-    );
+    const delegatorInfoStream = client.getPoolDelegatorsRewardPeriod(15n, testBlockHash);
     const delegatorInfoList = await streamToList(delegatorInfoStream);
 
     expect(delegatorInfoList).toEqual(expected.delegatorInfoList);
@@ -626,24 +490,17 @@ test.each(clients)('getPoolDelegatorsRewardPeriod', async (client) => {
 test.each(clients)('getPassiveDelegators', async (client) => {
     const blocks = await client.getBlocksAtHeight(10000n);
     const passiveDelegatorInfoStream = client.getPassiveDelegators(blocks[0]);
-    const passiveDelegatorInfoList = await streamToList(
-        passiveDelegatorInfoStream
-    );
+    const passiveDelegatorInfoList = await streamToList(passiveDelegatorInfoStream);
 
     expect(passiveDelegatorInfoList).toEqual(expected.passiveDelegatorInfoList);
 });
 
 test.each(clients)('getPassiveDelegatorsRewardPeriod', async (client) => {
     const blocks = await client.getBlocksAtHeight(10000n);
-    const passiveDelegatorRewardInfoStream =
-        client.getPassiveDelegatorsRewardPeriod(blocks[0]);
-    const passiveDelegatorRewardInfoList = await streamToList(
-        passiveDelegatorRewardInfoStream
-    );
+    const passiveDelegatorRewardInfoStream = client.getPassiveDelegatorsRewardPeriod(blocks[0]);
+    const passiveDelegatorRewardInfoList = await streamToList(passiveDelegatorRewardInfoStream);
 
-    expect(passiveDelegatorRewardInfoList).toEqual(
-        expected.passiveDelegatorRewardInfoList
-    );
+    expect(passiveDelegatorRewardInfoList).toEqual(expected.passiveDelegatorRewardInfoList);
 });
 
 test.each(clients)('getBranches', async (client) => {
@@ -672,9 +529,7 @@ test.each(clients)('getAccountNonFinalizedTransactions', async (client) => {
 });
 
 test.each(clients)('getBlockTransactionEvents', async (client) => {
-    const blockHash = v1.BlockHash.fromHexString(
-        '8f3acabb19ef769db4d13ada858a305cc1a3d64adeb78fcbf3bb9f7583de6362'
-    );
+    const blockHash = v1.BlockHash.fromHexString('8f3acabb19ef769db4d13ada858a305cc1a3d64adeb78fcbf3bb9f7583de6362');
     const transactionEvents = client.getBlockTransactionEvents(blockHash);
     const transactionEventList = await streamToList(transactionEvents);
 
@@ -682,9 +537,7 @@ test.each(clients)('getBlockTransactionEvents', async (client) => {
 });
 
 test.each(clients)('getBlockTransactionEvents', async (client) => {
-    const blockHash = v1.BlockHash.fromHexString(
-        '8f3acabb19ef769db4d13ada858a305cc1a3d64adeb78fcbf3bb9f7583de6362'
-    );
+    const blockHash = v1.BlockHash.fromHexString('8f3acabb19ef769db4d13ada858a305cc1a3d64adeb78fcbf3bb9f7583de6362');
     const transactionEvents = client.getBlockTransactionEvents(blockHash);
     const transactionEventList = await streamToList(transactionEvents);
 
@@ -708,21 +561,16 @@ test.each(clients)('getBlockPendingUpdates', async (client) => {
     const pendingUpdateBlock = v1.BlockHash.fromHexString(
         '39122a9c720cae643b999d93dd7bf09bcf50e99bb716767dd35c39690390db54'
     );
-    const pendingUpdateStream =
-        client.getBlockPendingUpdates(pendingUpdateBlock);
+    const pendingUpdateStream = client.getBlockPendingUpdates(pendingUpdateBlock);
     const pendingUpdateList = await streamToList(pendingUpdateStream);
 
     expect(pendingUpdateList.length).toEqual(1);
-    expect(pendingUpdateList[0].effectiveTime.value).toEqual(
-        expected.pendingUpdate.effectiveTime.value
-    );
+    expect(pendingUpdateList[0].effectiveTime.value).toEqual(expected.pendingUpdate.effectiveTime.value);
     expect(pendingUpdateList[0].effect).toEqual(expected.pendingUpdate.effect);
 });
 
 test.each(clients)('getBlockFinalizationSummary', async (client) => {
-    const finalizationSummary = await client.getBlockFinalizationSummary(
-        testBlockHash
-    );
+    const finalizationSummary = await client.getBlockFinalizationSummary(testBlockHash);
 
     expect(finalizationSummary).toEqual(expected.blockFinalizationSummary);
 });
@@ -745,7 +593,7 @@ test.each(clients)('getEmbeddedSchema', async (client) => {
         const rawReturnValue = invoked.returnValue;
         const returnValue = v1.deserializeReceiveReturnValue(
             v1.ReturnValue.toBuffer(rawReturnValue),
-            schema,
+            schema!.buffer,
             v1.ContractName.fromStringUnchecked('weather'),
             v1.EntrypointName.fromStringUnchecked('get')
         );
@@ -796,21 +644,15 @@ test.each(clients)('getFinalizedBlocksFrom', async (client) => {
     const expectedValues = [
         {
             height: 123n,
-            hash: v1.BlockHash.fromHexString(
-                'd2f69ff78b898c4eb0863bcbc179764b3ed20ed142e93eb3ed0cfc730c77f4ca'
-            ),
+            hash: v1.BlockHash.fromHexString('d2f69ff78b898c4eb0863bcbc179764b3ed20ed142e93eb3ed0cfc730c77f4ca'),
         },
         {
             height: 124n,
-            hash: v1.BlockHash.fromHexString(
-                'fc86847a2482d5eb36028fe4a4702d1cd52d6d6f953d5effe4855acc974dfc64'
-            ),
+            hash: v1.BlockHash.fromHexString('fc86847a2482d5eb36028fe4a4702d1cd52d6d6f953d5effe4855acc974dfc64'),
         },
         {
             height: 125n,
-            hash: v1.BlockHash.fromHexString(
-                'bc5e6aadad1bd5d107a8a02e7df5532f6c758ec456f709cfba1f402c408e7256'
-            ),
+            hash: v1.BlockHash.fromHexString('bc5e6aadad1bd5d107a8a02e7df5532f6c758ec456f709cfba1f402c408e7256'),
         },
     ];
 
@@ -826,22 +668,15 @@ test.each(clients)('getFinalizedBlocksFrom', async (client) => {
 describe('findEarliestFinalized', () => {
     test.each(clients)('Finds expected result', async (client) => {
         const [genesisBlockHash] = await client.getBlocksAtHeight(0n);
-        const genesisAccounts = await streamToList(
-            client.getAccountList(genesisBlockHash)
-        );
+        const genesisAccounts = await streamToList(client.getAccountList(genesisBlockHash));
 
         const firstAccount = await client.findEarliestFinalized(
             async (bi) => {
-                const accounts = await streamToList(
-                    client.getAccountList(bi.hash)
-                );
+                const accounts = await streamToList(client.getAccountList(bi.hash));
 
                 if (accounts.length > genesisAccounts.length) {
                     return accounts.filter(
-                        (a) =>
-                            !genesisAccounts.some(
-                                v1.AccountAddress.equals.bind(undefined, a)
-                            )
+                        (a) => !genesisAccounts.some(v1.AccountAddress.equals.bind(undefined, a))
                     )[0];
                 }
             },
@@ -855,63 +690,40 @@ describe('findEarliestFinalized', () => {
         expect(
             v1.AccountAddress.equals(
                 firstAccount,
-                v1.AccountAddress.fromBase58(
-                    '3sPayiQEQHrJUpwYUAnYCLWUTkk3JvEW5x6Vn6mD4raBgPAuSp'
-                )
+                v1.AccountAddress.fromBase58('3sPayiQEQHrJUpwYUAnYCLWUTkk3JvEW5x6Vn6mD4raBgPAuSp')
             )
         ).toBeTruthy();
     });
 
     test.each(clients)('Works on single block range', async (client) => {
-        const blockHash = await client.findEarliestFinalized(
-            async (bi) => bi.hash,
-            10000n,
-            10000n
-        );
+        const blockHash = await client.findEarliestFinalized(async (bi) => bi.hash, 10000n, 10000n);
         if (blockHash === undefined) {
             throw new Error('Expected blockHash to be defined');
         }
 
         expect(blockHash).toEqual(
-            BlockHash.fromHexString(
-                'e4f7f5512e55183f56efe31c1a9da6e5c7f93f24d5b746180e3b5076e54811c1'
-            )
+            BlockHash.fromHexString('e4f7f5512e55183f56efe31c1a9da6e5c7f93f24d5b746180e3b5076e54811c1')
         );
     });
 });
 
 test.each(clients)('findInstanceCreation', async (client) => {
-    const blockFirstContract = await client.findInstanceCreation(
-        v1.ContractAddress.create(0),
-        0n,
-        10000n
-    );
+    const blockFirstContract = await client.findInstanceCreation(v1.ContractAddress.create(0), 0n, 10000n);
 
     expect(blockFirstContract?.height).toBe(2589n);
 });
 
 describe('findFirstFinalizedBlockNoLaterThan', () => {
-    test.each(clients)(
-        'Returns lowest block in range on date earlier than genesis',
-        async (client) => {
-            const time = new Date('11/5/2000');
-            const bi = await client.findFirstFinalizedBlockNoLaterThan(
-                time,
-                10n,
-                1500n
-            );
+    test.each(clients)('Returns lowest block in range on date earlier than genesis', async (client) => {
+        const time = new Date('11/5/2000');
+        const bi = await client.findFirstFinalizedBlockNoLaterThan(time, 10n, 1500n);
 
-            expect(bi?.blockHeight).toBe(10n);
-        }
-    );
+        expect(bi?.blockHeight).toBe(10n);
+    });
 
     test.each(clients)('Returns undefined on future date', async (client) => {
         const time = new Date(Date.now() + 10000);
-        const bi = await client.findFirstFinalizedBlockNoLaterThan(
-            time,
-            1000000n,
-            1500000n
-        );
+        const bi = await client.findFirstFinalizedBlockNoLaterThan(time, 1000000n, 1500000n);
 
         expect(bi).toBe(undefined);
     });
@@ -926,43 +738,25 @@ test.each(clients)('getBakerEarliestWinTime', async (client) => {
     expect(earliestWinTime.value).toBeGreaterThan(1692792026500n);
 });
 
-test.each(clients)(
-    'getBlockCertificates: With timeout certificate',
-    async (client) => {
-        const blockWithTimeoutCert =
-            'ac94ab7628d44fd8b4edb3075ae156e4b85d4007f52f147df6936ff70083d1ef';
-        const blockCertificates = await client.getBlockCertificates(
-            BlockHash.fromHexString(blockWithTimeoutCert)
-        );
+test.each(clients)('getBlockCertificates: With timeout certificate', async (client) => {
+    const blockWithTimeoutCert = 'ac94ab7628d44fd8b4edb3075ae156e4b85d4007f52f147df6936ff70083d1ef';
+    const blockCertificates = await client.getBlockCertificates(BlockHash.fromHexString(blockWithTimeoutCert));
 
-        expect(blockCertificates.timeoutCertificate).toEqual(
-            expected.timeoutCertificate
-        );
-    }
-);
+    expect(blockCertificates.timeoutCertificate).toEqual(expected.timeoutCertificate);
+});
 
-test.each(clients)(
-    'getBlockCertificates: With epoch finalization entry',
-    async (client) => {
-        const blockWithEpochFinalizationEntry =
-            '1ba4bcd28a6e014204f79a81a47bac7518066410acbeb7853f20b55e335b947a';
-        const blockCertificates = await client.getBlockCertificates(
-            BlockHash.fromHexString(blockWithEpochFinalizationEntry)
-        );
+test.each(clients)('getBlockCertificates: With epoch finalization entry', async (client) => {
+    const blockWithEpochFinalizationEntry = '1ba4bcd28a6e014204f79a81a47bac7518066410acbeb7853f20b55e335b947a';
+    const blockCertificates = await client.getBlockCertificates(
+        BlockHash.fromHexString(blockWithEpochFinalizationEntry)
+    );
 
-        expect(blockCertificates.quorumCertificate).toEqual(
-            expected.quorumCertificate
-        );
-        expect(blockCertificates.epochFinalizationEntry).toEqual(
-            expected.epochFinalizationEntry
-        );
-    }
-);
+    expect(blockCertificates.quorumCertificate).toEqual(expected.quorumCertificate);
+    expect(blockCertificates.epochFinalizationEntry).toEqual(expected.epochFinalizationEntry);
+});
 
 test.each(clients)('getBakersRewardPeriod', async (client) => {
-    const bakerRewardPeriodInfo = await streamToList(
-        client.getBakersRewardPeriod()
-    );
+    const bakerRewardPeriodInfo = await streamToList(client.getBakersRewardPeriod());
     const brpi = bakerRewardPeriodInfo[0];
 
     expect(typeof brpi.baker.bakerId).toEqual('bigint');
@@ -971,9 +765,7 @@ test.each(clients)('getBakersRewardPeriod', async (client) => {
     expect(brpi.baker.aggregationKey.length).toEqual(192);
     expect(brpi.baker.aggregationKey.length).toEqual(192);
     expect(typeof brpi.commissionRates.bakingCommission).toEqual('number');
-    expect(typeof brpi.commissionRates.finalizationCommission).toEqual(
-        'number'
-    );
+    expect(typeof brpi.commissionRates.finalizationCommission).toEqual('number');
     expect(typeof brpi.commissionRates.transactionCommission).toEqual('number');
     expect(v1.CcdAmount.instanceOf(brpi.effectiveStake)).toBeTruthy();
     expect(v1.CcdAmount.instanceOf(brpi.equityCapital)).toBeTruthy();
@@ -985,35 +777,25 @@ test.each(clients)('getFirstBlockEpoch - block hash', async (client) => {
     const firstBlockEpoch = await client.getFirstBlockEpoch(testBlockHash);
 
     expect(firstBlockEpoch).toEqual(
-        BlockHash.fromHexString(
-            '1ffd2823aa0dff331cc1ec98cf8269cf22120b94e2087c107874c7e84190317b'
-        )
+        BlockHash.fromHexString('1ffd2823aa0dff331cc1ec98cf8269cf22120b94e2087c107874c7e84190317b')
     );
 });
 
-test.each(clients)(
-    'getFirstBlockEpoch - relative epoch request',
-    async (client) => {
-        const req = {
-            genesisIndex: 1,
-            epoch: 5n,
-        };
-        const firstBlockEpoch = await client.getFirstBlockEpoch(req);
+test.each(clients)('getFirstBlockEpoch - relative epoch request', async (client) => {
+    const req = {
+        genesisIndex: 1,
+        epoch: 5n,
+    };
+    const firstBlockEpoch = await client.getFirstBlockEpoch(req);
 
-        expect(firstBlockEpoch).toEqual(
-            BlockHash.fromHexString(
-                'ea2a11db1d20658e9dc91f70116fe3f83a5fc49ac318d8ed1848295ae93c66fa'
-            )
-        );
-    }
-);
+    expect(firstBlockEpoch).toEqual(
+        BlockHash.fromHexString('ea2a11db1d20658e9dc91f70116fe3f83a5fc49ac318d8ed1848295ae93c66fa')
+    );
+});
 
 test.each(clients)('getWinningBakersEpoch', async (client) => {
-    const blockHash =
-        'ae4a8e864bb71dc2b6043a31c429be4fc4a110955143753ab3963c6a829c8818';
-    const winningBakers = await streamToList(
-        client.getWinningBakersEpoch(BlockHash.fromHexString(blockHash))
-    );
+    const blockHash = 'ae4a8e864bb71dc2b6043a31c429be4fc4a110955143753ab3963c6a829c8818';
+    const winningBakers = await streamToList(client.getWinningBakersEpoch(BlockHash.fromHexString(blockHash)));
     const round = winningBakers.filter((x) => x.round === 296651n)[0];
 
     expect(round.round).toEqual(296651n);

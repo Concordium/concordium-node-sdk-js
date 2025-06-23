@@ -1,19 +1,14 @@
 /* eslint-disable import/no-extraneous-dependencies */
-// eslint-disable-next-line import/no-named-as-default
-import webpack from 'webpack';
 import { resolve } from 'path';
 import url from 'url';
+// eslint-disable-next-line import/no-named-as-default
+import webpack from 'webpack';
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
-function configFor(
-    target: 'web' | 'node' | 'react-native'
-): webpack.Configuration {
+function configFor(target: 'web' | 'node' | 'react-native'): webpack.Configuration {
     const t = target === 'react-native' ? 'web' : target;
-    const entry =
-        target === 'react-native'
-            ? resolve(__dirname, './src/index.react-native.ts')
-            : resolve(__dirname, './src/index.ts');
+    const entry = resolve(__dirname, './src/index.ts');
 
     const config: webpack.Configuration = {
         mode: 'production',
@@ -44,10 +39,7 @@ function configFor(
                         loader: 'ts-loader',
                         options: {
                             transpileOnly: true,
-                            configFile: resolve(
-                                __dirname,
-                                './tsconfig.build.json'
-                            ),
+                            configFile: resolve(__dirname, './tsconfig.build.json'),
                         },
                     },
                     exclude: /node_modules/,
@@ -69,12 +61,7 @@ function configFor(
     }
 
     if (target === 'react-native') {
-        config.resolve!.conditionNames = [
-            'react-native',
-            'browser',
-            'module',
-            'require',
-        ];
+        config.resolve!.conditionNames = ['react-native', 'browser', 'module', 'require'];
     }
 
     return config;

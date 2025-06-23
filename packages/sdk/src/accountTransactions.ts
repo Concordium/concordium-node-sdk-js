@@ -1,57 +1,56 @@
 import { Buffer } from 'buffer/index.js';
+
+import { Cursor } from './deserializationHelpers.js';
+import { ContractAddress, ContractName, Energy, ModuleReference } from './pub/types.js';
 import { serializeCredentialDeploymentInfo } from './serialization.js';
 import {
-    encodeWord64,
     encodeDataBlob,
-    encodeWord32,
-    packBufferWithWord32Length,
-    packBufferWithWord16Length,
-    serializeList,
     encodeWord8,
-    serializeConfigureDelegationPayload,
+    encodeWord32,
+    encodeWord64,
+    packBufferWithWord16Length,
+    packBufferWithWord32Length,
     serializeConfigureBakerPayload,
+    serializeConfigureDelegationPayload,
+    serializeList,
 } from './serializationHelpers.js';
 import {
+    AccountTransactionPayload,
     AccountTransactionType,
+    BakerKeysWithProofs,
+    Base58String,
+    ConfigureBakerPayload,
+    ConfigureDelegationPayload,
+    DelegationTarget,
+    DelegationTargetType,
+    DeployModulePayload,
+    HexString,
     InitContractPayload,
+    OpenStatus,
+    RegisterDataPayload,
     SimpleTransferPayload,
     SimpleTransferWithMemoPayload,
-    DeployModulePayload,
     UpdateContractPayload,
-    AccountTransactionPayload,
     UpdateCredentialsPayload,
-    RegisterDataPayload,
-    ConfigureDelegationPayload,
-    ConfigureBakerPayload,
-    OpenStatus,
-    BakerKeysWithProofs,
     UrlString,
-    DelegationTarget,
-    Base58String,
-    HexString,
 } from './types.js';
 import * as AccountAddress from './types/AccountAddress.js';
-import { DataBlob } from './types/DataBlob.js';
 import * as CcdAmount from './types/CcdAmount.js';
-import { Cursor } from './deserializationHelpers.js';
-import * as ReceiveName from './types/ReceiveName.js';
+import { DataBlob } from './types/DataBlob.js';
 import * as Parameter from './types/Parameter.js';
-import {
-    ContractAddress,
-    ContractName,
-    Energy,
-    ModuleReference,
-} from './pub/types.js';
+import * as ReceiveName from './types/ReceiveName.js';
 
 /**
  * A handler for a specific {@linkcode AccountTransactionType}.
  */
 export interface AccountTransactionHandler<
     PayloadType extends AccountTransactionPayload = AccountTransactionPayload,
-    JSONType = PayloadType
+    JSONType = PayloadType,
 > {
     /**
      * Serializes the payload to a buffer.
+     * This does NOT include the serialized transaction type. To have this included, use {@linkcode serializeAccountTransactionPayload} instead.
+     *
      * @param payload - The payload to serialize.
      * @returns The serialized payload.
      */
@@ -88,15 +87,11 @@ export interface AccountTransactionHandler<
 
 export interface SimpleTransferPayloadJSON {
     toAddress: Base58String;
-    amount: bigint;
+    amount: string;
 }
 
 export class SimpleTransferHandler
-    implements
-        AccountTransactionHandler<
-            SimpleTransferPayload,
-            SimpleTransferPayloadJSON
-        >
+    implements AccountTransactionHandler<SimpleTransferPayload, SimpleTransferPayloadJSON>
 {
     getBaseEnergyCost(): bigint {
         return 300n;
@@ -109,12 +104,8 @@ export class SimpleTransferHandler
     }
 
     deserialize(serializedPayload: Cursor): SimpleTransferPayload {
-        const toAddress = AccountAddress.fromBuffer(
-            Buffer.from(serializedPayload.read(32))
-        );
-        const amount = CcdAmount.fromMicroCcd(
-            serializedPayload.read(8).readBigUInt64BE(0)
-        );
+        const toAddress = AccountAddress.fromBuffer(Buffer.from(serializedPayload.read(32)));
+        const amount = CcdAmount.fromMicroCcd(serializedPayload.read(8).readBigUInt64BE(0));
         return {
             toAddress,
             amount,
@@ -123,54 +114,39 @@ export class SimpleTransferHandler
 
     toJSON(transfer: SimpleTransferPayload): SimpleTransferPayloadJSON {
         return {
-            toAddress: AccountAddress.toBase58(transfer.toAddress),
-            amount: transfer.amount.microCcdAmount,
+            toAddress: transfer.toAddress.toJSON(),
+            amount: transfer.amount.toJSON(),
         };
     }
 
     fromJSON(json: SimpleTransferPayloadJSON): SimpleTransferPayload {
         return {
-            toAddress: AccountAddress.fromBase58(json.toAddress),
-            amount: CcdAmount.fromMicroCcd(json.amount),
+            toAddress: AccountAddress.fromJSON(json.toAddress),
+            amount: CcdAmount.fromJSON(json.amount),
         };
     }
 }
 
-export interface SimpleTransferWithMemoPayloadJSON
-    extends SimpleTransferPayloadJSON {
+export interface SimpleTransferWithMemoPayloadJSON extends SimpleTransferPayloadJSON {
     memo: HexString;
 }
 
 export class SimpleTransferWithMemoHandler
     extends SimpleTransferHandler
-    implements
-        AccountTransactionHandler<
-            SimpleTransferWithMemoPayload,
-            SimpleTransferWithMemoPayloadJSON
-        >
+    implements AccountTransactionHandler<SimpleTransferWithMemoPayload, SimpleTransferWithMemoPayloadJSON>
 {
     serialize(transfer: SimpleTransferWithMemoPayload): Buffer {
         const serializedToAddress = AccountAddress.toBuffer(transfer.toAddress);
         const serializedMemo = encodeDataBlob(transfer.memo);
         const serializedAmount = encodeWord64(transfer.amount.microCcdAmount);
-        return Buffer.concat([
-            serializedToAddress,
-            serializedMemo,
-            serializedAmount,
-        ]);
+        return Buffer.concat([serializedToAddress, serializedMemo, serializedAmount]);
     }
 
     deserialize(serializedPayload: Cursor): SimpleTransferWithMemoPayload {
-        const toAddress = AccountAddress.fromBuffer(
-            Buffer.from(serializedPayload.read(32))
-        );
+        const toAddress = AccountAddress.fromBuffer(Buffer.from(serializedPayload.read(32)));
         const memoLength = serializedPayload.read(2).readUInt16BE(0);
-        const memo = new DataBlob(
-            Buffer.from(serializedPayload.read(memoLength))
-        );
-        const amount = CcdAmount.fromMicroCcd(
-            serializedPayload.read(8).readBigUInt64BE(0)
-        );
+        const memo = new DataBlob(Buffer.from(serializedPayload.read(memoLength)));
+        const amount = CcdAmount.fromMicroCcd(serializedPayload.read(8).readBigUInt64BE(0));
         return {
             toAddress,
             memo,
@@ -178,23 +154,19 @@ export class SimpleTransferWithMemoHandler
         };
     }
 
-    toJSON(
-        transfer: SimpleTransferWithMemoPayload
-    ): SimpleTransferWithMemoPayloadJSON {
+    toJSON(transfer: SimpleTransferWithMemoPayload): SimpleTransferWithMemoPayloadJSON {
         return {
-            toAddress: AccountAddress.toBase58(transfer.toAddress),
+            toAddress: transfer.toAddress.toJSON(),
             memo: transfer.memo.toJSON(),
-            amount: transfer.amount.microCcdAmount,
+            amount: transfer.amount.toJSON(),
         };
     }
 
-    fromJSON(
-        json: SimpleTransferWithMemoPayloadJSON
-    ): SimpleTransferWithMemoPayload {
+    fromJSON(json: SimpleTransferWithMemoPayloadJSON): SimpleTransferWithMemoPayload {
         return {
-            toAddress: AccountAddress.fromBase58(json.toAddress),
+            toAddress: AccountAddress.fromJSON(json.toAddress),
             memo: DataBlob.fromJSON(json.memo),
-            amount: CcdAmount.fromMicroCcd(json.amount),
+            amount: CcdAmount.fromJSON(json.amount),
         };
     }
 }
@@ -204,10 +176,7 @@ export interface DeployModulePayloadJSON {
     version?: number;
 }
 
-export class DeployModuleHandler
-    implements
-        AccountTransactionHandler<DeployModulePayload, DeployModulePayloadJSON>
-{
+export class DeployModuleHandler implements AccountTransactionHandler<DeployModulePayload, DeployModulePayloadJSON> {
     getBaseEnergyCost(payload: DeployModulePayload): bigint {
         let length = payload.source.byteLength;
         if (payload.version === undefined) {
@@ -244,44 +213,32 @@ export class DeployModuleHandler
     fromJSON(json: DeployModulePayloadJSON): DeployModulePayload {
         return {
             source: Buffer.from(json.source, 'hex'),
-            version: json.version,
+            version: json.version !== undefined ? Number(json.version) : undefined,
         };
     }
 }
 
 export interface InitContractPayloadJSON {
-    amount: bigint;
+    amount: string;
     moduleRef: HexString;
     initName: string;
     param: HexString;
     maxContractExecutionEnergy: bigint;
 }
 
-export class InitContractHandler
-    implements
-        AccountTransactionHandler<InitContractPayload, InitContractPayloadJSON>
-{
+export class InitContractHandler implements AccountTransactionHandler<InitContractPayload, InitContractPayloadJSON> {
     getBaseEnergyCost(payload: InitContractPayload): bigint {
         return payload.maxContractExecutionEnergy.value;
     }
 
     serialize(payload: InitContractPayload): Buffer {
         const serializedAmount = encodeWord64(payload.amount.microCcdAmount);
-        const initNameBuffer = Buffer.from(
-            'init_' + payload.initName.value,
-            'utf8'
-        );
+        const initNameBuffer = Buffer.from('init_' + payload.initName.value, 'utf8');
         const serializedInitName = packBufferWithWord16Length(initNameBuffer);
         const serializedModuleRef = payload.moduleRef.decodedModuleRef;
         const parameterBuffer = Parameter.toBuffer(payload.param);
-        const serializedParameters =
-            packBufferWithWord16Length(parameterBuffer);
-        return Buffer.concat([
-            serializedAmount,
-            serializedModuleRef,
-            serializedInitName,
-            serializedParameters,
-        ]);
+        const serializedParameters = packBufferWithWord16Length(parameterBuffer);
+        return Buffer.concat([serializedAmount, serializedModuleRef, serializedInitName, serializedParameters]);
     }
 
     deserialize(): InitContractPayload {
@@ -290,30 +247,27 @@ export class InitContractHandler
 
     toJSON(payload: InitContractPayload): InitContractPayloadJSON {
         return {
-            amount: payload.amount.microCcdAmount,
-            moduleRef: ModuleReference.toHexString(payload.moduleRef),
-            initName: ContractName.toString(payload.initName),
-            param: Parameter.toHexString(payload.param),
-            maxContractExecutionEnergy:
-                payload.maxContractExecutionEnergy.value,
+            amount: payload.amount.toJSON(),
+            moduleRef: payload.moduleRef.toJSON(),
+            initName: payload.initName.toJSON(),
+            param: payload.param.toJSON(),
+            maxContractExecutionEnergy: payload.maxContractExecutionEnergy.value,
         };
     }
 
     fromJSON(json: InitContractPayloadJSON): InitContractPayload {
         return {
-            amount: CcdAmount.fromMicroCcd(json.amount),
-            moduleRef: ModuleReference.fromHexString(json.moduleRef),
-            initName: ContractName.fromString(json.initName),
-            param: Parameter.fromHexString(json.param),
-            maxContractExecutionEnergy: Energy.create(
-                json.maxContractExecutionEnergy
-            ),
+            amount: CcdAmount.fromJSON(json.amount),
+            moduleRef: ModuleReference.fromJSON(json.moduleRef),
+            initName: ContractName.fromJSON(json.initName),
+            param: Parameter.fromJSON(json.param),
+            maxContractExecutionEnergy: Energy.create(json.maxContractExecutionEnergy),
         };
     }
 }
 
 export interface UpdateContractPayloadJSON {
-    amount: bigint;
+    amount: string;
     address: ContractAddress.SchemaValue;
     receiveName: string;
     message: HexString;
@@ -321,11 +275,7 @@ export interface UpdateContractPayloadJSON {
 }
 
 export class UpdateContractHandler
-    implements
-        AccountTransactionHandler<
-            UpdateContractPayload,
-            UpdateContractPayloadJSON
-        >
+    implements AccountTransactionHandler<UpdateContractPayload, UpdateContractPayloadJSON>
 {
     getBaseEnergyCost(payload: UpdateContractPayload): bigint {
         return payload.maxContractExecutionEnergy.value;
@@ -335,19 +285,11 @@ export class UpdateContractHandler
         const serializedAmount = encodeWord64(payload.amount.microCcdAmount);
         const serializeIndex = encodeWord64(payload.address.index);
         const serializeSubindex = encodeWord64(payload.address.subindex);
-        const serializedContractAddress = Buffer.concat([
-            serializeIndex,
-            serializeSubindex,
-        ]);
-        const receiveNameBuffer = Buffer.from(
-            ReceiveName.toString(payload.receiveName),
-            'utf8'
-        );
-        const serializedReceiveName =
-            packBufferWithWord16Length(receiveNameBuffer);
+        const serializedContractAddress = Buffer.concat([serializeIndex, serializeSubindex]);
+        const receiveNameBuffer = Buffer.from(ReceiveName.toString(payload.receiveName), 'utf8');
+        const serializedReceiveName = packBufferWithWord16Length(receiveNameBuffer);
         const parameterBuffer = Parameter.toBuffer(payload.message);
-        const serializedParameters =
-            packBufferWithWord16Length(parameterBuffer);
+        const serializedParameters = packBufferWithWord16Length(parameterBuffer);
         return Buffer.concat([
             serializedAmount,
             serializedContractAddress,
@@ -362,43 +304,35 @@ export class UpdateContractHandler
 
     toJSON(payload: UpdateContractPayload): UpdateContractPayloadJSON {
         return {
-            amount: payload.amount.microCcdAmount,
+            amount: payload.amount.toJSON(),
             address: ContractAddress.toSchemaValue(payload.address),
-            receiveName: ReceiveName.toString(payload.receiveName),
-            message: Parameter.toHexString(payload.message),
-            maxContractExecutionEnergy:
-                payload.maxContractExecutionEnergy.value,
+            receiveName: payload.receiveName.toJSON(),
+            message: payload.message.toJSON(),
+            maxContractExecutionEnergy: payload.maxContractExecutionEnergy.value,
         };
     }
 
     fromJSON(json: UpdateContractPayloadJSON): UpdateContractPayload {
         return {
-            amount: CcdAmount.fromMicroCcd(json.amount),
+            amount: CcdAmount.fromJSON(json.amount),
             address: ContractAddress.fromSchemaValue(json.address),
-            receiveName: ReceiveName.fromString(json.receiveName),
-            message: Parameter.fromHexString(json.message),
-            maxContractExecutionEnergy: Energy.create(
-                json.maxContractExecutionEnergy
-            ),
+            receiveName: ReceiveName.fromJSON(json.receiveName),
+            message: Parameter.fromJSON(json.message),
+            maxContractExecutionEnergy: Energy.create(json.maxContractExecutionEnergy),
         };
     }
 }
 
-export class UpdateCredentialsHandler
-    implements AccountTransactionHandler<UpdateCredentialsPayload>
-{
+export class UpdateCredentialsHandler implements AccountTransactionHandler<UpdateCredentialsPayload> {
     getBaseEnergyCost(updateCredentials: UpdateCredentialsPayload): bigint {
         const newCredentialsCost = updateCredentials.newCredentials
             .map((credential) => {
-                const numberOfKeys = BigInt(
-                    Object.keys(credential.cdi.credentialPublicKeys.keys).length
-                );
+                const numberOfKeys = BigInt(Object.keys(credential.cdi.credentialPublicKeys.keys).length);
                 return 54000n + 100n * numberOfKeys;
             })
             .reduce((prev, curr) => prev + curr, BigInt(0));
 
-        const currentCredentialsCost =
-            500n * updateCredentials.currentNumberOfCredentials;
+        const currentCredentialsCost = 500n * updateCredentials.currentNumberOfCredentials;
 
         return 500n + currentCredentialsCost + newCredentialsCost;
     }
@@ -407,11 +341,7 @@ export class UpdateCredentialsHandler
         const serializedAddedCredentials = serializeList(
             updateCredentials.newCredentials,
             encodeWord8,
-            ({ index, cdi }) =>
-                Buffer.concat([
-                    encodeWord8(index),
-                    serializeCredentialDeploymentInfo(cdi),
-                ])
+            ({ index, cdi }) => Buffer.concat([encodeWord8(index), serializeCredentialDeploymentInfo(cdi)])
         );
 
         const serializedRemovedCredIds = serializeList(
@@ -420,26 +350,35 @@ export class UpdateCredentialsHandler
             (credId: string) => Buffer.from(credId, 'hex')
         );
         const serializedThreshold = encodeWord8(updateCredentials.threshold);
-        return Buffer.concat([
-            serializedAddedCredentials,
-            serializedRemovedCredIds,
-            serializedThreshold,
-        ]);
+        return Buffer.concat([serializedAddedCredentials, serializedRemovedCredIds, serializedThreshold]);
     }
 
     deserialize(): UpdateCredentialsPayload {
         throw new Error('deserialize not supported');
     }
 
-    toJSON(
-        updateCredentials: UpdateCredentialsPayload
-    ): UpdateCredentialsPayload {
-        // UpdateCredentialsPayload is already fully JSON serializable.
+    toJSON(updateCredentials: UpdateCredentialsPayload): UpdateCredentialsPayload {
         return updateCredentials;
     }
 
     fromJSON(json: UpdateCredentialsPayload): UpdateCredentialsPayload {
-        return json;
+        return {
+            ...json,
+            currentNumberOfCredentials: BigInt(json.currentNumberOfCredentials),
+            threshold: Number(json.threshold),
+            newCredentials: json.newCredentials.map((nc) => ({
+                index: Number(nc.index),
+                cdi: {
+                    ...nc.cdi,
+                    credentialPublicKeys: {
+                        ...nc.cdi.credentialPublicKeys,
+                        threshold: Number(nc.cdi.credentialPublicKeys.threshold),
+                    },
+                    ipIdentity: Number(nc.cdi.ipIdentity),
+                    revocationThreshold: Number(nc.cdi.revocationThreshold),
+                },
+            })),
+        };
     }
 }
 
@@ -447,10 +386,7 @@ export interface RegisterDataPayloadJSON {
     data: HexString;
 }
 
-export class RegisterDataHandler
-    implements
-        AccountTransactionHandler<RegisterDataPayload, RegisterDataPayloadJSON>
-{
+export class RegisterDataHandler implements AccountTransactionHandler<RegisterDataPayload, RegisterDataPayloadJSON> {
     getBaseEnergyCost(): bigint {
         return 300n;
     }
@@ -481,7 +417,7 @@ export class RegisterDataHandler
 }
 
 export interface ConfigureBakerPayloadJSON {
-    stake?: bigint;
+    stake?: string;
     restakeEarnings?: boolean;
     openForDelegation?: OpenStatus;
     keys?: BakerKeysWithProofs;
@@ -492,11 +428,7 @@ export interface ConfigureBakerPayloadJSON {
 }
 
 export class ConfigureBakerHandler
-    implements
-        AccountTransactionHandler<
-            ConfigureBakerPayload,
-            ConfigureBakerPayloadJSON
-        >
+    implements AccountTransactionHandler<ConfigureBakerPayload, ConfigureBakerPayloadJSON>
 {
     getBaseEnergyCost(payload: ConfigureBakerPayload): bigint {
         if (payload.keys) {
@@ -517,30 +449,33 @@ export class ConfigureBakerHandler
     toJSON(payload: ConfigureBakerPayload): ConfigureBakerPayloadJSON {
         return {
             ...payload,
-            stake: payload.stake?.microCcdAmount,
+            stake: payload.stake?.toJSON(),
         };
     }
 
     fromJSON(json: ConfigureBakerPayloadJSON): ConfigureBakerPayload {
         return {
             ...json,
-            stake: json.stake ? CcdAmount.fromMicroCcd(json.stake) : undefined,
+            stake: json.stake ? CcdAmount.fromJSON(json.stake) : undefined,
+            openForDelegation: json.openForDelegation !== undefined ? Number(json.openForDelegation) : undefined,
+            transactionFeeCommission:
+                json.transactionFeeCommission !== undefined ? Number(json.transactionFeeCommission) : undefined,
+            bakingRewardCommission:
+                json.bakingRewardCommission !== undefined ? Number(json.bakingRewardCommission) : undefined,
+            finalizationRewardCommission:
+                json.finalizationRewardCommission !== undefined ? Number(json.finalizationRewardCommission) : undefined,
         };
     }
 }
 
 export interface ConfigureDelegationPayloadJSON {
-    stake?: bigint;
+    stake?: string;
     restakeEarnings?: boolean;
     delegationTarget?: DelegationTarget;
 }
 
 export class ConfigureDelegationHandler
-    implements
-        AccountTransactionHandler<
-            ConfigureDelegationPayload,
-            ConfigureDelegationPayloadJSON
-        >
+    implements AccountTransactionHandler<ConfigureDelegationPayload, ConfigureDelegationPayloadJSON>
 {
     getBaseEnergyCost(): bigint {
         return 300n;
@@ -554,20 +489,28 @@ export class ConfigureDelegationHandler
         throw new Error('deserialize not supported');
     }
 
-    toJSON(
-        payload: ConfigureDelegationPayload
-    ): ConfigureDelegationPayloadJSON {
+    toJSON(payload: ConfigureDelegationPayload): ConfigureDelegationPayloadJSON {
         return {
             ...payload,
-            stake: payload.stake?.microCcdAmount,
+            stake: payload.stake?.toJSON(),
         };
     }
 
     fromJSON(json: ConfigureDelegationPayloadJSON): ConfigureDelegationPayload {
-        return {
+        let result: ConfigureDelegationPayload = {
             ...json,
-            stake: json.stake ? CcdAmount.fromMicroCcd(json.stake) : undefined,
+            stake: json.stake ? CcdAmount.fromJSON(json.stake) : undefined,
         };
+
+        if (
+            json.delegationTarget === undefined ||
+            json.delegationTarget.delegateType === DelegationTargetType.PassiveDelegation
+        ) {
+            return result;
+        }
+
+        result.delegationTarget = { ...json.delegationTarget, bakerId: BigInt(json.delegationTarget.bakerId) };
+        return result;
     }
 }
 
@@ -582,39 +525,22 @@ export type AccountTransactionPayloadJSON =
     | ConfigureDelegationPayloadJSON
     | ConfigureBakerPayloadJSON;
 
-export function getAccountTransactionHandler(
-    type: AccountTransactionType.Transfer
-): SimpleTransferHandler;
+export function getAccountTransactionHandler(type: AccountTransactionType.Transfer): SimpleTransferHandler;
 export function getAccountTransactionHandler(
     type: AccountTransactionType.TransferWithMemo
 ): SimpleTransferWithMemoHandler;
-export function getAccountTransactionHandler(
-    type: AccountTransactionType.UpdateCredentials
-): UpdateCredentialsHandler;
-export function getAccountTransactionHandler(
-    type: AccountTransactionType.DeployModule
-): DeployModuleHandler;
-export function getAccountTransactionHandler(
-    type: AccountTransactionType.InitContract
-): InitContractHandler;
-export function getAccountTransactionHandler(
-    type: AccountTransactionType.Update
-): UpdateContractHandler;
-export function getAccountTransactionHandler(
-    type: AccountTransactionType.RegisterData
-): RegisterDataHandler;
+export function getAccountTransactionHandler(type: AccountTransactionType.UpdateCredentials): UpdateCredentialsHandler;
+export function getAccountTransactionHandler(type: AccountTransactionType.DeployModule): DeployModuleHandler;
+export function getAccountTransactionHandler(type: AccountTransactionType.InitContract): InitContractHandler;
+export function getAccountTransactionHandler(type: AccountTransactionType.Update): UpdateContractHandler;
+export function getAccountTransactionHandler(type: AccountTransactionType.RegisterData): RegisterDataHandler;
 export function getAccountTransactionHandler(
     type: AccountTransactionType.ConfigureDelegation
 ): ConfigureDelegationHandler;
-export function getAccountTransactionHandler(
-    type: AccountTransactionType.ConfigureBaker
-): ConfigureBakerHandler;
+export function getAccountTransactionHandler(type: AccountTransactionType.ConfigureBaker): ConfigureBakerHandler;
 export function getAccountTransactionHandler(
     type: AccountTransactionType
-): AccountTransactionHandler<
-    AccountTransactionPayload,
-    AccountTransactionPayloadJSON
->;
+): AccountTransactionHandler<AccountTransactionPayload, AccountTransactionPayloadJSON>;
 export function getAccountTransactionHandler(
     type: AccountTransactionType
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -639,8 +565,6 @@ export function getAccountTransactionHandler(
         case AccountTransactionType.ConfigureBaker:
             return new ConfigureBakerHandler();
         default:
-            throw new Error(
-                'The provided type does not have a handler: ' + type
-            );
+            throw new Error('The provided type does not have a handler: ' + type);
     }
 }

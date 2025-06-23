@@ -1,10 +1,11 @@
-import { credentials } from '@grpc/grpc-js';
+import * as Gen from '@concordium/ccd-js-gen';
 import * as SDK from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
-import * as Gen from '@concordium/ccd-js-gen';
+import { credentials } from '@grpc/grpc-js';
+import meow from 'meow';
 import * as Path from 'node:path';
 import * as Url from 'node:url';
-import meow from 'meow';
+
 import { parseEndpoint } from '../shared/util.js';
 
 const cli = meow(
@@ -31,20 +32,14 @@ const cli = meow(
 );
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
-const grpcClient = new ConcordiumGRPCNodeClient(
-    address,
-    Number(port),
-    credentials.createInsecure()
-);
+const grpcClient = new ConcordiumGRPCNodeClient(address, Number(port), credentials.createInsecure());
 
 const wCCDModuleRef = SDK.ModuleReference.fromHexString(
     'cc285180b45d7695db75c29dee004d2e81a1383880c9b122399bea809196c98f'
 );
 
 (async () => {
-    console.info(
-        `Fetching smart contract module source with reference '${wCCDModuleRef.moduleRef}'.`
-    );
+    console.info(`Fetching smart contract module source with reference '${wCCDModuleRef.moduleRef}'.`);
     const moduleSource = await grpcClient.getModuleSource(wCCDModuleRef);
     const filePath = Url.fileURLToPath(import.meta.url);
     const outDir = Path.join(Path.dirname(filePath), 'lib');

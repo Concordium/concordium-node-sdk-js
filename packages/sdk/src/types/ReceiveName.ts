@@ -1,12 +1,8 @@
 import { isAsciiAlphaNumericPunctuation } from '../contractHelpers.js';
+import type * as Proto from '../grpc-api/v2/concordium/types.js';
 import * as ContractName from './ContractName.js';
 import * as EntrypointName from './EntrypointName.js';
-import type * as Proto from '../grpc-api/v2/concordium/types.js';
-import {
-    TypedJson,
-    TypedJsonDiscriminator,
-    makeFromTypedJson,
-} from './util.js';
+import { TypedJson, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
@@ -96,15 +92,8 @@ export function instanceOf(value: unknown): value is ReceiveName {
  * @throws If the provided value is not a valid receive name.
  * @returns {ReceiveName} The receive name.
  */
-export function create(
-    contractName: ContractName.Type,
-    entrypointName: EntrypointName.Type
-): ReceiveName {
-    return fromString(
-        `${ContractName.toString(contractName)}.${EntrypointName.toString(
-            entrypointName
-        )}`
-    );
+export function create(contractName: ContractName.Type, entrypointName: EntrypointName.Type): ReceiveName {
+    return fromString(`${ContractName.toString(contractName)}.${EntrypointName.toString(entrypointName)}`);
 }
 
 /**
@@ -115,19 +104,13 @@ export function create(
  */
 export function fromString(value: string): ReceiveName {
     if (value.length > 100) {
-        throw new Error(
-            'Invalid ReceiveName: Can be atmost 100 characters long.'
-        );
+        throw new Error('Invalid ReceiveName: Can be atmost 100 characters long.');
     }
     if (!value.includes('.')) {
-        throw new Error(
-            "Invalid ReceiveName: Must contain at least one '.' character."
-        );
+        throw new Error("Invalid ReceiveName: Must contain at least one '.' character.");
     }
     if (!isAsciiAlphaNumericPunctuation(value)) {
-        throw new Error(
-            'Invalid ReceiveName: Must only contain ASCII alpha, numeric and punctuation characters.'
-        );
+        throw new Error('Invalid ReceiveName: Must only contain ASCII alpha, numeric and punctuation characters.');
     }
     return new ReceiveName(value);
 }
@@ -168,9 +151,7 @@ export function toContractName(receiveName: ReceiveName): ContractName.Type {
  * @param {ReceiveName} receiveName The receive name to get the entrypoint name from.
  * @returns {EntrypointName.Type}
  */
-export function toEntrypointName(
-    receiveName: ReceiveName
-): EntrypointName.Type {
+export function toEntrypointName(receiveName: ReceiveName): EntrypointName.Type {
     const splitAt = receiveName.value.indexOf('.');
     const entrypointName = receiveName.value.substring(splitAt + 1);
     return EntrypointName.fromStringUnchecked(entrypointName);
@@ -252,7 +233,4 @@ export function toTypedJSON({ value }: ReceiveName): TypedJson<Serializable> {
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */
-export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(
-    JSON_DISCRIMINATOR,
-    fromString
-);
+export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(JSON_DISCRIMINATOR, fromString);

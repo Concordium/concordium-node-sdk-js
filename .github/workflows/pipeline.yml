@@ -1,334 +1,361 @@
 name: Build, lint and typecheck examples
 
 on:
-    # Triggers the workflow on push or pull request events but only for the main branch
-    push:
-        branches: [ main, release**, feature** ]
-    pull_request:
-        branches: [ main, release**, feature** ]
-        # Don't run on draft PR's, see: https://github.com/orgs/community/discussions/25722#discussioncomment-3248917
-        types: [ opened, synchronize, reopened, ready_for_review ]
-    # Allows us to run the workflow manually from the Actions tab
-    workflow_dispatch:
-
+  # Triggers the workflow on push or pull request events but only for the main branch
+  push:
+    branches: [main, release**, feature**]
+  pull_request:
+    branches: ['**']
+    # Don't run on draft PR's, see: https://github.com/orgs/community/discussions/25722#discussioncomment-3248917
+    types: [opened, synchronize, reopened, ready_for_review]
+  # Allows us to run the workflow manually from the Actions tab
+  workflow_dispatch:
 
 env:
-    DUMMY: 3 # For cache busting.
-    NODE_VERSION: 18.16.0
-    RUST_VERSION: 1.73
-    RUST_FMT: nightly-2023-04-01-x86_64-unknown-linux-gnu
+  DUMMY: 3 # For cache busting.
+  NODE_VERSION: 18.16.0
+  RUST_VERSION: 1.73
+  RUST_FMT: nightly-2023-04-01-x86_64-unknown-linux-gnu
 
 jobs:
-    deps:
-        if: github.event.pull_request.draft == false
-        runs-on: ubuntu-22.04
-        steps:
-            - uses: actions/checkout@v3
-              with:
-                  submodules: 'recursive'
+  deps:
+    name: Dependencies
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
 
-            - uses: actions/setup-node@v3
-              with:
-                  node-version: ${{ env.NODE_VERSION }}
-                  cache: yarn
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
 
-            - name: Cache dependencies
-              id: yarn-cache
-              uses: actions/cache@v3
-              with:
-                  path: |
-                      ./node_modules
-                      ./docs/node_modules
-                      ./packages/ccd-js-gen/node_modules
-                  key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}-${{ env.DUMMY }}
-                  restore-keys: |
-                      ${{ runner.os }}-yarn
+      - name: Cache dependencies
+        id: yarn-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ./node_modules
+            ./docs/node_modules
+            ./packages/*/node_modules
+            ./examples/**/node_modules
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}-${{ env.DUMMY }}
+          restore-keys: |
+            ${{ runner.os }}-yarn
 
-            - name: Get dependencies
-              run: yarn install --immutable
+      - name: Get dependencies
+        run: yarn install --immutable
 
-    build:
-        if: github.event.pull_request.draft == false
-        runs-on: ubuntu-22.04
-        needs: deps
-        steps:
-            - uses: actions/checkout@v3
-              with:
-                  submodules: 'recursive'
+  build:
+    name: Build
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-22.04
+    needs: deps
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
 
-            - uses: actions/setup-node@v3
-              with:
-                  node-version: ${{ env.NODE_VERSION }}
-                  cache: yarn
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
 
-            - name: Cache GRPC
-              id: cache-grpc
-              uses: actions/cache@v3
-              with:
-                  path: |
-                      ./packages/sdk/src/grpc-api
-                  key: ${{ runner.os }}-grpc-${{ hashFiles('deps/concordium-base/concordium-grpc-api') }}-${{ env.DUMMY }}
-                  restore-keys: ${{ runner.os }}-grpc
+      - name: Cache GRPC
+        id: cache-grpc
+        uses: actions/cache@v4
+        with:
+          path: |
+            ./packages/sdk/src/grpc-api
+          key: ${{ runner.os }}-grpc-${{ hashFiles('deps/concordium-base/concordium-grpc-api') }}-${{ env.DUMMY }}
+          restore-keys: ${{ runner.os }}-grpc
 
-            - name: Cache WebPack
-              uses: actions/cache@v3
-              with:
-                  path: ./packages/web/.webpack-cache
-                  # These two lines ensure that a fresh cache is generated after each run
-                  key: ${{ runner.os }}-webpack-${{ github.run_id }}
-                  restore-keys: ${{ runner.os }}-webpack
+      - name: Cache WebPack
+        uses: actions/cache@v4
+        with:
+          path: ./packages/web/.webpack-cache
+          # These two lines ensure that a fresh cache is generated after each run
+          key: ${{ runner.os }}-webpack-${{ github.run_id }}
+          restore-keys: ${{ runner.os }}-webpack
 
-            - name: Restore dependencies
-              uses: actions/cache/restore@v3
-              with:
-                  path: |
-                      ./node_modules
-                      ./docs/node_modules
-                      ./packages/ccd-js-gen/node_modules
-                  key: ${{ runner.os }}-yarn
+      - name: Restore dependencies
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ./node_modules
+            ./docs/node_modules
+            ./packages/*/node_modules
+            ./examples/**/node_modules
+          key: ${{ runner.os }}-yarn
 
-            - name: Install rust
-              run: rustup default ${{ env.RUST_VERSION }}
+      - name: Install rust
+        run: rustup default ${{ env.RUST_VERSION }}
 
-            - uses: Swatinem/rust-cache@v2
-              with:
-                  workspaces: |
-                      packages/rust-bindings
-                      deps/concordium-base/rust-src
-                      deps/concordium-base/concordium-contracts-common
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            packages/rust-bindings
+            deps/concordium-base/rust-src
+            deps/concordium-base/smart-contracts/contracts-common
 
-            - name: Build
-              run: yarn build
+      - name: Build
+        run: yarn build-ci
 
-            - name: Store build-debug
-              uses: actions/upload-artifact@v4
-              with:
-                  name: build-debug
-                  # sdk/src is needed here because of sdk/src/grpc-api
-                  path: |
-                      packages/rust-bindings/lib
-                      packages/sdk/lib
-                      packages/sdk/src
-                      packages/ccd-js-gen/lib
+      - name: Store build-debug
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-debug
+          # sdk/src is needed here because of sdk/src/grpc-api
+          path: |
+            packages/rust-bindings/lib
+            packages/sdk/lib
+            packages/sdk/src
+            packages/ccd-js-gen/lib
+            packages/wallet-connectors/dist
+            packages/react-components/dist
 
-    typecheck-examples:
-        runs-on: ubuntu-22.04
-        needs: build
-        steps:
-            - uses: actions/checkout@v3
+  tests:
+    name: Tests
+    runs-on: ubuntu-22.04
+    needs: build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
 
-            - uses: actions/setup-node@v3
-              with:
-                  node-version: ${{ env.NODE_VERSION }}
-                  cache: yarn
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
 
-            - name: Restore dependencies
-              uses: actions/cache/restore@v3
-              with:
-                  path: |
-                      ./node_modules
-                      ./docs/node_modules
-                      ./packages/ccd-js-gen/node_modules
-                  key: ${{ runner.os }}-yarn
+      - name: Restore dependencies
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ./node_modules
+            ./docs/node_modules
+            ./packages/*/node_modules
+            ./examples/**/node_modules
+          key: ${{ runner.os }}-yarn
 
-            - name: Get build-debug
-              uses: actions/download-artifact@v4
-              with:
-                  path: packages
-                  name: build-debug
+      - name: Get build-debug
+        uses: actions/download-artifact@v4
+        with:
+          path: packages
+          name: build-debug
 
-            - name: Typecheck examples
-              run: yarn workspace @concordium/examples typecheck
+      - name: Run Tests
+        run: yarn test-ci
 
-    tests:
-        runs-on: ubuntu-22.04
-        needs: build
-        strategy:
-            matrix:
-                package: [ 'sdk', 'ccd-js-gen' ]
-        defaults:
-            run:
-                working-directory: packages/${{matrix.package}}
-        steps:
-            - name: Checkout
-              uses: actions/checkout@v3
-              with:
-                  submodules: 'recursive'
+  typedoc:
+    name: Build docs
+    runs-on: ubuntu-22.04
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
 
-            - uses: actions/setup-node@v3
-              with:
-                  node-version: ${{ env.NODE_VERSION }}
-                  cache: yarn
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
 
-            - name: Restore dependencies
-              uses: actions/cache/restore@v3
-              with:
-                  path: |
-                      ./node_modules
-                      ./docs/node_modules
-                      ./packages/ccd-js-gen/node_modules
-                  key: ${{ runner.os }}-yarn
+      - name: Restore dependencies
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ./node_modules
+            ./docs/node_modules
+            ./packages/*/node_modules
+            ./examples/**/node_modules
+          key: ${{ runner.os }}-yarn
 
-            - name: Get build-debug
-              uses: actions/download-artifact@v4
-              with:
-                  path: packages
-                  name: build-debug
+      - name: Get build-debug
+        uses: actions/download-artifact@v4
+        with:
+          path: packages
+          name: build-debug
 
-            - name: Run Tests
-              run: yarn test-ci
+      - name: Build typedoc
+        run: yarn build:docs
 
-    typedoc:
-        runs-on: ubuntu-22.04
-        needs: build
-        steps:
-            - uses: actions/checkout@v3
+  lint:
+    name: JS lint
+    runs-on: ubuntu-22.04
+    needs: build
+    if: github.event.pull_request.draft == false
+    steps:
+      - uses: actions/checkout@v4
 
-            - uses: actions/setup-node@v3
-              with:
-                  node-version: ${{ env.NODE_VERSION }}
-                  cache: yarn
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
 
-            - name: Restore dependencies
-              uses: actions/cache/restore@v3
-              with:
-                  path: |
-                      ./node_modules
-                      ./docs/node_modules
-                      ./packages/ccd-js-gen/node_modules
-                  key: ${{ runner.os }}-yarn
+      - name: Restore dependencies
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ./node_modules
+            ./docs/node_modules
+            ./packages/*/node_modules
+            ./examples/**/node_modules
+          key: ${{ runner.os }}-yarn
 
-            - name: Get build-debug
-              uses: actions/download-artifact@v4
-              with:
-                  path: packages
-                  name: build-debug
+      - name: Get build-debug
+        uses: actions/download-artifact@v4
+        with:
+          path: packages
+          name: build-debug
 
-            - name: Build typedoc
-              run: yarn build:docs
+      - name: Lint
+        run: yarn lint:all && yarn fmt-check:all
 
-    lint:
-        runs-on: ubuntu-22.04
-        needs: build
-        if: github.event.pull_request.draft == false
-        steps:
-            - uses: actions/checkout@v3
+  markdown-lint:
+    name: Markdown lint
+    runs-on: ubuntu-22.04
+    if: github.event.pull_request.draft == false
+    needs: deps
+    steps:
+      - uses: actions/checkout@v4
 
-            - uses: actions/setup-node@v3
-              with:
-                  node-version: ${{ env.NODE_VERSION }}
-                  cache: yarn
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
 
-            - name: Restore dependencies
-              uses: actions/cache/restore@v3
-              with:
-                  path: |
-                      ./node_modules
-                      ./docs/node_modules
-                      ./packages/ccd-js-gen/node_modules
-                  key: ${{ runner.os }}-yarn
+      - name: Restore dependencies
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ./node_modules
+            ./docs/node_modules
+            ./packages/*/node_modules
+            ./examples/**/node_modules
+          key: ${{ runner.os }}-yarn
 
-            - name: Get build-debug
-              uses: actions/download-artifact@v4
-              with:
-                  path: packages
-                  name: build-debug
+      - name: Lint markdown
+        run: yarn markdown:lint
 
-            - name: Lint
-              run: yarn lint
+  markdown-linkcheck:
+    name: Markdown links
+    runs-on: ubuntu-22.04
+    needs: deps
+    if: github.event.pull_request.draft == false
+    steps:
+      - uses: actions/checkout@v4
 
-    markdown-lint:
-        runs-on: ubuntu-22.04
-        if: github.event.pull_request.draft == false
-        needs: deps
-        steps:
-            - uses: actions/checkout@v3
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
 
-            - uses: actions/setup-node@v3
-              with:
-                  node-version: ${{ env.NODE_VERSION }}
-                  cache: yarn
+      - name: Restore dependencies
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ./node_modules
+            ./docs/node_modules
+            ./packages/*/node_modules
+            ./examples/**/node_modules
+          key: ${{ runner.os }}-yarn
 
-            - name: Restore dependencies
-              uses: actions/cache/restore@v3
-              with:
-                  path: |
-                      ./node_modules
-                      ./docs/node_modules
-                      ./packages/ccd-js-gen/node_modules
-                  key: ${{ runner.os }}-yarn
+      - name: Lint markdown
+        run: yarn markdown:linkcheck
 
-            - name: Lint markdown
-              run: yarn markdown:lint
+  size:
+    name: Package size
+    runs-on: ubuntu-22.04
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
 
-    markdown-linkcheck:
-        runs-on: ubuntu-22.04
-        needs: deps
-        if: github.event.pull_request.draft == false
-        steps:
-            - uses: actions/checkout@v3
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
 
-            - uses: actions/setup-node@v3
-              with:
-                  node-version: ${{ env.NODE_VERSION }}
-                  cache: yarn
+      - name: Restore dependencies
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ./node_modules
+            ./docs/node_modules
+            ./packages/*/node_modules
+            ./examples/**/node_modules
+          key: ${{ runner.os }}-yarn
 
-            - name: Restore dependencies
-              uses: actions/cache/restore@v3
-              with:
-                  path: |
-                      ./node_modules
-                      ./docs/node_modules
-                      ./packages/ccd-js-gen/node_modules
-                  key: ${{ runner.os }}-yarn
+      - name: Get build-debug
+        uses: actions/download-artifact@v4
+        with:
+          path: packages
+          name: build-debug
 
-            - name: Lint markdown
-              run: yarn markdown:linkcheck
+      - name: Size
+        run: yarn size:no-build
 
-    rust_lint_fmt:
-        runs-on: ubuntu-22.04
-        if: github.event.pull_request.draft == false
-        defaults:
-            run:
-                working-directory: packages/rust-bindings
-        steps:
-            - name: Checkout
-              uses: actions/checkout@v3
-              with:
-                  submodules: 'recursive'
+  rust_lint_fmt:
+    name: Rust fmt
+    runs-on: ubuntu-22.04
+    if: github.event.pull_request.draft == false
+    defaults:
+      run:
+        working-directory: packages/rust-bindings
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
 
-            - name: Install formatter
-              run: |
-                  rustup default ${{ env.RUST_FMT }}
-                  rustup component add rustfmt
+      - name: Install formatter
+        run: |
+          rustup default ${{ env.RUST_FMT }}
+          rustup component add rustfmt
 
-            - name: Format
-              run: cargo fmt -- --color=always --check
+      - name: Format
+        run: cargo fmt -- --color=always --check
 
-    rust_lint_clippy:
-        runs-on: ubuntu-22.04
-        needs: rust_lint_fmt
-        if: github.event.pull_request.draft == false
-        defaults:
-            run:
-                working-directory: packages/rust-bindings
-        steps:
-            - name: Checkout
-              uses: actions/checkout@v3
-              with:
-                  submodules: 'recursive'
+  rust_lint_clippy:
+    name: Rust clippy
+    runs-on: ubuntu-22.04
+    needs: rust_lint_fmt
+    if: github.event.pull_request.draft == false
+    defaults:
+      run:
+        working-directory: packages/rust-bindings
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
 
-            - name: Install clippy
-              run: |
-                  rustup default ${{ env.RUST_VERSION }}
-                  rustup component add clippy
+      - name: Install clippy
+        run: |
+          rustup default ${{ env.RUST_VERSION }}
+          rustup component add clippy
 
-            - uses: Swatinem/rust-cache@v2
-              with:
-                  workspaces: |
-                      packages/rust-bindings
-                      deps/concordium-base/rust-src
-                      deps/concordium-base/concordium-contracts-common
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            packages/rust-bindings
+            deps/concordium-base/rust-src
+            deps/concordium-base/smart-contracts/contracts-common
 
-            - name: Run clippy
-              run: cargo clippy --color=always --tests --benches -- -Dclippy::all
+      - name: Run clippy
+        run: cargo clippy --color=always --tests --benches -- -Dclippy::all
+  # The point of this job is to make it easy to add protection rules that require all status checks to pass.
+  results:
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    name: Workflow result
+    needs: [tests, typedoc, lint, markdown-lint, markdown-linkcheck, rust_lint_fmt, rust_lint_clippy]
+    steps:
+      - run: exit 1
+        # see https://stackoverflow.com/a/67532120/4907315
+        if: >-
+          ${{
+               contains(needs.*.result, 'failure')
+            || contains(needs.*.result, 'cancelled')
+          }}

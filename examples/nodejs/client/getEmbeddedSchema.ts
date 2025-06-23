@@ -1,9 +1,8 @@
 import { ModuleReference } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
-
-import meow from 'meow';
 import fs from 'fs';
+import meow from 'meow';
 
 const cli = meow(
     `
@@ -41,11 +40,7 @@ const cli = meow(
 );
 
 const [address, port] = cli.flags.endpoint.split(':');
-const client = new ConcordiumGRPCNodeClient(
-    address,
-    Number(port),
-    credentials.createInsecure()
-);
+const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.createInsecure());
 
 /**
  * Gets an embedded schema from a provided module.
@@ -57,7 +52,9 @@ const client = new ConcordiumGRPCNodeClient(
     const schema = await client.getEmbeddedSchema(moduleRef);
     // #endregion documentation-snippet
 
-    fs.writeFileSync(cli.flags.outPath, schema);
+    if (schema) {
+        fs.writeFileSync(cli.flags.outPath, new Uint8Array(schema.buffer));
+    }
 
     console.log('Wrote schema to file: ', cli.flags.outPath);
 })();

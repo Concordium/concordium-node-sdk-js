@@ -6,36 +6,28 @@
  * 2. Converting wasm file to js with [wasm2js]{@link https://github.com/WebAssembly/binaryen/blob/main/src/wasm2js.h}
  * 3. Replacing references to wasm file with corresponding references to converted file.
  */
-
-import path from 'node:path';
-import fs from 'node:fs';
-import util from 'node:util';
-import { exec as _exec } from 'node:child_process';
 import copyfiles from 'copyfiles';
+import { exec as _exec } from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
+import util from 'node:util';
 
 const exec = util.promisify(_exec);
 
 const WASM_FILENAME = 'index_bg.wasm';
 const WASM_FILENAME_JS = `${WASM_FILENAME}.js`;
 
-const bundlerPath = path.join(__dirname, '../lib/dapp/bundler');
-const outPath = path.join(__dirname, '../lib/dapp/react-native');
-
 // Copy files to react native folder
-copyfiles(
-    [`${bundlerPath}/index*`, `${bundlerPath}/package.json`, outPath],
-    { up: bundlerPath.split('/').length, flat: true },
-    () => {} // no-op
-);
-
-(async () => {
-    // Convert files using `wasm2js`
-    await exec(
-        `wasm2js ${path.join(outPath, WASM_FILENAME)} -o ${path.join(
-            outPath,
-            WASM_FILENAME_JS
-        )}`
+export const copyToFolder = (bundlerPath: string, outPath: string) =>
+    copyfiles(
+        [`${bundlerPath}/index*`, `${bundlerPath}/package.json`, outPath],
+        { up: bundlerPath.split('/').length, flat: true },
+        () => {} // no-op
     );
+
+export const convertWasmToJs = async (outPath: string) => {
+    // Convert files using `wasm2js`
+    await exec(`wasm2js ${path.join(outPath, WASM_FILENAME)} -o ${path.join(outPath, WASM_FILENAME_JS)}`);
 
     // Remove unused wasm file
     fs.rmSync(path.join(outPath, WASM_FILENAME));
@@ -48,4 +40,4 @@ copyfiles(
             content = content.replace(WASM_FILENAME, WASM_FILENAME_JS);
             fs.writeFileSync(file, content, 'utf-8');
         });
-})();
+};

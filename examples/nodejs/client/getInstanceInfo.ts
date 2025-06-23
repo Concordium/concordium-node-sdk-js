@@ -1,9 +1,9 @@
-import { parseEndpoint } from '../shared/util.js';
 import { BlockHash, ContractAddress, InstanceInfo } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
-
 import meow from 'meow';
+
+import { parseEndpoint } from '../shared/util.js';
 
 const cli = meow(
     `
@@ -41,11 +41,7 @@ const cli = meow(
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
 
-const client = new ConcordiumGRPCNodeClient(
-    address,
-    Number(port),
-    credentials.createInsecure()
-);
+const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.createInsecure());
 
 /**
  * Used to get information about a specific contract instance, at a specific
@@ -55,21 +51,12 @@ const client = new ConcordiumGRPCNodeClient(
 (async () => {
     // #region documentation-snippet
     const contractAddress = ContractAddress.create(cli.flags.contract);
-    const blockHash =
-        cli.flags.block === undefined
-            ? undefined
-            : BlockHash.fromHexString(cli.flags.block);
+    const blockHash = cli.flags.block === undefined ? undefined : BlockHash.fromHexString(cli.flags.block);
 
-    const instanceInfo: InstanceInfo = await client.getInstanceInfo(
-        contractAddress,
-        blockHash
-    );
+    const instanceInfo: InstanceInfo = await client.getInstanceInfo(contractAddress, blockHash);
 
     console.log('Name:', instanceInfo.name);
-    console.log(
-        'Amount in CCD:',
-        Number(instanceInfo.amount.microCcdAmount / 1000000n)
-    );
+    console.log('Amount in CCD:', Number(instanceInfo.amount.microCcdAmount / 1000000n));
     console.log('Version:', instanceInfo.version);
     console.log('Owner:', instanceInfo.owner.address);
     console.log('Module Reference:', instanceInfo.sourceModule.moduleRef);

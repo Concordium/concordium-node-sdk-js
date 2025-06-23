@@ -5,17 +5,17 @@ import {
     AccountTransactionSignature,
     AccountTransactionType,
     DeployModulePayload,
-    signTransaction,
     TransactionExpiry,
-    parseWallet,
     buildAccountSigner,
+    parseWallet,
+    signTransaction,
 } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
-import { readFileSync } from 'node:fs';
-import { parseEndpoint } from '../shared/util.js';
-
 import meow from 'meow';
+import { readFileSync } from 'node:fs';
+
+import { parseEndpoint } from '../shared/util.js';
 
 const cli = meow(
     `
@@ -53,11 +53,7 @@ const cli = meow(
 );
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
-const client = new ConcordiumGRPCNodeClient(
-    address,
-    Number(port),
-    credentials.createInsecure()
-);
+const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.createInsecure());
 
 /**
  * The following example demonstrates how a module can be deployed.
@@ -94,15 +90,9 @@ const client = new ConcordiumGRPCNodeClient(
 
     // Sign transaction
     const signer = buildAccountSigner(wallet);
-    const signature: AccountTransactionSignature = await signTransaction(
-        deployModuleTransaction,
-        signer
-    );
+    const signature: AccountTransactionSignature = await signTransaction(deployModuleTransaction, signer);
 
-    const transactionHash = await client.sendAccountTransaction(
-        deployModuleTransaction,
-        signature
-    );
+    const transactionHash = await client.sendAccountTransaction(deployModuleTransaction, signature);
 
     console.log('Transaction submitted, waiting for finalization...');
 

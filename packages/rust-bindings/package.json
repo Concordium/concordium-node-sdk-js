@@ -1,6 +1,6 @@
 {
     "name": "@concordium/rust-bindings",
-    "version": "3.1.0",
+    "version": "3.3.0",
     "license": "Apache-2.0",
     "engines": {
         "node": ">=16"
@@ -52,7 +52,7 @@
         },
         "./wallet": {
             "types": "./lib/wallet/node/cjs/index.d.ts",
-            "react-native": null,
+            "react-native": "./lib/wallet/react-native/index.js",
             "node": {
                 "module": "./lib/wallet/node/umd/index.min.js",
                 "default": "./lib/wallet/node/cjs/index.js"
@@ -82,27 +82,32 @@
         "./lib/**/index*"
     ],
     "scripts": {
-        "fmt": "cargo +nightly-2023-04-01-x86_64-unknown-linux-gnu fmt -- --color=always --check",
+        "rustfmt": "cargo +nightly-2023-04-01-x86_64-unknown-linux-gnu fmt -- --color=always",
         "clippy": "cargo +1.73 clippy --color=always --tests --benches -- -Dclippy::all",
         "build-web": "wasm-pack build ./packages/$0 --target web --out-dir $INIT_CWD/lib/$0/web/esm --out-name index",
         "build-node": "wasm-pack build ./packages/$0 --target nodejs --out-dir $INIT_CWD/lib/$0/node/cjs --out-name index",
         "build-bundler": "wasm-pack build ./packages/$0 --target bundler --out-dir $INIT_CWD/lib/$0/bundler --out-name index",
         "build-all": "yarn build-web $0 && yarn build-node $0 && yarn build-bundler $0",
-        "build": "yarn build-all dapp && ts-node ./scripts/build-react-native.ts && yarn build-all wallet && webpack && yarn sanitize",
-        "build:rust-bindings-dapp": "yarn build-all dapp && webpack --env package=dapp && ts-node ./scripts/build-react-native.ts && yarn sanitize",
-        "build:rust-bindings-wallet": "yarn build-all wallet && webpack --env package=wallet && yarn sanitize",
+        "build": "yarn build-all dapp && ts-node ./scripts/build-react-native-dapp.ts && yarn build-all wallet && ts-node ./scripts/build-react-native-wallet.ts && webpack && yarn sanitize",
+        "build:rust-bindings-dapp": "yarn build-all dapp && webpack --env package=dapp && ts-node ./scripts/build-react-native-dapp.ts && yarn sanitize",
+        "build:rust-bindings-wallet": "yarn build-all wallet && webpack --env package=wallet && ts-node ./scripts/build-react-native-wallet.ts && yarn sanitize",
         "build:rust-bindings": "yarn build",
         "clean": "rimraf -- target lib .webpack-cache",
         "sanitize": "find ./lib -type f -name .gitignore -delete -o -name package.json -delete",
-        "lint": "eslint . --cache --ext .ts,.tsx --max-warnings 0",
-        "lint-fix": "yarn --silent lint --fix; exit 0"
+        "lint": "eslint . --cache --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+        "lint-fix": "yarn lint --fix",
+        "prettier": "prettier . --ignore-path ../../.gitignore --ignore-path ../../.prettierignore --ignore-path .gitignore",
+        "fmt": "yarn prettier --write",
+        "fmt-check": "yarn prettier --check"
     },
     "devDependencies": {
         "@types/copyfiles": "^2.4.1",
+        "@types/node": "^20.12.13",
         "binaryen": "^114.0.0",
         "buffer": "^6.0.3",
         "copyfiles": "^2.4.1",
-        "eslint": "^8.50.0",
+        "eslint": "8",
+        "prettier": "^3.2.5",
         "rimraf": "^5.0.1",
         "ts-loader": "^9.4.4",
         "ts-node": "^10.9.1",

@@ -1,27 +1,29 @@
+import fs from 'fs';
+
+import {
+    GenericMembershipStatement,
+    GenericNonMembershipStatement,
+    GenericRangeStatement,
+} from '../../src/commonProofTypes.js';
 import {
     AttributeKeyString,
     CIS4,
     ConcordiumHdWallet,
     ContractAddress,
-    createAccountDID,
-    createWeb3IdDID,
-    dateToTimestampAttribute,
-    getVerifiablePresentation,
     MAX_DATE_TIMESTAMP,
     MAX_U64,
     MIN_DATE_TIMESTAMP,
     RequestStatement,
     StatementTypes,
     VerifiablePresentation,
+    Web3StatementBuilder,
+    createAccountDID,
+    createWeb3IdDID,
+    dateToTimestampAttribute,
+    getVerifiablePresentation,
     verifyAtomicStatements,
     verifyPresentation,
-    Web3StatementBuilder,
 } from '../../src/index.js';
-import {
-    expectedAccountCredentialPresentation,
-    expectedWeb3IdCredentialPresentation,
-} from './resources/expectedPresentation.js';
-import { expectedStatementMixed } from './resources/expectedStatements.js';
 import {
     CommitmentInput,
     CredentialSchemaSubject,
@@ -30,35 +32,24 @@ import {
     Web3IdProofRequest,
 } from '../../src/web3-id/types.js';
 import { TEST_SEED_1 } from './HdWallet.test.js';
-import fs from 'fs';
 import {
-    GenericMembershipStatement,
-    GenericNonMembershipStatement,
-    GenericRangeStatement,
-} from '../../src/commonProofTypes.js';
+    expectedAccountCredentialPresentation,
+    expectedWeb3IdCredentialPresentation,
+} from './resources/expectedPresentation.js';
+import { expectedStatementMixed } from './resources/expectedStatements.js';
 
-const GLOBAL_CONTEXT = JSON.parse(
-    fs.readFileSync('./test/ci/resources/global.json').toString()
-).value;
+const GLOBAL_CONTEXT = JSON.parse(fs.readFileSync('./test/ci/resources/global.json').toString()).value;
 
 test('Generate V2 statement', () => {
     const builder = new Web3StatementBuilder();
     const statement = builder
-        .addForVerifiableCredentials(
-            [ContractAddress.create(2101), ContractAddress.create(1337, 42)],
-            (b) =>
-                b
-                    .addRange('b', 80n, 1237n)
-                    .addMembership('c', ['aa', 'ff', 'zz'])
+        .addForVerifiableCredentials([ContractAddress.create(2101), ContractAddress.create(1337, 42)], (b) =>
+            b.addRange('b', 80n, 1237n).addMembership('c', ['aa', 'ff', 'zz'])
         )
         .addForVerifiableCredentials([ContractAddress.create(1338)], (b) =>
-            b
-                .addRange('a', 80n, 1237n)
-                .addNonMembership('d', ['aa', 'ff', 'zz'])
+            b.addRange('a', 80n, 1237n).addNonMembership('d', ['aa', 'ff', 'zz'])
         )
-        .addForIdentityCredentials([0, 1, 2], (b) =>
-            b.revealAttribute(AttributeKeyString.firstName)
-        )
+        .addForIdentityCredentials([0, 1, 2], (b) => b.revealAttribute(AttributeKeyString.firstName))
         .getStatements();
     expect(statement).toStrictEqual(expectedStatementMixed);
 });
@@ -96,65 +87,50 @@ test('create Web3Id proof with account credentials', () => {
             values,
             randomness: {
                 dob: '575851a4e0558d589a57544a4a9f5ad1bd8467126c1b6767d32f633ea03380e6',
-                firstName:
-                    '575851a4e0558d589a57544a4a9f5ad1bd8467126c1b6767d32f633ea03380e6',
+                firstName: '575851a4e0558d589a57544a4a9f5ad1bd8467126c1b6767d32f633ea03380e6',
             },
         },
     ];
 
     const presentation = getVerifiablePresentation({
         request: {
-            challenge:
-                '94d3e85bbc8ff0091e562ad8ef6c30d57f29b19f17c98ce155df2a30100dAAAA',
+            challenge: '94d3e85bbc8ff0091e562ad8ef6c30d57f29b19f17c98ce155df2a30100dAAAA',
             credentialStatements,
         },
         globalContext: GLOBAL_CONTEXT,
         commitmentInputs,
     });
 
-    const expected = VerifiablePresentation.fromString(
-        expectedAccountCredentialPresentation
-    );
+    const expected = VerifiablePresentation.fromString(expectedAccountCredentialPresentation);
     expect(presentation.presentationContext).toBe(expected.presentationContext);
     expect(presentation.type).toBe(expected.type);
     expect(presentation.proof.type).toBe(expected.proof.type);
     // TODO is this date check even valid?
     expect(new Date(presentation.proof.created)).not.toBeNaN();
-    expect(presentation.verifiableCredential[0].type).toEqual(
-        expected.verifiableCredential[0].type
-    );
-    expect(presentation.verifiableCredential[0].issuer).toBe(
-        expected.verifiableCredential[0].issuer
-    );
+    expect(presentation.verifiableCredential[0].type).toEqual(expected.verifiableCredential[0].type);
+    expect(presentation.verifiableCredential[0].issuer).toBe(expected.verifiableCredential[0].issuer);
     expect(presentation.verifiableCredential[0].credentialSubject.id).toBe(
         expected.verifiableCredential[0].credentialSubject.id
     );
-    expect(
-        presentation.verifiableCredential[0].credentialSubject.proof.type
-    ).toBe(expected.verifiableCredential[0].credentialSubject.proof.type);
-    expect(
-        presentation.verifiableCredential[0].credentialSubject.statement
-    ).toEqual(expected.verifiableCredential[0].credentialSubject.statement);
+    expect(presentation.verifiableCredential[0].credentialSubject.proof.type).toBe(
+        expected.verifiableCredential[0].credentialSubject.proof.type
+    );
+    expect(presentation.verifiableCredential[0].credentialSubject.statement).toEqual(
+        expected.verifiableCredential[0].credentialSubject.statement
+    );
 });
 
 test('create Web3Id proof with Web3Id Credentials', () => {
-    const globalContext = JSON.parse(
-        fs.readFileSync('./test/ci/resources/global.json').toString()
-    ).value;
+    const globalContext = JSON.parse(fs.readFileSync('./test/ci/resources/global.json').toString()).value;
 
     const randomness: Record<string, string> = {};
-    randomness.degreeType =
-        '53573aac0039a54affd939be0ad0c49df6e5a854ce448a73abb2b0534a0a62ba';
-    randomness.degreeName =
-        '3917917065f8178e99c954017886f83984247ca16a22b065286de89b54d04610';
-    randomness.graduationDate =
-        '0f5a299aeba0cdc16fbaa98f21cab57cfa6dd50f0a2b039393686df7c7ae1561';
+    randomness.degreeType = '53573aac0039a54affd939be0ad0c49df6e5a854ce448a73abb2b0534a0a62ba';
+    randomness.degreeName = '3917917065f8178e99c954017886f83984247ca16a22b065286de89b54d04610';
+    randomness.graduationDate = '0f5a299aeba0cdc16fbaa98f21cab57cfa6dd50f0a2b039393686df7c7ae1561';
 
     const wallet = ConcordiumHdWallet.fromHex(TEST_SEED_1, 'Testnet');
 
-    const publicKey = wallet
-        .getVerifiableCredentialPublicKey(ContractAddress.create(1), 1)
-        .toString('hex');
+    const publicKey = wallet.getVerifiableCredentialPublicKey(ContractAddress.create(1), 1).toString('hex');
 
     const values: Record<string, bigint | string> = {
         degreeName: 'Bachelor of Science and Arts',
@@ -182,9 +158,7 @@ test('create Web3Id proof with Web3Id Credentials', () => {
     const commitmentInputs: CommitmentInput[] = [
         {
             type: 'web3Issuer',
-            signer: wallet
-                .getVerifiableCredentialSigningKey(ContractAddress.create(1), 1)
-                .toString('hex'),
+            signer: wallet.getVerifiableCredentialSigningKey(ContractAddress.create(1), 1).toString('hex'),
             values,
             randomness,
             signature:
@@ -194,37 +168,30 @@ test('create Web3Id proof with Web3Id Credentials', () => {
 
     const presentation = getVerifiablePresentation({
         request: {
-            challenge:
-                '94d3e85bbc8ff0091e562ad8ef6c30d57f29b19f17c98ce155df2a30100dAAAA',
+            challenge: '94d3e85bbc8ff0091e562ad8ef6c30d57f29b19f17c98ce155df2a30100dAAAA',
             credentialStatements,
         },
         globalContext,
         commitmentInputs,
     });
 
-    const expected = VerifiablePresentation.fromString(
-        expectedWeb3IdCredentialPresentation
-    );
+    const expected = VerifiablePresentation.fromString(expectedWeb3IdCredentialPresentation);
     expect(presentation.presentationContext).toBe(expected.presentationContext);
     expect(presentation.type).toBe(expected.type);
     expect(presentation.proof.type).toBe(expected.proof.type);
     // TODO is this date check even valid?
     expect(new Date(presentation.proof.created)).not.toBeNaN();
-    expect(presentation.verifiableCredential[0].type).toEqual(
-        expected.verifiableCredential[0].type
-    );
-    expect(presentation.verifiableCredential[0].issuer).toBe(
-        expected.verifiableCredential[0].issuer
-    );
+    expect(presentation.verifiableCredential[0].type).toEqual(expected.verifiableCredential[0].type);
+    expect(presentation.verifiableCredential[0].issuer).toBe(expected.verifiableCredential[0].issuer);
     expect(presentation.verifiableCredential[0].credentialSubject.id).toBe(
         expected.verifiableCredential[0].credentialSubject.id
     );
-    expect(
-        presentation.verifiableCredential[0].credentialSubject.proof.type
-    ).toBe(expected.verifiableCredential[0].credentialSubject.proof.type);
-    expect(
-        presentation.verifiableCredential[0].credentialSubject.statement
-    ).toEqual(expected.verifiableCredential[0].credentialSubject.statement);
+    expect(presentation.verifiableCredential[0].credentialSubject.proof.type).toBe(
+        expected.verifiableCredential[0].credentialSubject.proof.type
+    );
+    expect(presentation.verifiableCredential[0].credentialSubject.statement).toEqual(
+        expected.verifiableCredential[0].credentialSubject.statement
+    );
 });
 
 const schemaWithTimeStamp: CredentialSchemaSubject = {
@@ -324,9 +291,7 @@ test('A bigint range statement with an out of bounds lower limit fails', () => {
         upper: 10n,
     };
 
-    expect(() =>
-        verifyAtomicStatements([statement], schemaWithTimeStamp)
-    ).toThrowError(
+    expect(() => verifyAtomicStatements([statement], schemaWithTimeStamp)).toThrowError(
         'Age is a integer property and therefore the lower end of a range statement must be a bigint in the range of 0 to 18446744073709551615'
     );
 });
@@ -339,9 +304,7 @@ test('A bigint range statement with an out of bounds upper limit fails', () => {
         upper: 18446744073709551616n,
     };
 
-    expect(() =>
-        verifyAtomicStatements([statement], schemaWithTimeStamp)
-    ).toThrowError(
+    expect(() => verifyAtomicStatements([statement], schemaWithTimeStamp)).toThrowError(
         'Age is a integer property and therefore the upper end of a range statement must be a bigint in the range of 0 to 18446744073709551615'
     );
 });
@@ -354,9 +317,7 @@ test('A bigint range statement with valid bounds succeed verification', () => {
         upper: 18446744073709551615n,
     };
 
-    expect(
-        verifyAtomicStatements([statement], schemaWithTimeStamp)
-    ).toBeTruthy();
+    expect(verifyAtomicStatements([statement], schemaWithTimeStamp)).toBeTruthy();
 });
 
 test('A string range statement with an out of bounds lower limit fails', () => {
@@ -367,9 +328,7 @@ test('A string range statement with an out of bounds lower limit fails', () => {
         upper: 'Concordium testing strings web3',
     };
 
-    expect(() =>
-        verifyAtomicStatements([statement], schemaWithTimeStamp)
-    ).toThrowError(
+    expect(() => verifyAtomicStatements([statement], schemaWithTimeStamp)).toThrowError(
         'Degree Type is a string property and therefore the lower end of a range statement must be a string in the range of 0 to 31 bytes as UTF-8'
     );
 });
@@ -382,9 +341,7 @@ test('A string range statement with an out of bounds upper limit fails', () => {
         upper: 'Concordium testing strings web33',
     };
 
-    expect(() =>
-        verifyAtomicStatements([statement], schemaWithTimeStamp)
-    ).toThrowError(
+    expect(() => verifyAtomicStatements([statement], schemaWithTimeStamp)).toThrowError(
         'Degree Type is a string property and therefore the upper end of a range statement must be a string in the range of 0 to 31 bytes as UTF-8'
     );
 });
@@ -397,9 +354,7 @@ test('A string range statement with valid bounds succeed verification', () => {
         upper: 'Concordium testing strings web3',
     };
 
-    expect(
-        verifyAtomicStatements([statement], schemaWithTimeStamp)
-    ).toBeTruthy();
+    expect(verifyAtomicStatements([statement], schemaWithTimeStamp)).toBeTruthy();
 });
 
 test('A timestamp range statement with an out of bounds lower limit fails', () => {
@@ -410,9 +365,7 @@ test('A timestamp range statement with an out of bounds lower limit fails', () =
         upper: dateToTimestampAttribute(new Date(MAX_DATE_TIMESTAMP)),
     };
 
-    expect(() =>
-        verifyAtomicStatements([statement], schemaWithTimeStamp)
-    ).toThrowError(
+    expect(() => verifyAtomicStatements([statement], schemaWithTimeStamp)).toThrowError(
         'Graduation date is a timestamp property and therefore the lower end of a range statement must be a Date in the range of -262144-01-01T00:00:00Zto +262143-12-31T23:59:59.999999999Z'
     );
 });
@@ -425,9 +378,7 @@ test('A timestamp range statement with an out of bounds upper limit fails', () =
         upper: dateToTimestampAttribute(new Date(MAX_DATE_TIMESTAMP + 1)),
     };
 
-    expect(() =>
-        verifyAtomicStatements([statement], schemaWithTimeStamp)
-    ).toThrowError(
+    expect(() => verifyAtomicStatements([statement], schemaWithTimeStamp)).toThrowError(
         'Graduation date is a timestamp property and therefore the upper end of a range statement must be a Date in the range of -262144-01-01T00:00:00Zto +262143-12-31T23:59:59.999999999Z'
     );
 });
@@ -440,9 +391,7 @@ test('A timestamp range statement with valid bounds succeed verification', () =>
         upper: dateToTimestampAttribute(new Date(MAX_DATE_TIMESTAMP)),
     };
 
-    expect(
-        verifyAtomicStatements([statement], schemaWithTimeStamp)
-    ).toBeTruthy();
+    expect(verifyAtomicStatements([statement], schemaWithTimeStamp)).toBeTruthy();
 });
 
 test('A bigint set statement with an out of bounds item fails', () => {
@@ -452,9 +401,7 @@ test('A bigint set statement with an out of bounds item fails', () => {
         set: [MAX_U64 + 1n],
     };
 
-    expect(() =>
-        verifyAtomicStatements([statement], schemaWithTimeStamp)
-    ).toThrowError(
+    expect(() => verifyAtomicStatements([statement], schemaWithTimeStamp)).toThrowError(
         'Age is a integer property and therefore the members of a set statement must be bigint in the range of 0 to 18446744073709551615'
     );
 });
@@ -466,9 +413,7 @@ test('A bigint set statement with a negative number item fails', () => {
         set: [-1n],
     };
 
-    expect(() =>
-        verifyAtomicStatements([statement], schemaWithTimeStamp)
-    ).toThrowError(
+    expect(() => verifyAtomicStatements([statement], schemaWithTimeStamp)).toThrowError(
         'Age is a integer property and therefore the members of a set statement must be bigint in the range of 0 to 18446744073709551615'
     );
 });
@@ -480,9 +425,7 @@ test('A bigint set statement with valid items succeeds', () => {
         set: [0n, MAX_U64],
     };
 
-    expect(
-        verifyAtomicStatements([statement], schemaWithTimeStamp)
-    ).toBeTruthy();
+    expect(verifyAtomicStatements([statement], schemaWithTimeStamp)).toBeTruthy();
 });
 
 test('A bigint not in set statement with an out of bounds item fails', () => {
@@ -492,9 +435,7 @@ test('A bigint not in set statement with an out of bounds item fails', () => {
         set: [MAX_U64 + 1n],
     };
 
-    expect(() =>
-        verifyAtomicStatements([statement], schemaWithTimeStamp)
-    ).toThrowError(
+    expect(() => verifyAtomicStatements([statement], schemaWithTimeStamp)).toThrowError(
         'Age is a integer property and therefore the members of a set statement must be bigint in the range of 0 to 18446744073709551615'
     );
 });
@@ -506,9 +447,7 @@ test('A bigint not in set statement with a negative number item fails', () => {
         set: [-1n],
     };
 
-    expect(() =>
-        verifyAtomicStatements([statement], schemaWithTimeStamp)
-    ).toThrowError(
+    expect(() => verifyAtomicStatements([statement], schemaWithTimeStamp)).toThrowError(
         'Age is a integer property and therefore the members of a set statement must be bigint in the range of 0 to 18446744073709551615'
     );
 });
@@ -520,9 +459,7 @@ test('A bigint not in set statement with valid items succeeds', () => {
         set: [0n, MAX_U64],
     };
 
-    expect(
-        verifyAtomicStatements([statement], schemaWithTimeStamp)
-    ).toBeTruthy();
+    expect(verifyAtomicStatements([statement], schemaWithTimeStamp)).toBeTruthy();
 });
 
 test('A string set statement with an out of bounds item fails', () => {
@@ -532,9 +469,7 @@ test('A string set statement with an out of bounds item fails', () => {
         set: ['Concordium testing strings web33'],
     };
 
-    expect(() =>
-        verifyAtomicStatements([statement], schemaWithTimeStamp)
-    ).toThrowError(
+    expect(() => verifyAtomicStatements([statement], schemaWithTimeStamp)).toThrowError(
         'Degree Type is a string property and therefore the members of a set statement must be string in the range of 0 to 31 bytes as UTF-8'
     );
 });
@@ -546,9 +481,7 @@ test('A string set statement with valid items succeeds', () => {
         set: ['', 'Concordium testing strings web3'],
     };
 
-    expect(
-        verifyAtomicStatements([statement], schemaWithTimeStamp)
-    ).toBeTruthy();
+    expect(verifyAtomicStatements([statement], schemaWithTimeStamp)).toBeTruthy();
 });
 
 test('A string not in set statement with an out of bounds item fails', () => {
@@ -558,9 +491,7 @@ test('A string not in set statement with an out of bounds item fails', () => {
         set: ['Concordium testing strings web33'],
     };
 
-    expect(() =>
-        verifyAtomicStatements([statement], schemaWithTimeStamp)
-    ).toThrowError(
+    expect(() => verifyAtomicStatements([statement], schemaWithTimeStamp)).toThrowError(
         'Degree Type is a string property and therefore the members of a set statement must be string in the range of 0 to 31 bytes as UTF-8'
     );
 });
@@ -572,9 +503,7 @@ test('A string not in set statement with valid items succeeds', () => {
         set: ['', 'Concordium testing strings web3'],
     };
 
-    expect(
-        verifyAtomicStatements([statement], schemaWithTimeStamp)
-    ).toBeTruthy();
+    expect(verifyAtomicStatements([statement], schemaWithTimeStamp)).toBeTruthy();
 });
 
 test('A timestamp set statement with an out of bounds item fails', () => {
@@ -584,9 +513,7 @@ test('A timestamp set statement with an out of bounds item fails', () => {
         set: [dateToTimestampAttribute(new Date(MAX_DATE_TIMESTAMP + 1))],
     };
 
-    expect(() =>
-        verifyAtomicStatements([statement], schemaWithTimeStamp)
-    ).toThrowError(
+    expect(() => verifyAtomicStatements([statement], schemaWithTimeStamp)).toThrowError(
         'Graduation date is a date-time property and therefore the members of a set statement must be Date in the range of -262144-01-01T00:00:00Zto +262143-12-31T23:59:59.999999999Z'
     );
 });
@@ -598,9 +525,7 @@ test('A timestamp set statement with a lower out of bounds item fails', () => {
         set: [dateToTimestampAttribute(new Date(MIN_DATE_TIMESTAMP - 1))],
     };
 
-    expect(() =>
-        verifyAtomicStatements([statement], schemaWithTimeStamp)
-    ).toThrowError(
+    expect(() => verifyAtomicStatements([statement], schemaWithTimeStamp)).toThrowError(
         'Graduation date is a date-time property and therefore the members of a set statement must be Date in the range of -262144-01-01T00:00:00Zto +262143-12-31T23:59:59.999999999Z'
     );
 });
@@ -615,55 +540,44 @@ test('A timestamp set statement with valid items succeeds', () => {
         ],
     };
 
-    expect(
-        verifyAtomicStatements([statement], schemaWithTimeStamp)
-    ).toBeTruthy();
+    expect(verifyAtomicStatements([statement], schemaWithTimeStamp)).toBeTruthy();
 });
 
 test('A timestamp not in set statement with an out of bounds item fails', () => {
-    const statement: GenericNonMembershipStatement<string, TimestampAttribute> =
-        {
-            type: StatementTypes.AttributeNotInSet,
-            attributeTag: 'graduationDate',
-            set: [dateToTimestampAttribute(new Date(MAX_DATE_TIMESTAMP + 1))],
-        };
+    const statement: GenericNonMembershipStatement<string, TimestampAttribute> = {
+        type: StatementTypes.AttributeNotInSet,
+        attributeTag: 'graduationDate',
+        set: [dateToTimestampAttribute(new Date(MAX_DATE_TIMESTAMP + 1))],
+    };
 
-    expect(() =>
-        verifyAtomicStatements([statement], schemaWithTimeStamp)
-    ).toThrowError(
+    expect(() => verifyAtomicStatements([statement], schemaWithTimeStamp)).toThrowError(
         'Graduation date is a date-time property and therefore the members of a set statement must be Date in the range of -262144-01-01T00:00:00Zto +262143-12-31T23:59:59.999999999Z'
     );
 });
 
 test('A timestamp not in set statement with a lower out of bounds item fails', () => {
-    const statement: GenericNonMembershipStatement<string, TimestampAttribute> =
-        {
-            type: StatementTypes.AttributeNotInSet,
-            attributeTag: 'graduationDate',
-            set: [dateToTimestampAttribute(new Date(MIN_DATE_TIMESTAMP - 1))],
-        };
+    const statement: GenericNonMembershipStatement<string, TimestampAttribute> = {
+        type: StatementTypes.AttributeNotInSet,
+        attributeTag: 'graduationDate',
+        set: [dateToTimestampAttribute(new Date(MIN_DATE_TIMESTAMP - 1))],
+    };
 
-    expect(() =>
-        verifyAtomicStatements([statement], schemaWithTimeStamp)
-    ).toThrowError(
+    expect(() => verifyAtomicStatements([statement], schemaWithTimeStamp)).toThrowError(
         'Graduation date is a date-time property and therefore the members of a set statement must be Date in the range of -262144-01-01T00:00:00Zto +262143-12-31T23:59:59.999999999Z'
     );
 });
 
 test('A timestamp not in set statement with valid items succeeds', () => {
-    const statement: GenericNonMembershipStatement<string, TimestampAttribute> =
-        {
-            type: StatementTypes.AttributeNotInSet,
-            attributeTag: 'graduationDate',
-            set: [
-                dateToTimestampAttribute(new Date(MIN_DATE_TIMESTAMP)),
-                dateToTimestampAttribute(new Date(MAX_DATE_TIMESTAMP)),
-            ],
-        };
+    const statement: GenericNonMembershipStatement<string, TimestampAttribute> = {
+        type: StatementTypes.AttributeNotInSet,
+        attributeTag: 'graduationDate',
+        set: [
+            dateToTimestampAttribute(new Date(MIN_DATE_TIMESTAMP)),
+            dateToTimestampAttribute(new Date(MAX_DATE_TIMESTAMP)),
+        ],
+    };
 
-    expect(
-        verifyAtomicStatements([statement], schemaWithTimeStamp)
-    ).toBeTruthy();
+    expect(verifyAtomicStatements([statement], schemaWithTimeStamp)).toBeTruthy();
 });
 
 const TESTNET_PRESENTATION = VerifiablePresentation.fromString(`{
@@ -765,8 +679,7 @@ const TESTNET_PRESENTATION_DATA: CredentialWithMetadata[] = [
         status: CIS4.CredentialStatus.Active,
         inputs: {
             type: 'web3',
-            issuerPk:
-                '400d2cd6bc50a29168c02d4e7897a3659d8874f3f2cb349dbbeff37cc58469c1',
+            issuerPk: '400d2cd6bc50a29168c02d4e7897a3659d8874f3f2cb349dbbeff37cc58469c1',
         },
     },
     {
@@ -818,8 +731,7 @@ test('testnet presentation', () => {
         TESTNET_PRESENTATION_DATA.map((d) => d.inputs)
     );
     const expected: Web3IdProofRequest = {
-        challenge:
-            'd7bce30c25cad255a30b8bc72a7d4ee654d2d1e0fa4342fde1e453c034e9afa7',
+        challenge: 'd7bce30c25cad255a30b8bc72a7d4ee654d2d1e0fa4342fde1e453c034e9afa7',
         credentialStatements: [
             {
                 id: 'did:ccd:testnet:sci:6260:0/credentialEntry/70159fe625e369b05c09294692088174dbc5df15b78ebd6722e5cac6f6b93052',
@@ -827,11 +739,7 @@ test('testnet presentation', () => {
                     { attributeTag: 'userId', type: 'RevealAttribute' },
                     { attributeTag: 'username', type: 'RevealAttribute' },
                 ],
-                type: [
-                    'ConcordiumVerifiableCredential',
-                    'SoMeCredential',
-                    'VerifiableCredential',
-                ],
+                type: ['ConcordiumVerifiableCredential', 'SoMeCredential', 'VerifiableCredential'],
             },
             {
                 id: 'did:ccd:testnet:cred:9549a7e0894fe888a68019e31db5a99a21c9b14cca0513934e9951057c96434a86dd54f90ff2bf18b99dad5ec64d7563',

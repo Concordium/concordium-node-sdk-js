@@ -18,9 +18,7 @@ export interface NodeNetworkInfo {
     avgBpsOut: bigint;
 }
 
-export type NodeInfoDetails =
-    | NodeInfoDetails_Bootstrapper
-    | NodeInfoDetails_Node;
+export type NodeInfoDetails = NodeInfoDetails_Bootstrapper | NodeInfoDetails_Node;
 
 export interface NodeInfoDetails_Bootstrapper {
     tag: 'bootstrapper';
@@ -31,9 +29,7 @@ export interface NodeInfoDetails_Node {
     consensusStatus: NodeInfoConsensusStatus;
 }
 
-export type NodeInfoConsensusStatus =
-    | NodeInfoConsensusStatusGeneric
-    | NodeInfoConsensusStatusActive;
+export type NodeInfoConsensusStatus = NodeInfoConsensusStatusGeneric | NodeInfoConsensusStatusActive;
 
 export interface NodeInfoConsensusStatusGeneric {
     tag: 'notRunning' | 'passive';
@@ -45,9 +41,7 @@ export interface NodeInfoConsensusStatusActive {
     status: BakerConsensusInfoStatus;
 }
 
-export type BakerConsensusInfoStatus =
-    | BakerConsensusInfoStatusGeneric
-    | BakerConsensusInfoStatusPassiveCommitteeInfo;
+export type BakerConsensusInfoStatus = BakerConsensusInfoStatusGeneric | BakerConsensusInfoStatusPassiveCommitteeInfo;
 
 export interface BakerConsensusInfoStatusGeneric {
     tag: 'activeBakerCommitteeInfo' | 'activeFinalizerCommitteeInfo';

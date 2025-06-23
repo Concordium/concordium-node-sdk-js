@@ -4,27 +4,17 @@
  *
  * @format
  */
-
-import React from 'react';
-import type { PropsWithChildren } from 'react';
 import {
-    SafeAreaView,
-    ScrollView,
-    StatusBar,
-    StyleSheet,
-    Text,
-    useColorScheme,
-    View,
-} from 'react-native';
-
-import { Buffer } from 'buffer/';
-import * as ed from '@noble/ed25519';
-import {
-    displayTypeSchemaTemplate,
     ConcordiumGRPCWebClient,
+    ConcordiumHdWallet,
+    displayTypeSchemaTemplate,
     getSignature,
 } from '@concordium/web-sdk';
-
+import * as ed from '@noble/ed25519';
+import { Buffer } from 'buffer/';
+import React from 'react';
+import type { PropsWithChildren } from 'react';
+import { SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, View, useColorScheme } from 'react-native';
 import {
     Colors,
     DebugInstructions,
@@ -39,13 +29,24 @@ type SectionProps = PropsWithChildren<{
 
 const ADDRESS = 'https://grpc.testnet.concordium.com';
 const PORT = 20000;
+const WALLET_SEED =
+    'c70040111e6f32891c142ce7ce35fb5e52d5c5a97e1afc5e5628f032c65c288e5fd737432910ed1870ba818025813e4bab0dff727b9b6709ae7ed1264dae3b46';
 
 function TestSDK() {
+    // WALLET
+    const wallet = ConcordiumHdWallet.fromHex(WALLET_SEED, 'Testnet');
+
+    const privateKey = wallet.getAccountSigningKey(0, 0, 0).toString('hex');
+    console.log('WALLET privateKey', privateKey);
+    const publicKey = wallet.getAccountPublicKey(0, 0, 0).toString('hex');
+    console.log('WALLET publicKey', publicKey);
+    const idCredSec = wallet.getIdCredSec(0, 0).toString('hex');
+    console.log('WALLET idCredSec', idCredSec);
+    const getPrfKey = wallet.getPrfKey(0, 0).toString('hex');
+    console.log('WALLET getPrfKey', getPrfKey);
+
     // SCHEMA
-    const schema = Buffer.from(
-        'FAACAAAABAAAAGtleXMQAR4gAAAADgAAAGF1eGlsaWFyeV9kYXRhEAEC',
-        'base64'
-    );
+    const schema = Buffer.from('FAACAAAABAAAAGtleXMQAR4gAAAADgAAAGF1eGlsaWFyeV9kYXRhEAEC', 'base64');
     console.log(schema);
     const jsonSchema = displayTypeSchemaTemplate(schema);
     console.log(jsonSchema);
@@ -120,21 +121,16 @@ function App(): JSX.Element {
                 barStyle={isDarkMode ? 'light-content' : 'dark-content'}
                 backgroundColor={backgroundStyle.backgroundColor}
             />
-            <ScrollView
-                contentInsetAdjustmentBehavior="automatic"
-                style={backgroundStyle}
-            >
+            <ScrollView contentInsetAdjustmentBehavior="automatic" style={backgroundStyle}>
                 <Header />
                 <View
                     style={{
-                        backgroundColor: isDarkMode
-                            ? Colors.black
-                            : Colors.white,
+                        backgroundColor: isDarkMode ? Colors.black : Colors.white,
                     }}
                 >
                     <Section title="Step One">
-                        Edit <Text style={styles.highlight}>App.tsx</Text> to
-                        change this screen and then come back to see your edits.
+                        Edit <Text style={styles.highlight}>App.tsx</Text> to change this screen and then come back to
+                        see your edits.
                     </Section>
                     <Section title="See Your Changes">
                         <ReloadInstructions />
@@ -142,9 +138,7 @@ function App(): JSX.Element {
                     <Section title="Debug">
                         <DebugInstructions />
                     </Section>
-                    <Section title="Learn More">
-                        Read the docs to discover what to do next:
-                    </Section>
+                    <Section title="Learn More">Read the docs to discover what to do next:</Section>
                     <LearnMoreLinks />
                 </View>
             </ScrollView>

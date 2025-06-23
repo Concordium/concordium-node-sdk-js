@@ -1,22 +1,22 @@
 import type {
+    Address,
+    BakerId,
+    ContractVersion,
+    DelegatorId,
+    EventDelegationTarget,
+    HexString,
+    ModuleRef,
     OpenStatusText,
     ReleaseSchedule,
-    ContractVersion,
-    Address,
-    ModuleRef,
-    HexString,
-    EventDelegationTarget,
-    BakerId,
-    DelegatorId,
 } from '../types.js';
-import type { UpdateInstructionPayload } from './chainUpdate.js';
-import type * as ContractAddress from './ContractAddress.js';
 import type * as AccountAddress from './AccountAddress.js';
+import type * as CcdAmount from './CcdAmount.js';
+import type * as ContractAddress from './ContractAddress.js';
+import type * as ContractEvent from './ContractEvent.js';
+import type * as InitName from './InitName.js';
 import type * as Parameter from './Parameter.js';
 import type * as ReceiveName from './ReceiveName.js';
-import type * as InitName from './InitName.js';
-import type * as ContractEvent from './ContractEvent.js';
-import type * as CcdAmount from './CcdAmount.js';
+import type { UpdateInstructionPayload } from './chainUpdate.js';
 
 export enum TransactionEventTag {
     ModuleDeployed = 'ModuleDeployed',
@@ -43,12 +43,16 @@ export enum TransactionEventTag {
     BakerSetTransactionFeeCommission = 'BakerSetTransactionFeeCommission',
     BakerSetBakingRewardCommission = 'BakerSetBakingRewardCommission',
     BakerSetFinalizationRewardCommission = 'BakerSetFinalizationRewardCommission',
+    BakerDelegationRemoved = 'BakerDelegationRemoved',
+    BakerSuspended = 'BakerSuspended',
+    BakerResumed = 'BakerResumed',
     DelegationStakeIncreased = 'DelegationStakeIncreased',
     DelegationStakeDecreased = 'DelegationStakeDecreased',
     DelegationSetRestakeEarnings = 'DelegationSetRestakeEarnings',
     DelegationSetDelegationTarget = 'DelegationSetDelegationTarget',
     DelegationAdded = 'DelegationAdded',
     DelegationRemoved = 'DelegationRemoved',
+    DelegationBakerRemoved = 'DelegationBakerRemoved',
     TransferMemo = 'TransferMemo',
     Transferred = 'Transferred',
     Interrupted = 'Interrupted',
@@ -221,9 +225,7 @@ export interface CredentialsUpdatedEvent {
 // Delegation Events
 
 export interface DelegatorEvent {
-    tag:
-        | TransactionEventTag.DelegationAdded
-        | TransactionEventTag.DelegationRemoved;
+    tag: TransactionEventTag.DelegationAdded | TransactionEventTag.DelegationRemoved;
     delegatorId: DelegatorId;
     account: AccountAddress.Type;
 }
@@ -243,12 +245,15 @@ export interface DelegationSetRestakeEarningsEvent {
 }
 
 export interface DelegationStakeChangedEvent {
-    tag:
-        | TransactionEventTag.DelegationStakeDecreased
-        | TransactionEventTag.DelegationStakeIncreased;
+    tag: TransactionEventTag.DelegationStakeDecreased | TransactionEventTag.DelegationStakeIncreased;
     delegatorId: DelegatorId;
     account: AccountAddress.Type;
     newStake: CcdAmount.Type;
+}
+
+export interface DelegationBakerRemovedEvent {
+    tag: TransactionEventTag.DelegationBakerRemoved;
+    bakerId: BakerId;
 }
 
 // Baker Events
@@ -271,9 +276,7 @@ export interface BakerRemovedEvent {
 }
 
 export interface BakerStakeChangedEvent {
-    tag:
-        | TransactionEventTag.BakerStakeIncreased
-        | TransactionEventTag.BakerStakeDecreased;
+    tag: TransactionEventTag.BakerStakeIncreased | TransactionEventTag.BakerStakeDecreased;
     bakerId: BakerId;
     account: AccountAddress.Type;
     newStake: CcdAmount.Type;
@@ -330,18 +333,28 @@ export interface BakerSetTransactionFeeCommissionEvent {
     transactionFeeCommission: number;
 }
 
+export interface BakerDelegationRemovedEvent {
+    tag: TransactionEventTag.BakerDelegationRemoved;
+    delegatorId: DelegatorId;
+}
+
+export interface BakerSuspendedEvent {
+    tag: TransactionEventTag.BakerSuspended;
+    bakerId: BakerId;
+}
+
+export interface BakerResumedEvent {
+    tag: TransactionEventTag.BakerResumed;
+    bakerId: BakerId;
+}
+
 export interface UpdateEnqueuedEvent {
     tag: TransactionEventTag.UpdateEnqueued;
     effectiveTime: number;
     payload: UpdateInstructionPayload;
 }
 
-export type ContractTraceEvent =
-    | ResumedEvent
-    | InterruptedEvent
-    | UpdatedEvent
-    | UpgradedEvent
-    | TransferredEvent;
+export type ContractTraceEvent = ResumedEvent | InterruptedEvent | UpdatedEvent | UpgradedEvent | TransferredEvent;
 export type BakerEvent =
     | BakerSetTransactionFeeCommissionEvent
     | BakerSetBakingRewardCommissionEvent
@@ -352,9 +365,13 @@ export type BakerEvent =
     | BakerStakeChangedEvent
     | BakerAddedEvent
     | BakerRemovedEvent
-    | BakerKeysUpdatedEvent;
+    | BakerKeysUpdatedEvent
+    | BakerDelegationRemovedEvent
+    | BakerSuspendedEvent
+    | BakerResumedEvent;
 export type DelegationEvent =
     | DelegatorEvent
     | DelegationSetDelegationTargetEvent
     | DelegationSetRestakeEarningsEvent
-    | DelegationStakeChangedEvent;
+    | DelegationStakeChangedEvent
+    | DelegationBakerRemovedEvent;

@@ -6,6 +6,69 @@
 
 - Method (`getContractUpdateEnergyCost`) for estimating energy usage of contract update.
 
+## 9.1.1
+
+### Changes
+
+- Update transitive dependency `base-x` for the compiled library distribution
+
+## 9.1.0
+
+### Added
+- The "wasm" entrypoint `@concordium/web-sdk/wasm` from now supports react-native. This means that the partial support for react-native is now extended to full support.
+
+## 9.0.0
+
+### Breaking changes
+
+- Protocol version 8:
+  - Add `isSuspended` field to `AccountBakerDetails` and `BakerPoolStatusDetails`.
+  - Add `BakerSuspendedEvent` and `BakerResumedEvent` to `BakerEvent` union type.
+  - Add `BlockSpecialEventValidatorSuspended` and `BlockSpecialEventValidatorPrimedForSuspension` to `BlockSpecialEvent` union type.
+  - Add `PendingValidatorScoreUpdate` to `UpdateInstructionPayload` union type.
+  - Add `ChainParametersV3` to `ChainParameters` union type.
+  - Add `isPrimedForSuspension` and `missedRounds` fields to `CurrentPaydayBakerPoolStatus`.
+  - Add suspended field to the `ConfigureBakerPayload`.
+  - Add `validatorScoreParameters` to `NextUpdateSequenceNumbers`.
+
+## 8.1.1
+
+### Fixed
+
+- `getEnergyCost` returning energy amounts that were off by one due to not including the transaction type in the
+  transaction payload serialization.
+
+## 8.1.0
+
+### Added
+
+- Add `legalCountry` as an allowed attribute for set/not-set membership proofs.
+- Add attributes `lei`, `legalName`, `legalCountry`, `businessNumber`, and `registrationAuth` to `IDENTITY_SUBJECT_SCHEMA`.
+
+## 8.0.1
+
+### Breaking changes
+
+- `getEmbeddedModuleSchema` now uses the module version to determine in which custom wasm sections to look for the schema.
+- `ConcordiumGRPCClient.getEmbeddedSchema` now delegates to `getEmbeddedModuleSchema` instead of `wasmToSchema`
+  (which was removed as it was just a less capable version of `getEmbeddedModuleSchema`).
+  This means that it returns the complete `RawModuleSchema` instead of only the schema bytes.
+  It also means that it returns `null` instead of an error when no embedded schema was found.
+- Update `AccountInfo` and `BakerPoolStatus` according to the changes introduced in the GRPC types introduced with node version 7
+
+## 7.5.1
+
+### Fixed
+
+- Update `@concordium/rust-bindings` to `3.2.1` which fixes an issue causing runtime error `unreachable` for the internal WebAssembly module.
+- Update JSON serialization of `AccountTransactionPayload` through `AccountTransactionPayloadHandler` to correctly serialize `CcdAmount` as `string`
+
+## 7.5.0
+
+### Added
+
+- Bumped @concordium/rust-bindings to 3.2.0: Support company related attributes: `lei`, `legalName`, `legalCountry`, `businessNumber` and `registrationAuth`, allow for company account creation using the SDK.
+
 ## 7.4.0
 
 ### Added

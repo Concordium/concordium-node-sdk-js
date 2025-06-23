@@ -1,0 +1,48 @@
+{
+    "name": "@concordium/react-components",
+    "version": "0.6.1",
+    "description": "Utility library of React components for building dApps that interact with the Concordium blockchain.",
+    "author": "Concordium Software",
+    "license": "Apache-2.0",
+    "browser": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "default": "./dist/index.js"
+        }
+    },
+    "files": [
+        "./dist",
+        "./src"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Concordium/concordium-node-sdk-js/tree/main/packages/react-components"
+    },
+    "scripts": {
+        "lint": "eslint . --cache --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+        "lint-fix": "yarn lint --fix",
+        "prettier": "prettier . --ignore-path ../../.gitignore --ignore-path ../../.prettierignore --ignore-path .gitignore",
+        "fmt": "yarn prettier --write",
+        "fmt-check": "yarn prettier --check",
+        "build": "tsc"
+    },
+    "dependencies": {
+        "@concordium/wallet-connectors": "workspace:^",
+        "@protobuf-ts/grpcweb-transport": "^2.9.4",
+        "buffer": "^6.0.3"
+    },
+    "devDependencies": {
+        "@tsconfig/recommended": "^1.0.1",
+        "@types/node": "^18.11.17",
+        "@types/react": "^18",
+        "eslint": "8",
+        "prettier": "^3.2.5",
+        "typescript": "^5.2.2"
+    },
+    "peerDependencies": {
+        "@concordium/web-sdk": ">= 7",
+        "react": "^18"
+    }
+}

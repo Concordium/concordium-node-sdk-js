@@ -3,12 +3,7 @@ module.exports = {
         browser: true,
         es2020: true,
     },
-    extends: [
-        'plugin:prettier/recommended',
-        'plugin:@typescript-eslint/recommended',
-        'plugin:import/recommended',
-        'plugin:import/typescript',
-    ],
+    extends: ['plugin:import/recommended', 'plugin:import/typescript', 'prettier'],
     parser: '@typescript-eslint/parser',
     parserOptions: {
         ecmaVersion: 2020,
@@ -16,20 +11,13 @@ module.exports = {
         tsconfigRootDir: __dirname,
         project: [
             './packages/**/tsconfig.json',
+            './examples/wallet-connection/*/tsconfig.json',
             './docs/**/tsconfig.json',
             '**/tsconfig.eslint.json',
         ],
     },
     plugins: ['@typescript-eslint', 'import'],
     rules: {
-        'prettier/prettier': 'warn',
-        quotes: [
-            2,
-            'single',
-            {
-                avoidEscape: true,
-            },
-        ],
         'import/no-unresolved': [
             2,
             {
@@ -44,7 +32,7 @@ module.exports = {
         'import/no-extraneous-dependencies': [
             'error',
             {
-                devDependencies: ['**/*/test/*', '**/*.config.*'],
+                devDependencies: ['**/*/test/*', '**/*.config.*', '**/*/__tests__/*'],
             },
         ],
         '@typescript-eslint/no-unused-vars': [
@@ -63,14 +51,7 @@ module.exports = {
             },
         },
     ],
-    ignorePatterns: [
-        '**/pkg/**/*',
-        '**/dist/**/*',
-        '**/lib/**/*',
-        'deps/**/*',
-        '**/src/grpc-api/*',
-        'typedoc/**',
-    ],
+    ignorePatterns: ['**/pkg/**/*', '**/dist/**/*', '**/lib/**/*', 'deps/**/*', '**/src/grpc-api/*', 'typedoc/**'],
     settings: {
         'import/ignore': ['bs58check'],
         'import/parsers': {

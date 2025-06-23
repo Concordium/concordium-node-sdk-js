@@ -1,10 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Buffer } from 'buffer/index.js';
-import {
-    AccountTransactionSignature,
-    HexString,
-    IpAddressString,
-} from './types.js';
+
+import { AccountTransactionSignature, HexString, IpAddressString } from './types.js';
 
 /**
  * Replaces a string in a JSON string with the same string as a
@@ -19,10 +15,7 @@ import {
 export function stringToInt(jsonStruct: string, keys: string[]): string {
     let result = jsonStruct;
     for (const key of keys) {
-        result = result.replace(
-            new RegExp(`"${key}":\\s*"([0-9]+)"`, 'g'),
-            `"${key}":$1`
-        );
+        result = result.replace(new RegExp(`"${key}":\\s*"([0-9]+)"`, 'g'), `"${key}":$1`);
     }
     return result;
 }
@@ -56,9 +49,7 @@ export function isValidIp(ip: IpAddressString): boolean {
  * Counts the total number of signatures.
  * @param accountSignatures the signature structure to count
  */
-export function countSignatures(
-    accountSignatures: AccountTransactionSignature
-): bigint {
+export function countSignatures(accountSignatures: AccountTransactionSignature): bigint {
     let totalSignatureCount = 0n;
     const values = Object.values(accountSignatures);
     for (const credentialSignature of values) {
@@ -66,50 +57,6 @@ export function countSignatures(
         totalSignatureCount += signatureCount;
     }
     return totalSignatureCount;
-}
-
-/**
- * Compiles a wasm module and extracts the smart contract schema.
- *
- * @param wasm the wasm module as a Buffer
- *
- * @throws If WASM module contains no schema
- * @throws If WASM module provided is invalid
- *
- * @returns the smart contract schema as a Buffer
- */
-export function wasmToSchema(wasm: ArrayBuffer): Uint8Array {
-    const wasmModule = new WebAssembly.Module(wasm);
-    const schemaBytes = schemaBytesFromWasmModule(
-        wasmModule,
-        'concordium-schema'
-    );
-    if (schemaBytes === null) {
-        throw Error('WASM-Module contains no schema!');
-    }
-    return new Uint8Array(schemaBytes);
-}
-
-/**
- * Extracts custom-section containing the smart contract schema if present.
- * @param wasmModule the WebAssembly module.
- * @returns the smart contract schema as a Buffer or null if not present.
- */
-export function schemaBytesFromWasmModule(
-    wasmModule: WebAssembly.Module,
-    sectionName:
-        | 'concordium-schema'
-        | 'concordium-schema-v1'
-        | 'concordium-schema-v2'
-): ArrayBuffer | null {
-    const sections = WebAssembly.Module.customSections(wasmModule, sectionName);
-    if (sections.length === 1) {
-        return sections[0];
-    } else if (sections.length === 0) {
-        return null;
-    } else {
-        throw Error('Invalid WASM-Module retrieved!');
-    }
 }
 
 /**
@@ -133,12 +80,7 @@ export function unwrap<A>(x: A | undefined): A {
 // Works the same way as a list mapping, allowing both a value and key mapping.
 // If `keyMapper()` is not provided, it will map `Record<A,C>` to `Record<A,D>`
 /* eslint-disable @typescript-eslint/no-explicit-any */
-export function mapRecord<
-    A extends string | number | symbol,
-    B,
-    C extends string | number | symbol,
-    D
->(
+export function mapRecord<A extends string | number | symbol, B, C extends string | number | symbol, D>(
     rec: Record<A, B>,
     valMapper: (x: B) => D,
     keyMapper: (x: A) => C = (a: any) => a
@@ -155,10 +97,7 @@ export function mapRecord<
  * Maps an infinite stream of type A to an infinite stream of type B
  * @param mapper: function used to map each element from type A to B.
  */
-export function mapStream<A, B>(
-    stream: AsyncIterable<A>,
-    mapper: (x: A) => B
-): AsyncIterable<B> {
+export function mapStream<A, B>(stream: AsyncIterable<A>, mapper: (x: A) => B): AsyncIterable<B> {
     return {
         [Symbol.asyncIterator]() {
             return {
@@ -188,15 +127,11 @@ export function filterRecord<A extends string | number | symbol, B>(
     rec: Record<A, B>,
     predicate: (k: A, v: B) => boolean
 ): Record<A, B> {
-    return Object.fromEntries(
-        Object.entries(rec).filter(([k, v]) => predicate(k as A, v as B))
-    ) as Record<A, B>;
+    return Object.fromEntries(Object.entries(rec).filter(([k, v]) => predicate(k as A, v as B))) as Record<A, B>;
 }
 
 // Converts an async iterable to a list. Beware! This will not terminate if given an infinite stream.
-export async function streamToList<A>(
-    iterable: AsyncIterable<A>
-): Promise<A[]> {
+export async function streamToList<A>(iterable: AsyncIterable<A>): Promise<A[]> {
     const list: A[] = [];
     for await (const iter of iterable) {
         list.push(iter);

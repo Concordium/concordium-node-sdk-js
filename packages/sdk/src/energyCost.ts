@@ -1,15 +1,11 @@
 import { ConcordiumGRPCClient } from './grpc/GRPCClient.js';
 import { getAccountTransactionHandler } from './accountTransactions.js';
 import { collapseRatio, multiplyRatio } from './ratioHelpers.js';
-import {
-    AccountTransactionPayload,
-    AccountTransactionType,
-    ChainParameters,
-    Ratio,
-} from './types.js';
-import * as Energy from './types/Energy.js';
+import { serializeAccountTransactionPayload } from './serialization.js';
+import { AccountTransactionPayload, AccountTransactionType, ChainParameters, Ratio } from './types.js';
 import * as CcdAmount from './types/CcdAmount.js';
 import * as BlockHash from './types/BlockHash.js';
+import * as Energy from './types/Energy.js';
 import {
     AccountAddress,
     ContractAddress,
@@ -26,7 +22,7 @@ export const constantA = 100n;
 export const constantB = 1n;
 
 // Account address (32 bytes), nonce (8 bytes), energy (8 bytes), payload size (4 bytes), expiry (8 bytes);
-const accountTransactionHeaderSize = BigInt(32 + 8 + 8 + 4 + 8);
+const ACCOUNT_TRANSACTION_HEADER_SIZE = BigInt(32 + 8 + 8 + 4 + 8);
 
 /**
  * The energy cost is assigned according to the formula:
@@ -45,7 +41,7 @@ export function calculateEnergyCost(
 ): Energy.Type {
     return Energy.create(
         constantA * signatureCount +
-            constantB * (accountTransactionHeaderSize + payloadSize) +
+            constantB * (ACCOUNT_TRANSACTION_HEADER_SIZE + payloadSize) +
             transactionSpecificCost
     );
 }
@@ -60,13 +56,9 @@ export function getEnergyCost(
     payload: AccountTransactionPayload,
     signatureCount = 1n
 ): Energy.Type {
+    const size = serializeAccountTransactionPayload({ payload, type: transactionType }).length;
     const handler = getAccountTransactionHandler(transactionType);
-    const size = handler.serialize(payload).length;
-    return calculateEnergyCost(
-        signatureCount,
-        BigInt(size),
-        handler.getBaseEnergyCost(payload)
-    );
+    return calculateEnergyCost(signatureCount, BigInt(size), handler.getBaseEnergyCost(payload));
 }
 
 /**
@@ -121,28 +113,16 @@ export async function getContractUpdateEnergyCost(
  * Given the current blockchain parameters, return the microCCD per NRG exchange rate of the chain.
  * @returns the microCCD per NRG exchange rate as a ratio.
  */
-export function getExchangeRate({
-    euroPerEnergy,
-    microGTUPerEuro,
-}: ChainParameters): Ratio {
-    const denominator = BigInt(
-        euroPerEnergy.denominator * microGTUPerEuro.denominator
-    );
-    const numerator = BigInt(
-        euroPerEnergy.numerator * microGTUPerEuro.numerator
-    );
+export function getExchangeRate({ euroPerEnergy, microGTUPerEuro }: ChainParameters): Ratio {
+    const denominator = BigInt(euroPerEnergy.denominator * microGTUPerEuro.denominator);
+    const numerator = BigInt(euroPerEnergy.numerator * microGTUPerEuro.numerator);
     return { numerator, denominator };
 }
 
 /**
  * Given an NRG amount and the current blockchain parameters, this returns the corresponding amount in microCcd.
  */
-export function convertEnergyToMicroCcd(
-    cost: Energy.Type,
-    chainParameters: ChainParameters
-): CcdAmount.Type {
+export function convertEnergyToMicroCcd(cost: Energy.Type, chainParameters: ChainParameters): CcdAmount.Type {
     const rate = getExchangeRate(chainParameters);
-    return CcdAmount.fromMicroCcd(
-        collapseRatio(multiplyRatio(rate, cost.value))
-    );
+    return CcdAmount.fromMicroCcd(collapseRatio(multiplyRatio(rate, cost.value)));
 }

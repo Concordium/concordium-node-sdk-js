@@ -1,25 +1,24 @@
 /**
  * @module Common GRPC-Client
  */
-
 import * as AccountAddress from './types/AccountAddress.js';
-import * as ContractAddress from './types/ContractAddress.js';
-import * as Duration from './types/Duration.js';
-import * as Timestamp from './types/Timestamp.js';
-import * as Energy from './types/Energy.js';
 import type * as BlockHash from './types/BlockHash.js';
-import * as CredentialRegistrationId from './types/CredentialRegistrationId.js';
-import * as Parameter from './types/Parameter.js';
-import type * as InitName from './types/InitName.js';
-import type * as ContractName from './types/ContractName.js';
-import type * as ReceiveName from './types/ReceiveName.js';
-import type * as SequenceNumber from './types/SequenceNumber.js';
-import type * as ReturnValue from './types/ReturnValue.js';
 import type * as CcdAmount from './types/CcdAmount.js';
-import type * as TransactionHash from './types/TransactionHash.js';
-import type * as TransactionExpiry from './types/TransactionExpiry.js';
+import * as ContractAddress from './types/ContractAddress.js';
+import type * as ContractName from './types/ContractName.js';
+import * as CredentialRegistrationId from './types/CredentialRegistrationId.js';
 import { DataBlob } from './types/DataBlob.js';
+import * as Duration from './types/Duration.js';
+import * as Energy from './types/Energy.js';
+import type * as InitName from './types/InitName.js';
 import type * as ModuleReference from './types/ModuleReference.js';
+import * as Parameter from './types/Parameter.js';
+import type * as ReceiveName from './types/ReceiveName.js';
+import type * as ReturnValue from './types/ReturnValue.js';
+import type * as SequenceNumber from './types/SequenceNumber.js';
+import * as Timestamp from './types/Timestamp.js';
+import type * as TransactionExpiry from './types/TransactionExpiry.js';
+import type * as TransactionHash from './types/TransactionHash.js';
 import { RejectReason } from './types/rejectReason.js';
 import { ContractTraceEvent } from './types/transactionEvent.js';
 
@@ -93,14 +92,10 @@ export type GenesisIndex = number;
  * @example
  * type PartiallyOptionalProps = MakeOptional<{test: string; another: number;}, 'another'>; // {test: string; another?: number;}
  */
-export type MakeOptional<T, K extends keyof T> = Compute<
-    Omit<T, K> & Partial<Pick<T, K>>
->;
+export type MakeOptional<T, K extends keyof T> = Compute<Omit<T, K> & Partial<Pick<T, K>>>;
 
 /** Makes keys of type required (i.e. non-optional) */
-export type MakeRequired<T, K extends keyof T> = Compute<
-    Required<Pick<T, K>> & Omit<T, K>
->;
+export type MakeRequired<T, K extends keyof T> = Compute<Required<Pick<T, K>> & Omit<T, K>>;
 /**
  * Returns a union of all keys of type T with values matching type V.
  */
@@ -128,6 +123,11 @@ export enum AttributesKeys {
     idDocExpiresAt,
     nationalIdNo,
     taxIdNo,
+    lei,
+    legalName,
+    legalCountry,
+    businessNumber,
+    registrationAuth,
 }
 
 export type Attributes = {
@@ -149,6 +149,11 @@ export enum AttributeKeyString {
     idDocExpiresAt = 'idDocExpiresAt',
     nationalIdNo = 'nationalIdNo',
     taxIdNo = 'taxIdNo',
+    lei = 'lei',
+    legalName = 'legalName',
+    legalCountry = 'legalCountry',
+    businessNumber = 'businessNumber',
+    registrationAuth = 'registrationAuth',
 }
 
 export enum Sex {
@@ -177,10 +182,7 @@ export interface AddressAccount {
     address: AccountAddress.Type;
 }
 
-export type AccountIdentifierInput =
-    | AccountAddress.Type
-    | CredentialRegistrationId.Type
-    | bigint;
+export type AccountIdentifierInput = AccountAddress.Type | CredentialRegistrationId.Type | bigint;
 
 export type Address =
     | {
@@ -200,13 +202,11 @@ interface BaseTransactionSummaryType {
     type: TransactionSummaryType;
 }
 
-export interface TransferWithMemoSummaryType
-    extends BaseTransactionSummaryType {
+export interface TransferWithMemoSummaryType extends BaseTransactionSummaryType {
     contents: 'transferWithMemo';
 }
 
-export interface GenericTransactionSummaryType
-    extends BaseTransactionSummaryType {
+export interface GenericTransactionSummaryType extends BaseTransactionSummaryType {
     contents: string;
 }
 
@@ -453,7 +453,7 @@ export type ChainParametersV1 = ChainParametersCommon &
         level2Keys: AuthorizationsV1;
     };
 
-/** Chain parameters used from protocol version 6 */
+/** Chain parameters used in protocol version 6 and 7 */
 export type ChainParametersV2 = ChainParametersCommon &
     CooldownParametersV1 &
     TimeParametersV1 &
@@ -468,11 +468,24 @@ export type ChainParametersV2 = ChainParametersCommon &
         level2Keys: AuthorizationsV1;
     };
 
+/**
+ * Validator score parameters. These parameters control the threshold of
+ * maximal missed rounds before a validator gets suspended.
+ */
+export interface ValidatorScoreParameters {
+    /** Maximal number of missed rounds before a validator gets suspended. */
+    maxMissedRounds: bigint;
+}
+
+/** Chain parameters used from protocol version 8 */
+export type ChainParametersV3 = Omit<ChainParametersV2, 'version'> & {
+    version: 3;
+    /** The current validator score parameters */
+    validatorScoreParameters: ValidatorScoreParameters;
+};
+
 /** Union of all chain parameters across all protocol versions */
-export type ChainParameters =
-    | ChainParametersV0
-    | ChainParametersV1
-    | ChainParametersV2;
+export type ChainParameters = ChainParametersV0 | ChainParametersV1 | ChainParametersV2 | ChainParametersV3;
 
 export interface Authorization {
     threshold: number;
@@ -630,9 +643,7 @@ export interface RelativeBlocksAtHeightRequest {
     restrict: boolean;
 }
 
-export type BlocksAtHeightRequest =
-    | AbsoluteBlocksAtHeightRequest
-    | RelativeBlocksAtHeightRequest;
+export type BlocksAtHeightRequest = AbsoluteBlocksAtHeightRequest | RelativeBlocksAtHeightRequest;
 
 /** Common properties for  consensus status types used across all protocol versions */
 export interface ConsensusStatusCommon {
@@ -801,16 +812,14 @@ interface SharedCredentialDeploymentValues {
     policy: Policy;
 }
 
-export interface CredentialDeploymentValues
-    extends SharedCredentialDeploymentValues {
+export interface CredentialDeploymentValues extends SharedCredentialDeploymentValues {
     credId: string;
     revocationThreshold: number;
     arData: Record<string, ChainArData>;
     commitments: CredentialDeploymentCommitments;
 }
 
-export interface InitialCredentialDeploymentValues
-    extends SharedCredentialDeploymentValues {
+export interface InitialCredentialDeploymentValues extends SharedCredentialDeploymentValues {
     regId: string;
 }
 
@@ -850,9 +859,7 @@ export interface RemovalPendingChange extends StakePendingChangeCommon {
     change: StakePendingChangeType.RemoveStake;
 }
 
-export type StakePendingChange =
-    | ReduceStakePendingChange
-    | RemovalPendingChange;
+export type StakePendingChange = ReduceStakePendingChange | RemovalPendingChange;
 
 export enum OpenStatus {
     OpenForAll = 0,
@@ -884,15 +891,28 @@ export interface CommissionRates {
     finalizationCommission: number;
 }
 
+/** Information about a baker pool in the current reward period. */
 export interface CurrentPaydayBakerPoolStatus {
+    /** The number of blocks baked in the current reward period. */
     blocksBaked: bigint;
+    /** The number of blocks baked in the current reward period. */
     finalizationLive: boolean;
+    /** The transaction fees accruing to the pool in the current reward period. */
     transactionFeesEarned: CcdAmount.Type;
+    /** The effective stake of the baker in the current reward period. */
     effectiveStake: CcdAmount.Type;
+    /** The lottery power of the baker in the current reward period. */
     lotteryPower: number;
+    /** The effective equity capital of the baker for the current reward period. */
     bakerEquityCapital: CcdAmount.Type;
+    /** The effective delegated capital to the pool for the current reward period. */
     delegatedCapital: CcdAmount.Type;
+    /** The commission rates that apply for the current reward period. */
     commissionRates: CommissionRates;
+    /** A flag indicating whether the pool owner is primed for suspension. Will always be `false` if the protocol version does not support validator suspension. */
+    isPrimedForSuspension: boolean;
+    /** The number of missed rounds in the current reward period. Will always be `0n` if the protocol version does not support validator suspension. */
+    missedRounds: bigint;
 }
 
 export enum BakerPoolPendingChangeType {
@@ -903,7 +923,7 @@ export enum BakerPoolPendingChangeType {
 
 type BakerPoolPendingChangeWrapper<
     T extends keyof typeof BakerPoolPendingChangeType,
-    S extends Record<string, any>
+    S extends Record<string, any>,
 > = S & {
     pendingChangeType: T;
 };
@@ -913,11 +933,10 @@ export interface BakerPoolPendingChangeReduceBakerCapitalDetails {
     effectiveTime: Date;
 }
 
-export type BakerPoolPendingChangeReduceBakerCapital =
-    BakerPoolPendingChangeWrapper<
-        BakerPoolPendingChangeType.ReduceBakerCapital,
-        BakerPoolPendingChangeReduceBakerCapitalDetails
-    >;
+export type BakerPoolPendingChangeReduceBakerCapital = BakerPoolPendingChangeWrapper<
+    BakerPoolPendingChangeType.ReduceBakerCapital,
+    BakerPoolPendingChangeReduceBakerCapitalDetails
+>;
 
 export interface BakerPoolPendingChangeRemovePoolDetails {
     effectiveTime: Date;
@@ -949,30 +968,64 @@ type PoolStatusWrapper<T extends keyof typeof PoolStatusType, S> = S & {
 };
 
 export interface BakerPoolStatusDetails {
+    /** The pool owner */
     bakerId: BakerId;
+    /** The account address of the pool owner */
     bakerAddress: AccountAddress.Type;
-    bakerEquityCapital: CcdAmount.Type;
-    delegatedCapital: CcdAmount.Type;
-    delegatedCapitalCap: CcdAmount.Type;
-    poolInfo: BakerPoolInfo;
+    /** The equity capital provided by the pool owner. Absent if the pool is removed. */
+    bakerEquityCapital?: CcdAmount.Type;
+    /** The capital delegated to the pool by other accounts. Absent if the pool is removed. */
+    delegatedCapital?: CcdAmount.Type;
+    /**
+     * The maximum amount that may be delegated to the pool, accounting for leverage and stake limits.
+     * Absent if the pool is removed
+     */
+    delegatedCapitalCap?: CcdAmount.Type;
+    /**
+     * The pool info associated with the pool: open status, metadata URL and commission rates.
+     * Absent if the pool is removed
+     */
+    poolInfo?: BakerPoolInfo;
+    /** Any pending change to the equity capital. This is not used from protocol version 7 onwards, as stake changes are immediate. */
     bakerStakePendingChange: BakerPoolPendingChange;
-    currentPaydayStatus: CurrentPaydayBakerPoolStatus | null;
+    /** Information of the pool in the current reward period. */
+    currentPaydayStatus?: CurrentPaydayBakerPoolStatus;
+    /** Total capital staked across all pools, including passive delegation. */
     allPoolTotalCapital: CcdAmount.Type;
+    /**
+     * A flag indicating whether the pool owner is suspended.
+     * Will always be `false` if the protocol version does not support validator suspension.
+     */
+    isSuspended: boolean;
 }
 
-export type BakerPoolStatus = PoolStatusWrapper<
-    PoolStatusType.BakerPool,
-    BakerPoolStatusDetails
->;
+/**
+ * Contains information about a given pool at the end of a given block.
+ * From protocol version 7, pool removal has immediate effect, however, the
+ * pool may still be present for the current (and possibly next) reward period.
+ * In this case, the `current_payday_info` field will be set, but the
+ * `equity_capital`, `delegated_capital`, `delegated_capital_cap` and,
+ * `pool_info` fields will all be absent. The `equity_pending_change` field
+ * will also be absent, as stake changes are immediate.
+ */
+export type BakerPoolStatus = PoolStatusWrapper<PoolStatusType.BakerPool, BakerPoolStatusDetails>;
 
 export interface PassiveDelegationStatusDetails {
+    /** The total capital delegated passively. */
     delegatedCapital: CcdAmount.Type;
+    /** The passive delegation commission rates. */
     commissionRates: CommissionRates;
+    /** The transaction fees accruing to the passive delegators in the current reward period. */
     currentPaydayTransactionFeesEarned: CcdAmount.Type;
+    /** The effective delegated capital of passive delegators for the current reward period. */
     currentPaydayDelegatedCapital: CcdAmount.Type;
+    /** Total capital staked across all pools, including passive delegation. */
     allPoolTotalCapital: CcdAmount.Type;
 }
 
+/**
+ * Contains information about passive delegators at the end of a given block.
+ */
 export type PassiveDelegationStatus = PoolStatusWrapper<
     PoolStatusType.PassiveDelegation,
     PassiveDelegationStatusDetails
@@ -1000,9 +1053,7 @@ export type EventDelegationTarget =
       }
     | DelegationTargetPassiveDelegation;
 
-export type DelegationTarget =
-    | DelegationTargetPassiveDelegation
-    | DelegationTargetBaker;
+export type DelegationTarget = DelegationTargetPassiveDelegation | DelegationTargetBaker;
 
 interface AccountBakerDetailsCommon {
     restakeEarnings: boolean;
@@ -1012,6 +1063,12 @@ interface AccountBakerDetailsCommon {
     bakerSignatureVerifyKey: string;
     stakedAmount: CcdAmount.Type;
     pendingChange?: StakePendingChange;
+    /**
+     * A flag indicating whether the validator is currently suspended or not.
+     * In protocol versions prior to protocol version 8, this will always be `false`.
+     * A suspended validator will not be included in the validator committee the next time it is calculated.
+     */
+    isSuspended: boolean;
 }
 
 /** Protocol version 1-3. */
@@ -1034,9 +1091,7 @@ export interface AccountDelegationDetails {
     pendingChange?: StakePendingChange;
 }
 
-export type AccountCredential = Versioned<
-    InitialAccountCredential | NormalAccountCredential
->;
+export type AccountCredential = Versioned<InitialAccountCredential | NormalAccountCredential>;
 
 export enum AccountInfoType {
     Simple = 'simple',
@@ -1054,6 +1109,21 @@ interface AccountInfoCommon {
     accountEncryptedAmount: AccountEncryptedAmount;
     accountReleaseSchedule: AccountReleaseSchedule;
     accountCredentials: Record<number, AccountCredential>;
+    /**
+     * The stake on the account that is in cooldown.
+     * There can be multiple amounts in cooldown that expire at different times.
+     * This was introduced in protocol version 7, and will be empty in
+     * earlier protocol versions.
+     */
+    accountCooldowns: Cooldown[];
+    /**
+     * The available (unencrypted) balance of the account (i.e. that can be transferred
+     * or used to pay for transactions). This is the balance minus the locked amount.
+     * The locked amount is the maximum of the amount in the release schedule and
+     * the total amount that is actively staked or in cooldown (inactive stake).
+     * This was introduced with node version 7.0
+     */
+    accountAvailableBalance: CcdAmount.Type;
 }
 
 export interface AccountInfoSimple extends AccountInfoCommon {
@@ -1071,10 +1141,7 @@ export interface AccountInfoDelegator extends AccountInfoCommon {
     accountDelegation: AccountDelegationDetails;
 }
 
-export type AccountInfo =
-    | AccountInfoSimple
-    | AccountInfoBaker
-    | AccountInfoDelegator;
+export type AccountInfo = AccountInfoSimple | AccountInfoBaker | AccountInfoDelegator;
 
 export interface Description {
     name: string;
@@ -1160,11 +1227,10 @@ export interface NextUpdateSequenceNumbers {
     minBlockTime: bigint;
     blockEnergyLimit: bigint;
     finalizationCommiteeParameters: bigint;
+    validatorScoreParameters: bigint;
 }
 
-export type BlockFinalizationSummary =
-    | BlockFinalizationSummary_None
-    | BlockFinalizationSummary_Record;
+export type BlockFinalizationSummary = BlockFinalizationSummary_None | BlockFinalizationSummary_Record;
 
 export interface BlockFinalizationSummary_None {
     tag: 'none';
@@ -1223,9 +1289,7 @@ export enum AccountTransactionType {
     ConfigureDelegation = 26,
 }
 
-export function isAccountTransactionType(
-    candidate: number
-): candidate is AccountTransactionType {
+export function isAccountTransactionType(candidate: number): candidate is AccountTransactionType {
     return candidate in AccountTransactionType;
 }
 
@@ -1356,14 +1420,12 @@ export interface BakerKeyProofs {
 
 export type BakerKeysWithProofs = PublicBakerKeys & BakerKeyProofs;
 
-export type GenerateBakerKeysOutput = PublicBakerKeys &
-    PrivateBakerKeys &
-    BakerKeyProofs;
+export type GenerateBakerKeysOutput = PublicBakerKeys & PrivateBakerKeys & BakerKeyProofs;
 
 export interface ConfigureBakerPayload {
-    /* stake to bake. if set to 0, this removes the account as a baker */
+    /** stake to bake. if set to 0, this removes the account as a baker */
     stake?: CcdAmount.Type;
-    /* should earnings from baking be added to staked amount  */
+    /** should earnings from baking be added to staked amount  */
     restakeEarnings?: boolean;
     openForDelegation?: OpenStatus;
     keys?: BakerKeysWithProofs;
@@ -1371,6 +1433,11 @@ export interface ConfigureBakerPayload {
     transactionFeeCommission?: number;
     bakingRewardCommission?: number;
     finalizationRewardCommission?: number;
+    /**
+     * Describes whether the validator should change its suspended status. This field is only from protocol version 8
+     * and later.
+     */
+    suspended?: boolean;
 }
 
 export interface ConfigureDelegationPayload {
@@ -1446,9 +1513,7 @@ export interface InstanceInfoSerializedV1 extends InstanceInfoSerializedCommon {
     version: 1;
 }
 
-export type InstanceInfoSerialized =
-    | InstanceInfoSerializedV0
-    | InstanceInfoSerializedV1;
+export type InstanceInfoSerialized = InstanceInfoSerializedV0 | InstanceInfoSerializedV1;
 
 export interface InstanceStateKVPair {
     key: HexString;
@@ -1483,9 +1548,7 @@ export interface InvokeContractFailedResult {
     returnValue?: ReturnValue.Type;
 }
 
-export type InvokeContractResult =
-    | InvokeContractSuccessResult
-    | InvokeContractFailedResult;
+export type InvokeContractResult = InvokeContractSuccessResult | InvokeContractFailedResult;
 
 export interface CredentialDeploymentDetails {
     expiry: TransactionExpiry.Type;
@@ -1502,8 +1565,7 @@ export interface IdOwnershipProofs {
     sig: string;
 }
 
-export interface UnsignedCredentialDeploymentInformation
-    extends CredentialDeploymentValues {
+export interface UnsignedCredentialDeploymentInformation extends CredentialDeploymentValues {
     proofs: IdOwnershipProofs;
 }
 
@@ -1522,8 +1584,7 @@ interface CdiRandomness {
 }
 
 // TODO Should we rename this, As it is not actually the transaction that is sent to the node. (Note that this would be a breaking change)
-export type CredentialDeploymentTransaction = CredentialDeploymentDetails &
-    CdiRandomness;
+export type CredentialDeploymentTransaction = CredentialDeploymentDetails & CdiRandomness;
 /** Internal type used when building credentials */
 export type UnsignedCdiWithRandomness = {
     unsignedCdi: UnsignedCredentialDeploymentInformation;
@@ -1864,3 +1925,44 @@ export type BlockItem =
               expiry: number;
           };
       };
+
+/**
+ * The status of a cooldown. When stake is removed from a baker or delegator
+ * (from protocol version 7) it first enters the pre-pre-cooldown state.
+ * The next time the stake snaphot is taken (at the epoch transition before
+ * a payday) it enters the pre-cooldown state. At the subsequent payday, it
+ * enters the cooldown state. At the payday after the end of the cooldown
+ * period, the stake is finally released.
+ */
+export enum CooldownStatus {
+    /**
+     * The amount is in cooldown and will expire at the specified time, becoming available
+     * at the subsequent pay day.
+     */
+    Cooldown,
+    /**
+     * The amount will enter cooldown at the next pay day. The specified end time is
+     * projected to be the end of the cooldown period, but the actual end time will be
+     * determined at the payday, and may be different if the global cooldown period
+     * changes.
+     */
+    PreCooldown,
+    /**
+     * The amount will enter pre-cooldown at the next snapshot epoch (i.e. the epoch
+     * transition before a pay day transition). As with pre-cooldown, the specified
+     * end time is projected, but the actual end time will be determined later.
+     */
+    PrePreCooldown,
+}
+
+/**
+ * Describes a cooldown associated with removal of stake from a baker/delegator account
+ */
+export type Cooldown = {
+    /** The time at which the cooldown will end  */
+    timestamp: Timestamp.Type;
+    /** The amount that is in cooldown and set to be released at the end of the cooldown period */
+    amount: CcdAmount.Type;
+    /** The status of the cooldown */
+    status: CooldownStatus;
+};

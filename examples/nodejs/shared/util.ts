@@ -1,8 +1,6 @@
-import { ContractAddress, AccountAddress } from '@concordium/web-sdk';
+import { AccountAddress, ContractAddress } from '@concordium/web-sdk';
 
-export const parseAddress = (
-    input: string
-): AccountAddress.Type | ContractAddress.Type => {
+export const parseAddress = (input: string): AccountAddress.Type | ContractAddress.Type => {
     if (!input.includes(',')) {
         return AccountAddress.fromBase58(input);
     }
@@ -24,9 +22,7 @@ const schemeRegex = /^(\w+):\/\//;
  * @param endpoint String with information of an endpoint.
  * @returns Triple with ['<address>', <port>, '<scheme>'].
  */
-export const parseEndpoint = (
-    endpoint: string
-): [string, number, string | undefined] => {
+export const parseEndpoint = (endpoint: string): [string, number, string | undefined] => {
     const result = schemeRegex.exec(endpoint);
     const matched = result?.[0];
     const scheme = result?.[1];

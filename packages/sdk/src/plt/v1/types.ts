@@ -206,7 +206,7 @@ export type TokenInitializationParameters = {
     /** The name of the token. */
     name: string;
     /** A URL pointing to the metadata of the token. */
-    metadata: string; // TODO: will change to url object containing url and checksum
+    metadata: TokenMetadataUrl.Type;
     /** Whether the token supports an allow list */
     allowList?: boolean;
     /** Whether the token supports an deny list */

@@ -1,3 +1,5 @@
+import { Buffer } from 'buffer/index.js';
+
 import { HexString, cborDecode, cborEncode } from '../index.js';
 import { Cbor } from './index.js';
 

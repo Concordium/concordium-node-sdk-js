@@ -35,7 +35,7 @@ export async function mint(
     expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5)
 ): Promise<TransactionHash.Type> {
     const amountsList = [amounts].flat();
-    amountsList.forEach((amount) => validateAmount(token, amount));
+    // amountsList.forEach((amount) => validateAmount(token, amount));
 
     const ops: TokenMintOperation[] = amountsList.map((amount) => ({
         [TokenOperationType.Mint]: { amount: scaleAmount(token, amount) },
@@ -64,7 +64,7 @@ export async function burn(
     expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5)
 ): Promise<TransactionHash.Type> {
     const amountsList = [amounts].flat();
-    amountsList.forEach((amount) => validateAmount(token, amount));
+    // amountsList.forEach((amount) => validateAmount(token, amount));
 
     const ops: TokenBurnOperation[] = amountsList.map((amount) => ({
         [TokenOperationType.Burn]: { amount: scaleAmount(token, amount) },

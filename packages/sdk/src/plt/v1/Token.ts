@@ -251,6 +251,7 @@ export async function transfer(
     signer: AccountSigner,
     expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5)
 ): Promise<TransactionHash.Type> {
+    // TODO: re-enable validation when it's covered by unit tests
     // await validateTransfer(token, sender, payload);
 
     const ops: TokenHolderOperation[] = [payload]

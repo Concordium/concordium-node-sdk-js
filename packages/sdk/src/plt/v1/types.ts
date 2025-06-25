@@ -1,5 +1,6 @@
 import { TokenGovernancePayload, TokenHolderPayload } from '../../index.js';
 import * as AccountAddress from '../../types/AccountAddress.js';
+import * as TokenMetadataUrl from '../TokenMetadataUrl.js';
 import { Cbor, CborMemo, TokenModuleEvent as EncodedModuleEvent, TokenAmount, TokenHolder, TokenId } from '../index.js';
 
 /**
@@ -163,7 +164,7 @@ export type TokenModuleState = {
     /** The name of the token. */
     name: string;
     /** A URL pointing to the metadata of the token. */
-    metadata: string; // TODO: will change to url object containing url and checksum
+    metadata: TokenMetadataUrl.Type;
     /** Whether the token supports an allow list */
     allowList?: boolean;
     /** Whether the token supports an deny list */
@@ -177,6 +178,26 @@ export type TokenModuleState = {
 };
 
 /**
+ * The account state represents account-specific information that is maintained by the Token
+ * Module, and is returned as part of a `GetAccountInfo` query. It does not include state that is
+ * managed by the Token Kernel, such as the token identifier and account balance.
+ *
+ * All fields are optional, and can be omitted if the module implementation does not support them.
+ * The structure supports additional fields for future extensibility. Non-standard fields (i.e. any
+ * fields that are not defined by a standard, and are specific to the module implementation) may
+ * be included, and their tags should be prefixed with an underscore ("_") to distinguish them
+ * as such.
+ */
+export type TokenModuleAccountState = {
+    /** Whether the account is on the allow list. */
+    allowList?: boolean;
+    /** Whether the account is on the deny list. */
+    denyList?: boolean;
+    /** Any additional state information depending on the module implementation. */
+    [key: string]: unknown;
+};
+
+/**
  * These parameters are passed to the token module to initialize the token.
  * The token initialization update will also include the ticker symbol, initial account,
  * number of decimals, and a reference to the token module implementation.
@@ -185,7 +206,7 @@ export type TokenInitializationParameters = {
     /** The name of the token. */
     name: string;
     /** A URL pointing to the metadata of the token. */
-    metadata: string; // TODO: will change to url object containing url and checksum
+    metadata: TokenMetadataUrl.Type;
     /** Whether the token supports an allow list */
     allowList?: boolean;
     /** Whether the token supports an deny list */

@@ -6,6 +6,7 @@ import { Token as GenericToken, holderTransaction, scaleAmount, validateAmount }
 import { Cbor, TokenAmount, TokenId, TokenInfo } from '../index.js';
 import {
     TokenHolderOperation,
+    TokenModuleAccountState,
     TokenModuleState,
     TokenOperationType,
     TokenTransfer,
@@ -199,15 +200,16 @@ export async function validateTransfer(
 
     // Validate all amounts
     payloads.forEach((p) => validateAmount(token, p.amount));
+    const { decimals } = token.info.state;
 
     // Check the sender balance.
-    const senderBalance = (await balanceOf(token, sender)) ?? TokenAmount.zero(); // We fall back to zero, as the `token` has already been validated at this point.
+    const senderBalance = (await balanceOf(token, sender)) ?? TokenAmount.zero(decimals); // We fall back to zero, as the `token` has already been validated at this point.
     const payloadTotal = payloads.reduce(
         (acc, { amount }) => acc.add(TokenAmount.toDecimal(amount)),
-        TokenAmount.toDecimal(TokenAmount.zero())
+        TokenAmount.toDecimal(TokenAmount.zero(decimals))
     );
     if (TokenAmount.toDecimal(senderBalance).lt(payloadTotal)) {
-        throw new InsufficientFundsError(sender, TokenAmount.fromDecimal(payloadTotal));
+        throw new InsufficientFundsError(sender, TokenAmount.fromDecimal(payloadTotal, decimals));
     }
 
     const moduleState = Cbor.decode(token.info.state.moduleState) as TokenModuleState;
@@ -222,7 +224,11 @@ export async function validateTransfer(
     const accounts = await Promise.all([senderPromise, ...receiverPromises]);
     accounts.forEach((r) => {
         const accToken = r.accountTokens.find((t) => t.id.value === token.info.id.value)?.state;
-        if (accToken?.memberDenyList || accToken?.memberAllowList === false) {
+        if (accToken?.moduleState === undefined) {
+            return;
+        }
+        const moduleState = Cbor.decode(accToken.moduleState) as TokenModuleAccountState;
+        if (moduleState.memberDenyList || moduleState.memberAllowList === false) {
             throw new NotAllowedError(r.accountAddress);
         }
     });
@@ -230,14 +236,22 @@ export async function validateTransfer(
     return true;
 }
 
+type TransferOtions = {
+    /** Whether to automatically scale a token amount to the correct number of decimals as the token */
+    autoScale?: boolean;
+    /** Whether to validate the payload executing it */
+    validate?: boolean;
+};
+
 /**
  * Transfers tokens from the sender to the specified recipients.
  *
  * @param {Token} token - The token to transfer.
  * @param {AccountAddress.Type} sender - The account address of the sender.
- * @param {TokenTransfer | [TokenTransfer]} payload - The transfer payload.
+ * @param {TokenTransfer | TokenTransfer[]} payload - The transfer payload.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
+ * @param {TransferOtions} [opts={ autoScale: true, validate: true }] - Options for the transfer.
  *
  * @returns {Promise<TransactionHash.Type>} A promise that resolves to the transaction hash.
  * @throws {InvalidTokenAmountError} If any token amount is not compatible with the token.
@@ -247,16 +261,22 @@ export async function validateTransfer(
 export async function transfer(
     token: Token,
     sender: AccountAddress.Type,
-    payload: TokenTransfer | [TokenTransfer],
+    payload: TokenTransfer | TokenTransfer[],
     signer: AccountSigner,
-    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5)
+    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
+    opts: TransferOtions = { autoScale: true, validate: true }
 ): Promise<TransactionHash.Type> {
-    // TODO: re-enable validation when it's covered by unit tests
-    // await validateTransfer(token, sender, payload);
+    let transfers: TokenTransfer[] = [payload].flat();
+    if (opts.autoScale) {
+        transfers = transfers.map((p) => ({ ...p, amount: scaleAmount(token, p.amount) }));
+    }
 
-    const ops: TokenHolderOperation[] = [payload]
-        .flat()
-        .map((p) => ({ [TokenOperationType.Transfer]: { ...p, amount: scaleAmount(token, p.amount) } }));
+    if (opts.validate) {
+        // TODO: re-enable validation when it's covered by unit tests
+        // await validateTransfer(token, sender, transfers);
+    }
+
+    const ops: TokenHolderOperation[] = transfers.map((p) => ({ [TokenOperationType.Transfer]: p }));
     const encoded = createTokenHolderPayload(token.info.id, ops);
 
     return holderTransaction(token, sender, encoded, signer, expiry);

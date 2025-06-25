@@ -61,18 +61,15 @@ class TokenMetadataUrl {
      * @returns {JSON} The JSON representation.
      */
     public toJSON(): JSON {
-        let _additional: Record<string, HexString> | undefined;
+        let url: JSON = { url: this.url };
+        if (this.checksumSha256 !== undefined) {
+            url.checksumSha256 = Buffer.from(this.checksumSha256).toString('hex');
+        }
         if (this.additional !== undefined) {
             const pairs = Object.entries(this.additional).map(([key, value]) => [key, Cbor.encode(value).toJSON()]);
-            _additional = Object.fromEntries(pairs);
+            url._additional = Object.fromEntries(pairs);
         }
-
-        return {
-            url: this.url,
-            checksumSha256:
-                this.checksumSha256 !== undefined ? Buffer.from(this.checksumSha256).toString('hex') : undefined,
-            _additional,
-        };
+        return url;
     }
 }
 

@@ -143,11 +143,14 @@ export function fromJSON({ url, checksumSha256, _additional }: JSON): TokenMetad
  * @returns A CBOR-compatible value representation of the TokenMetadataUrl.
  */
 export function toCBORValue(tokenMetadataUrl: TokenMetadataUrl): CBOR {
-    return {
-        ...tokenMetadataUrl.additional,
-        url: tokenMetadataUrl.url,
-        checksumSha256: tokenMetadataUrl.checksumSha256,
-    };
+    let cbor: CBOR = { url: tokenMetadataUrl.url };
+    if (tokenMetadataUrl.checksumSha256 !== undefined) {
+        cbor.checksumSha256 = tokenMetadataUrl.checksumSha256;
+    }
+    if (tokenMetadataUrl.additional) {
+        cbor.additional = tokenMetadataUrl.additional;
+    }
+    return cbor;
 }
 
 /**

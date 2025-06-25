@@ -1,3 +1,5 @@
+import { Buffer } from 'buffer/index.js';
+
 import * as Proto from '../grpc-api/v2/concordium/protocol-level-tokens.js';
 import { cborDecode, cborEncode } from '../pub/types.js';
 import { HexString } from '../types.js';

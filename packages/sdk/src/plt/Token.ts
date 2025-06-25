@@ -410,8 +410,7 @@ export async function transfer(
     }
 
     if (opts.validate) {
-        // TODO: re-enable validation when it's covered by unit tests
-        // await validateTransfer(token, sender, transfers);
+        await validateTransfer(token, sender, transfers);
     }
 
     const ops: TokenTransferOperation[] = transfers.map((p) => ({ [TokenOperationType.Transfer]: p }));
@@ -473,8 +472,7 @@ export async function mint(
 
     if (opts.validate) {
         validateGovernanceOperation(token, sender);
-        // TODO: re-enable validation when it's covered by unit tests
-        // amountsList.forEach((amount) => validateAmount(token, amount));
+        amountsList.forEach((amount) => validateAmount(token, amount));
     }
 
     const ops: TokenMintOperation[] = amountsList.map((amount) => ({
@@ -512,8 +510,7 @@ export async function burn(
 
     if (opts.validate) {
         validateGovernanceOperation(token, sender);
-        // TODO: re-enable validation when it's covered by unit tests
-        // amountsList.forEach((amount) => validateAmount(token, amount));
+        amountsList.forEach((amount) => validateAmount(token, amount));
     }
 
     const ops: TokenBurnOperation[] = amountsList.map((amount) => ({

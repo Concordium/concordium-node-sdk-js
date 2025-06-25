@@ -319,7 +319,7 @@ export function balanceOf(
  *
  * @param {Token} token - The token to transfer.
  * @param {AccountAddress.Type} sender - The account address of the sender.
- * @param {TokenTransfer | [TokenTransfer]} payload - The transfer payload.
+ * @param {TokenTransfer | TokenTransfer[]} payload - The transfer payload.
  *
  * @returns {Promise<true>} A promise that resolves to true if the transfer is valid.
  * @throws {InvalidTokenAmountError} If any token amount is not compatible with the token.
@@ -329,7 +329,7 @@ export function balanceOf(
 export async function validateTransfer(
     token: Token,
     sender: AccountAddress.Type,
-    payload: TokenTransfer | [TokenTransfer]
+    payload: TokenTransfer | TokenTransfer[]
 ): Promise<true> {
     const payloads = [payload].flat();
 
@@ -385,7 +385,7 @@ type TransferOtions = {
  *
  * @param {Token} token - The token to transfer.
  * @param {AccountAddress.Type} sender - The account address of the sender.
- * @param {TokenTransfer | [TokenTransfer]} payload - The transfer payload.
+ * @param {TokenTransfer | TokenTransfer[]} payload - The transfer payload.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
  * @param {TransferOtions} [opts={ autoScale: true, validate: true }] - Options for the transfer.
@@ -398,7 +398,7 @@ type TransferOtions = {
 export async function transfer(
     token: Token,
     sender: AccountAddress.Type,
-    payload: TokenTransfer | [TokenTransfer],
+    payload: TokenTransfer | TokenTransfer[],
     signer: AccountSigner,
     expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
     opts: TransferOtions = { autoScale: true, validate: true }

@@ -1,5 +1,5 @@
 import { AccountAddress, AccountSigner, TransactionExpiry, TransactionHash } from '../../pub/types.js';
-import { governanceTransaction, scaleAmount, validateAmount } from '../Token.js';
+import { governanceTransaction, scaleAmount } from '../Token.js';
 import { TokenAmount } from '../index.js';
 import { Type as Token } from './Token.js';
 import {

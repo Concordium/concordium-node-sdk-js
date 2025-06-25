@@ -1,6 +1,6 @@
-import { AccountAddress, AccountInfo } from '../../../src/pub/types.js';
-import { Cbor, Token, TokenAmount, TokenHolder, TokenId, TokenMetadataUrl } from '../../../src/pub/plt.ts';
 import { TokenModuleAccountState, TokenModuleState, TokenTransfer } from '../../../src/plt/module.js';
+import { Cbor, Token, TokenAmount, TokenHolder, TokenId, TokenMetadataUrl } from '../../../src/pub/plt.ts';
+import { AccountAddress, AccountInfo } from '../../../src/pub/types.js';
 
 const ACCOUNT_1 = AccountAddress.fromBase58('4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd');
 const ACCOUNT_2 = AccountAddress.fromBase58('3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB');
@@ -124,7 +124,7 @@ describe('Token.validateTransfer', () => {
     it('should validate transfer when sender has sufficient funds and no restrictions', async () => {
         const sender = ACCOUNT_1;
         const recipient = ACCOUNT_2;
-        const tokenId = TokenId.fromString('3f1bfce9')
+        const tokenId = TokenId.fromString('3f1bfce9');
         const decimals = 8;
 
         // Setup token with no allow/deny lists
@@ -162,7 +162,7 @@ describe('Token.validateTransfer', () => {
     it('should throw InsufficientFundsError when sender has insufficient balance', async () => {
         const sender = ACCOUNT_1;
         const recipient = ACCOUNT_2;
-        const tokenId = TokenId.fromString('3f1bfce9')
+        const tokenId = TokenId.fromString('3f1bfce9');
         const decimals = 8;
 
         const moduleState: TokenModuleState = {
@@ -188,15 +188,13 @@ describe('Token.validateTransfer', () => {
         };
 
         // Should throw InsufficientFundsError
-        await expect(Token.validateTransfer(token, sender, transfer)).rejects.toThrow(
-            Token.InsufficientFundsError
-        );
+        await expect(Token.validateTransfer(token, sender, transfer)).rejects.toThrow(Token.InsufficientFundsError);
     });
 
     it('should throw NotAllowedError when account is on deny list', async () => {
         const sender = ACCOUNT_1;
         const recipient = ACCOUNT_2;
-        const tokenId = TokenId.fromString('3f1bfce9')
+        const tokenId = TokenId.fromString('3f1bfce9');
         const decimals = 8;
 
         // Setup token with deny list enabled
@@ -213,16 +211,12 @@ describe('Token.validateTransfer', () => {
         const senderBalance = TokenAmount.create(BigInt(1000), decimals);
 
         // Create sender account info with deny list status
-        const senderAccountState: TokenModuleAccountState = { memberDenyList: true };
-        const senderAccountInfo = createAccountInfo(
-            sender,
-            tokenId,
-            senderBalance,
-            senderAccountState
-        );
+        const senderAccountState: TokenModuleAccountState = { denyList: true };
+        const senderAccountInfo = createAccountInfo(sender, tokenId, senderBalance, senderAccountState);
 
         // Mock getAccountInfo to return sender on deny list
-        token.grpc.getAccountInfo = jest.fn()
+        token.grpc.getAccountInfo = jest
+            .fn()
             .mockResolvedValueOnce(senderAccountInfo) // First call for balance check
             .mockResolvedValueOnce(senderAccountInfo) // Second call for sender
             .mockResolvedValueOnce(createAccountInfo(recipient, tokenId)); // Third call for recipient
@@ -235,15 +229,13 @@ describe('Token.validateTransfer', () => {
         };
 
         // Should throw NotAllowedError
-        await expect(Token.validateTransfer(token, sender, transfer)).rejects.toThrow(
-            Token.NotAllowedError
-        );
+        await expect(Token.validateTransfer(token, sender, transfer)).rejects.toThrow(Token.NotAllowedError);
     });
 
     it('should throw NotAllowedError when account is not on allow list', async () => {
         const sender = ACCOUNT_1;
         const recipient = ACCOUNT_2;
-        const tokenId = TokenId.fromString('3f1bfce9')
+        const tokenId = TokenId.fromString('3f1bfce9');
         const decimals = 8;
 
         // Setup token with allow list enabled
@@ -259,25 +251,17 @@ describe('Token.validateTransfer', () => {
         // Setup sender account with sufficient balance
         const senderBalance = TokenAmount.create(BigInt(1000), decimals);
 
-        // Create sender account info with allow list status set to false
-        const senderAccountState: TokenModuleAccountState = { memberAllowList: true };
-        const senderAccountInfo = createAccountInfo(
-            sender,
-            tokenId,
-            senderBalance,
-            senderAccountState
-        );
+        // Create sender account info with allow list status set to true
+        const senderAccountState: TokenModuleAccountState = { allowList: true };
+        const senderAccountInfo = createAccountInfo(sender, tokenId, senderBalance, senderAccountState);
 
-        const recipientAccountState: TokenModuleAccountState = { memberAllowList: false };
-        const recipientAccountInfo = createAccountInfo(
-            recipient,
-            tokenId,
-            undefined,
-            recipientAccountState
-        );
+        // Create recipient account info with allow list status set to true
+        const recipientAccountState: TokenModuleAccountState = { allowList: false };
+        const recipientAccountInfo = createAccountInfo(recipient, tokenId, undefined, recipientAccountState);
 
         // Mock getAccountInfo to return sender not on allow list
-        token.grpc.getAccountInfo = jest.fn()
+        token.grpc.getAccountInfo = jest
+            .fn()
             .mockResolvedValueOnce(senderAccountInfo) // First call for balance check
             .mockResolvedValueOnce(senderAccountInfo) // Second call for sender
             .mockResolvedValueOnce(recipientAccountInfo); // Third call for recipient
@@ -290,16 +274,58 @@ describe('Token.validateTransfer', () => {
         };
 
         // Should throw NotAllowedError
-        await expect(Token.validateTransfer(token, sender, transfer)).rejects.toThrow(
-            Token.NotAllowedError
-        );
+        await expect(Token.validateTransfer(token, sender, transfer)).rejects.toThrow(Token.NotAllowedError);
+    });
+
+    it('should allow transfer when account is the governance account', async () => {
+        const sender = ACCOUNT_1;
+        const recipient = ACCOUNT_2;
+        const tokenId = TokenId.fromString('3f1bfce9');
+        const decimals = 8;
+
+        // Setup token with allow list enabled
+        const moduleState: TokenModuleState = {
+            name: 'Test Token',
+            metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
+            governanceAccount: TokenHolder.fromAccountAddress(sender),
+            allowList: true,
+        };
+
+        const token = createMockToken(decimals, moduleState, tokenId);
+
+        // Setup sender account with sufficient balance
+        const senderBalance = TokenAmount.create(BigInt(1000), decimals);
+
+        // Create sender/governance account info with allow list status set to false
+        const senderAccountState: TokenModuleAccountState = { allowList: false };
+        const senderAccountInfo = createAccountInfo(sender, tokenId, senderBalance, senderAccountState);
+
+        const recipientAccountState: TokenModuleAccountState = { allowList: true };
+        const recipientAccountInfo = createAccountInfo(recipient, tokenId, undefined, recipientAccountState);
+
+        // Mock getAccountInfo to return sender not on allow list
+        token.grpc.getAccountInfo = jest
+            .fn()
+            .mockResolvedValueOnce(senderAccountInfo) // First call for balance check
+            .mockResolvedValueOnce(senderAccountInfo) // Second call for sender
+            .mockResolvedValueOnce(recipientAccountInfo); // Third call for recipient
+
+        // Create transfer payload
+        const transferAmount = TokenAmount.create(BigInt(500), decimals);
+        const transfer: TokenTransfer = {
+            amount: transferAmount,
+            recipient: TokenHolder.fromAccountAddress(recipient),
+        };
+
+        // Should validate
+        await expect(Token.validateTransfer(token, sender, transfer)).resolves.toBe(true);
     });
 
     it('should validate batch transfers when total amount is within balance', async () => {
         const sender = ACCOUNT_1;
         const recipient1 = ACCOUNT_2;
         const recipient2 = AccountAddress.fromBase58('3JLFF6RGoKNL8V8ycvuwXU3ZCNRKh78ytdr92pTb5GADnjeDnx');
-        const tokenId = TokenId.fromString('3f1bfce9')
+        const tokenId = TokenId.fromString('3f1bfce9');
         const decimals = 8;
 
         const moduleState: TokenModuleState = {
@@ -315,7 +341,8 @@ describe('Token.validateTransfer', () => {
         const senderAccountInfo = createAccountInfo(sender, tokenId, senderBalance);
 
         // Mock getAccountInfo
-        token.grpc.getAccountInfo = jest.fn()
+        token.grpc.getAccountInfo = jest
+            .fn()
             .mockResolvedValueOnce(senderAccountInfo) // First call for balance check
             .mockResolvedValueOnce(senderAccountInfo) // For sender validation
             .mockResolvedValueOnce(createAccountInfo(recipient1, tokenId)) // For recipient1 validation
@@ -345,9 +372,7 @@ function createMockToken(
     moduleState: TokenModuleState = {
         name: 'Test Token',
         metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
-        governanceAccount: TokenHolder.fromAccountAddress(
-            ACCOUNT_1
-        )
+        governanceAccount: TokenHolder.fromAccountAddress(ACCOUNT_1),
     },
     tokenId: TokenId.Type = TokenId.fromString('3f1bfce9')
 ): Token.Type {
@@ -357,7 +382,7 @@ function createMockToken(
             state: {
                 decimals,
                 moduleState: moduleState === undefined ? undefined : Cbor.encode(moduleState),
-            }
+            },
         },
         grpc: {
             getAccountInfo: jest.fn(),
@@ -369,16 +394,18 @@ function createAccountInfo(
     accountAddress: AccountAddress.Type,
     tokenId: TokenId.Type,
     balance?: TokenAmount.Type,
-    moduleState?: TokenModuleAccountState,
+    moduleState?: TokenModuleAccountState
 ): AccountInfo {
     return {
         accountAddress,
-        accountTokens: [{
-            id: tokenId,
-            state: {
-                balance,
-                moduleState: moduleState ? Cbor.encode(moduleState) : undefined,
+        accountTokens: [
+            {
+                id: tokenId,
+                state: {
+                    balance,
+                    moduleState: moduleState ? Cbor.encode(moduleState) : undefined,
+                },
             },
-        }],
+        ],
     } as AccountInfo;
 }

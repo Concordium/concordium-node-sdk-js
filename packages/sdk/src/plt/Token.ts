@@ -360,14 +360,15 @@ export async function validateTransfer(
     const accounts = await Promise.all([senderPromise, ...receiverPromises]);
     accounts.forEach((r) => {
         const accToken = r.accountTokens.find((t) => t.id.value === token.info.id.value)?.state;
-        if (accToken?.moduleState === undefined) {
-            return;
-        }
+        if (accToken?.moduleState === undefined) return true;
+        if (!moduleState.denyList && AccountAddress.equals(r.accountAddress, moduleState.governanceAccount.address))
+            return true;
 
-        const moduleState = Cbor.decode(accToken.moduleState) as TokenModuleAccountState;
-        if (moduleState.memberDenyList || moduleState.memberAllowList === false) {
+        const accountModuleState = Cbor.decode(accToken.moduleState) as TokenModuleAccountState;
+        if (moduleState.allowList && !accountModuleState.allowList)
             throw new NotAllowedError(TokenHolder.fromAccountAddress(r.accountAddress));
-        }
+        if (moduleState.denyList && accountModuleState.denyList)
+            throw new NotAllowedError(TokenHolder.fromAccountAddress(r.accountAddress));
     });
 
     return true;

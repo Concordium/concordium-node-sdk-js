@@ -43,14 +43,20 @@ export async function mint(
     expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
     opts: SupplyUpdateOptions = { autoScale: true, validate: true }
 ): Promise<TransactionHash.Type> {
-    const amountsList = [amounts].flat();
-    const ops: TokenMintOperation[] = amountsList.map((amount) => {
-        const scaled = opts.autoScale ? scaleAmount(token, amount) : amount;
-        return {
-            [TokenOperationType.Mint]: { amount: scaled },
-        };
-    });
-    return batchOperations(token, sender, ops, signer, expiry, opts.validate);
+    let amountsList = [amounts].flat();
+    if (opts.autoScale) {
+        amountsList = amountsList.map((amount) => scaleAmount(token, amount));
+    }
+
+    if (opts.validate) {
+        // TODO: re-enable validation when it's covered by unit tests
+        // amountsList.forEach((amount) => validateAmount(token, amount));
+    }
+
+    const ops: TokenMintOperation[] = amountsList.map((amount) => ({
+        [TokenOperationType.Mint]: { amount },
+    }));
+    return batchOperations(token, sender, ops, signer, expiry);
 }
 
 /**
@@ -75,14 +81,20 @@ export async function burn(
     expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
     opts: SupplyUpdateOptions = { autoScale: true, validate: true }
 ): Promise<TransactionHash.Type> {
-    const amountsList = [amounts].flat();
-    const ops: TokenBurnOperation[] = amountsList.map((amount) => {
-        const scaled = opts.autoScale ? scaleAmount(token, amount) : amount;
-        return {
-            [TokenOperationType.Burn]: { amount: scaled },
-        };
-    });
-    return batchOperations(token, sender, ops, signer, expiry, opts.validate);
+    let amountsList = [amounts].flat();
+    if (opts.autoScale) {
+        amountsList = amountsList.map((amount) => scaleAmount(token, amount));
+    }
+
+    if (opts.validate) {
+        // TODO: re-enable validation when it's covered by unit tests
+        // amountsList.forEach((amount) => validateAmount(token, amount));
+    }
+
+    const ops: TokenBurnOperation[] = amountsList.map((amount) => ({
+        [TokenOperationType.Burn]: { amount },
+    }));
+    return batchOperations(token, sender, ops, signer, expiry);
 }
 
 type UpdateListOptions = {

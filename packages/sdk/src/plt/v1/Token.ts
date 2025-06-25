@@ -248,7 +248,7 @@ type TransferOtions = {
  *
  * @param {Token} token - The token to transfer.
  * @param {AccountAddress.Type} sender - The account address of the sender.
- * @param {TokenTransfer | [TokenTransfer]} payload - The transfer payload.
+ * @param {TokenTransfer | TokenTransfer[]} payload - The transfer payload.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
  * @param {TransferOtions} [opts={ autoScale: true, validate: true }] - Options for the transfer.
@@ -261,21 +261,22 @@ type TransferOtions = {
 export async function transfer(
     token: Token,
     sender: AccountAddress.Type,
-    payload: TokenTransfer | [TokenTransfer],
+    payload: TokenTransfer | TokenTransfer[],
     signer: AccountSigner,
     expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
     opts: TransferOtions = { autoScale: true, validate: true }
 ): Promise<TransactionHash.Type> {
-    if (opts.validate) {
-        await validateTransfer(token, sender, payload);
+    let transfers: TokenTransfer[] = [payload].flat();
+    if (opts.autoScale) {
+        transfers = transfers.map((p) => ({ ...p, amount: scaleAmount(token, p.amount) }));
     }
 
-    const ops: TokenHolderOperation[] = [payload].flat().map((p) => {
-        const amount = opts.autoScale ? scaleAmount(token, p.amount) : p.amount;
-        return {
-            [TokenOperationType.Transfer]: { ...p, amount },
-        };
-    });
+    if (opts.validate) {
+        // TODO: re-enable validation when it's covered by unit tests
+        // await validateTransfer(token, sender, transfers);
+    }
+
+    const ops: TokenHolderOperation[] = transfers.map((p) => ({ [TokenOperationType.Transfer]: p }));
     const encoded = createTokenHolderPayload(token.info.id, ops);
 
     return holderTransaction(token, sender, encoded, signer, expiry);

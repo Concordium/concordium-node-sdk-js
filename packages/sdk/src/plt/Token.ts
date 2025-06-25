@@ -145,7 +145,7 @@ export function fromInfo(grpc: ConcordiumGRPCClient, tokenInfo: TokenInfo): Toke
  * @throws {InvalidTokenAmountError} If the token amount is not compatible with the token.
  */
 export function validateAmount(token: Token, amount: TokenAmount.Type): void {
-    if (amount.decimals === token.info.state.decimals) {
+    if (amount.decimals !== token.info.state.decimals) {
         throw new InvalidTokenAmountError(token.info.state.decimals, amount);
     }
 }

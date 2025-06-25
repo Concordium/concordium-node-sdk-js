@@ -18,6 +18,7 @@ const cli = meow(
     --help,         Displays this message
     --block,    -b  A block to query from, defaults to last final block
     --endpoint, -e  Specify endpoint of the form "address:port", defaults to localhost:20000
+    --secure,   -s  Whether to use tls or not. Defaults to false.
 `,
     {
         importMeta: import.meta,
@@ -36,13 +37,22 @@ const cli = meow(
                 alias: 'e',
                 default: 'localhost:20000',
             },
+            secure: {
+                type: 'boolean',
+                alias: 's',
+                default: false,
+            },
         },
     }
 );
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
 
-const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.createInsecure());
+const client = new ConcordiumGRPCNodeClient(
+    address,
+    Number(port),
+    cli.flags.secure ? credentials.createSsl() : credentials.createInsecure()
+);
 
 /**
  * Retrieves information about an protocol level token (PLT). The function must be provided a

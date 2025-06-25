@@ -1,5 +1,5 @@
 import { AccountAddress, AccountSigner, TransactionExpiry, TransactionHash } from '../../pub/types.js';
-import { governanceTransaction, scaleAmount, validateAmount } from '../Token.js';
+import { governanceTransaction, scaleAmount } from '../Token.js';
 import { TokenAmount } from '../index.js';
 import { Type as Token } from './Token.js';
 import {
@@ -35,7 +35,8 @@ export async function mint(
     expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5)
 ): Promise<TransactionHash.Type> {
     const amountsList = [amounts].flat();
-    amountsList.forEach((amount) => validateAmount(token, amount));
+    // TODO: re-enable validation when it's covered by unit tests
+    // amountsList.forEach((amount) => validateAmount(token, amount));
 
     const ops: TokenMintOperation[] = amountsList.map((amount) => ({
         [TokenOperationType.Mint]: { amount: scaleAmount(token, amount) },
@@ -64,7 +65,8 @@ export async function burn(
     expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5)
 ): Promise<TransactionHash.Type> {
     const amountsList = [amounts].flat();
-    amountsList.forEach((amount) => validateAmount(token, amount));
+    // TODO: re-enable validation when it's covered by unit tests
+    // amountsList.forEach((amount) => validateAmount(token, amount));
 
     const ops: TokenBurnOperation[] = amountsList.map((amount) => ({
         [TokenOperationType.Burn]: { amount: scaleAmount(token, amount) },

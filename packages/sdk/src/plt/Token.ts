@@ -81,7 +81,7 @@ export class InvalidTokenAmountError extends TokenError {
         public readonly amount: TokenAmount.Type
     ) {
         super(
-            `The token amount supplied cannot be represented as an amount of the token. The amount is represented with ${amount.decimals}, while the token only allows amounts up to ${tokenDecimals}.`
+            `The token amount supplied cannot be represented as an amount of the token. The amount is represented with ${amount.decimals} decimals, while the token requires ${tokenDecimals} decimals.`
         );
     }
 }
@@ -145,7 +145,7 @@ export function fromInfo(grpc: ConcordiumGRPCClient, tokenInfo: TokenInfo): Toke
  * @throws {InvalidTokenAmountError} If the token amount is not compatible with the token.
  */
 export function validateAmount(token: Token, amount: TokenAmount.Type): void {
-    if (amount.decimals > token.info.state.decimals) {
+    if (amount.decimals !== token.info.state.decimals) {
         throw new InvalidTokenAmountError(token.info.state.decimals, amount);
     }
 }
@@ -159,10 +159,11 @@ export function validateAmount(token: Token, amount: TokenAmount.Type): void {
  * @throws {InvalidTokenAmountError} If the token amount is not compatible with the token.
  */
 export function scaleAmount(token: Token, amount: TokenAmount.Type): TokenAmount.Type {
-    validateAmount(token, amount);
-
     if (amount.decimals === token.info.state.decimals) {
         return amount;
+    }
+    if (amount.decimals > token.info.state.decimals) {
+        throw new InvalidTokenAmountError(token.info.state.decimals, amount);
     }
 
     return TokenAmount.create(

@@ -251,7 +251,7 @@ export async function transfer(
     signer: AccountSigner,
     expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5)
 ): Promise<TransactionHash.Type> {
-    await validateTransfer(token, sender, payload);
+    // await validateTransfer(token, sender, payload);
 
     const ops: TokenHolderOperation[] = [payload]
         .flat()

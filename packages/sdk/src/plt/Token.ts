@@ -80,6 +80,7 @@ export class InvalidTokenAmountError extends TokenError {
         public readonly tokenDecimals: number,
         public readonly amount: TokenAmount.Type
     ) {
+        // TODO: change error message to reflect that we only allow exact match on decimals.
         super(
             `The token amount supplied cannot be represented as an amount of the token. The amount is represented with ${amount.decimals}, while the token only allows amounts up to ${tokenDecimals}.`
         );

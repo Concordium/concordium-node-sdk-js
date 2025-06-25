@@ -1,3 +1,4 @@
+import { Buffer } from 'buffer/index.js';
 import { decode } from 'cbor2/decoder';
 import { encode, registerEncoder } from 'cbor2/encoder';
 import { Tag } from 'cbor2/tag';

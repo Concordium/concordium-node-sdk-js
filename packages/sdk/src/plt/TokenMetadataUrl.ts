@@ -1,3 +1,4 @@
+import { Buffer } from 'buffer/index.js';
 import { registerEncoder } from 'cbor2/encoder';
 
 import { HexString, cborDecode, cborEncode } from '../index.js';

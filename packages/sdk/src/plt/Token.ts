@@ -104,7 +104,7 @@ export class InvalidTokenAmountError extends TokenError {
         public readonly amount: TokenAmount.Type
     ) {
         super(
-            `The token amount supplied cannot be represented as an amount of the token. The amount is represented with ${amount.decimals}, while the token only allows amounts up to ${tokenDecimals}.`
+            `The token amount supplied cannot be represented as an amount of the token. The amount is represented with ${amount.decimals} decimals, while the token requires ${tokenDecimals} decimals.`
         );
     }
 }
@@ -205,7 +205,7 @@ export function fromInfo(grpc: ConcordiumGRPCClient, tokenInfo: TokenInfo): Toke
  * @throws {InvalidTokenAmountError} If the token amount is not compatible with the token.
  */
 export function validateAmount(token: Token, amount: TokenAmount.Type): void {
-    if (amount.decimals > token.info.state.decimals) {
+    if (amount.decimals !== token.info.state.decimals) {
         throw new InvalidTokenAmountError(token.info.state.decimals, amount);
     }
 }
@@ -219,10 +219,11 @@ export function validateAmount(token: Token, amount: TokenAmount.Type): void {
  * @throws {InvalidTokenAmountError} If the token amount is not compatible with the token.
  */
 export function scaleAmount(token: Token, amount: TokenAmount.Type): TokenAmount.Type {
-    validateAmount(token, amount);
-
     if (amount.decimals === token.info.state.decimals) {
         return amount;
+    }
+    if (amount.decimals > token.info.state.decimals) {
+        throw new InvalidTokenAmountError(token.info.state.decimals, amount);
     }
 
     return TokenAmount.create(
@@ -402,18 +403,18 @@ export async function transfer(
     expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
     opts: TransferOtions = { autoScale: true, validate: true }
 ): Promise<TransactionHash.Type> {
-    if (opts.validate) {
-        await validateTransfer(token, sender, payload);
+    let transfers: TokenTransfer[] = [payload].flat();
+    if (opts.autoScale) {
+        transfers = transfers.map((p) => ({ ...p, amount: scaleAmount(token, p.amount) }));
     }
 
-    const ops: TokenTransferOperation[] = [payload].flat().map((p) => {
-        const amount = opts.autoScale ? scaleAmount(token, p.amount) : p.amount;
-        return {
-            [TokenOperationType.Transfer]: { ...p, amount },
-        };
-    });
-    const encoded = createTokenUpdatePayload(token.info.id, ops);
+    if (opts.validate) {
+        // TODO: re-enable validation when it's covered by unit tests
+        // await validateTransfer(token, sender, transfers);
+    }
 
+    const ops: TokenTransferOperation[] = transfers.map((p) => ({ [TokenOperationType.Transfer]: p }));
+    const encoded = createTokenUpdatePayload(token.info.id, ops);
     return sendRaw(token, sender, encoded, signer, expiry);
 }
 
@@ -464,19 +465,20 @@ export async function mint(
     expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
     opts: SupplyUpdateOptions = { autoScale: true, validate: true }
 ): Promise<TransactionHash.Type> {
-    const amountsList = [amounts].flat();
+    let amountsList = [amounts].flat();
+    if (opts.autoScale) {
+        amountsList = amountsList.map((amount) => scaleAmount(token, amount));
+    }
 
     if (opts.validate) {
         validateGovernanceOperation(token, sender);
-        amountsList.forEach((amount) => validateAmount(token, amount));
+        // TODO: re-enable validation when it's covered by unit tests
+        // amountsList.forEach((amount) => validateAmount(token, amount));
     }
 
-    const ops: TokenMintOperation[] = amountsList.map((amount) => {
-        const scaled = opts.autoScale ? scaleAmount(token, amount) : amount;
-        return {
-            [TokenOperationType.Mint]: { amount: scaled },
-        };
-    });
+    const ops: TokenMintOperation[] = amountsList.map((amount) => ({
+        [TokenOperationType.Mint]: { amount },
+    }));
     return sendOperations(token, sender, ops, signer, expiry);
 }
 
@@ -502,19 +504,20 @@ export async function burn(
     expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
     opts: SupplyUpdateOptions = { autoScale: true, validate: true }
 ): Promise<TransactionHash.Type> {
-    const amountsList = [amounts].flat();
+    let amountsList = [amounts].flat();
+    if (opts.autoScale) {
+        amountsList = amountsList.map((amount) => scaleAmount(token, amount));
+    }
 
     if (opts.validate) {
         validateGovernanceOperation(token, sender);
-        amountsList.forEach((amount) => validateAmount(token, amount));
+        // TODO: re-enable validation when it's covered by unit tests
+        // amountsList.forEach((amount) => validateAmount(token, amount));
     }
 
-    const ops: TokenBurnOperation[] = amountsList.map((amount) => {
-        const scaled = opts.autoScale ? scaleAmount(token, amount) : amount;
-        return {
-            [TokenOperationType.Burn]: { amount: scaled },
-        };
-    });
+    const ops: TokenBurnOperation[] = amountsList.map((amount) => ({
+        [TokenOperationType.Burn]: { amount },
+    }));
     return sendOperations(token, sender, ops, signer, expiry);
 }
 

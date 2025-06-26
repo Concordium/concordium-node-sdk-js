@@ -202,12 +202,15 @@ export function fromInfo(grpc: ConcordiumGRPCClient, tokenInfo: TokenInfo): Toke
  *
  * @param {Token} token - The token to validate against.
  * @param {TokenAmount.Type} amount - The amount to validate.
+
+ * @returns {true} If the amount is valid within the context of the token.
  * @throws {InvalidTokenAmountError} If the token amount is not compatible with the token.
  */
-export function validateAmount(token: Token, amount: TokenAmount.Type): void {
-    if (amount.decimals !== token.info.state.decimals) {
-        throw new InvalidTokenAmountError(token.info.state.decimals, amount);
+export function validateAmount(token: Token, amount: TokenAmount.Type): true {
+    if (amount.decimals === token.info.state.decimals) {
+        return true;
     }
+    throw new InvalidTokenAmountError(token.info.state.decimals, amount);
 }
 
 /**
@@ -235,18 +238,15 @@ export function scaleAmount(token: Token, amount: TokenAmount.Type): TokenAmount
 /**
  * Initiates a transaction for a given token.
  *
- * This function creates and sends a transaction of type `Token` for the specified token.
- * It verifies that the sender is the token issuer, encodes the provided payload, signs the transaction,
- * and submits it to the blockchain.
+ * This function creates and sends a transaction of type `TokenUpdate` for the specified token.
  *
- * @param {Token} token - The token for which the governance transaction is being performed.
+ * @param {Token} token - The token for which the transaction is being performed.
  * @param {AccountAddress.Type} sender - The account address initiating the transaction.
  * @param {TokenUpdatePayload} payload - The transaction payload.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
  *
  * @returns {Promise<TransactionHash.Type>} A promise that resolves to the transaction hash.
- * @throws {UnauthorizedGovernanceOperationError} If the sender is not the token issuer.
  */
 export async function sendRaw(
     token: Token,
@@ -263,7 +263,7 @@ export async function sendRaw(
     };
     const transaction: AccountTransaction = {
         type: AccountTransactionType.TokenUpdate,
-        payload: payload,
+        payload,
         header,
     };
     const signature = await signTransaction(transaction, signer);
@@ -309,9 +309,7 @@ export function balanceOf(
         return account.accountTokens.find((t) => t.id.value === token.info.id.value)?.state.balance;
     }
 
-    return token.grpc.getAccountInfo(account).then((accInfo) => {
-        return accInfo.accountTokens.find((t) => t.id.value === token.info.id.value)?.state.balance;
-    });
+    return token.grpc.getAccountInfo(account).then((accInfo) => balanceOf(token, accInfo));
 }
 
 /**
@@ -324,7 +322,7 @@ export function balanceOf(
  * @returns {Promise<true>} A promise that resolves to true if the transfer is valid.
  * @throws {InvalidTokenAmountError} If any token amount is not compatible with the token.
  * @throws {InsufficientFundsError} If the sender does not have enough tokens.
- * @throws {NotAllowedError} If a receiver is not allowed to receive tokens.
+ * @throws {NotAllowedError} If the sender or receiver is not allowed to send/receive tokens.
  */
 export async function validateTransfer(
     token: Token,
@@ -393,7 +391,7 @@ type TransferOtions = {
  * @returns {Promise<TransactionHash.Type>} A promise that resolves to the transaction hash.
  * @throws {InvalidTokenAmountError} If `opts.validate` and any token amount is not compatible with the token.
  * @throws {InsufficientFundsError} If `opts.validate` and the sender does not have enough tokens.
- * @throws {NotAllowedError} If `opts.validate` and a receiver is not allowed to receive tokens.
+ * @throws {NotAllowedError} If `opts.validate` and a sender or receiver is not allowed to send/receive tokens.
  */
 export async function transfer(
     token: Token,

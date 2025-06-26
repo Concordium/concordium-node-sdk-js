@@ -218,8 +218,7 @@ describe('Token.validateTransfer', () => {
         token.grpc.getAccountInfo = jest
             .fn()
             .mockResolvedValueOnce(senderAccountInfo) // First call for balance check
-            .mockResolvedValueOnce(senderAccountInfo) // Second call for sender
-            .mockResolvedValueOnce(createAccountInfo(recipient, tokenId)); // Third call for recipient
+            .mockResolvedValueOnce(createAccountInfo(recipient, tokenId)); // second call for recipient
 
         // Create transfer payload
         const transferAmount = TokenAmount.create(BigInt(500), decimals);
@@ -263,8 +262,7 @@ describe('Token.validateTransfer', () => {
         token.grpc.getAccountInfo = jest
             .fn()
             .mockResolvedValueOnce(senderAccountInfo) // First call for balance check
-            .mockResolvedValueOnce(senderAccountInfo) // Second call for sender
-            .mockResolvedValueOnce(recipientAccountInfo); // Third call for recipient
+            .mockResolvedValueOnce(recipientAccountInfo); // second call for recipient
 
         // Create transfer payload
         const transferAmount = TokenAmount.create(BigInt(500), decimals);
@@ -299,7 +297,6 @@ describe('Token.validateTransfer', () => {
         // Mock getAccountInfo
         token.grpc.getAccountInfo = jest
             .fn()
-            .mockResolvedValueOnce(senderAccountInfo) // First call for balance check
             .mockResolvedValueOnce(senderAccountInfo) // For sender validation
             .mockResolvedValueOnce(createAccountInfo(recipient1, tokenId)) // For recipient1 validation
             .mockResolvedValueOnce(createAccountInfo(recipient2, tokenId)); // For recipient2 validation

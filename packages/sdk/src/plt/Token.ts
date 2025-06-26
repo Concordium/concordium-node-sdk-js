@@ -337,9 +337,10 @@ export async function validateTransfer(
     payloads.forEach((p) => validateAmount(token, p.amount));
 
     const { decimals } = token.info.state;
+    const senderInfo = await token.grpc.getAccountInfo(sender);
 
     // Check the sender balance.
-    const senderBalance = (await balanceOf(token, sender)) ?? TokenAmount.zero(decimals); // We fall back to zero, as the `token` has already been validated at this point.
+    const senderBalance = balanceOf(token, senderInfo) ?? TokenAmount.zero(decimals); // We fall back to zero, as the `token` has already been validated at this point.
     const payloadTotal = payloads.reduce(
         (acc, { amount }) => acc.add(TokenAmount.toDecimal(amount)),
         TokenAmount.toDecimal(TokenAmount.zero(decimals))
@@ -355,12 +356,12 @@ export async function validateTransfer(
     }
 
     // Check that sender and all receivers are NOT on the deny list (if present), or that they are included in the allow list (if present).
-    const senderPromise = token.grpc.getAccountInfo(sender);
-    const receiverPromises = payloads.map((p) => token.grpc.getAccountInfo(p.recipient.address));
-    const accounts = await Promise.all([senderPromise, ...receiverPromises]);
+    const receiverInfos = await Promise.all(payloads.map((p) => token.grpc.getAccountInfo(p.recipient.address)));
+    const accounts = [senderInfo, ...receiverInfos];
     accounts.forEach((r) => {
         const accToken = r.accountTokens.find((t) => t.id.value === token.info.id.value)?.state;
-        if (accToken?.moduleState === undefined) return true;
+        if (accToken?.moduleState === undefined)
+            throw new NotAllowedError(TokenHolder.fromAccountAddress(r.accountAddress));
 
         const accountModuleState = Cbor.decode(accToken.moduleState) as TokenModuleAccountState;
         if (moduleState.allowList && !accountModuleState.allowList)

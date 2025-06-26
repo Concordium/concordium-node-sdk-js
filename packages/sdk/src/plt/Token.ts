@@ -361,8 +361,6 @@ export async function validateTransfer(
     accounts.forEach((r) => {
         const accToken = r.accountTokens.find((t) => t.id.value === token.info.id.value)?.state;
         if (accToken?.moduleState === undefined) return true;
-        if (!moduleState.denyList && AccountAddress.equals(r.accountAddress, moduleState.governanceAccount.address))
-            return true;
 
         const accountModuleState = Cbor.decode(accToken.moduleState) as TokenModuleAccountState;
         if (moduleState.allowList && !accountModuleState.allowList)

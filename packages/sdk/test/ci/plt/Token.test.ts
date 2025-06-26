@@ -277,50 +277,6 @@ describe('Token.validateTransfer', () => {
         await expect(Token.validateTransfer(token, sender, transfer)).rejects.toThrow(Token.NotAllowedError);
     });
 
-    it('should allow transfer when account is the governance account', async () => {
-        const sender = ACCOUNT_1;
-        const recipient = ACCOUNT_2;
-        const tokenId = TokenId.fromString('3f1bfce9');
-        const decimals = 8;
-
-        // Setup token with allow list enabled
-        const moduleState: TokenModuleState = {
-            name: 'Test Token',
-            metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
-            governanceAccount: TokenHolder.fromAccountAddress(sender),
-            allowList: true,
-        };
-
-        const token = createMockToken(decimals, moduleState, tokenId);
-
-        // Setup sender account with sufficient balance
-        const senderBalance = TokenAmount.create(BigInt(1000), decimals);
-
-        // Create sender/governance account info with allow list status set to false
-        const senderAccountState: TokenModuleAccountState = { allowList: false };
-        const senderAccountInfo = createAccountInfo(sender, tokenId, senderBalance, senderAccountState);
-
-        const recipientAccountState: TokenModuleAccountState = { allowList: true };
-        const recipientAccountInfo = createAccountInfo(recipient, tokenId, undefined, recipientAccountState);
-
-        // Mock getAccountInfo to return sender not on allow list
-        token.grpc.getAccountInfo = jest
-            .fn()
-            .mockResolvedValueOnce(senderAccountInfo) // First call for balance check
-            .mockResolvedValueOnce(senderAccountInfo) // Second call for sender
-            .mockResolvedValueOnce(recipientAccountInfo); // Third call for recipient
-
-        // Create transfer payload
-        const transferAmount = TokenAmount.create(BigInt(500), decimals);
-        const transfer: TokenTransfer = {
-            amount: transferAmount,
-            recipient: TokenHolder.fromAccountAddress(recipient),
-        };
-
-        // Should validate
-        await expect(Token.validateTransfer(token, sender, transfer)).resolves.toBe(true);
-    });
-
     it('should validate batch transfers when total amount is within balance', async () => {
         const sender = ACCOUNT_1;
         const recipient1 = ACCOUNT_2;

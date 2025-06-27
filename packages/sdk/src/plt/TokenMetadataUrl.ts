@@ -145,7 +145,7 @@ export function toCBORValue(tokenMetadataUrl: TokenMetadataUrl): CBOR {
         cbor.checksumSha256 = tokenMetadataUrl.checksumSha256;
     }
     if (tokenMetadataUrl.additional) {
-        cbor.additional = tokenMetadataUrl.additional;
+        cbor = {...cbor, ...tokenMetadataUrl.additional};
     }
     return cbor;
 }

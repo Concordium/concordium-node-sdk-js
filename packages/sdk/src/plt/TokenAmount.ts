@@ -103,7 +103,7 @@ class TokenAmount {
         if (decimals < 0) {
             throw Err.negative();
         }
-        if (Math.floor(decimals) !== decimals) {
+        if (!Number.isInteger(decimals)) {
             throw Err.fractionalDecimals();
         }
     }

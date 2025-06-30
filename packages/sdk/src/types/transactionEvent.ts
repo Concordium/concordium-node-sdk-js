@@ -60,7 +60,7 @@ export enum TransactionEventTag {
     Resumed = 'Resumed',
     Updated = 'Updated',
     Upgraded = 'Upgraded',
-    TokenOperation = 'TokenOperation',
+    TokenUpdate = 'TokenUpdate',
 }
 
 export type TransactionEvent =
@@ -81,7 +81,7 @@ export type TransactionEvent =
     | UpdateEnqueuedEvent
     | DelegationEvent
     | BakerEvent
-    | TokenEvent;
+    | TokenUpdateEvent;
 
 // Contract Events
 
@@ -350,9 +350,9 @@ export interface UpdateEnqueuedEvent {
 /**
  * Token (PLT) events originating from account transactions.
  */
-export type TokenEvent = {
+export type TokenUpdateEvent = {
     /** The type of the event */
-    tag: TransactionEventTag.TokenOperation;
+    tag: TransactionEventTag.TokenUpdate;
     /** The token ID of the token the event originates from */
     tokenId: PLT.TokenId.Type;
     /** The event details */

@@ -6,11 +6,20 @@ import {
     serializeAccountTransactionPayload,
 } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
-import { Cbor, TokenAmount, TokenId, V1 } from '@concordium/web-sdk/plt';
+import {
+    Cbor,
+    Token,
+    TokenAmount,
+    TokenId,
+    TokenOperation,
+    TokenOperationType,
+    TokenSupplyUpdate,
+    createTokenUpdatePayload,
+} from '@concordium/web-sdk/plt';
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
 
-import { parseEndpoint, parseKeysFile } from '../../shared/util.js';
+import { parseEndpoint, parseKeysFile } from '../shared/util.js';
 
 const cli = meow(
     `
@@ -66,21 +75,21 @@ const client = new ConcordiumGRPCNodeClient(addr, Number(port), credentials.crea
 (async () => {
     // #region documentation-snippet
     // parse input
-    const action = cli.input[0] as V1.TokenOperationType;
+    const action = cli.input[0] as TokenOperationType;
     if (!action) {
         console.error('Missing required arguments: <action>');
         return;
     }
 
     // Validate action
-    if (action !== V1.TokenOperationType.Mint && action !== V1.TokenOperationType.Burn) {
+    if (action !== TokenOperationType.Mint && action !== TokenOperationType.Burn) {
         console.error('Invalid action. Use "mint" or "burn".');
         return;
     }
 
     // parse the arguments
     const tokenId = TokenId.fromString(id);
-    const token = await V1.Token.fromId(client, tokenId);
+    const token = await Token.fromId(client, tokenId);
     const tokenAmount = TokenAmount.fromDecimal(amount, token.info.state.decimals);
 
     if (walletFile !== undefined) {
@@ -89,12 +98,12 @@ const client = new ConcordiumGRPCNodeClient(addr, Number(port), credentials.crea
 
         try {
             // create the token instance
-            const token = await V1.Token.fromId(client, tokenId);
+            const token = await Token.fromId(client, tokenId);
 
             console.log(`Attempting to ${action} ${tokenAmount.toString()} ${tokenId.toString()} tokens...`);
 
             // Execute the mint/burn operation
-            const operation = action === V1.TokenOperationType.Mint ? V1.Governance.mint : V1.Governance.burn;
+            const operation = action === TokenOperationType.Mint ? Token.mint : Token.burn;
             const transaction = await operation(token, sender, tokenAmount, signer);
             console.log(`Transaction submitted with hash: ${transaction}`);
 
@@ -106,11 +115,11 @@ const client = new ConcordiumGRPCNodeClient(addr, Number(port), credentials.crea
             }
 
             switch (result.summary.transactionType) {
-                case TransactionKindString.TokenGovernance:
+                case TransactionKindString.TokenUpdate:
                     result.summary.events.forEach((e) => console.log(e.event));
                     break;
                 case TransactionKindString.Failed:
-                    if (result.summary.rejectReason.tag !== RejectReasonTag.TokenGovernanceTransactionFailed) {
+                    if (result.summary.rejectReason.tag !== RejectReasonTag.TokenUpdateTransactionFailed) {
                         throw new Error('Unexpected reject reason tag: ' + result.summary.rejectReason.tag);
                     }
                     const details = Cbor.decode(result.summary.rejectReason.contents.details);
@@ -124,19 +133,19 @@ const client = new ConcordiumGRPCNodeClient(addr, Number(port), credentials.crea
         }
     } else {
         // Or from a wallet perspective:
-        const update: V1.TokenSupplyUpdate = { amount: tokenAmount };
+        const update: TokenSupplyUpdate = { amount: tokenAmount };
         const operation = {
             [action]: update,
-        } as V1.TokenGovernanceOperation;
+        } as TokenOperation;
         console.log(`Specified ${action} action:`, JSON.stringify(operation, null, 2));
 
-        const payload = V1.createTokenGovernancePayload(tokenId, operation);
+        const payload = createTokenUpdatePayload(tokenId, operation);
         console.log('Created payload:', payload);
 
         // Serialize payload for signing/submission
         const serialized = serializeAccountTransactionPayload({
             payload,
-            type: AccountTransactionType.TokenGovernance,
+            type: AccountTransactionType.TokenUpdate,
         });
         console.log('Serialized payload for sign & send:', serialized.toString('hex'));
     }

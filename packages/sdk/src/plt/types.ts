@@ -1,5 +1,4 @@
-import * as AccountAddress from '../types/AccountAddress.js';
-import type { Cbor, CborMemo, TokenAmount, TokenId, TokenModuleReference } from './index.js';
+import type { Cbor, CborMemo, TokenAmount, TokenHolder, TokenId, TokenModuleReference } from './index.js';
 
 /**
  * Represents a protocol level token state for an account.
@@ -20,8 +19,6 @@ export type TokenAccountState = {
 export type TokenState = {
     /** The reference of the module implementing this token. */
     moduleRef: TokenModuleReference.Type;
-    /** Account address of the issuer. The issuer is the holder of the nominated account which can perform token-governance operations. */
-    issuer: AccountAddress.Type;
     /** The number of decimals used to represent token amounts. */
     decimals: number;
     /** The total available token supply. */
@@ -67,8 +64,6 @@ export type CreatePLTPayload = {
     tokenId: TokenId.Type;
     /** The module reference for the token. */
     moduleRef: TokenModuleReference.Type;
-    /** The account to nominate for governance operations. */
-    governanceAccount: AccountAddress.Type;
     /**
      * The number of decimal places used in the representation of amounts of this token. This determines the smallest
      * representable fraction of the token.
@@ -92,7 +87,7 @@ export type TokenEvent =
     | TokenEventGeneric<TokenEventType.Transfer, TokenTransferEvent>
     | TokenEventGeneric<TokenEventType.Mint, TokenSupplyUpdateEvent>
     | TokenEventGeneric<TokenEventType.Burn, TokenSupplyUpdateEvent>
-    | TokenEventGeneric<TokenEventType.Module, TokenModuleEvent>;
+    | TokenEventGeneric<TokenEventType.Module, EncodedTokenModuleEvent>;
 
 /**
  * The type of events emitted by the token module.
@@ -111,7 +106,7 @@ export enum TokenEventType {
 /**
  * Event emitted by the token module.
  */
-export type TokenModuleEvent = {
+export type EncodedTokenModuleEvent = {
     /** The type of the event emitted by the token module. */
     type: string;
     /** Additional details about the event (CBOR encoded). */
@@ -123,9 +118,9 @@ export type TokenModuleEvent = {
  */
 export type TokenTransferEvent = {
     /** The token holder sending the tokens. */
-    from: TokenHolder;
+    from: TokenHolder.Type;
     /** The token holder receiving the tokens. */
-    to: TokenHolder;
+    to: TokenHolder.Type;
     /** The amount of tokens transferred. */
     amount: TokenAmount.Type;
     /** An optional memo associated with the transfer. */
@@ -137,22 +132,7 @@ export type TokenTransferEvent = {
  */
 export type TokenSupplyUpdateEvent = {
     /** The token holder whose supply is updated. */
-    target: TokenHolder;
+    target: TokenHolder.Type;
     /** The amount by which the token supply is updated. */
     amount: TokenAmount.Type;
-};
-
-/**
- * A token holder is an entity that can hold tokens.
- */
-export type TokenHolder = TokenHolderGeneric<'account', AccountAddress.Type>;
-
-/**
- * A generic token holder type that can be extended to support other types of holders in the future.
- */
-type TokenHolderGeneric<T extends 'account', A> = {
-    /** The type of the token holder. Can be used to discriminate different types of token holders. */
-    tag: T;
-    /** The address of the token holder. */
-    address: A;
 };

@@ -29,7 +29,7 @@ import {
     MemoEvent,
     ModuleDeployedEvent,
     NewEncryptedAmountEvent,
-    TokenEvent,
+    TokenUpdateEvent,
     TransactionEventTag,
     TransferredWithScheduleEvent,
 } from './transactionEvent.js';
@@ -73,8 +73,7 @@ export enum TransactionKindString {
     ConfigureDelegation = 'configureDelegation',
     StakingReward = 'paydayAccountReward',
     Failed = 'failed',
-    TokenHolder = 'tokenHolder',
-    TokenGovernance = 'tokenGovernance',
+    TokenUpdate = 'tokenUpdate',
 }
 
 /**
@@ -201,21 +200,12 @@ export interface FailedTransactionSummary {
 }
 
 /**
- * The summary of a token holder transaction of any type.
+ * The summary of a token transaction of any type.
  */
-export type TokenHolderSummary = {
-    transactionType: TransactionKindString.TokenHolder;
+export type TokenUpdateSummary = {
+    transactionType: TransactionKindString.TokenUpdate;
     /** The update details */
-    events: TokenEvent[];
-};
-
-/**
- * The summary of a token governance transaction of any type.
- */
-export type TokenGovernanceSummary = {
-    transactionType: TransactionKindString.TokenGovernance;
-    /** The update details */
-    events: TokenEvent[];
+    events: TokenUpdateEvent[];
 };
 
 /**
@@ -245,8 +235,7 @@ export type AccountTransactionSummary = BaseAccountTransactionSummary &
         | ConfigureDelegationSummary
         | UpdateCredentialKeysSummary
         | UpdateCredentialsSummary
-        | TokenHolderSummary
-        | TokenGovernanceSummary
+        | TokenUpdateSummary
     );
 
 export interface AccountCreationSummary extends BaseBlockItemSummary {

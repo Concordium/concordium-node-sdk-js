@@ -4,8 +4,74 @@
 
 ### Breaking changes
 
+- Add `TokenUpdateSummary` to the possible transaction outcomes declared by
+  `AccountTransactionSummary`, and correspondingly `TokenUpdateEvent` to `TransactionEvent`.
+- Added new variant `TokenUpdate` to `TransactionEventTag`, `AccountTransactionType` and correspondingly `TransactionKindString`.
+- Added new variant `CreatePLT` to `UpdateType`.
+- Updated `AccountInfo` to hold information about the PLTs held by an account.
+- Removed `toProto` and `fromProto` from the exposed API for all custom types in the SDK. This should have no impact, as
+  the parameter/return values are internal-only.
+- Added `TokenUpdatePayload` to `AccountTransactionPayload` union type.
+- Added reject reasons related to PLT transactions to `RejectReason` union type.
+- `CcdAmount.fromDecimal` no longer supports creation from a string with comma used as the decimal separator, e.g.
+  "10,123".
+
+### Added
+
+- A new package export scoped to hold types and functionality for interacting with PLTs, available at
+  `@concordium/web-sdk/plt`.
+- New types representing entities within the domain of protocol level tokens (PLTs)
+  - `Cbor`: Represents CBOR encoded details for PLT module state, events, and operations
+  - `CborMemo`: Represents CBOR encoded memos for PLT transactions
+  - `TokenId`: A unique text identifier of a PLT
+  - `TokenAmount`: A representation of a PLT amount
+  - `TokenModuleReference`: The module reference of a PLT instance
+  - `TokenMetadataUrl`: An object containing the url for token metadata
+  - `TokenHolder`: A representation of the different token holder entities. Currently, only accounts are supported.
+  - `TokenAccountState`, `TokenState`, `TokenInfo`, and `TokenAccountInfo`, all representing PLT related data returned by the
+    GRPC API of a Concordium node. 
+- `Token`, which is a client for interacting with PLTs
+- `parseModuleEvent`, which attempts to parse an `EncodedTokenModuleEvent` into a `TokenModuleEvent`.
+- CBOR conversion functionality to `AccountAddress`.
+- An extension for `cbor2`, which registers CBOR encoders for all relevant Concordium types. This is accessible at the
+  `@concordium/web-sdk/extensions/cbor2` entrypoint.
+- `cborEncode` and `cborDecode` functions for deterministic encoding/decoding of objects composed of Concordium domain
+  types.
+- `registerCborDecoders` and `registerCborEncoders` for registering Concordium domain type encoders/decoders globally
+  for `cbor2`
+  - **NOTE**: By registering decoders globally without using the returned cleanup function, the registration overrides
+  any previously registered decoder for the corresponding CBOR tag.
+- `TokenUpdateHandler`, which is also accessible by passing the corresponding `TransactionType` to `getAccountTransactionHandler`.
+- Function `parseSimpleWallet` which parses a `SimpleWalletFormat` (also a subset of `GenesisFormat`), which can be used
+  with `buildAccountSigner`
+- A new optional field `createPlt` to `AuthorizationsV1` which exposes the access structure for PLT creation.
+
+## 10.0.0-alpha.9
+
+### Breaking changes
+
+- Consolidate `TokenHolderPayload` and `TokenGovernancePayload` into `TokenUpdatePayload`, and correspondingly on the
+  enums `AccountTransactionType` and `TransactionKindString`.
+- Consolidate `TokenHolderUpdateHandler` and `TokenGovernanceUpdateHandler` into `TokenUpdateHandler`.
+- Consolidate `TokenHolderSummary` and `TokenGovernanceSummary` into `TokenUpdateSummary`, and correspondingly on the `TransactionEvent` enum.
+- Consolidate `TokenHolderTransactionFailedRejectReason` and `TokenGovernanceTransactionFailedRejectReason`
+  into `TokenUpdateTransactionFailedRejectReason`, and correspondingly on the `RejectReasonTag` enum.
+- Functionality exposed on `V1.Token` and `V1.Governance` is now available on `Token`, which is a client for interacting with PLTs.
+  Any functionality previously exposed on the `V1` namespace, has been moved to the root of `@concordium/web-sdk/plt`.
+- Removed `UnauthorizedTokenGovernance` type and the corresponding `RejectReasonTag.UnauthorizedTokenGovernance`. This will now happen
+  as a `EncodedTokenModuleEvent` instead.
+- Changed the representation of accounts on any PLT related type from `AccountAddress` to `TokenHolder`.
+
+### Added
+
+- `TokenHolder`: A representation of the different token holder entities. Currently, only accounts are supported.
+
+## 10.0.0-alpha.8
+
+### Breaking changes
+
 - Add `TokenHolderSummary` and `TokenGovernanceSummary` to the possible transaction outcomes declared by
-  `AccountTransactionSummary`, and correspondingly `TokenHolderEvent` and `TokenGovernanceEvent` to `TransactionEvent`.
+- `AccountTransactionSummary`, and correspondingly `TokenHolderEvent` and `TokenGovernanceEvent` to `TransactionEvent`.
 - Added new variants `TokenHolder` and `TokenGovernance` to `TransactionEventTag`, `AccountTransactionType` and correspondingly `TransactionKindString`.
 - Added new variant `CreatePLT` to `UpdateType`.
 - Updated `AccountInfo` to hold information about the PLTs held by an account.
@@ -26,13 +92,12 @@
   - `TokenId`: A unique text identifier of a PLT
   - `TokenAmount`: A representation of a PLT amount
   - `TokenModuleReference`: The module reference of a PLT instance
+  - `TokenMetadataUrl`: An object containing the url for token metadata
+  - `TokenHolder`: A representation of the different token holder entities. Currently, only accounts are supported.
   - `TokenAccountState`, `TokenState`, `TokenInfo`, and `TokenAccountInfo`, all representing PLT related data returned by the
     GRPC API of a Concordium node. 
-- Clients for interacting with PLTs on chain:
-  - `Token`, which is a client for interacting with PLTs from arbitrary token modules and for V1 PLTs:
-  - `V1.Token` which is a client for interacting with V1 PLTs as a token holder.
-  - `V1.Governance` which is a client for interacting with V1 PLTs from the perspective of token governance.
-- `V1.parseModuleEvent`, which attempts to parse a `TokenModuleEvent` into a `V1.TokenModuleEvent`.
+- `Token`, which is a client for interacting with PLTs
+- `parseModuleEvent`, which attempts to parse an `EncodedTokenModuleEvent` into a `TokenModuleEvent`.
 - CBOR conversion functionality to `AccountAddress`.
 - An extension for `cbor2`, which registers CBOR encoders for all relevant Concordium types. This is accessible at the
   `@concordium/web-sdk/extensions/cbor2` entrypoint.
@@ -42,8 +107,7 @@
   for `cbor2`
   - **NOTE**: By registering decoders globally without using the returned cleanup function, the registration overrides
   any previously registered decoder for the corresponding CBOR tag.
-- `TokenHolderHandler` and `TokenGovernanceHandler`, which are also accessible by passing the corresponding
-  `TransactionType` to `getAccountTransactionHandler`.
+- `TokenUpdateHandler`, which is also accessible by passing the corresponding `TransactionType` to `getAccountTransactionHandler`.
 - Function `parseSimpleWallet` which parses a `SimpleWalletFormat` (also a subset of `GenesisFormat`), which can be used
   with `buildAccountSigner`
 - A new optional field `createPlt` to `AuthorizationsV1` which exposes the access structure for PLT creation.

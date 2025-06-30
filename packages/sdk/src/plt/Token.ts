@@ -1,16 +1,31 @@
 import { ConcordiumGRPCClient } from '../grpc/GRPCClient.js';
 import {
     AccountAddress,
+    AccountInfo,
     AccountTransaction,
     AccountTransactionHeader,
     AccountTransactionType,
-    TokenGovernancePayload,
-    TokenHolderPayload,
+    TokenUpdatePayload,
     TransactionExpiry,
     TransactionHash,
 } from '../pub/types.js';
 import { AccountSigner, signTransaction } from '../signHelpers.js';
-import { TokenAmount, TokenId, TokenInfo, TokenModuleReference } from './index.js';
+import { Cbor, TokenAmount, TokenHolder, TokenId, TokenInfo, TokenModuleReference } from './index.js';
+import {
+    TokenAddAllowListOperation,
+    TokenAddDenyListOperation,
+    TokenBurnOperation,
+    TokenMintOperation,
+    TokenModuleAccountState,
+    TokenModuleState,
+    TokenOperation,
+    TokenOperationType,
+    TokenRemoveAllowListOperation,
+    TokenRemoveDenyListOperation,
+    TokenTransfer,
+    TokenTransferOperation,
+    createTokenUpdatePayload,
+} from './module.js';
 
 /**
  * Enum representing the types of errors that can occur when interacting with PLT instances through the client.
@@ -22,6 +37,14 @@ export enum TokenErrorCode {
     INVALID_TOKEN_AMOUNT = 'INVALID_TOKEN_AMOUNT',
     /** Error type indicating an unauthorized governance operation was attempted. */
     UNAUTHORIZED_GOVERNANCE_OPERATION = 'UNAUTHORIZED_GOVERNANCE_OPERATION',
+    /**
+     * Error representing an attempt transfer funds to an account which is either not on the token allow list, or is on
+     * the token deny list
+     */
+    NOT_ALLOWED = 'NOT_ALLOWED',
+    /** Error representing an attempt to transfer tokens from an account that does not have enough tokens to cover the
+     * amount */
+    INSUFFICIENT_FUNDS = 'INSUFFICIENT_FUNDS',
 }
 
 /**
@@ -100,9 +123,46 @@ export class UnauthorizedGovernanceOperationError extends TokenError {
 }
 
 /**
+ * Error type indicating an attempt transfer funds to/from an account which is either not on the token allow list, or is on the token deny list
+ */
+export class NotAllowedError extends TokenError {
+    public readonly code = TokenErrorCode.NOT_ALLOWED;
+
+    /**
+     * Constructs a new NotAllowedError.
+     * @param {TokenHolder.Type} receiver - The account address of the receiver.
+     */
+    constructor(public readonly receiver: TokenHolder.Type) {
+        super(
+            `Transfering funds from or to the account specified is currently not allowed (${receiver}) because of the allow/deny list.`
+        );
+    }
+}
+
+/**
+ * Error type indicating insufficient funds for a transaction.
+ */
+export class InsufficientFundsError extends TokenError {
+    public readonly code = TokenErrorCode.INSUFFICIENT_FUNDS;
+
+    /**
+     * Constructs a new InsufficientFundsError.
+     *
+     * @param {AccountAddress.Type} sender - The account address of the sender.
+     * @param {TokenAmount.Type} requiredAmount - The amount of tokens required for the transaction.
+     */
+    constructor(
+        public readonly sender: AccountAddress.Type,
+        public readonly requiredAmount: TokenAmount.Type
+    ) {
+        super(`Insufficient funds: Sender ${sender} requires at least ${requiredAmount} tokens.`);
+    }
+}
+
+/**
  * Class representing a token.
  */
-export class Token {
+class Token {
     /**
      * Constructs a new Token.
      * @param {ConcordiumGRPCClient} grpc - The gRPC client for interacting with the Concordium network.
@@ -142,12 +202,15 @@ export function fromInfo(grpc: ConcordiumGRPCClient, tokenInfo: TokenInfo): Toke
  *
  * @param {Token} token - The token to validate against.
  * @param {TokenAmount.Type} amount - The amount to validate.
+
+ * @returns {true} If the amount is valid within the context of the token.
  * @throws {InvalidTokenAmountError} If the token amount is not compatible with the token.
  */
-export function validateAmount(token: Token, amount: TokenAmount.Type): void {
-    if (amount.decimals !== token.info.state.decimals) {
-        throw new InvalidTokenAmountError(token.info.state.decimals, amount);
+export function validateAmount(token: Token, amount: TokenAmount.Type): true {
+    if (amount.decimals === token.info.state.decimals) {
+        return true;
     }
+    throw new InvalidTokenAmountError(token.info.state.decimals, amount);
 }
 
 /**
@@ -173,23 +236,22 @@ export function scaleAmount(token: Token, amount: TokenAmount.Type): TokenAmount
 }
 
 /**
- * Initiates a holder transaction for a given token.
+ * Initiates a transaction for a given token.
  *
- * This function creates and sends a transaction of type `TokenHolder` for the specified token.
- * It encodes the provided payload, signs the transaction, and submits it to the blockchain.
+ * This function creates and sends a transaction of type `TokenUpdate` for the specified token.
  *
- * @param {Token} token - The token for which the holder transaction is being performed.
+ * @param {Token} token - The token for which the transaction is being performed.
  * @param {AccountAddress.Type} sender - The account address initiating the transaction.
- * @param {TokenHolderPayload} payload - The transaction payload.
+ * @param {TokenUpdatePayload} payload - The transaction payload.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
  *
  * @returns {Promise<TransactionHash.Type>} A promise that resolves to the transaction hash.
  */
-export async function holderTransaction(
+export async function sendRaw(
     token: Token,
     sender: AccountAddress.Type,
-    payload: TokenHolderPayload,
+    payload: TokenUpdatePayload,
     signer: AccountSigner,
     expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5)
 ): Promise<TransactionHash.Type> {
@@ -200,7 +262,7 @@ export async function holderTransaction(
         sender,
     };
     const transaction: AccountTransaction = {
-        type: AccountTransactionType.TokenHolder,
+        type: AccountTransactionType.TokenUpdate,
         payload,
         header,
     };
@@ -209,46 +271,398 @@ export async function holderTransaction(
 }
 
 /**
- * Initiates a governance transaction for a given token.
- *
- * This function creates and sends a transaction of type `TokenGovernance` for the specified token.
- * It verifies that the sender is the token issuer, encodes the provided payload, signs the transaction,
- * and submits it to the blockchain.
- *
- * @param {Token} token - The token for which the governance transaction is being performed.
- * @param {AccountAddress.Type} sender - The account address initiating the transaction.
- * @param {TokenGovernancePayload} payload - The transaction payload.
- * @param {AccountSigner} signer - The signer responsible for signing the transaction.
- * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
- * @param {boolean} [validate=true] - Whether to validate the sender's authorization.
- *
- * @returns {Promise<TransactionHash.Type>} A promise that resolves to the transaction hash.
- * @throws {UnauthorizedGovernanceOperationError} If the sender is not the token issuer.
+ * The response type for the `balanceOf` function.
  */
-export async function governanceTransaction(
+export type BalanceOfResponse = TokenAmount.Type | undefined;
+
+/**
+ * Retrieves the balance of a token for a given account.
+ *
+ * @param {Token} token - The token to check the balance of.
+ * @param {AccountInfo} accountInfo - The account to check the balance for.
+ *
+ * @returns {BalanceOfResponse} The balance of the token for the account.
+ */
+export function balanceOf(token: Token, accountInfo: AccountInfo): BalanceOfResponse;
+/**
+ * Retrieves the balance of a token for a given account.
+ *
+ * @param {Token} token - The token to check the balance of.
+ * @param {AccountAddress.Type} accountAddress - The account to check the balance for.
+ *
+ * @returns {Promise<BalanceOfResponse>} The balance of the token for the account.
+ */
+export async function balanceOf(token: Token, accountAddress: AccountAddress.Type): Promise<BalanceOfResponse>;
+/**
+ * Retrieves the balance of a token for a given account.
+ *
+ * @param {Token} token - The token to check the balance of.
+ * @param {AccountInfo | AccountAddress.Type} account - The account to check the balance for.
+ *
+ * @returns {Promise<BalanceOfResponse> | BalanceOfResponse} The balance of the token for the account.
+ */
+export function balanceOf(
+    token: Token,
+    account: AccountInfo | AccountAddress.Type
+): Promise<BalanceOfResponse> | BalanceOfResponse {
+    if (!AccountAddress.instanceOf(account)) {
+        return account.accountTokens.find((t) => t.id.value === token.info.id.value)?.state.balance;
+    }
+
+    return token.grpc.getAccountInfo(account).then((accInfo) => balanceOf(token, accInfo));
+}
+
+/**
+ * Validates a token transfer.
+ *
+ * @param {Token} token - The token to transfer.
+ * @param {AccountAddress.Type} sender - The account address of the sender.
+ * @param {TokenTransfer | TokenTransfer[]} payload - The transfer payload.
+ *
+ * @returns {Promise<true>} A promise that resolves to true if the transfer is valid.
+ * @throws {InvalidTokenAmountError} If any token amount is not compatible with the token.
+ * @throws {InsufficientFundsError} If the sender does not have enough tokens.
+ * @throws {NotAllowedError} If the sender or receiver is not allowed to send/receive tokens.
+ */
+export async function validateTransfer(
     token: Token,
     sender: AccountAddress.Type,
-    payload: TokenGovernancePayload,
+    payload: TokenTransfer | TokenTransfer[]
+): Promise<true> {
+    const payloads = [payload].flat();
+
+    // Validate all amounts
+    payloads.forEach((p) => validateAmount(token, p.amount));
+
+    const { decimals } = token.info.state;
+    const senderInfo = await token.grpc.getAccountInfo(sender);
+
+    // Check the sender balance.
+    const senderBalance = balanceOf(token, senderInfo) ?? TokenAmount.zero(decimals); // We fall back to zero, as the `token` has already been validated at this point.
+    const payloadTotal = payloads.reduce(
+        (acc, { amount }) => acc.add(TokenAmount.toDecimal(amount)),
+        TokenAmount.toDecimal(TokenAmount.zero(decimals))
+    );
+    if (TokenAmount.toDecimal(senderBalance).lt(payloadTotal)) {
+        throw new InsufficientFundsError(sender, TokenAmount.fromDecimal(payloadTotal, decimals));
+    }
+
+    const moduleState = Cbor.decode(token.info.state.moduleState) as TokenModuleState;
+    if (!moduleState.allowList && !moduleState.denyList) {
+        // If the token neither has a deny list nor allow list, we can skip the check.
+        return true;
+    }
+
+    // Check that sender and all receivers are NOT on the deny list (if present), or that they are included in the allow list (if present).
+    const receiverInfos = await Promise.all(payloads.map((p) => token.grpc.getAccountInfo(p.recipient.address)));
+    const accounts = [senderInfo, ...receiverInfos];
+    accounts.forEach((r) => {
+        const accToken = r.accountTokens.find((t) => t.id.value === token.info.id.value)?.state;
+        if (accToken?.moduleState === undefined)
+            throw new NotAllowedError(TokenHolder.fromAccountAddress(r.accountAddress));
+
+        const accountModuleState = Cbor.decode(accToken.moduleState) as TokenModuleAccountState;
+        if (moduleState.allowList && !accountModuleState.allowList)
+            throw new NotAllowedError(TokenHolder.fromAccountAddress(r.accountAddress));
+        if (moduleState.denyList && accountModuleState.denyList)
+            throw new NotAllowedError(TokenHolder.fromAccountAddress(r.accountAddress));
+    });
+
+    return true;
+}
+
+type TransferOtions = {
+    /** Whether to automatically scale a token amount to the correct number of decimals as the token */
+    autoScale?: boolean;
+    /** Whether to validate the payload executing it */
+    validate?: boolean;
+};
+
+/**
+ * Transfers tokens from the sender to the specified recipients.
+ *
+ * @param {Token} token - The token to transfer.
+ * @param {AccountAddress.Type} sender - The account address of the sender.
+ * @param {TokenTransfer | TokenTransfer[]} payload - The transfer payload.
+ * @param {AccountSigner} signer - The signer responsible for signing the transaction.
+ * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
+ * @param {TransferOtions} [opts={ autoScale: true, validate: true }] - Options for the transfer.
+ *
+ * @returns {Promise<TransactionHash.Type>} A promise that resolves to the transaction hash.
+ * @throws {InvalidTokenAmountError} If `opts.validate` and any token amount is not compatible with the token.
+ * @throws {InsufficientFundsError} If `opts.validate` and the sender does not have enough tokens.
+ * @throws {NotAllowedError} If `opts.validate` and a sender or receiver is not allowed to send/receive tokens.
+ */
+export async function transfer(
+    token: Token,
+    sender: AccountAddress.Type,
+    payload: TokenTransfer | TokenTransfer[],
     signer: AccountSigner,
     expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
-    validate: boolean = true
+    opts: TransferOtions = { autoScale: true, validate: true }
 ): Promise<TransactionHash.Type> {
-    // Check if the sender is the token issuer
-    if (validate && !AccountAddress.equals(sender, token.info.state.issuer)) {
+    let transfers: TokenTransfer[] = [payload].flat();
+    if (opts.autoScale) {
+        transfers = transfers.map((p) => ({ ...p, amount: scaleAmount(token, p.amount) }));
+    }
+
+    if (opts.validate) {
+        await validateTransfer(token, sender, transfers);
+    }
+
+    const ops: TokenTransferOperation[] = transfers.map((p) => ({ [TokenOperationType.Transfer]: p }));
+    const encoded = createTokenUpdatePayload(token.info.id, ops);
+    return sendRaw(token, sender, encoded, signer, expiry);
+}
+
+/**
+ * Validates that the sender is authorized to perform governance operations on the token.
+ *
+ * @param {Token} token - The token to validate governance operations for.
+ * @param {AccountAddress.Type} sender - The account address of the sender.
+ *
+ * @returns {true} If the sender is authorized.
+ * @throws {UnauthorizedGovernanceOperationError} If the sender is not the governance account of the token.
+ */
+export function validateGovernanceOperation(token: Token, sender: AccountAddress.Type): true {
+    const { governanceAccount } = Cbor.decode(token.info.state.moduleState) as TokenModuleState;
+    if (!AccountAddress.equals(sender, governanceAccount.address)) {
         throw new UnauthorizedGovernanceOperationError(sender);
     }
 
-    const { nonce } = await token.grpc.getNextAccountNonce(sender);
-    const header: AccountTransactionHeader = {
-        expiry,
-        nonce: nonce,
-        sender,
-    };
-    const transaction: AccountTransaction = {
-        type: AccountTransactionType.TokenGovernance,
-        payload: payload,
-        header,
-    };
-    const signature = await signTransaction(transaction, signer);
-    return token.grpc.sendAccountTransaction(transaction, signature);
+    return true;
+}
+
+type SupplyUpdateOptions = {
+    /** Whether to automatically scale a token amount to the correct number of decimals as the token */
+    autoScale?: boolean;
+    /** Whether to validate the payload executing it */
+    validate?: boolean;
+};
+
+/**
+ * Mints a specified amount of tokens.
+ *
+ * @param {Token} token - The token to mint.
+ * @param {AccountAddress.Type} sender - The account address of the sender.
+ * @param {TokenAmount.Type | TokenAmount.Type[]} amounts - The amount(s) of tokens to mint.
+ * @param {AccountSigner} signer - The signer responsible for signing the transaction.
+ * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
+ * @param {SupplyUpdateOptions} [opts={ autoScale: true, validate: true }] - Options for supply update operations.
+ *
+ * @returns A promise that resolves to the transaction hash.
+ * @throws {InvalidTokenAmountError} If `opts.validate` and the token amount is not compatible with the token.
+ * @throws {UnauthorizedGovernanceOperationError} If `opts.validate` and the sender is not the token issuer.
+ */
+export async function mint(
+    token: Token,
+    sender: AccountAddress.Type,
+    amounts: TokenAmount.Type | TokenAmount.Type[],
+    signer: AccountSigner,
+    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
+    opts: SupplyUpdateOptions = { autoScale: true, validate: true }
+): Promise<TransactionHash.Type> {
+    let amountsList = [amounts].flat();
+    if (opts.autoScale) {
+        amountsList = amountsList.map((amount) => scaleAmount(token, amount));
+    }
+
+    if (opts.validate) {
+        validateGovernanceOperation(token, sender);
+        amountsList.forEach((amount) => validateAmount(token, amount));
+    }
+
+    const ops: TokenMintOperation[] = amountsList.map((amount) => ({
+        [TokenOperationType.Mint]: { amount },
+    }));
+    return sendOperations(token, sender, ops, signer, expiry);
+}
+
+/**
+ * Burns a specified amount of tokens.
+ *
+ * @param {Token} token - The token to burn.
+ * @param {AccountAddress.Type} sender - The account address of the sender.
+ * @param {TokenAmount.Type | TokenAmount.Type[]} amounts - The amount(s) of tokens to burn.
+ * @param {AccountSigner} signer - The signer responsible for signing the transaction.
+ * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
+ * @param {SupplyUpdateOptions} [opts={ autoScale: true, validate: true }] - Options for supply update operations.
+ *
+ * @returns A promise that resolves to the transaction hash.
+ * @throws {InvalidTokenAmountError} If `opts.validate` and the token amount is not compatible with the token.
+ * @throws {UnauthorizedGovernanceOperationError} If `opts.validate` and the sender is not the token issuer.
+ */
+export async function burn(
+    token: Token,
+    sender: AccountAddress.Type,
+    amounts: TokenAmount.Type | TokenAmount.Type[],
+    signer: AccountSigner,
+    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
+    opts: SupplyUpdateOptions = { autoScale: true, validate: true }
+): Promise<TransactionHash.Type> {
+    let amountsList = [amounts].flat();
+    if (opts.autoScale) {
+        amountsList = amountsList.map((amount) => scaleAmount(token, amount));
+    }
+
+    if (opts.validate) {
+        validateGovernanceOperation(token, sender);
+        amountsList.forEach((amount) => validateAmount(token, amount));
+    }
+
+    const ops: TokenBurnOperation[] = amountsList.map((amount) => ({
+        [TokenOperationType.Burn]: { amount },
+    }));
+    return sendOperations(token, sender, ops, signer, expiry);
+}
+
+type UpdateListOptions = {
+    /** Whether to validate the payload executing it */
+    validate?: boolean;
+};
+
+/**
+ * Adds an account to the allow list of a token.
+ *
+ * @param {Token} token - The token for which to add the list entry.
+ * @param {AccountAddress.Type} sender - The account address of the sender.
+ * @param {TokenHolder.Type | TokenHolder.Type[]} targets - The account address(es) to be added to the list.
+ * @param {AccountSigner} signer - The signer responsible for signing the transaction.
+ * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
+ * @param {UpdateListOptions} [opts={ validate: true }] - Options for updating the allow/deny list.
+ *
+ * @returns A promise that resolves to the transaction hash.
+ * @throws {UnauthorizedGovernanceOperationError} If `opts.validate` and the sender is not the token issuer.
+ */
+export async function addAllowList(
+    token: Token,
+    sender: AccountAddress.Type,
+    targets: TokenHolder.Type | TokenHolder.Type[],
+    signer: AccountSigner,
+    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
+    { validate }: UpdateListOptions = { validate: true }
+): Promise<TransactionHash.Type> {
+    if (validate) {
+        validateGovernanceOperation(token, sender);
+    }
+
+    const ops: TokenAddAllowListOperation[] = [targets]
+        .flat()
+        .map((target) => ({ [TokenOperationType.AddAllowList]: { target } }));
+    return sendOperations(token, sender, ops, signer, expiry);
+}
+
+/**
+ * Removes an account from the allow list of a token.
+ *
+ * @param {Token} token - The token for which to add the list entry.
+ * @param {AccountAddress.Type} sender - The account address of the sender.
+ * @param {TokenHolder.Type | TokenHolder.Type[]} targets - The account address(es) to be added to the list.
+ * @param {AccountSigner} signer - The signer responsible for signing the transaction.
+ * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
+ * @param {UpdateListOptions} [opts={ validate: true }] - Options for updating the allow/deny list.
+ *
+ * @returns A promise that resolves to the transaction hash.
+ * @throws {UnauthorizedGovernanceOperationError} If `opts.validate` and the sender is not the token issuer.
+ */
+export async function removeAllowList(
+    token: Token,
+    sender: AccountAddress.Type,
+    targets: TokenHolder.Type | TokenHolder.Type[],
+    signer: AccountSigner,
+    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
+    { validate }: UpdateListOptions = { validate: true }
+): Promise<TransactionHash.Type> {
+    if (validate) {
+        validateGovernanceOperation(token, sender);
+    }
+
+    const ops: TokenRemoveAllowListOperation[] = [targets]
+        .flat()
+        .map((target) => ({ [TokenOperationType.RemoveAllowList]: { target } }));
+    return sendOperations(token, sender, ops, signer, expiry);
+}
+
+/**
+ * Adds an account to the deny list of a token.
+ *
+ * @param {Token} token - The token for which to add the list entry.
+ * @param {AccountAddress.Type} sender - The account address of the sender.
+ * @param {TokenHolder.Type | TokenHolder.Type[]} targets - The account address(es) to be added to the list.
+ * @param {AccountSigner} signer - The signer responsible for signing the transaction.
+ * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
+ * @param {UpdateListOptions} [opts={ validate: true }] - Options for updating the allow/deny list.
+ *
+ * @returns A promise that resolves to the transaction hash.
+ * @throws {UnauthorizedGovernanceOperationError} If `opts.validate` and the sender is not the token issuer.
+ */
+export async function addDenyList(
+    token: Token,
+    sender: AccountAddress.Type,
+    targets: TokenHolder.Type | TokenHolder.Type[],
+    signer: AccountSigner,
+    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
+    { validate }: UpdateListOptions = { validate: true }
+): Promise<TransactionHash.Type> {
+    if (validate) {
+        validateGovernanceOperation(token, sender);
+    }
+
+    const ops: TokenAddDenyListOperation[] = [targets]
+        .flat()
+        .map((target) => ({ [TokenOperationType.AddDenyList]: { target } }));
+    return sendOperations(token, sender, ops, signer, expiry);
+}
+
+/**
+ * Removes an account from the deny list of a token.
+ *
+ * @param {Token} token - The token for which to add the list entry.
+ * @param {AccountAddress.Type} sender - The account address of the sender.
+ * @param {TokenHolder.Type | TokenHolder.Type[]} targets - The account address(es) to be added to the list.
+ * @param {AccountSigner} signer - The signer responsible for signing the transaction.
+ * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
+ * @param {UpdateListOptions} [opts={ validate: true }] - Options for updating the allow/deny list.
+ *
+ * @returns A promise that resolves to the transaction hash.
+ * @throws {UnauthorizedGovernanceOperationError} If `opts.validate` and the sender is not the token issuer.
+ */
+export async function removeDenyList(
+    token: Token,
+    sender: AccountAddress.Type,
+    targets: TokenHolder.Type | TokenHolder.Type[],
+    signer: AccountSigner,
+    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
+    { validate }: UpdateListOptions = { validate: true }
+): Promise<TransactionHash.Type> {
+    if (validate) {
+        validateGovernanceOperation(token, sender);
+    }
+
+    const ops: TokenRemoveDenyListOperation[] = [targets]
+        .flat()
+        .map((target) => ({ [TokenOperationType.RemoveDenyList]: { target } }));
+    return sendOperations(token, sender, ops, signer, expiry);
+}
+
+/**
+ * Executes a batch of governance operations on a token.
+ *
+ * @param {Token} token - The token on which to perform the operations.
+ * @param {AccountAddress.Type} sender - The account address of the sender.
+ * @param {TokenOperation[]} operations - An array of governance operations to execute.
+ * @param {AccountSigner} signer - The signer responsible for signing the transaction.
+ * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
+ *
+ * @returns A promise that resolves to the transaction hash.
+ */
+export async function sendOperations(
+    token: Token,
+    sender: AccountAddress.Type,
+    operations: TokenOperation[],
+    signer: AccountSigner,
+    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5)
+): Promise<TransactionHash.Type> {
+    const payload = createTokenUpdatePayload(token.info.id, operations);
+    return sendRaw(token, sender, payload, signer, expiry);
 }

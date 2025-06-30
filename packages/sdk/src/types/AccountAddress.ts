@@ -1,12 +1,8 @@
 import bs58check from 'bs58check';
 import { Buffer } from 'buffer/index.js';
-import { decode } from 'cbor2/decoder';
-import { encode, registerEncoder } from 'cbor2/encoder';
-import { Tag } from 'cbor2/tag';
 
 import type * as Proto from '../grpc-api/v2/concordium/kernel.js';
 import { Base58String } from '../types.js';
-import { bail } from '../util.js';
 import { TypedJson, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 
 /**
@@ -158,9 +154,9 @@ export function fromSchemaValue(accountAddress: SchemaValue): AccountAddress {
     return fromBase58(accountAddress);
 }
 
-const ADDRESS_BYTES_LENGTH = 32;
+export const BYTES_LENGTH = 32;
 const ALIAS_BYTES_LENGTH = 3;
-const COMMON_BYTES_LENGTH = ADDRESS_BYTES_LENGTH - ALIAS_BYTES_LENGTH;
+const COMMON_BYTES_LENGTH = BYTES_LENGTH - ALIAS_BYTES_LENGTH;
 const MAX_COUNT = 16777215; // 2^(8 * 3) - 1
 
 /**
@@ -252,170 +248,3 @@ export function toTypedJSON(value: AccountAddress): TypedJson<Serializable> {
  * @returns {Type} The parsed instance.
  */
 export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(JSON_DISCRIMINATOR, fromBase58);
-
-const TAGGED_COININFO = 40305;
-const TAGGED_ADDRESS = 40307;
-const CCD_NETWORK_ID = 919; // Concordium network identifier - Did you know 919 is a palindromic prime and a centred hexagonal number?
-
-function toCBORValue(value: AccountAddress): Map<number, any> {
-    const taggedCoinInfo = new Tag(TAGGED_COININFO, new Map([[1, CCD_NETWORK_ID]]));
-    return new Map<number, any>([
-        [1, taggedCoinInfo],
-        [3, value.decodedAddress],
-    ]);
-}
-
-/**
- * Converts an AccountAddress to its CBOR (Concise Binary Object Representation) encoding.
- * This encodes the account address as a CBOR tagged value with tag 40307, containing both
- * the coin information (tagged as 40305) and the account's decoded address.
- *
- * This corresponds to a concordium-specific subtype of the `tagged-address` type from
- * [BCR-2020-009]{@link https://github.com/BlockchainCommons/Research/blob/master/papers/bcr-2020-009-address.md},
- * identified by `tagged-coininfo` corresponding to the Concordium network from
- * [BCR-2020-007]{@link https://github.com/BlockchainCommons/Research/blob/master/papers/bcr-2020-007-hdkey.md}
- *
- * Example of CBOR diagnostic notation for an encoded account address:
- * ```
- * 40307({
- *   1: 40305({1: 919}),
- *   3: h'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789'
- * })
- * ```
- * Where 919 is the Concordium network identifier and the hex string is the raw account address.
- *
- * @param {AccountAddress} value - The account address to convert to CBOR format.
- * @throws {Error} - If an unsupported CBOR encoding is specified.
- * @returns {Uint8Array} The CBOR encoded representation of the account address.
- */
-export function toCBOR(value: AccountAddress): Uint8Array {
-    const tagged = new Tag(TAGGED_ADDRESS, toCBORValue(value));
-    return new Uint8Array(encode(tagged));
-}
-
-/**
- * Registers a CBOR encoder for the AccountAddress type with the `cbo2` library.
- * This allows AccountAddress instances to be automatically encoded when used with
- * the `cbor2` library's encode function.
- *
- * @returns {void}
- * @example
- * // Register the encoder
- * registerCBOREncoder();
- * // Now AccountAddress instances can be encoded directly
- * const encoded = encode(myAccountAddress);
- */
-export function registerCBOREncoder(): void {
-    registerEncoder(AccountAddress, (value) => [TAGGED_ADDRESS, toCBORValue(value)]);
-}
-
-function parseCBORValue(decoded: unknown): AccountAddress {
-    // Verify we have a tagged value with tag 40307 (tagged-address)
-    if (!(decoded instanceof Tag) || decoded.tag !== TAGGED_ADDRESS) {
-        throw new Error(`Invalid CBOR encoded account address: expected tag ${TAGGED_ADDRESS}`);
-    }
-
-    const value = decoded.contents;
-
-    if (!(value instanceof Map)) {
-        throw new Error('Invalid CBOR encoded account address: expected a map');
-    }
-
-    // Verify the map corresponds to the BCR-2020-009 `address` format
-    const validKeys = [1, 2, 3]; // we allow 2 here, as it is in the spec for BCR-2020-009 `address`, but we don't use it
-    for (const key of value.keys()) {
-        validKeys.includes(key) || bail(`Invalid CBOR encoded account address: unexpected key ${key}`);
-    }
-
-    // Extract the account address bytes (key 3)
-    const addressBytes = value.get(3);
-    if (!addressBytes || !(addressBytes instanceof Uint8Array) || addressBytes.byteLength !== ADDRESS_BYTES_LENGTH) {
-        throw new Error('Invalid CBOR encoded account address: missing or invalid address bytes');
-    }
-
-    // Optional validation for coin information if present (key 1)
-    const coinInfo = value.get(1);
-    if (coinInfo !== undefined) {
-        // Verify coin info has the correct tag if present
-        if (!(coinInfo instanceof Tag) || coinInfo.tag !== TAGGED_COININFO) {
-            throw new Error(
-                `Invalid CBOR encoded account address: coin info has incorrect tag (expected ${TAGGED_COININFO})`
-            );
-        }
-
-        // Verify coin info contains Concordium network identifier if present
-        const coinInfoMap = coinInfo.contents;
-        if (!(coinInfoMap instanceof Map) || coinInfoMap.get(1) !== CCD_NETWORK_ID) {
-            throw new Error(
-                `Invalid CBOR encoded account address: coin info does not contain Concordium network identifier ${CCD_NETWORK_ID}`
-            );
-        }
-
-        // Verify the map corresponds to the BCR-2020-007 `coininfo` format
-        const validKeys = [1, 2]; // we allow 2 here, as it is in the spec for BCR-2020-007 `coininfo`, but we don't use it
-        for (const key of coinInfoMap.keys()) {
-            validKeys.includes(key) || bail(`Invalid CBOR encoded coininfo: unexpected key ${key}`);
-        }
-    }
-
-    // Create the AccountAddress from the extracted bytes
-    return fromBuffer(addressBytes);
-}
-
-/**
- * Decodes a CBOR-encoded account address into an AccountAddress instance.
- * This function can handle both the full tagged format (with coin information)
- * and a simplified format with just the address bytes.
- *
- * 1. With `tagged-coininfo` (40305):
- * ```
- * 40307({
- *   1: 40305({1: 919}),  // Optional coin information
- *   3: h'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789'
- * })
- * ```
- *
- * 2. Without `tagged-coininfo`:
- * ```
- * 40307({
- *   3: h'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789'
- * }) // The address is assumed to be a Concordium address
- * ```
- *
- * @param {Uint8Array} bytes - The CBOR encoded representation of an account address.
- * @throws {Error} - If the input is not a valid CBOR encoding of an account address.
- * @returns {AccountAddress} The decoded AccountAddress instance.
- */
-export function fromCBOR(bytes: Uint8Array): AccountAddress {
-    return parseCBORValue(decode(bytes));
-}
-
-/**
- * Registers a CBOR decoder for the tagged-address (40307) format with the `cbor2` library.
- * This enables automatic decoding of CBOR data containing Concordium account addresses
- * when using the `cbor2` library's decode function.
- *
- * @returns {() => void} A cleanup function that, when called, will restore the previous
- * decoder (if any) that was registered for the tagged-address format. This is useful
- * when used in an existing `cbor2` use-case.
- *
- * @example
- * // Register the decoder
- * const cleanup = registerCBORDecoder();
- * // Use the decoder
- * const address = decode(cborBytes); // Returns AccountAddress if format matches
- * // Later, unregister the decoder
- * cleanup();
- */
-export function registerCBORDecoder(): () => void {
-    const old = Tag.registerDecoder(TAGGED_ADDRESS, parseCBORValue);
-
-    // return cleanup function to restore the old decoder
-    return () => {
-        if (old) {
-            Tag.registerDecoder(TAGGED_ADDRESS, old);
-        } else {
-            Tag.clearDecoder(TAGGED_ADDRESS);
-        }
-    };
-}

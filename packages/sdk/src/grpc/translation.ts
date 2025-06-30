@@ -1194,28 +1194,13 @@ function trRejectReason(rejectReason: GRPC.RejectReason | undefined): SDK.Reject
                 tag: Tag.NonExistentTokenId,
                 contents: PLT.TokenId.fromProto(reason.nonExistentTokenId),
             };
-        case 'tokenHolderTransactionFailed':
+        case 'tokenUpdateTransactionFailed':
             return {
-                tag: Tag.TokenHolderTransactionFailed,
+                tag: Tag.TokenUpdateTransactionFailed,
                 contents: {
-                    type: reason.tokenHolderTransactionFailed.type,
-                    tokenId: PLT.TokenId.fromProto(unwrap(reason.tokenHolderTransactionFailed.tokenId)),
-                    details: PLT.Cbor.fromProto(unwrap(reason.tokenHolderTransactionFailed.details)),
-                },
-            };
-
-        case 'unauthorizedTokenGovernance':
-            return {
-                tag: Tag.UnauthorizedTokenGovernance,
-                contents: PLT.TokenId.fromProto(reason.unauthorizedTokenGovernance),
-            };
-        case 'tokenGovernanceTransactionFailed':
-            return {
-                tag: Tag.TokenGovernanceTransactionFailed,
-                contents: {
-                    type: reason.tokenGovernanceTransactionFailed.type,
-                    tokenId: PLT.TokenId.fromProto(unwrap(reason.tokenGovernanceTransactionFailed.tokenId)),
-                    details: PLT.Cbor.fromProto(unwrap(reason.tokenGovernanceTransactionFailed.details)),
+                    type: reason.tokenUpdateTransactionFailed.type,
+                    tokenId: PLT.TokenId.fromProto(unwrap(reason.tokenUpdateTransactionFailed.tokenId)),
+                    details: PLT.Cbor.fromProto(unwrap(reason.tokenUpdateTransactionFailed.details)),
                 },
             };
         case undefined:
@@ -1598,7 +1583,6 @@ function trUpdatePayload(updatePayload: GRPC.UpdatePayload | undefined): SDK.Upd
                     tokenId: PLT.TokenId.fromProto(unwrap(payload.createPltUpdate.tokenId)),
                     moduleRef: PLT.TokenModuleReference.fromProto(unwrap(payload.createPltUpdate.tokenModule)),
                     decimals: payload.createPltUpdate.decimals,
-                    governanceAccount: AccountAddress.fromProto(unwrap(payload.createPltUpdate.governanceAccount)),
                     initializationParameters: PLT.Cbor.fromProto(
                         unwrap(payload.createPltUpdate.initializationParameters)
                     ),
@@ -1763,10 +1747,8 @@ function trTransactionType(type?: GRPC.TransactionType): SDK.TransactionKindStri
             return SDK.TransactionKindString.ConfigureBaker;
         case GRPC.TransactionType.CONFIGURE_DELEGATION:
             return SDK.TransactionKindString.ConfigureDelegation;
-        case GRPC.TransactionType.TOKEN_HOLDER:
-            return SDK.TransactionKindString.TokenHolder;
-        case GRPC.TransactionType.TOKEN_GOVERNANCE:
-            return SDK.TransactionKindString.TokenGovernance;
+        case GRPC.TransactionType.TOKEN_UPDATE:
+            return SDK.TransactionKindString.TokenUpdate;
         case undefined:
             return undefined;
     }
@@ -2046,27 +2028,16 @@ function trAccountTransactionSummary(
                 transactionType: SDK.TransactionKindString.ConfigureDelegation,
                 events: effect.delegationConfigured.events.map((x) => trDelegationEvent(x, base.sender)),
             };
-        case 'tokenHolderEffect':
-            const holderEvents: SDK.TokenEvent[] = effect.tokenHolderEffect.events.map((e) => ({
-                tag: SDK.TransactionEventTag.TokenOperation,
+        case 'tokenUpdateEffect':
+            const events: SDK.TokenUpdateEvent[] = effect.tokenUpdateEffect.events.map((e) => ({
+                tag: SDK.TransactionEventTag.TokenUpdate,
                 tokenId: PLT.TokenId.fromProto(unwrap(e.tokenId)),
                 event: tokenEvent(e),
             }));
             return {
                 ...base,
-                transactionType: SDK.TransactionKindString.TokenHolder,
-                events: holderEvents,
-            };
-        case 'tokenGovernanceEffect':
-            const govEvents: SDK.TokenEvent[] = effect.tokenGovernanceEffect.events.map((e) => ({
-                tag: SDK.TransactionEventTag.TokenOperation,
-                tokenId: PLT.TokenId.fromProto(unwrap(e.tokenId)),
-                event: tokenEvent(e),
-            }));
-            return {
-                ...base,
-                transactionType: SDK.TransactionKindString.TokenGovernance,
-                events: govEvents,
+                transactionType: SDK.TransactionKindString.TokenUpdate,
+                events,
             };
         case undefined:
             throw Error('Failed translating AccountTransactionEffects, encountered undefined value');
@@ -2078,8 +2049,8 @@ function tokenEvent(event: GRPC_PLT.TokenEvent): PLT.TokenEvent {
         case 'transferEvent':
             const transferEvent: PLT.TokenEvent = {
                 tag: PLT.TokenEventType.Transfer,
-                from: tokenHolder(unwrap(event.event.transferEvent.from)),
-                to: tokenHolder(unwrap(event.event.transferEvent.to)),
+                from: PLT.TokenHolder.fromProto(unwrap(event.event.transferEvent.from)),
+                to: PLT.TokenHolder.fromProto(unwrap(event.event.transferEvent.to)),
                 amount: PLT.TokenAmount.fromProto(unwrap(event.event.transferEvent.amount)),
             };
             if (event.event.transferEvent.memo) {
@@ -2097,28 +2068,16 @@ function tokenEvent(event: GRPC_PLT.TokenEvent): PLT.TokenEvent {
             return {
                 tag: PLT.TokenEventType.Mint,
                 amount: PLT.TokenAmount.fromProto(unwrap(event.event.mintEvent.amount)),
-                target: tokenHolder(unwrap(event.event.mintEvent.target)),
+                target: PLT.TokenHolder.fromProto(unwrap(event.event.mintEvent.target)),
             };
         case 'burnEvent':
             return {
                 tag: PLT.TokenEventType.Burn,
                 amount: PLT.TokenAmount.fromProto(unwrap(event.event.burnEvent.amount)),
-                target: tokenHolder(unwrap(event.event.burnEvent.target)),
+                target: PLT.TokenHolder.fromProto(unwrap(event.event.burnEvent.target)),
             };
         case undefined:
             throw Error('Failed translating "TokenEvent", encountered undefined value');
-    }
-}
-
-function tokenHolder(holder: GRPC_PLT.TokenHolder): PLT.TokenHolder {
-    switch (holder.address.oneofKind) {
-        case 'account':
-            return {
-                tag: 'account',
-                address: AccountAddress.fromProto(unwrap(holder.address.account)),
-            };
-        case undefined:
-            throw Error('Failed translating TokenHolder, encountered undefined value');
     }
 }
 
@@ -2736,7 +2695,6 @@ export function winningBaker(winningBaker: GRPC.WinningBaker): SDK.WinningBaker 
 export function trTokenInfo(tokenInfo: GRPC.TokenInfo): PLT.TokenInfo {
     const state: PLT.TokenState = {
         decimals: unwrap(tokenInfo.tokenState?.decimals),
-        issuer: AccountAddress.fromProto(unwrap(tokenInfo.tokenState?.issuer)),
         moduleRef: PLT.TokenModuleReference.fromProto(unwrap(tokenInfo.tokenState?.tokenModuleRef)),
         totalSupply: PLT.TokenAmount.fromProto(unwrap(tokenInfo.tokenState?.totalSupply)),
         moduleState: PLT.Cbor.fromProto(unwrap(tokenInfo.tokenState?.moduleState)),

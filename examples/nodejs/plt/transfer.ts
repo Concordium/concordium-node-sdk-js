@@ -7,11 +7,21 @@ import {
     serializeAccountTransactionPayload,
 } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
-import { Cbor, CborMemo, TokenAmount, TokenId, V1 } from '@concordium/web-sdk/plt';
+import {
+    Cbor,
+    CborMemo,
+    Token,
+    TokenAmount,
+    TokenHolder,
+    TokenId,
+    TokenTransfer,
+    TokenTransferOperation,
+    createTokenUpdatePayload,
+} from '@concordium/web-sdk/plt';
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
 
-import { parseEndpoint, parseKeysFile } from '../../shared/util.js';
+import { parseEndpoint, parseKeysFile } from '../shared/util.js';
 
 const cli = meow(
     `
@@ -82,12 +92,12 @@ const client = new ConcordiumGRPCNodeClient(
 
     // parse the other arguments
     const tokenId = TokenId.fromString(cli.flags.tokenId);
-    const token = await V1.Token.fromId(client, tokenId);
+    const token = await Token.fromId(client, tokenId);
     const amount = TokenAmount.fromDecimal(cli.flags.amount, token.info.state.decimals);
-    const recipient = AccountAddress.fromBase58(cli.flags.recipient);
+    const recipient = TokenHolder.fromAccountAddress(AccountAddress.fromBase58(cli.flags.recipient));
     const memo = cli.flags.memo ? CborMemo.fromString(cli.flags.memo) : undefined;
 
-    const transfer: V1.TokenTransfer = {
+    const transfer: TokenTransfer = {
         recipient,
         amount,
         memo,
@@ -100,7 +110,7 @@ const client = new ConcordiumGRPCNodeClient(
         // From a service perspective:
         // create the token instance
         try {
-            const transaction = await V1.Token.transfer(token, sender, transfer, signer);
+            const transaction = await Token.transfer(token, sender, transfer, signer);
             console.log(`Transaction submitted with hash: ${transaction}`);
 
             const result = await client.waitForTransactionFinalization(transaction);
@@ -111,11 +121,11 @@ const client = new ConcordiumGRPCNodeClient(
             }
 
             switch (result.summary.transactionType) {
-                case TransactionKindString.TokenHolder:
+                case TransactionKindString.TokenUpdate:
                     result.summary.events.forEach((e) => console.log(e.event));
                     break;
                 case TransactionKindString.Failed:
-                    if (result.summary.rejectReason.tag !== RejectReasonTag.TokenHolderTransactionFailed) {
+                    if (result.summary.rejectReason.tag !== RejectReasonTag.TokenUpdateTransactionFailed) {
                         throw new Error('Unexpected reject reason tag: ' + result.summary.rejectReason.tag);
                     }
                     const details = Cbor.decode(result.summary.rejectReason.contents.details);
@@ -130,14 +140,14 @@ const client = new ConcordiumGRPCNodeClient(
     } else {
         // Or from a wallet perspective:
         // Create transfer payload
-        const transferOperation: V1.TokenTransferOperation = {
+        const transferOperation: TokenTransferOperation = {
             transfer,
         };
-        const payload = V1.createTokenHolderPayload(tokenId, transferOperation);
+        const payload = createTokenUpdatePayload(tokenId, transferOperation);
         console.log('Created payload:', payload);
 
         // Serialize payload for signing/submission
-        const serialized = serializeAccountTransactionPayload({ payload, type: AccountTransactionType.TokenHolder });
+        const serialized = serializeAccountTransactionPayload({ payload, type: AccountTransactionType.TokenUpdate });
         console.log('Serialized payload for sign & send:', serialized.toString('hex'));
     }
     // #endregion documentation-snippet

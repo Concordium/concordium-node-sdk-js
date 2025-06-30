@@ -1,3 +1,5 @@
+import { encode } from 'cbor2';
+
 import { Cbor, TokenMetadataUrl } from '../../../src/pub/plt.js';
 
 describe('TokenMetadataUrl', () => {
@@ -138,19 +140,19 @@ describe('TokenMetadataUrl', () => {
     });
 
     it('should handle CBOR decoding with missing fields gracefully', () => {
-        expect(() => TokenMetadataUrl.fromCBORValue({})).toThrow();
+        expect(() => TokenMetadataUrl.fromCBOR(encode({}))).toThrow();
 
         expect(() =>
-            TokenMetadataUrl.fromCBORValue({ url: 'https://example.com', checksumSha256: new Uint8Array(10) })
+            TokenMetadataUrl.fromCBOR(encode({ url: 'https://example.com', checksumSha256: new Uint8Array(10) }))
         ).toThrow();
     });
 
     it('should handle additional fields correctly in CBOR', () => {
         const url = 'https://example.com';
         const additional = { customField: 'customValue' };
-        const cborValue = { url, ...additional };
+        const cborValue = encode({ url, ...additional });
 
-        const tokenMetadataUrl = TokenMetadataUrl.fromCBORValue(cborValue);
+        const tokenMetadataUrl = TokenMetadataUrl.fromCBOR(cborValue);
         expect(tokenMetadataUrl.url).toBe(url);
         expect(tokenMetadataUrl.additional).toEqual(additional);
     });

@@ -1,8 +1,10 @@
 import { Buffer } from 'buffer/index.js';
 
 import * as Proto from '../grpc-api/v2/concordium/protocol-level-tokens.js';
-import { cborDecode, cborEncode } from '../pub/types.js';
 import { HexString } from '../types.js';
+import { cborDecode, cborEncode } from '../types/cbor.js';
+import { TokenHolder, TokenMetadataUrl } from './index.js';
+import { TokenEventDetails, TokenModuleAccountState, TokenModuleState } from './module.js';
 
 export type JSON = HexString;
 
@@ -113,13 +115,95 @@ export function toProto(cbor: Cbor): Proto.CBor {
     };
 }
 
+function decodeTokenModuleState(value: Cbor): TokenModuleState {
+    const decoded = cborDecode(value.bytes);
+    if (typeof decoded !== 'object' || decoded === null) {
+        throw new Error('Invalid CBOR data for TokenModuleState');
+    }
+
+    // Validate required fields
+    if (!('governanceAccount' in decoded && TokenHolder.instanceOf(decoded.governanceAccount))) {
+        throw new Error('Invalid TokenModuleState: missing or invalid governanceAccount');
+    }
+    if (!('metadata' in decoded && TokenMetadataUrl.instanceOf(decoded.metadata))) {
+        throw new Error('Invalid TokenModuleState: missing or invalid metadataUrl');
+    }
+    if (!('name' in decoded && typeof decoded.name === 'string')) {
+        throw new Error('Invalid TokenModuleState: missing or invalid name');
+    }
+
+    // Validate optional fields
+    if ('allowList' in decoded && typeof decoded.allowList !== 'boolean') {
+        throw new Error('Invalid TokenModuleState: allowList must be a boolean');
+    }
+    if ('denyList' in decoded && typeof decoded.denyList !== 'boolean') {
+        throw Error('Invalid TokenModuleState: denyList must be a boolean');
+    }
+    if ('mintable' in decoded && typeof decoded.mintable !== 'boolean') {
+        throw new Error('Invalid TokenModuleState: mintable must be a boolean');
+    }
+    if ('burnable' in decoded && typeof decoded.burnable !== 'boolean') {
+        throw new Error('Invalid TokenModuleState: burnable must be a boolean');
+    }
+
+    return decoded as TokenModuleState;
+}
+
+function decodeTokenModuleAccountState(value: Cbor): TokenModuleAccountState {
+    const decoded = cborDecode(value.bytes);
+    if (typeof decoded !== 'object' || decoded === null) {
+        throw new Error('Invalid CBOR data for TokenModuleAccountState');
+    }
+
+    // Validate optional fields
+    if ('allowList' in decoded && typeof decoded.allowList !== 'boolean') {
+        throw new Error('Invalid TokenModuleState: allowList must be a boolean');
+    }
+    if ('denyList' in decoded && typeof decoded.denyList !== 'boolean') {
+        throw Error('Invalid TokenModuleState: denyList must be a boolean');
+    }
+
+    return decoded as TokenModuleAccountState;
+}
+
+function decodeTokenEventDetails(value: Cbor): TokenEventDetails {
+    const decoded = cborDecode(value.bytes);
+    if (typeof decoded !== 'object' || decoded === null) {
+        throw new Error(`Invalid event details: ${JSON.stringify(decoded)}. Expected an object.`);
+    }
+    if (!('target' in decoded && TokenHolder.instanceOf(decoded.target))) {
+        throw new Error(`Invalid event details: ${JSON.stringify(decoded)}. Expected 'target' to be a TokenHolder`);
+    }
+
+    return decoded as TokenEventDetails;
+}
+
+type DecodeTypeMap = {
+    TokenModuleState: TokenModuleState;
+    TokenModuleAccountState: TokenModuleAccountState;
+    TokenEventDetails: TokenEventDetails;
+};
+
+export function decode<T extends keyof DecodeTypeMap>(cbor: Cbor, type: T): DecodeTypeMap[T];
+export function decode(cbor: Cbor, type?: undefined): unknown;
+
 /**
  * Decode CBOR encoded data into its original representation.
  * @param {Cbor} cbor - The CBOR encoded data.
+ * @param {string | undefined} type - Optional type hint for decoding.
  * @returns {unknown} The decoded data.
  */
-export function decode(cbor: Cbor): unknown {
-    return cborDecode(cbor.bytes);
+export function decode<T extends keyof DecodeTypeMap | undefined>(cbor: Cbor, type: T): unknown {
+    switch (type) {
+        case 'TokenModuleState':
+            return decodeTokenModuleState(cbor);
+        case 'TokenModuleAccountState':
+            return decodeTokenModuleAccountState(cbor);
+        case 'TokenEventDetails':
+            return decodeTokenEventDetails(cbor);
+        default:
+            return cborDecode(cbor.bytes);
+    }
 }
 
 /**

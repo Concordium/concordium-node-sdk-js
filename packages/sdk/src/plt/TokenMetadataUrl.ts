@@ -1,4 +1,5 @@
 import { Buffer } from 'buffer/index.js';
+import { registerEncoder } from 'cbor2/encoder';
 
 import { HexString, cborDecode, cborEncode } from '../index.js';
 import { Cbor } from './index.js';
@@ -29,7 +30,7 @@ export type CBOR = {
 /**
  * Protocol level token (PLT) metadata URL.
  */
-export class TokenMetadataUrl {
+class TokenMetadataUrl {
     #nominal = true;
 
     /**
@@ -60,18 +61,15 @@ export class TokenMetadataUrl {
      * @returns {JSON} The JSON representation.
      */
     public toJSON(): JSON {
-        let _additional: Record<string, HexString> | undefined;
+        let url: JSON = { url: this.url };
+        if (this.checksumSha256 !== undefined) {
+            url.checksumSha256 = Buffer.from(this.checksumSha256).toString('hex');
+        }
         if (this.additional !== undefined) {
             const pairs = Object.entries(this.additional).map(([key, value]) => [key, Cbor.encode(value).toJSON()]);
-            _additional = Object.fromEntries(pairs);
+            url._additional = Object.fromEntries(pairs);
         }
-
-        return {
-            url: this.url,
-            checksumSha256:
-                this.checksumSha256 !== undefined ? Buffer.from(this.checksumSha256).toString('hex') : undefined,
-            _additional,
-        };
+        return url;
     }
 }
 
@@ -142,11 +140,14 @@ export function fromJSON({ url, checksumSha256, _additional }: JSON): TokenMetad
  * @returns A CBOR-compatible value representation of the TokenMetadataUrl.
  */
 export function toCBORValue(tokenMetadataUrl: TokenMetadataUrl): CBOR {
-    return {
-        ...tokenMetadataUrl.additional,
-        url: tokenMetadataUrl.url,
-        checksumSha256: tokenMetadataUrl.checksumSha256,
-    };
+    let cbor: CBOR = { url: tokenMetadataUrl.url };
+    if (tokenMetadataUrl.checksumSha256 !== undefined) {
+        cbor.checksumSha256 = tokenMetadataUrl.checksumSha256;
+    }
+    if (tokenMetadataUrl.additional) {
+        cbor = { ...cbor, ...tokenMetadataUrl.additional };
+    }
+    return cbor;
 }
 
 /**
@@ -201,4 +202,20 @@ export function fromCBORValue(value: unknown): TokenMetadataUrl {
  */
 export function fromCBOR(cbor: Uint8Array): TokenMetadataUrl {
     return fromCBORValue(cborDecode(cbor));
+}
+
+/**
+ * Registers a CBOR encoder for the TokenMetadataUrl type with the `cbor2` library.
+ * This allows TokenMetadataUrl instances to be automatically encoded when used with
+ * the `cbor2` library's encode function.
+ *
+ * @returns {void}
+ * @example
+ * // Register the encoder
+ * registerCBOREncoder();
+ * // Now TokenMetadataUrl instances can be encoded directly
+ * const encoded = encode(myTokenMetadataUrl);
+ */
+export function registerCBOREncoder(): void {
+    registerEncoder(TokenMetadataUrl, (value) => [NaN, toCBORValue(value)]);
 }

@@ -15,10 +15,6 @@ export {
     fromTypedJSON,
     JSON_DISCRIMINATOR,
     Serializable,
-    toCBOR,
-    fromCBOR,
-    registerCBOREncoder,
-    registerCBORDecoder,
     instanceOf,
     fromJSON,
 } from '../../types/AccountAddress.js';

@@ -27,6 +27,7 @@
   - `TokenAmount`: A representation of a PLT amount
   - `TokenModuleReference`: The module reference of a PLT instance
   - `TokenMetadataUrl`: An object containing the url for token metadata
+  - `TokenHolder`: A representation of the different token holder entities. Currently, only accounts are supported.
   - `TokenAccountState`, `TokenState`, `TokenInfo`, and `TokenAccountInfo`, all representing PLT related data returned by the
     GRPC API of a Concordium node. 
 - `Token`, which is a client for interacting with PLTs

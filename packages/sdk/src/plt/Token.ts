@@ -10,7 +10,7 @@ import {
     TransactionHash,
 } from '../pub/types.js';
 import { AccountSigner, signTransaction } from '../signHelpers.js';
-import { bail } from '../util.ts';
+import { bail } from '../util.js';
 import { Cbor, TokenAmount, TokenHolder, TokenId, TokenInfo, TokenModuleReference } from './index.js';
 import {
     TokenAddAllowListOperation,
@@ -354,7 +354,7 @@ export async function validateTransfer(
     sender: AccountAddress.Type,
     payload: TokenTransfer | TokenTransfer[]
 ): Promise<true> {
-   token.moduleState.paused && bail(new PausedError(token.info.id));
+    token.moduleState.paused && bail(new PausedError(token.info.id));
 
     const payloads = [payload].flat();
     // Validate all amounts

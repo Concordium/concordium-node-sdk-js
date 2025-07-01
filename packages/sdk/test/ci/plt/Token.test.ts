@@ -422,15 +422,15 @@ describe('Token governance operation', () => {
         await expect(Token.addAllowList(token, sender, target, signer, undefined, { validate: true })).rejects.toThrow(
             Token.UnauthorizedGovernanceOperationError
         );
-        await expect(Token.removeAllowList(token, sender, target, signer, undefined, { validate: true })).rejects.toThrow(
-            Token.UnauthorizedGovernanceOperationError
-        );
+        await expect(
+            Token.removeAllowList(token, sender, target, signer, undefined, { validate: true })
+        ).rejects.toThrow(Token.UnauthorizedGovernanceOperationError);
         await expect(Token.addDenyList(token, sender, target, signer, undefined, { validate: true })).rejects.toThrow(
             Token.UnauthorizedGovernanceOperationError
         );
-        await expect(Token.removeDenyList(token, sender, target, signer, undefined, { validate: true })).rejects.toThrow(
-            Token.UnauthorizedGovernanceOperationError
-        );
+        await expect(
+            Token.removeDenyList(token, sender, target, signer, undefined, { validate: true })
+        ).rejects.toThrow(Token.UnauthorizedGovernanceOperationError);
 
         // Pause function
         await expect(Token.pause(token, sender, true, signer, undefined, { validate: true })).rejects.toThrow(

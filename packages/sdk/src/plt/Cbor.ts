@@ -4,7 +4,12 @@ import * as Proto from '../grpc-api/v2/concordium/protocol-level-tokens.js';
 import { HexString } from '../types.js';
 import { cborDecode, cborEncode } from '../types/cbor.js';
 import { TokenHolder, TokenMetadataUrl } from './index.js';
-import { TokenListUpdateEventDetails, TokenModuleAccountState, TokenModuleState, TokenPauseEventDetails } from './module.js';
+import {
+    TokenListUpdateEventDetails,
+    TokenModuleAccountState,
+    TokenModuleState,
+    TokenPauseEventDetails,
+} from './module.js';
 
 export type JSON = HexString;
 
@@ -192,7 +197,6 @@ function decodeTokenPauseEventDetails(value: Cbor): TokenPauseEventDetails {
 
     return decoded as TokenPauseEventDetails;
 }
-
 
 type DecodeTypeMap = {
     TokenModuleState: TokenModuleState;

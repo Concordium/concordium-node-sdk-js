@@ -90,6 +90,7 @@ describe('Token.validateGovernanceOperation', () => {
         const moduleState: TokenModuleState = {
             name: 'Test Token',
             metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
+            paused: false,
             governanceAccount: TokenHolder.fromAccountAddress(governanceAddress),
         };
 
@@ -105,6 +106,7 @@ describe('Token.validateGovernanceOperation', () => {
         const moduleState: TokenModuleState = {
             name: 'Test Token',
             metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
+            paused: false,
             governanceAccount: TokenHolder.fromAccountAddress(governanceAddress),
         };
 
@@ -131,6 +133,7 @@ describe('Token.validateTransfer', () => {
         const moduleState: TokenModuleState = {
             name: 'Test Token',
             metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
+            paused: false,
             governanceAccount: TokenHolder.fromAccountAddress(sender),
             allowList: false,
             denyList: false,
@@ -168,6 +171,7 @@ describe('Token.validateTransfer', () => {
         const moduleState: TokenModuleState = {
             name: 'Test Token',
             metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
+            paused: false,
             governanceAccount: TokenHolder.fromAccountAddress(sender),
         };
 
@@ -201,6 +205,7 @@ describe('Token.validateTransfer', () => {
         const moduleState: TokenModuleState = {
             name: 'Test Token',
             metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
+            paused: false,
             governanceAccount: TokenHolder.fromAccountAddress(sender),
             denyList: true,
         };
@@ -217,7 +222,7 @@ describe('Token.validateTransfer', () => {
         // Mock getAccountInfo to return sender on deny list
         token.grpc.getAccountInfo = jest
             .fn()
-            .mockResolvedValueOnce(senderAccountInfo) // First call for balance check
+            .mockResolvedValueOnce(senderAccountInfo) // First call for sender
             .mockResolvedValueOnce(createAccountInfo(recipient, tokenId)); // second call for recipient
 
         // Create transfer payload
@@ -241,6 +246,7 @@ describe('Token.validateTransfer', () => {
         const moduleState: TokenModuleState = {
             name: 'Test Token',
             metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
+            paused: false,
             governanceAccount: TokenHolder.fromAccountAddress(sender),
             allowList: true,
         };
@@ -261,7 +267,7 @@ describe('Token.validateTransfer', () => {
         // Mock getAccountInfo to return sender not on allow list
         token.grpc.getAccountInfo = jest
             .fn()
-            .mockResolvedValueOnce(senderAccountInfo) // First call for balance check
+            .mockResolvedValueOnce(senderAccountInfo) // First call for sender
             .mockResolvedValueOnce(recipientAccountInfo); // second call for recipient
 
         // Create transfer payload
@@ -285,6 +291,7 @@ describe('Token.validateTransfer', () => {
         const moduleState: TokenModuleState = {
             name: 'Test Token',
             metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
+            paused: false,
             governanceAccount: TokenHolder.fromAccountAddress(sender),
         };
 
@@ -316,6 +323,44 @@ describe('Token.validateTransfer', () => {
         // Should validate successfully
         await expect(Token.validateTransfer(token, sender, transfers)).resolves.toBe(true);
     });
+
+    it('should throw PausedError when the token is paused', async () => {
+        const sender = ACCOUNT_1;
+        const recipient = ACCOUNT_2;
+        const tokenId = TokenId.fromString('3f1bfce9');
+        const decimals = 8;
+
+        // Setup token with token paused state `true`
+        const moduleState: TokenModuleState = {
+            name: 'Test Token',
+            metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
+            paused: true,
+            governanceAccount: TokenHolder.fromAccountAddress(sender),
+        };
+
+        const token = createMockToken(decimals, moduleState, tokenId);
+
+        // Setup sender account with sufficient balance
+        const senderBalance = TokenAmount.create(BigInt(1000), decimals);
+        const senderAccountInfo = createAccountInfo(sender, tokenId, senderBalance);
+        const recipientAccountInfo = createAccountInfo(recipient, tokenId, undefined);
+
+        // Mock getAccountInfo
+        token.grpc.getAccountInfo = jest
+            .fn()
+            .mockResolvedValueOnce(senderAccountInfo) // First call for sender
+            .mockResolvedValueOnce(recipientAccountInfo); // second call for recipient
+
+        // Create transfer payload
+        const transferAmount = TokenAmount.create(BigInt(500), decimals);
+        const transfer: TokenTransfer = {
+            amount: transferAmount,
+            recipient: TokenHolder.fromAccountAddress(recipient),
+        };
+
+        // Should throw UnsupportedOperationError
+        await expect(Token.validateTransfer(token, sender, transfer)).rejects.toThrow(Token.PausedError);
+    });
 });
 
 // Helper functions to create test data
@@ -325,6 +370,7 @@ function createMockToken(
     moduleState: TokenModuleState = {
         name: 'Test Token',
         metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
+        paused: false,
         governanceAccount: TokenHolder.fromAccountAddress(ACCOUNT_1),
     },
     tokenId: TokenId.Type = TokenId.fromString('3f1bfce9')
@@ -340,6 +386,7 @@ function createMockToken(
         grpc: {
             getAccountInfo: jest.fn(),
         },
+        moduleState,
     } as unknown as Token.Type;
 }
 

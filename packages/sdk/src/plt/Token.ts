@@ -165,7 +165,7 @@ export class InsufficientFundsError extends TokenError {
 /**
  * Error type indicating that the token is paused.
  */
-export class TokenPausedError extends TokenError {
+export class PausedError extends TokenError {
     public readonly code = TokenErrorCode.PAUSED;
 
     /**
@@ -347,14 +347,14 @@ export function balanceOf(
  * @throws {InvalidTokenAmountError} If any token amount is not compatible with the token.
  * @throws {InsufficientFundsError} If the sender does not have enough tokens.
  * @throws {NotAllowedError} If the sender or receiver is not allowed to send/receive tokens.
- * @throws {TokenPausedError} If `opts.validate` and the token is paused.
+ * @throws {PausedError} If `opts.validate` and the token is paused.
  */
 export async function validateTransfer(
     token: Token,
     sender: AccountAddress.Type,
     payload: TokenTransfer | TokenTransfer[]
 ): Promise<true> {
-   token.moduleState.paused && bail(new TokenPausedError(token.info.id));
+   token.moduleState.paused && bail(new PausedError(token.info.id));
 
     const payloads = [payload].flat();
     // Validate all amounts
@@ -417,7 +417,7 @@ type TransferOtions = {
  * @throws {InvalidTokenAmountError} If `opts.validate` and any token amount is not compatible with the token.
  * @throws {InsufficientFundsError} If `opts.validate` and the sender does not have enough tokens.
  * @throws {NotAllowedError} If `opts.validate` and a sender or receiver is not allowed to send/receive tokens.
- * @throws {TokenPausedError} If `opts.validate` and the token is paused.
+ * @throws {PausedError} If `opts.validate` and the token is paused.
  */
 export async function transfer(
     token: Token,
@@ -479,7 +479,7 @@ type SupplyUpdateOptions = {
  * @returns A promise that resolves to the transaction hash.
  * @throws {InvalidTokenAmountError} If `opts.validate` and the token amount is not compatible with the token.
  * @throws {UnauthorizedGovernanceOperationError} If `opts.validate` and the sender is not the token issuer.
- * @throws {TokenPausedError} If `opts.validate` and the token is paused.
+ * @throws {PausedError} If `opts.validate` and the token is paused.
  */
 export async function mint(
     token: Token,
@@ -495,7 +495,7 @@ export async function mint(
     }
 
     if (validate) {
-        token.moduleState.paused && bail(new TokenPausedError(token.info.id));
+        token.moduleState.paused && bail(new PausedError(token.info.id));
         validateGovernanceOperation(token, sender);
         amountsList.forEach((amount) => validateAmount(token, amount));
     }
@@ -519,7 +519,7 @@ export async function mint(
  * @returns A promise that resolves to the transaction hash.
  * @throws {InvalidTokenAmountError} If `opts.validate` and the token amount is not compatible with the token.
  * @throws {UnauthorizedGovernanceOperationError} If `opts.validate` and the sender is not the token issuer.
- * @throws {TokenPausedError} If `opts.validate` and the token is paused.
+ * @throws {PausedError} If `opts.validate` and the token is paused.
  */
 export async function burn(
     token: Token,
@@ -535,7 +535,7 @@ export async function burn(
     }
 
     if (validate) {
-        token.moduleState.paused && bail(new TokenPausedError(token.info.id));
+        token.moduleState.paused && bail(new PausedError(token.info.id));
         validateGovernanceOperation(token, sender);
         amountsList.forEach((amount) => validateAmount(token, amount));
     }

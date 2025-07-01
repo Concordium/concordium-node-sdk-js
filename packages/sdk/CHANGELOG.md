@@ -46,6 +46,13 @@
   with `buildAccountSigner`
 - A new optional field `createPlt` to `AuthorizationsV1` which exposes the access structure for PLT creation.
 
+## 10.0.0-alpha.10 (Unreleased)
+
+### Added
+
+- `pause` function added to the `Token` module, which can be used to pause/unpause execution of token operations.
+- `moduleState` added to `Token` instances, which is the parsed token module state of a PLT instance.
+
 ## 10.0.0-alpha.9
 
 ### Breaking changes

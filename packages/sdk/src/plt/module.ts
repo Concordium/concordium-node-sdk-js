@@ -228,7 +228,15 @@ export type TokenListUpdateEventDetails = {
     target: TokenHolder.Type;
 };
 
-export type TokenEventDetails = TokenListUpdateEventDetails;
+/**
+ * The structure of a pause event for a PLT.
+ */
+export type TokenPauseEventDetails = {
+    /** Whether the token is paused */
+    paused: boolean;
+};
+
+export type TokenEventDetails = TokenListUpdateEventDetails | TokenPauseEventDetails;
 
 /**
  * An event occuring as the result of an "addAllowList" operation.
@@ -263,10 +271,7 @@ export type TokenRemoveDenyListEvent = GenericTokenModuleEvent<
  * An event occuring as the result of a "pause" operation, describing whether execution
  * of the associated token operations are paused or not.
  */
-export type TokenPauseEvent = GenericTokenModuleEvent<TokenOperationType.Pause, {
-    /** Whether the token operations are paused or not. */
-    paused: boolean;
-}>;
+export type TokenPauseEvent = GenericTokenModuleEvent<TokenOperationType.Pause, TokenPauseEventDetails>;
 
 /**
  * A union of all token module events.
@@ -277,14 +282,6 @@ export type TokenModuleEvent =
     | TokenRemoveAllowListEvent
     | TokenRemoveDenyListEvent
     | TokenPauseEvent;
-
-const EVENT_TYPES = [
-    TokenOperationType.AddAllowList,
-    TokenOperationType.RemoveAllowList,
-    TokenOperationType.AddDenyList,
-    TokenOperationType.RemoveDenyList,
-    TokenOperationType.Pause,
-];
 
 /**
  * Parses a token module event, decoding the details from CBOR format. If the desired outcome is to be able to handle
@@ -311,13 +308,15 @@ const EVENT_TYPES = [
  * }
  */
 export function parseModuleEvent(event: EncodedTokenModuleEvent): TokenModuleEvent {
-    if (!EVENT_TYPES.includes(event.type as TokenOperationType)) {
-        throw new Error(`Cannot parse event as token module event: ${event.type}`);
+    switch (event.type) {
+        case TokenOperationType.AddAllowList:
+        case TokenOperationType.RemoveAllowList:
+        case TokenOperationType.AddDenyList:
+        case TokenOperationType.RemoveDenyList:
+            return { type: event.type, details: Cbor.decode(event.details, 'TokenListUpdateEventDetails') };
+        case TokenOperationType.Pause:
+            return { type: event.type, details: Cbor.decode(event.details, 'TokenPauseEventDetails') };
+        default:
+            throw new Error(`Cannot parse event as token module event: ${event.type}`);
     }
-
-    const details = Cbor.decode(event.details, 'TokenEventDetails');
-    return {
-        ...event,
-        details,
-    } as TokenModuleEvent;
 }

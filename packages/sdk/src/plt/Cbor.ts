@@ -4,7 +4,7 @@ import * as Proto from '../grpc-api/v2/concordium/protocol-level-tokens.js';
 import { HexString } from '../types.js';
 import { cborDecode, cborEncode } from '../types/cbor.js';
 import { TokenHolder, TokenMetadataUrl } from './index.js';
-import { TokenEventDetails, TokenModuleAccountState, TokenModuleState } from './module.js';
+import { TokenListUpdateEventDetails, TokenModuleAccountState, TokenModuleState, TokenPauseEventDetails } from './module.js';
 
 export type JSON = HexString;
 
@@ -169,7 +169,7 @@ function decodeTokenModuleAccountState(value: Cbor): TokenModuleAccountState {
     return decoded as TokenModuleAccountState;
 }
 
-function decodeTokenEventDetails(value: Cbor): TokenEventDetails {
+function decodeTokenListUpdateEventDetails(value: Cbor): TokenListUpdateEventDetails {
     const decoded = cborDecode(value.bytes);
     if (typeof decoded !== 'object' || decoded === null) {
         throw new Error(`Invalid event details: ${JSON.stringify(decoded)}. Expected an object.`);
@@ -178,13 +178,27 @@ function decodeTokenEventDetails(value: Cbor): TokenEventDetails {
         throw new Error(`Invalid event details: ${JSON.stringify(decoded)}. Expected 'target' to be a TokenHolder`);
     }
 
-    return decoded as TokenEventDetails;
+    return decoded as TokenListUpdateEventDetails;
 }
+
+function decodeTokenPauseEventDetails(value: Cbor): TokenPauseEventDetails {
+    const decoded = cborDecode(value.bytes);
+    if (typeof decoded !== 'object' || decoded === null) {
+        throw new Error(`Invalid event details: ${JSON.stringify(decoded)}. Expected an object.`);
+    }
+    if (!('paused' in decoded && typeof decoded.paused === 'boolean')) {
+        throw new Error(`Invalid event details: ${JSON.stringify(decoded)}. Expected 'paused' to be a boolean`);
+    }
+
+    return decoded as TokenPauseEventDetails;
+}
+
 
 type DecodeTypeMap = {
     TokenModuleState: TokenModuleState;
     TokenModuleAccountState: TokenModuleAccountState;
-    TokenEventDetails: TokenEventDetails;
+    TokenListUpdateEventDetails: TokenListUpdateEventDetails;
+    TokenPauseEventDetails: TokenPauseEventDetails;
 };
 
 export function decode<T extends keyof DecodeTypeMap>(cbor: Cbor, type: T): DecodeTypeMap[T];
@@ -202,8 +216,10 @@ export function decode<T extends keyof DecodeTypeMap | undefined>(cbor: Cbor, ty
             return decodeTokenModuleState(cbor);
         case 'TokenModuleAccountState':
             return decodeTokenModuleAccountState(cbor);
-        case 'TokenEventDetails':
-            return decodeTokenEventDetails(cbor);
+        case 'TokenListUpdateEventDetails':
+            return decodeTokenListUpdateEventDetails(cbor);
+        case 'TokenPauseEventDetails':
+            return decodeTokenPauseEventDetails(cbor);
         default:
             return cborDecode(cbor.bytes);
     }

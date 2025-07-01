@@ -131,6 +131,9 @@ function decodeTokenModuleState(value: Cbor): TokenModuleState {
     if (!('name' in decoded && typeof decoded.name === 'string')) {
         throw new Error('Invalid TokenModuleState: missing or invalid name');
     }
+    if (!('paused' in decoded && typeof decoded.paused === 'boolean')) {
+        throw new Error('Invalid TokenModuleState: missing or invalid paused');
+    }
 
     // Validate optional fields
     if ('allowList' in decoded && typeof decoded.allowList !== 'boolean') {

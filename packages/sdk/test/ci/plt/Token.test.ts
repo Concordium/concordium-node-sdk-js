@@ -363,6 +363,82 @@ describe('Token.validateTransfer', () => {
     });
 });
 
+describe('Token update supply operation', () => {
+    it('should throw PausedError when trying to mint/burn tokens while token is paused', async () => {
+        const governanceAddress = ACCOUNT_1;
+        const tokenId = TokenId.fromString('3f1bfce9');
+        const decimals = 8;
+        const signer = undefined as any;
+
+        // Setup token with paused state true
+        const moduleState: TokenModuleState = {
+            name: 'Test Token',
+            metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
+            paused: true,
+            governanceAccount: TokenHolder.fromAccountAddress(governanceAddress),
+        };
+
+        const token = createMockToken(decimals, moduleState, tokenId);
+        const amount = TokenAmount.create(BigInt(1000), decimals);
+
+        // Should throw PausedError
+        await expect(
+            Token.mint(token, governanceAddress, amount, signer, undefined, { validate: true })
+        ).rejects.toThrow(Token.PausedError);
+        await expect(
+            Token.burn(token, governanceAddress, amount, signer, undefined, { validate: true })
+        ).rejects.toThrow(Token.PausedError);
+    });
+});
+
+describe('Token governance operation', () => {
+    it('should throw UnauthorizedGovernanceOperationError when trying execute from a non-governance account', async () => {
+        const tokenId = TokenId.fromString('3f1bfce9');
+        const decimals = 8;
+        const signer = undefined as any;
+        const sender = ACCOUNT_2;
+
+        // Setup token with paused state true
+        const moduleState: TokenModuleState = {
+            name: 'Test Token',
+            metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
+            paused: false,
+            governanceAccount: TokenHolder.fromAccountAddress(ACCOUNT_1),
+        };
+
+        const token = createMockToken(decimals, moduleState, tokenId);
+        const amount = TokenAmount.create(BigInt(1000), decimals);
+
+        // Supply update functions
+        await expect(Token.mint(token, sender, amount, signer, undefined, { validate: true })).rejects.toThrow(
+            Token.UnauthorizedGovernanceOperationError
+        );
+        await expect(Token.burn(token, sender, amount, signer, undefined, { validate: true })).rejects.toThrow(
+            Token.UnauthorizedGovernanceOperationError
+        );
+
+        // List update functions
+        const target = TokenHolder.fromAccountAddress(ACCOUNT_2);
+        await expect(Token.addAllowList(token, sender, target, signer, undefined, { validate: true })).rejects.toThrow(
+            Token.UnauthorizedGovernanceOperationError
+        );
+        await expect(Token.removeAllowList(token, sender, target, signer, undefined, { validate: true })).rejects.toThrow(
+            Token.UnauthorizedGovernanceOperationError
+        );
+        await expect(Token.addDenyList(token, sender, target, signer, undefined, { validate: true })).rejects.toThrow(
+            Token.UnauthorizedGovernanceOperationError
+        );
+        await expect(Token.removeDenyList(token, sender, target, signer, undefined, { validate: true })).rejects.toThrow(
+            Token.UnauthorizedGovernanceOperationError
+        );
+
+        // Pause function
+        await expect(Token.pause(token, sender, true, signer, undefined, { validate: true })).rejects.toThrow(
+            Token.UnauthorizedGovernanceOperationError
+        );
+    });
+});
+
 // Helper functions to create test data
 
 function createMockToken(

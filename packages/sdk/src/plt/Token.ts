@@ -182,6 +182,9 @@ export class TokenPausedError extends TokenError {
  * Class representing a token.
  */
 class Token {
+    /** The parsed module state of the token. */
+    public readonly moduleState: TokenModuleState;
+
     /**
      * Constructs a new Token.
      * @param {ConcordiumGRPCClient} grpc - The gRPC client for interacting with the Concordium network.
@@ -190,7 +193,9 @@ class Token {
     public constructor(
         public readonly grpc: ConcordiumGRPCClient,
         public readonly info: TokenInfo
-    ) {}
+    ) {
+        this.moduleState = Cbor.decode(info.state.moduleState, 'TokenModuleState');
+    }
 }
 
 export type Type = Token;
@@ -332,18 +337,6 @@ export function balanceOf(
 }
 
 /**
- * Checks if a token is paused.
- *
- * @param {Token} token - The token to check.
- *
- * @returns {boolean} True if the token is paused, false otherwise.
- */
-export function isPaused(token: Token): boolean {
-    const state = Cbor.decode(token.info.state.moduleState, 'TokenModuleState');
-    return state.paused;
-}
-
-/**
  * Validates a token transfer.
  *
  * @param {Token} token - The token to transfer.
@@ -354,16 +347,16 @@ export function isPaused(token: Token): boolean {
  * @throws {InvalidTokenAmountError} If any token amount is not compatible with the token.
  * @throws {InsufficientFundsError} If the sender does not have enough tokens.
  * @throws {NotAllowedError} If the sender or receiver is not allowed to send/receive tokens.
+ * @throws {TokenPausedError} If `opts.validate` and the token is paused.
  */
 export async function validateTransfer(
     token: Token,
     sender: AccountAddress.Type,
     payload: TokenTransfer | TokenTransfer[]
 ): Promise<true> {
-    isPaused(token) && bail(new TokenPausedError(token.info.id));
+   token.moduleState.paused && bail(new TokenPausedError(token.info.id));
 
     const payloads = [payload].flat();
-
     // Validate all amounts
     payloads.forEach((p) => validateAmount(token, p.amount));
 
@@ -380,8 +373,7 @@ export async function validateTransfer(
         throw new InsufficientFundsError(sender, TokenAmount.fromDecimal(payloadTotal, decimals));
     }
 
-    const moduleState = Cbor.decode(token.info.state.moduleState) as TokenModuleState;
-    if (!moduleState.allowList && !moduleState.denyList) {
+    if (!token.moduleState.allowList && !token.moduleState.denyList) {
         // If the token neither has a deny list nor allow list, we can skip the check.
         return true;
     }
@@ -395,9 +387,9 @@ export async function validateTransfer(
             throw new NotAllowedError(TokenHolder.fromAccountAddress(r.accountAddress));
 
         const accountModuleState = Cbor.decode(accToken.moduleState) as TokenModuleAccountState;
-        if (moduleState.allowList && !accountModuleState.allowList)
+        if (token.moduleState.allowList && !accountModuleState.allowList)
             throw new NotAllowedError(TokenHolder.fromAccountAddress(r.accountAddress));
-        if (moduleState.denyList && accountModuleState.denyList)
+        if (token.moduleState.denyList && accountModuleState.denyList)
             throw new NotAllowedError(TokenHolder.fromAccountAddress(r.accountAddress));
     });
 
@@ -425,6 +417,7 @@ type TransferOtions = {
  * @throws {InvalidTokenAmountError} If `opts.validate` and any token amount is not compatible with the token.
  * @throws {InsufficientFundsError} If `opts.validate` and the sender does not have enough tokens.
  * @throws {NotAllowedError} If `opts.validate` and a sender or receiver is not allowed to send/receive tokens.
+ * @throws {TokenPausedError} If `opts.validate` and the token is paused.
  */
 export async function transfer(
     token: Token,
@@ -486,6 +479,7 @@ type SupplyUpdateOptions = {
  * @returns A promise that resolves to the transaction hash.
  * @throws {InvalidTokenAmountError} If `opts.validate` and the token amount is not compatible with the token.
  * @throws {UnauthorizedGovernanceOperationError} If `opts.validate` and the sender is not the token issuer.
+ * @throws {TokenPausedError} If `opts.validate` and the token is paused.
  */
 export async function mint(
     token: Token,
@@ -501,7 +495,7 @@ export async function mint(
     }
 
     if (validate) {
-        isPaused(token) && bail(new TokenPausedError(token.info.id));
+        token.moduleState.paused && bail(new TokenPausedError(token.info.id));
         validateGovernanceOperation(token, sender);
         amountsList.forEach((amount) => validateAmount(token, amount));
     }
@@ -525,6 +519,7 @@ export async function mint(
  * @returns A promise that resolves to the transaction hash.
  * @throws {InvalidTokenAmountError} If `opts.validate` and the token amount is not compatible with the token.
  * @throws {UnauthorizedGovernanceOperationError} If `opts.validate` and the sender is not the token issuer.
+ * @throws {TokenPausedError} If `opts.validate` and the token is paused.
  */
 export async function burn(
     token: Token,
@@ -540,7 +535,7 @@ export async function burn(
     }
 
     if (validate) {
-        isPaused(token) && bail(new TokenPausedError(token.info.id));
+        token.moduleState.paused && bail(new TokenPausedError(token.info.id));
         validateGovernanceOperation(token, sender);
         amountsList.forEach((amount) => validateAmount(token, amount));
     }

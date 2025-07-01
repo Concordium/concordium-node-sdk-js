@@ -10,6 +10,7 @@ import {
     TransactionHash,
 } from '../pub/types.js';
 import { AccountSigner, signTransaction } from '../signHelpers.js';
+import { bail } from '../util.ts';
 import { Cbor, TokenAmount, TokenHolder, TokenId, TokenInfo, TokenModuleReference } from './index.js';
 import {
     TokenAddAllowListOperation,
@@ -20,6 +21,7 @@ import {
     TokenModuleState,
     TokenOperation,
     TokenOperationType,
+    TokenPauseOperation,
     TokenRemoveAllowListOperation,
     TokenRemoveDenyListOperation,
     TokenTransfer,
@@ -45,6 +47,7 @@ export enum TokenErrorCode {
     /** Error representing an attempt to transfer tokens from an account that does not have enough tokens to cover the
      * amount */
     INSUFFICIENT_FUNDS = 'INSUFFICIENT_FUNDS',
+    PAUSED = 'PAUSED',
 }
 
 /**
@@ -156,6 +159,22 @@ export class InsufficientFundsError extends TokenError {
         public readonly requiredAmount: TokenAmount.Type
     ) {
         super(`Insufficient funds: Sender ${sender} requires at least ${requiredAmount} tokens.`);
+    }
+}
+
+/**
+ * Error type indicating that the token is paused.
+ */
+export class TokenPausedError extends TokenError {
+    public readonly code = TokenErrorCode.PAUSED;
+
+    /**
+     * Constructs a new TokenPausedError.
+     *
+     * @param {TokenId.Type} tokenId - The ID of the token.
+     */
+    constructor(public readonly tokenId: TokenId.Type) {
+        super(`Token ${tokenId} is paused.`);
     }
 }
 
@@ -313,6 +332,18 @@ export function balanceOf(
 }
 
 /**
+ * Checks if a token is paused.
+ *
+ * @param {Token} token - The token to check.
+ *
+ * @returns {boolean} True if the token is paused, false otherwise.
+ */
+export function isPaused(token: Token): boolean {
+    const state = Cbor.decode(token.info.state.moduleState, 'TokenModuleState');
+    return state.paused;
+}
+
+/**
  * Validates a token transfer.
  *
  * @param {Token} token - The token to transfer.
@@ -329,6 +360,8 @@ export async function validateTransfer(
     sender: AccountAddress.Type,
     payload: TokenTransfer | TokenTransfer[]
 ): Promise<true> {
+    isPaused(token) && bail(new TokenPausedError(token.info.id));
+
     const payloads = [payload].flat();
 
     // Validate all amounts
@@ -399,14 +432,14 @@ export async function transfer(
     payload: TokenTransfer | TokenTransfer[],
     signer: AccountSigner,
     expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
-    opts: TransferOtions = { autoScale: true, validate: true }
+    { autoScale = true, validate = true }: TransferOtions = {}
 ): Promise<TransactionHash.Type> {
     let transfers: TokenTransfer[] = [payload].flat();
-    if (opts.autoScale) {
+    if (autoScale) {
         transfers = transfers.map((p) => ({ ...p, amount: scaleAmount(token, p.amount) }));
     }
 
-    if (opts.validate) {
+    if (validate) {
         await validateTransfer(token, sender, transfers);
     }
 
@@ -460,14 +493,15 @@ export async function mint(
     amounts: TokenAmount.Type | TokenAmount.Type[],
     signer: AccountSigner,
     expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
-    opts: SupplyUpdateOptions = { autoScale: true, validate: true }
+    { autoScale = true, validate = true }: SupplyUpdateOptions = {}
 ): Promise<TransactionHash.Type> {
     let amountsList = [amounts].flat();
-    if (opts.autoScale) {
+    if (autoScale) {
         amountsList = amountsList.map((amount) => scaleAmount(token, amount));
     }
 
-    if (opts.validate) {
+    if (validate) {
+        isPaused(token) && bail(new TokenPausedError(token.info.id));
         validateGovernanceOperation(token, sender);
         amountsList.forEach((amount) => validateAmount(token, amount));
     }
@@ -498,14 +532,15 @@ export async function burn(
     amounts: TokenAmount.Type | TokenAmount.Type[],
     signer: AccountSigner,
     expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
-    opts: SupplyUpdateOptions = { autoScale: true, validate: true }
+    { autoScale = true, validate = true }: SupplyUpdateOptions = {}
 ): Promise<TransactionHash.Type> {
     let amountsList = [amounts].flat();
-    if (opts.autoScale) {
+    if (autoScale) {
         amountsList = amountsList.map((amount) => scaleAmount(token, amount));
     }
 
-    if (opts.validate) {
+    if (validate) {
+        isPaused(token) && bail(new TokenPausedError(token.info.id));
         validateGovernanceOperation(token, sender);
         amountsList.forEach((amount) => validateAmount(token, amount));
     }
@@ -540,7 +575,7 @@ export async function addAllowList(
     targets: TokenHolder.Type | TokenHolder.Type[],
     signer: AccountSigner,
     expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
-    { validate }: UpdateListOptions = { validate: true }
+    { validate = true }: UpdateListOptions = {}
 ): Promise<TransactionHash.Type> {
     if (validate) {
         validateGovernanceOperation(token, sender);
@@ -571,7 +606,7 @@ export async function removeAllowList(
     targets: TokenHolder.Type | TokenHolder.Type[],
     signer: AccountSigner,
     expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
-    { validate }: UpdateListOptions = { validate: true }
+    { validate = true }: UpdateListOptions = {}
 ): Promise<TransactionHash.Type> {
     if (validate) {
         validateGovernanceOperation(token, sender);
@@ -602,7 +637,7 @@ export async function addDenyList(
     targets: TokenHolder.Type | TokenHolder.Type[],
     signer: AccountSigner,
     expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
-    { validate }: UpdateListOptions = { validate: true }
+    { validate = true }: UpdateListOptions = {}
 ): Promise<TransactionHash.Type> {
     if (validate) {
         validateGovernanceOperation(token, sender);
@@ -633,7 +668,7 @@ export async function removeDenyList(
     targets: TokenHolder.Type | TokenHolder.Type[],
     signer: AccountSigner,
     expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
-    { validate }: UpdateListOptions = { validate: true }
+    { validate = true }: UpdateListOptions = {}
 ): Promise<TransactionHash.Type> {
     if (validate) {
         validateGovernanceOperation(token, sender);
@@ -643,6 +678,43 @@ export async function removeDenyList(
         .flat()
         .map((target) => ({ [TokenOperationType.RemoveDenyList]: { target } }));
     return sendOperations(token, sender, ops, signer, expiry);
+}
+
+/**
+ * Options to be passed to the {@linkcode pause} function.
+ */
+export type PauseOptions = {
+    /** Whether to validate the payload executing it */
+    validate?: boolean;
+};
+
+/**
+ * Pauses or unpauses execution of "mint", "burn", and "transfer" operations for the token.
+ *
+ * @param {Token} token - The token to pause/unpause.
+ * @param {AccountAddress.Type} sender - The account address of the sender.
+ * @param {boolean} pause - Whether to pause or unpause the token.
+ * @param {AccountSigner} signer - The signer responsible for signing the transaction.
+ * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
+ * @param {PauseOptions} [opts={ validate: true }] - Options for the pause operation.
+ *
+ * @returns A promise that resolves to the transaction hash.
+ * @throws {UnauthorizedGovernanceOperationError} If `opts.validate` and the sender is not the token issuer.
+ */
+export async function pause(
+    token: Token,
+    sender: AccountAddress.Type,
+    pause: boolean,
+    signer: AccountSigner,
+    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
+    { validate = true }: PauseOptions = {}
+): Promise<TransactionHash.Type> {
+    if (validate) {
+        validateGovernanceOperation(token, sender);
+    }
+
+    const operation: TokenPauseOperation = { [TokenOperationType.Pause]: pause };
+    return sendOperations(token, sender, [operation], signer, expiry);
 }
 
 /**

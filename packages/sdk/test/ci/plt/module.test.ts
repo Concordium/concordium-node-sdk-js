@@ -8,6 +8,7 @@ import {
     TokenMintOperation,
     TokenOperationType,
     TokenPauseEventDetails,
+    TokenPauseOperation,
     TokenRemoveAllowListOperation,
     TokenRemoveDenyListOperation,
     TokenTransferOperation,
@@ -377,6 +378,37 @@ describe('PLT transactions', () => {
               a1
                 6e72656d6f766544656e794c697374 a1
                   66746172676574 ${testAccountAddressCbor}
+            `.replace(/\s/g, ''),
+            'hex'
+        );
+
+        expect(payload.operations.toString()).toEqual(expectedOperations.toString('hex'));
+
+        const decoded = Cbor.decode(payload.operations);
+        expect(decoded).toEqual([removeDenyList]);
+
+        const ser = serializeAccountTransactionPayload({ payload, type: AccountTransactionType.TokenUpdate });
+        const serPayload = ser.slice(1);
+        const des = new TokenUpdateHandler().deserialize(Cursor.fromBuffer(serPayload));
+        expect(des).toEqual(payload);
+    });
+
+    it('(de)serializes pause operations correctly', () => {
+        const removeDenyList: TokenPauseOperation = {
+            [TokenOperationType.Pause]: true,
+        };
+
+        const payload = createTokenUpdatePayload(token, removeDenyList);
+
+        // This is a CBOR encoded byte sequence representing the pause operation:
+        // - 81: An array of 1 item
+        // - a1: A map with 1 key-value pair
+        //   - 65 7061757365 f5: Key "pause" (in UTF-8), value true
+        const expectedOperations = Buffer.from(
+            `
+            81
+              a1
+                65 7061757365f5
             `.replace(/\s/g, ''),
             'hex'
         );

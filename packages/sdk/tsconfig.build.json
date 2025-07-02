@@ -3,6 +3,7 @@
     "include": ["src/**/*"],
     "compilerOptions": {
         "allowImportingTsExtensions": false,
+        "noEmit": false,
         "rootDir": "./src",
         "outDir": "./lib/esm"
     }

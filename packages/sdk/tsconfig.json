@@ -5,7 +5,8 @@
             "ES2020",
             "DOM" // To get WebAssembly type.
         ],
-        "allowImportingTsExtensions": true
+        "allowImportingTsExtensions": true,
+        "noEmit": true
     },
     "include": [
         "src/**/*",

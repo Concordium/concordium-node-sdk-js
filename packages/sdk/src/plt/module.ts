@@ -1,8 +1,7 @@
-import { TokenUpdatePayload } from '../types.js';
+import { EncodedTokenModuleEvent, TokenUpdatePayload, TransactionEventTag } from '../types.js';
 import {
     Cbor,
     CborMemo,
-    EncodedTokenModuleEvent,
     TokenAmount,
     TokenHolder,
     TokenId,
@@ -204,6 +203,10 @@ export type TokenInitializationParameters = {
 };
 
 type GenericTokenModuleEvent<E extends TokenOperationType, T extends Object> = {
+    /** The tag of the event. */
+    tag: TransactionEventTag.TokenModuleEvent;
+    /** The ID of the token. */
+    tokenId: TokenId.Type;
     /** The type of the event. */
     type: E;
     /** The details of the event. */

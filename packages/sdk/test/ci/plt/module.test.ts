@@ -7,6 +7,7 @@ import {
     TokenListUpdateEventDetails,
     TokenMintOperation,
     TokenOperationType,
+    TokenPauseEventDetails,
     TokenRemoveAllowListOperation,
     TokenRemoveDenyListOperation,
     TokenTransferOperation,
@@ -24,13 +25,17 @@ import {
 describe('PLT parseModuleEvent', () => {
     const testEventParsing = (type: string, targetValue: number) => {
         it(`parses ${type} events correctly`, () => {
-            const target = TokenHolder.fromAccountAddress(
-                AccountAddress.fromBuffer(new Uint8Array(32).fill(targetValue))
-            );
+            const accountBytes = new Uint8Array(32).fill(targetValue);
+            const details: TokenListUpdateEventDetails = {
+                target: TokenHolder.fromAccountAddress(AccountAddress.fromBuffer(accountBytes)),
+            };
             const validEvent = {
                 type,
-                details: Cbor.encode({ target }),
+                details: Cbor.encode(details),
             };
+            expect(validEvent.details.toString()).toEqual(
+                `a166746172676574d99d73a201d99d71a101190397035820${Buffer.from(accountBytes).toString('hex')}`
+            );
 
             const parsedEvent = parseModuleEvent(validEvent);
             expect(parsedEvent.type).toEqual(type);
@@ -47,10 +52,12 @@ describe('PLT parseModuleEvent', () => {
     testEventParsing('removeDenyList', 0x18);
 
     it('parses pause event', () => {
+        const details: TokenPauseEventDetails = { paused: true };
         const validEvent = {
             type: 'pause',
-            details: Cbor.encode({ paused: true }),
+            details: Cbor.encode(details),
         };
+        expect(validEvent.details.toString()).toEqual('a166706175736564f5');
 
         const parsedEvent = parseModuleEvent(validEvent);
         expect(parsedEvent.type).toEqual('pause');

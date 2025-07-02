@@ -4,6 +4,7 @@ import {
     TokenAddAllowListOperation,
     TokenAddDenyListOperation,
     TokenBurnOperation,
+    TokenListUpdateEventDetails,
     TokenMintOperation,
     TokenOperationType,
     TokenRemoveAllowListOperation,
@@ -20,7 +21,7 @@ import {
     serializeAccountTransactionPayload,
 } from '../../../src/pub/types.js';
 
-describe('PLT V1 parseModuleEvent', () => {
+describe('PLT parseModuleEvent', () => {
     const testEventParsing = (type: string, targetValue: number) => {
         it(`parses ${type} events correctly`, () => {
             const target = TokenHolder.fromAccountAddress(
@@ -33,8 +34,10 @@ describe('PLT V1 parseModuleEvent', () => {
 
             const parsedEvent = parseModuleEvent(validEvent);
             expect(parsedEvent.type).toEqual(type);
-            expect(parsedEvent.details.target.type).toEqual('account');
-            expect(parsedEvent.details.target.address.decodedAddress).toEqual(new Uint8Array(32).fill(targetValue));
+            expect((parsedEvent.details as TokenListUpdateEventDetails).target.type).toEqual('account');
+            expect((parsedEvent.details as TokenListUpdateEventDetails).target.address.decodedAddress).toEqual(
+                new Uint8Array(32).fill(targetValue)
+            );
         });
     };
 
@@ -43,23 +46,42 @@ describe('PLT V1 parseModuleEvent', () => {
     testEventParsing('removeAllowList', 0x17);
     testEventParsing('removeDenyList', 0x18);
 
+    it('parses pause event', () => {
+        const validEvent = {
+            type: 'pause',
+            details: Cbor.encode({ paused: true }),
+        };
+
+        const parsedEvent = parseModuleEvent(validEvent);
+        expect(parsedEvent.type).toEqual('pause');
+        expect(parsedEvent.details).toEqual({ paused: true });
+    });
+
     it('throws an error for invalid event type', () => {
         const invalidEvent = { type: 'invalidType', details: Cbor.encode({}) };
         expect(() => parseModuleEvent(invalidEvent)).toThrowError(/invalidType/);
     });
 
     it('throws an error for invalid event details', () => {
-        const invalidDetailsEvent = { type: 'addAllowList', details: Cbor.encode(null) };
+        let invalidDetailsEvent = { type: 'addAllowList', details: Cbor.encode(null) };
+        expect(() => parseModuleEvent(invalidDetailsEvent)).toThrowError(/null/);
+
+        invalidDetailsEvent = { type: 'pause', details: Cbor.encode(null) };
         expect(() => parseModuleEvent(invalidDetailsEvent)).toThrowError(/null/);
     });
 
-    it("throws an error if 'target' is missing or invalid", () => {
+    it("throws an error if 'target' is missing or invalid for list update events", () => {
         const missingTargetEvent = { type: 'addAllowList', details: Cbor.encode({}) };
+        expect(() => parseModuleEvent(missingTargetEvent)).toThrowError(/{}/);
+    });
+
+    it("throws an error if 'paused' is missing or invalid for pause events", () => {
+        const missingTargetEvent = { type: 'pause', details: Cbor.encode({}) };
         expect(() => parseModuleEvent(missingTargetEvent)).toThrowError(/{}/);
     });
 });
 
-describe('PLT v1 transactions', () => {
+describe('PLT transactions', () => {
     const token = TokenId.fromString('DKK');
     const testAccountAddress = TokenHolder.fromAccountAddress(AccountAddress.fromBuffer(new Uint8Array(32).fill(0x15)));
     // - d99d73: A tagged (40307) item with a map (a2) containing:

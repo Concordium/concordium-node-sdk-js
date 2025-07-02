@@ -547,6 +547,7 @@ export class TokenUpdateHandler implements AccountTransactionHandler<TokenUpdate
         const PLT_MINT_COST = 100n;
         const PLT_BURN_COST = 100n;
         const PLT_LIST_UPDATE_COST = 50n;
+        const PLT_PAUSE_COST = 50n;
 
         for (const operation of operations) {
             switch (true) {
@@ -564,6 +565,9 @@ export class TokenUpdateHandler implements AccountTransactionHandler<TokenUpdate
                 case TokenOperationType.AddDenyList in operation:
                 case TokenOperationType.RemoveDenyList in operation:
                     energyCost += PLT_LIST_UPDATE_COST;
+                    break;
+                case TokenOperationType.Pause in operation:
+                    energyCost += PLT_PAUSE_COST;
                     break;
             }
         }

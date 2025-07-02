@@ -2,6 +2,7 @@ import {
     AccountAddress,
     AccountTransactionType,
     RejectReasonTag,
+    TransactionEventTag,
     TransactionKindString,
     TransactionSummaryType,
     serializeAccountTransactionPayload,
@@ -10,7 +11,6 @@ import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import {
     Cbor,
     Token,
-    TokenEventType,
     TokenHolder,
     TokenId,
     TokenListUpdate,
@@ -144,10 +144,10 @@ const client = new ConcordiumGRPCNodeClient(
             switch (result.summary.transactionType) {
                 case TransactionKindString.TokenUpdate:
                     result.summary.events.forEach((e) => {
-                        if (e.event.tag !== TokenEventType.Module) {
-                            throw new Error('Unexpected event type: ' + e.event.tag);
+                        if (e.tag !== TransactionEventTag.TokenModuleEvent) {
+                            throw new Error('Unexpected event type: ' + e.tag);
                         }
-                        console.log('Token module event:', e.event, Cbor.decode(e.event.details));
+                        console.log('Token module event:', e, Cbor.decode(e.details));
                     });
                     break;
                 case TransactionKindString.Failed:

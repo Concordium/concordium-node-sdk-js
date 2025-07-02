@@ -116,7 +116,7 @@ const client = new ConcordiumGRPCNodeClient(addr, Number(port), credentials.crea
 
             switch (result.summary.transactionType) {
                 case TransactionKindString.TokenUpdate:
-                    result.summary.events.forEach((e) => console.log(e.event));
+                    result.summary.events.forEach((e) => console.log(e));
                     break;
                 case TransactionKindString.Failed:
                     if (result.summary.rejectReason.tag !== RejectReasonTag.TokenUpdateTransactionFailed) {

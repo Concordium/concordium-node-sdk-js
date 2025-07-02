@@ -1,12 +1,5 @@
 import { EncodedTokenModuleEvent, TokenUpdatePayload, TransactionEventTag } from '../types.js';
-import {
-    Cbor,
-    CborMemo,
-    TokenAmount,
-    TokenHolder,
-    TokenId,
-    TokenMetadataUrl,
-} from './index.js';
+import { Cbor, CborMemo, TokenAmount, TokenHolder, TokenId, TokenMetadataUrl } from './index.js';
 
 /**
  * Enum representing the types of token operations.

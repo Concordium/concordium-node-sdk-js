@@ -54,6 +54,10 @@
 - Changed the representation of `TokenEvent` to a more flattened version in line with the representation in concordium-base.
 - Replaced `TokenUpdateEvent` with the flattened `TokenEvent` mentioned above.
 
+### Changed
+
+- Energy cost of PLT mint/burn changed from 100 to 50
+
 ## 10.0.0-alpha.10
 
 ### Fixed

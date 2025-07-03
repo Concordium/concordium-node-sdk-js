@@ -231,6 +231,85 @@ describe('Token.validateTransfer', () => {
         await expect(Token.validateTransfer(token, sender, transfer)).rejects.toThrow(Token.NotAllowedError);
     });
 
+    it('should validate successfully for tokens with deny list when account does not have a balance', async () => {
+        const sender = ACCOUNT_1;
+        const recipient = ACCOUNT_2;
+        const tokenId = TokenId.fromString('3f1bfce9');
+        const decimals = 8;
+
+        // Setup token with deny list enabled
+        const moduleState: TokenModuleState = {
+            name: 'Test Token',
+            metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
+            governanceAccount: TokenHolder.fromAccountAddress(sender),
+            denyList: true,
+        };
+
+        const token = createMockToken(decimals, moduleState, tokenId);
+
+        // Setup sender account with sufficient balance
+        const senderBalance = TokenAmount.create(BigInt(1000), decimals);
+
+        // Create sender account info with deny list status
+        const senderAccountState: TokenModuleAccountState = { denyList: false };
+        const senderAccountInfo = createAccountInfo(sender, tokenId, senderBalance, senderAccountState);
+
+        // Mock getAccountInfo to return sender on deny list
+        token.grpc.getAccountInfo = jest
+            .fn()
+            .mockResolvedValueOnce(senderAccountInfo) // First call for balance check
+            .mockResolvedValueOnce(createAccountInfo(recipient)); // second call for recipient, no token balance.
+
+        // Create transfer payload
+        const transferAmount = TokenAmount.create(BigInt(500), decimals);
+        const transfer: TokenTransfer = {
+            amount: transferAmount,
+            recipient: TokenHolder.fromAccountAddress(recipient),
+        };
+
+        await expect(Token.validateTransfer(token, sender, transfer)).resolves.toBe(true);
+    });
+
+    it('should throw NotAllowedError for tokens with allow list when account does not have a balance', async () => {
+        const sender = ACCOUNT_1;
+        const recipient = ACCOUNT_2;
+        const tokenId = TokenId.fromString('3f1bfce9');
+        const decimals = 8;
+
+        // Setup token with deny list enabled
+        const moduleState: TokenModuleState = {
+            name: 'Test Token',
+            metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
+            governanceAccount: TokenHolder.fromAccountAddress(sender),
+            allowList: true,
+        };
+
+        const token = createMockToken(decimals, moduleState, tokenId);
+
+        // Setup sender account with sufficient balance
+        const senderBalance = TokenAmount.create(BigInt(1000), decimals);
+
+        // Create sender account info with deny list status
+        const senderAccountState: TokenModuleAccountState = { allowList: true };
+        const senderAccountInfo = createAccountInfo(sender, tokenId, senderBalance, senderAccountState);
+
+        // Mock getAccountInfo to return sender on deny list
+        token.grpc.getAccountInfo = jest
+            .fn()
+            .mockResolvedValueOnce(senderAccountInfo) // First call for balance check
+            .mockResolvedValueOnce(createAccountInfo(recipient)); // second call for recipient, no token balance.
+
+        // Create transfer payload
+        const transferAmount = TokenAmount.create(BigInt(500), decimals);
+        const transfer: TokenTransfer = {
+            amount: transferAmount,
+            recipient: TokenHolder.fromAccountAddress(recipient),
+        };
+
+        // Should throw NotAllowedError
+        await expect(Token.validateTransfer(token, sender, transfer)).rejects.toThrow(Token.NotAllowedError);
+    });
+
     it('should throw NotAllowedError when account is not on allow list', async () => {
         const sender = ACCOUNT_1;
         const recipient = ACCOUNT_2;
@@ -345,20 +424,12 @@ function createMockToken(
 
 function createAccountInfo(
     accountAddress: AccountAddress.Type,
-    tokenId: TokenId.Type,
+    tokenId?: TokenId.Type,
     balance?: TokenAmount.Type,
     moduleState?: TokenModuleAccountState
 ): AccountInfo {
-    return {
-        accountAddress,
-        accountTokens: [
-            {
-                id: tokenId,
-                state: {
-                    balance,
-                    moduleState: moduleState ? Cbor.encode(moduleState) : undefined,
-                },
-            },
-        ],
-    } as AccountInfo;
+    const accountTokens = tokenId
+        ? [{ id: tokenId, state: { balance, moduleState: moduleState ? Cbor.encode(moduleState) : undefined } }]
+        : [];
+    return { accountAddress, accountTokens } as AccountInfo;
 }

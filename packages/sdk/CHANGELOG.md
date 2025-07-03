@@ -46,6 +46,12 @@
   with `buildAccountSigner`
 - A new optional field `createPlt` to `AuthorizationsV1` which exposes the access structure for PLT creation.
 
+## 10.0.0-alpha.10
+
+### Fixed
+
+- Fixed a bug where PLT transfer validation would fail when the reciever had no balance if the token had a deny list.
+
 ## 10.0.0-alpha.9
 
 ### Breaking changes

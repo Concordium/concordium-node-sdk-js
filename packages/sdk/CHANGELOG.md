@@ -15,6 +15,7 @@
 - Added reject reasons related to PLT transactions to `RejectReason` union type.
 - `CcdAmount.fromDecimal` no longer supports creation from a string with comma used as the decimal separator, e.g.
   "10,123".
+- Energy cost of PLT mint/burn changed from 100 to 50
 
 ### Added
 

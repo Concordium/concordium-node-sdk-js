@@ -382,14 +382,15 @@ export async function validateTransfer(
     const receiverInfos = await Promise.all(payloads.map((p) => token.grpc.getAccountInfo(p.recipient.address)));
     const accounts = [senderInfo, ...receiverInfos];
     accounts.forEach((r) => {
-        const accToken = r.accountTokens.find((t) => t.id.value === token.info.id.value)?.state;
-        if (accToken?.moduleState === undefined)
-            throw new NotAllowedError(TokenHolder.fromAccountAddress(r.accountAddress));
+        const accountToken = r.accountTokens.find((t) => t.id.value === token.info.id.value)?.state;
+        const accountModuleState =
+            accountToken?.moduleState === undefined
+                ? undefined
+                : (Cbor.decode(accountToken.moduleState) as TokenModuleAccountState);
 
-        const accountModuleState = Cbor.decode(accToken.moduleState) as TokenModuleAccountState;
-        if (token.moduleState.allowList && !accountModuleState.allowList)
+        if (token.moduleState.denyList && accountModuleState?.denyList)
             throw new NotAllowedError(TokenHolder.fromAccountAddress(r.accountAddress));
-        if (token.moduleState.denyList && accountModuleState.denyList)
+        if (token.moduleState.allowList && !accountModuleState?.allowList)
             throw new NotAllowedError(TokenHolder.fromAccountAddress(r.accountAddress));
     });
 

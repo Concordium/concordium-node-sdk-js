@@ -544,8 +544,8 @@ export class TokenUpdateHandler implements AccountTransactionHandler<TokenUpdate
         let energyCost = 300n;
         // Additional cost of specific PLT operations
         const PLT_TRANSFER_COST = 100n;
-        const PLT_MINT_COST = 100n;
-        const PLT_BURN_COST = 100n;
+        const PLT_MINT_COST = 50n;
+        const PLT_BURN_COST = 50n;
         const PLT_LIST_UPDATE_COST = 50n;
         const PLT_PAUSE_COST = 50n;
 

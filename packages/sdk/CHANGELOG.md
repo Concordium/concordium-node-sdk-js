@@ -53,6 +53,10 @@
 - `pause` function added to the `Token` module, which can be used to pause/unpause execution of token operations.
 - `moduleState` added to `Token` instances, which is the parsed token module state of a PLT instance.
 
+### Changed
+
+- Energy cost of PLT mint/burn changed from 100 to 50
+
 ## 10.0.0-alpha.10
 
 ### Fixed

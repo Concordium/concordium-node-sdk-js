@@ -46,6 +46,12 @@
   with `buildAccountSigner`
 - A new optional field `createPlt` to `AuthorizationsV1` which exposes the access structure for PLT creation.
 
+## 10.0.0-alpha.11 (Unreleased)
+
+### Changed
+
+- Energy cost of PLT mint/burn changed from 100 to 50
+
 ## 10.0.0-alpha.10
 
 ### Fixed

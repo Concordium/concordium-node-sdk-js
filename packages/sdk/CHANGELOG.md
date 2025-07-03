@@ -15,7 +15,6 @@
 - Added reject reasons related to PLT transactions to `RejectReason` union type.
 - `CcdAmount.fromDecimal` no longer supports creation from a string with comma used as the decimal separator, e.g.
   "10,123".
-- Energy cost of PLT mint/burn changed from 100 to 50
 
 ### Added
 
@@ -46,6 +45,10 @@
 - Function `parseSimpleWallet` which parses a `SimpleWalletFormat` (also a subset of `GenesisFormat`), which can be used
   with `buildAccountSigner`
 - A new optional field `createPlt` to `AuthorizationsV1` which exposes the access structure for PLT creation.
+
+## 10.0.0-alpha.10 (Unreleased)
+
+- Energy cost of PLT mint/burn changed from 100 to 50
 
 ## 10.0.0-alpha.9
 

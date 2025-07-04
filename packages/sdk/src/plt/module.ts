@@ -1,13 +1,5 @@
-import { TokenUpdatePayload } from '../types.js';
-import {
-    Cbor,
-    CborMemo,
-    EncodedTokenModuleEvent,
-    TokenAmount,
-    TokenHolder,
-    TokenId,
-    TokenMetadataUrl,
-} from './index.js';
+import { EncodedTokenModuleEvent, TokenUpdatePayload, TransactionEventTag } from '../types.js';
+import { Cbor, CborMemo, TokenAmount, TokenHolder, TokenId, TokenMetadataUrl } from './index.js';
 
 /**
  * Enum representing the types of token operations.
@@ -214,6 +206,10 @@ export type TokenInitializationParameters = {
 };
 
 type GenericTokenModuleEvent<E extends TokenOperationType, T extends Object> = {
+    /** The tag of the event. */
+    tag: TransactionEventTag.TokenModuleEvent;
+    /** The ID of the token. */
+    tokenId: TokenId.Type;
     /** The type of the event. */
     type: E;
     /** The details of the event. */
@@ -313,9 +309,9 @@ export function parseModuleEvent(event: EncodedTokenModuleEvent): TokenModuleEve
         case TokenOperationType.RemoveAllowList:
         case TokenOperationType.AddDenyList:
         case TokenOperationType.RemoveDenyList:
-            return { type: event.type, details: Cbor.decode(event.details, 'TokenListUpdateEventDetails') };
+            return { ...event, type: event.type, details: Cbor.decode(event.details, 'TokenListUpdateEventDetails') };
         case TokenOperationType.Pause:
-            return { type: event.type, details: Cbor.decode(event.details, 'TokenPauseEventDetails') };
+            return { ...event, type: event.type, details: Cbor.decode(event.details, 'TokenPauseEventDetails') };
         default:
             throw new Error(`Cannot parse event as token module event: ${event.type}`);
     }

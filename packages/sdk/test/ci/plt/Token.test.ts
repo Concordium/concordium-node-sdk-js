@@ -248,6 +248,7 @@ describe('Token.validateTransfer', () => {
             metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
             governanceAccount: TokenHolder.fromAccountAddress(sender),
             denyList: true,
+            paused: false,
         };
 
         const token = createMockToken(decimals, moduleState, tokenId);
@@ -287,6 +288,7 @@ describe('Token.validateTransfer', () => {
             metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
             governanceAccount: TokenHolder.fromAccountAddress(sender),
             allowList: true,
+            paused: false,
         };
 
         const token = createMockToken(decimals, moduleState, tokenId);

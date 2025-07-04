@@ -19,7 +19,9 @@ import { Cbor, TokenAmount, TokenId } from '../../../src/pub/plt.js';
 import {
     AccountAddress,
     AccountTransactionType,
+    EncodedTokenModuleEvent,
     TokenUpdateHandler,
+    TransactionEventTag,
     serializeAccountTransactionPayload,
 } from '../../../src/pub/types.js';
 
@@ -30,8 +32,10 @@ describe('PLT parseModuleEvent', () => {
             const details: TokenListUpdateEventDetails = {
                 target: TokenHolder.fromAccountAddress(AccountAddress.fromBuffer(accountBytes)),
             };
-            const validEvent = {
+            const validEvent: EncodedTokenModuleEvent = {
+                tag: TransactionEventTag.TokenModuleEvent,
                 type,
+                tokenId: TokenId.fromString('PLT'),
                 details: Cbor.encode(details),
             };
             expect(validEvent.details.toString()).toEqual(
@@ -54,7 +58,9 @@ describe('PLT parseModuleEvent', () => {
 
     it('parses pause event', () => {
         const details: TokenPauseEventDetails = { paused: true };
-        const validEvent = {
+        const validEvent: EncodedTokenModuleEvent = {
+            tag: TransactionEventTag.TokenModuleEvent,
+            tokenId: TokenId.fromString('PLT'),
             type: 'pause',
             details: Cbor.encode(details),
         };
@@ -66,25 +72,42 @@ describe('PLT parseModuleEvent', () => {
     });
 
     it('throws an error for invalid event type', () => {
-        const invalidEvent = { type: 'invalidType', details: Cbor.encode({}) };
+        const invalidEvent: EncodedTokenModuleEvent = {
+            tag: TransactionEventTag.TokenModuleEvent,
+            tokenId: TokenId.fromString('PLT'),
+            type: 'invalidType',
+            details: Cbor.encode({}),
+        };
         expect(() => parseModuleEvent(invalidEvent)).toThrowError(/invalidType/);
     });
 
     it('throws an error for invalid event details', () => {
-        let invalidDetailsEvent = { type: 'addAllowList', details: Cbor.encode(null) };
-        expect(() => parseModuleEvent(invalidDetailsEvent)).toThrowError(/null/);
-
-        invalidDetailsEvent = { type: 'pause', details: Cbor.encode(null) };
+        const invalidDetailsEvent: EncodedTokenModuleEvent = {
+            tag: TransactionEventTag.TokenModuleEvent,
+            tokenId: TokenId.fromString('PLT'),
+            type: 'addAllowList',
+            details: Cbor.encode(null),
+        };
         expect(() => parseModuleEvent(invalidDetailsEvent)).toThrowError(/null/);
     });
 
-    it("throws an error if 'target' is missing or invalid for list update events", () => {
-        const missingTargetEvent = { type: 'addAllowList', details: Cbor.encode({}) };
+    it("throws an error if 'target' is missing or invalid", () => {
+        const missingTargetEvent: EncodedTokenModuleEvent = {
+            tag: TransactionEventTag.TokenModuleEvent,
+            tokenId: TokenId.fromString('PLT'),
+            type: 'addAllowList',
+            details: Cbor.encode({}),
+        };
         expect(() => parseModuleEvent(missingTargetEvent)).toThrowError(/{}/);
     });
 
     it("throws an error if 'paused' is missing or invalid for pause events", () => {
-        const missingTargetEvent = { type: 'pause', details: Cbor.encode({}) };
+        const missingTargetEvent: EncodedTokenModuleEvent = {
+            tag: TransactionEventTag.TokenModuleEvent,
+            tokenId: TokenId.fromString('PLT'),
+            type: 'pause',
+            details: Cbor.encode({}),
+        };
         expect(() => parseModuleEvent(missingTargetEvent)).toThrowError(/{}/);
     });
 });

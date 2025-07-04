@@ -4,9 +4,10 @@
 
 ### Breaking changes
 
-- Add `TokenUpdateSummary` to the possible transaction outcomes declared by
-  `AccountTransactionSummary`, and correspondingly `TokenUpdateEvent` to `TransactionEvent`.
-- Added new variant `TokenUpdate` to `TransactionEventTag`, `AccountTransactionType` and correspondingly `TransactionKindString`.
+- Add `TokenUpdateSummary` to the possible transaction outcomes declared by `AccountTransactionSummary`
+- Added new variant `TokenUpdate` to  `AccountTransactionType` and correspondingly `TransactionKindString`.
+- Added `EncodedTokenModuleEvent`, `TokenTransfer`, `TokenMint`, `TokenBurn` types to `TransactionEvent` union.
+- Added new variants `TokenModuleEvent`, `TokenTransfer`, `TokenMint`, `TokenBurn` to `TransactionEventTag`.
 - Added new variant `CreatePLT` to `UpdateType`.
 - Updated `AccountInfo` to hold information about the PLTs held by an account.
 - Removed `toProto` and `fromProto` from the exposed API for all custom types in the SDK. This should have no impact, as
@@ -47,6 +48,11 @@
 - A new optional field `createPlt` to `AuthorizationsV1` which exposes the access structure for PLT creation.
 
 ## 10.0.0-alpha.? (Unreleased)
+
+### Breaking changes
+
+- Changed the representation of `TokenEvent` to a more flattened version in line with the representation in concordium-base.
+- Replaced `TokenUpdateEvent` with the flattened `TokenEvent` mentioned above.
 
 ### Added
 

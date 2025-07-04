@@ -136,9 +136,6 @@ function decodeTokenModuleState(value: Cbor): TokenModuleState {
     if (!('name' in decoded && typeof decoded.name === 'string')) {
         throw new Error('Invalid TokenModuleState: missing or invalid name');
     }
-    if (!('paused' in decoded && typeof decoded.paused === 'boolean')) {
-        throw new Error('Invalid TokenModuleState: missing or invalid paused');
-    }
 
     // Validate optional fields
     if ('allowList' in decoded && typeof decoded.allowList !== 'boolean') {
@@ -152,6 +149,9 @@ function decodeTokenModuleState(value: Cbor): TokenModuleState {
     }
     if ('burnable' in decoded && typeof decoded.burnable !== 'boolean') {
         throw new Error('Invalid TokenModuleState: burnable must be a boolean');
+    }
+    if ('paused' in decoded && typeof decoded.paused !== 'boolean') {
+        throw new Error('Invalid TokenModuleState: paused must be a boolean');
     }
 
     return decoded as TokenModuleState;

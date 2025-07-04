@@ -158,7 +158,7 @@ export type TokenModuleState = {
     /** Whether the token is burnable */
     burnable?: boolean;
     /** Whether the token operations are paused or not. */
-    paused: boolean;
+    paused?: boolean;
     /** Any additional state information depending on the module implementation */
     [key: string]: unknown;
 };

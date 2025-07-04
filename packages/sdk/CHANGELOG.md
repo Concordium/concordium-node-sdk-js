@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 9.2.0
+
+### Fixed
+
+- Fixed an issue an internal dependency not being handled correctly in the UMD build.
+
 ### Added
 
 - Method (`getContractUpdateEnergyCost`) for estimating energy usage of contract update.

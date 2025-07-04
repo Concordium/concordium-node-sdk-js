@@ -54,6 +54,11 @@
 - Changed the representation of `TokenEvent` to a more flattened version in line with the representation in concordium-base.
 - Replaced `TokenUpdateEvent` with the flattened `TokenEvent` mentioned above.
 
+### Added
+
+- `pause` function added to the `Token` module, which can be used to pause/unpause execution of token operations.
+- `moduleState` added to `Token` instances, which is the parsed token module state of a PLT instance.
+
 ### Changed
 
 - Energy cost of PLT mint/burn changed from 100 to 50

@@ -12,6 +12,7 @@ export enum TokenOperationType {
     RemoveAllowList = 'removeAllowList',
     AddDenyList = 'addDenyList',
     RemoveDenyList = 'removeDenyList',
+    Pause = 'pause',
 }
 
 export type Memo = CborMemo.Type | Uint8Array;
@@ -90,6 +91,12 @@ export type TokenAddDenyListOperation = TokenOperationGen<TokenOperationType.Add
 export type TokenRemoveDenyListOperation = TokenOperationGen<TokenOperationType.RemoveDenyList, TokenListUpdate>;
 
 /**
+ * Represents an operation to pause the execution of the "mint", "burn",
+ * and "transfer" operations of the token.
+ */
+export type TokenPauseOperation = TokenOperationGen<TokenOperationType.Pause, boolean>;
+
+/**
  * Union type representing all possible operations for a token.
  */
 export type TokenOperation =
@@ -99,7 +106,8 @@ export type TokenOperation =
     | TokenAddAllowListOperation
     | TokenRemoveAllowListOperation
     | TokenAddDenyListOperation
-    | TokenRemoveDenyListOperation;
+    | TokenRemoveDenyListOperation
+    | TokenPauseOperation;
 
 /**
  * Creates a payload for token operations.
@@ -149,6 +157,8 @@ export type TokenModuleState = {
     mintable?: boolean;
     /** Whether the token is burnable */
     burnable?: boolean;
+    /** Whether the token operations are paused or not. */
+    paused: boolean;
     /** Any additional state information depending on the module implementation */
     [key: string]: unknown;
 };
@@ -214,36 +224,50 @@ export type TokenListUpdateEventDetails = {
     target: TokenHolder.Type;
 };
 
-export type TokenEventDetails = TokenListUpdateEventDetails;
+/**
+ * The structure of a pause event for a PLT.
+ */
+export type TokenPauseEventDetails = {
+    /** Whether the token is paused */
+    paused: boolean;
+};
+
+export type TokenEventDetails = TokenListUpdateEventDetails | TokenPauseEventDetails;
 
 /**
- * An event occuring as the result of an "add-allow-list" operation.
+ * An event occuring as the result of an "addAllowList" operation.
  */
 export type TokenAddAllowListEvent = GenericTokenModuleEvent<
     TokenOperationType.AddAllowList,
     TokenListUpdateEventDetails
 >;
 /**
- * An event occuring as the result of an "add-deny-list" operation.
+ * An event occuring as the result of an "addDenyList" operation.
  */
 export type TokenAddDenyListEvent = GenericTokenModuleEvent<
     TokenOperationType.AddDenyList,
     TokenListUpdateEventDetails
 >;
 /**
- * An event occuring as the result of an "remove-allow-list" operation.
+ * An event occuring as the result of an "removeAllowList" operation.
  */
 export type TokenRemoveAllowListEvent = GenericTokenModuleEvent<
     TokenOperationType.RemoveAllowList,
     TokenListUpdateEventDetails
 >;
 /**
- * An event occuring as the result of an "remove-deny-list" operation.
+ * An event occuring as the result of an "removeDenyList" operation.
  */
 export type TokenRemoveDenyListEvent = GenericTokenModuleEvent<
     TokenOperationType.RemoveDenyList,
     TokenListUpdateEventDetails
 >;
+
+/**
+ * An event occuring as the result of a "pause" operation, describing whether execution
+ * of the associated token operations are paused or not.
+ */
+export type TokenPauseEvent = GenericTokenModuleEvent<TokenOperationType.Pause, TokenPauseEventDetails>;
 
 /**
  * A union of all token module events.
@@ -252,14 +276,8 @@ export type TokenModuleEvent =
     | TokenAddAllowListEvent
     | TokenAddDenyListEvent
     | TokenRemoveAllowListEvent
-    | TokenRemoveDenyListEvent;
-
-const EVENT_TYPES = [
-    TokenOperationType.AddAllowList,
-    TokenOperationType.RemoveAllowList,
-    TokenOperationType.AddDenyList,
-    TokenOperationType.RemoveDenyList,
-];
+    | TokenRemoveDenyListEvent
+    | TokenPauseEvent;
 
 /**
  * Parses a token module event, decoding the details from CBOR format. If the desired outcome is to be able to handle
@@ -286,13 +304,15 @@ const EVENT_TYPES = [
  * }
  */
 export function parseModuleEvent(event: EncodedTokenModuleEvent): TokenModuleEvent {
-    if (!EVENT_TYPES.includes(event.type as TokenOperationType)) {
-        throw new Error(`Cannot parse event as token module event: ${event.type}`);
+    switch (event.type) {
+        case TokenOperationType.AddAllowList:
+        case TokenOperationType.RemoveAllowList:
+        case TokenOperationType.AddDenyList:
+        case TokenOperationType.RemoveDenyList:
+            return { ...event, type: event.type, details: Cbor.decode(event.details, 'TokenListUpdateEventDetails') };
+        case TokenOperationType.Pause:
+            return { ...event, type: event.type, details: Cbor.decode(event.details, 'TokenPauseEventDetails') };
+        default:
+            throw new Error(`Cannot parse event as token module event: ${event.type}`);
     }
-
-    const details = Cbor.decode(event.details, 'TokenEventDetails');
-    return {
-        ...event,
-        details,
-    } as TokenModuleEvent;
 }

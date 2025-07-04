@@ -6,6 +6,7 @@ import * as GRPC_PLT from '../grpc-api/v2/concordium/protocol-level-tokens.js';
 import * as GRPC from '../grpc-api/v2/concordium/types.js';
 import * as PLT from '../plt/index.js';
 import * as SDK from '../types.js';
+import { TokenEvent, TokenTransferEvent, TransactionEventTag } from '../types.js';
 import * as AccountAddress from '../types/AccountAddress.js';
 import * as BlockHash from '../types/BlockHash.js';
 import * as CcdAmount from '../types/CcdAmount.js';
@@ -2029,26 +2030,22 @@ function trAccountTransactionSummary(
                 events: effect.delegationConfigured.events.map((x) => trDelegationEvent(x, base.sender)),
             };
         case 'tokenUpdateEffect':
-            const events: SDK.TokenUpdateEvent[] = effect.tokenUpdateEffect.events.map((e) => ({
-                tag: SDK.TransactionEventTag.TokenUpdate,
-                tokenId: PLT.TokenId.fromProto(unwrap(e.tokenId)),
-                event: tokenEvent(e),
-            }));
             return {
                 ...base,
                 transactionType: SDK.TransactionKindString.TokenUpdate,
-                events,
+                events: effect.tokenUpdateEffect.events.map(tokenEvent),
             };
         case undefined:
             throw Error('Failed translating AccountTransactionEffects, encountered undefined value');
     }
 }
 
-function tokenEvent(event: GRPC_PLT.TokenEvent): PLT.TokenEvent {
+function tokenEvent(event: GRPC_PLT.TokenEvent): TokenEvent {
     switch (event.event.oneofKind) {
         case 'transferEvent':
-            const transferEvent: PLT.TokenEvent = {
-                tag: PLT.TokenEventType.Transfer,
+            const transferEvent: TokenTransferEvent = {
+                tag: TransactionEventTag.TokenTransfer,
+                tokenId: PLT.TokenId.fromProto(unwrap(event.tokenId)),
                 from: PLT.TokenHolder.fromProto(unwrap(event.event.transferEvent.from)),
                 to: PLT.TokenHolder.fromProto(unwrap(event.event.transferEvent.to)),
                 amount: PLT.TokenAmount.fromProto(unwrap(event.event.transferEvent.amount)),
@@ -2060,19 +2057,22 @@ function tokenEvent(event: GRPC_PLT.TokenEvent): PLT.TokenEvent {
             return transferEvent;
         case 'moduleEvent':
             return {
-                tag: PLT.TokenEventType.Module,
+                tag: TransactionEventTag.TokenModuleEvent,
+                tokenId: PLT.TokenId.fromProto(unwrap(event.tokenId)),
                 type: event.event.moduleEvent.type,
                 details: PLT.Cbor.fromProto(unwrap(event.event.moduleEvent.details)),
             };
         case 'mintEvent':
             return {
-                tag: PLT.TokenEventType.Mint,
+                tag: TransactionEventTag.TokenMint,
+                tokenId: PLT.TokenId.fromProto(unwrap(event.tokenId)),
                 amount: PLT.TokenAmount.fromProto(unwrap(event.event.mintEvent.amount)),
                 target: PLT.TokenHolder.fromProto(unwrap(event.event.mintEvent.target)),
             };
         case 'burnEvent':
             return {
-                tag: PLT.TokenEventType.Burn,
+                tag: TransactionEventTag.TokenBurn,
+                tokenId: PLT.TokenId.fromProto(unwrap(event.tokenId)),
                 amount: PLT.TokenAmount.fromProto(unwrap(event.event.burnEvent.amount)),
                 target: PLT.TokenHolder.fromProto(unwrap(event.event.burnEvent.target)),
             };

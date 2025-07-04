@@ -1,4 +1,4 @@
-import type { Cbor, CborMemo, TokenAmount, TokenHolder, TokenId, TokenModuleReference } from './index.js';
+import type { Cbor, TokenAmount, TokenId, TokenModuleReference } from './index.js';
 
 /**
  * Represents a protocol level token state for an account.
@@ -72,67 +72,4 @@ export type CreatePLTPayload = {
     decimals: number;
     /** The module specific initialization parameters. */
     initializationParameters: Cbor.Type;
-};
-
-type TokenEventGeneric<T extends TokenEventType, E extends object> = E & {
-    /** The type of the event. */
-    tag: T;
-};
-
-/**
- * Represents a token event emitted as the result of a token governance transaction.
- * The event type is determined by the `tag` field.
- */
-export type TokenEvent =
-    | TokenEventGeneric<TokenEventType.Transfer, TokenTransferEvent>
-    | TokenEventGeneric<TokenEventType.Mint, TokenSupplyUpdateEvent>
-    | TokenEventGeneric<TokenEventType.Burn, TokenSupplyUpdateEvent>
-    | TokenEventGeneric<TokenEventType.Module, EncodedTokenModuleEvent>;
-
-/**
- * The type of events emitted by the token module.
- */
-export enum TokenEventType {
-    /** Event emitted when a transfer of tokens is performed. */
-    Transfer = 'transfer',
-    /** Event emitted when the token supply is updated by minting to a token holder. */
-    Mint = 'mint',
-    /** Event emitted when the token supply is updated by burning from the balance of a token holder. */
-    Burn = 'burn',
-    /** Event emitted when from a token module */
-    Module = 'module',
-}
-
-/**
- * Event emitted by the token module.
- */
-export type EncodedTokenModuleEvent = {
-    /** The type of the event emitted by the token module. */
-    type: string;
-    /** Additional details about the event (CBOR encoded). */
-    details: Cbor.Type;
-};
-
-/**
- * Event emitted when a transfer of tokens is performed.
- */
-export type TokenTransferEvent = {
-    /** The token holder sending the tokens. */
-    from: TokenHolder.Type;
-    /** The token holder receiving the tokens. */
-    to: TokenHolder.Type;
-    /** The amount of tokens transferred. */
-    amount: TokenAmount.Type;
-    /** An optional memo associated with the transfer. */
-    memo?: CborMemo.Type;
-};
-
-/**
- * Event emitted when the token supply is updated.
- */
-export type TokenSupplyUpdateEvent = {
-    /** The token holder whose supply is updated. */
-    target: TokenHolder.Type;
-    /** The amount by which the token supply is updated. */
-    amount: TokenAmount.Type;
 };

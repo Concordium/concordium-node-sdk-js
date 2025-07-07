@@ -56,7 +56,7 @@
 
 ### Added
 
-- `pause` function added to the `Token` module, which can be used to pause/unpause execution of token operations.
+- `pause` and `unpause` functions added to the `Token` module, which can be used to pause/unpause execution of token operations respectively.
 - `moduleState` added to `Token` instances, which is the parsed token module state of a PLT instance.
 
 ### Changed

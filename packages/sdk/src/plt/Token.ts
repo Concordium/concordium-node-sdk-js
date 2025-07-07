@@ -26,6 +26,7 @@ import {
     TokenRemoveDenyListOperation,
     TokenTransfer,
     TokenTransferOperation,
+    TokenUnpauseOperation,
     createTokenUpdatePayload,
 } from './module.js';
 
@@ -685,11 +686,10 @@ export type PauseOptions = {
 };
 
 /**
- * Pauses or unpauses execution of "mint", "burn", and "transfer" operations for the token.
+ * Suspends execution of any operation involving balance changes for the token.
  *
  * @param {Token} token - The token to pause/unpause.
  * @param {AccountAddress.Type} sender - The account address of the sender.
- * @param {boolean} pause - Whether to pause or unpause the token.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
  * @param {PauseOptions} [opts={ validate: true }] - Options for the pause operation.
@@ -700,7 +700,6 @@ export type PauseOptions = {
 export async function pause(
     token: Token,
     sender: AccountAddress.Type,
-    pause: boolean,
     signer: AccountSigner,
     expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
     { validate = true }: PauseOptions = {}
@@ -709,7 +708,34 @@ export async function pause(
         validateGovernanceOperation(token, sender);
     }
 
-    const operation: TokenPauseOperation = { [TokenOperationType.Pause]: pause };
+    const operation: TokenPauseOperation = { [TokenOperationType.Pause]: {} };
+    return sendOperations(token, sender, [operation], signer, expiry);
+}
+
+/**
+ * Resumes execution of any operation involving balance changes for the token.
+ *
+ * @param {Token} token - The token to pause/unpause.
+ * @param {AccountAddress.Type} sender - The account address of the sender.
+ * @param {AccountSigner} signer - The signer responsible for signing the transaction.
+ * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
+ * @param {PauseOptions} [opts={ validate: true }] - Options for the pause operation.
+ *
+ * @returns A promise that resolves to the transaction hash.
+ * @throws {UnauthorizedGovernanceOperationError} If `opts.validate` and the sender is not the token issuer.
+ */
+export async function unpause(
+    token: Token,
+    sender: AccountAddress.Type,
+    signer: AccountSigner,
+    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
+    { validate = true }: PauseOptions = {}
+): Promise<TransactionHash.Type> {
+    if (validate) {
+        validateGovernanceOperation(token, sender);
+    }
+
+    const operation: TokenUnpauseOperation = { [TokenOperationType.Unpause]: {} };
     return sendOperations(token, sender, [operation], signer, expiry);
 }
 

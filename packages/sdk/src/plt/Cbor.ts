@@ -191,9 +191,6 @@ function decodeTokenPauseEventDetails(value: Cbor): TokenPauseEventDetails {
     if (typeof decoded !== 'object' || decoded === null) {
         throw new Error(`Invalid event details: ${JSON.stringify(decoded)}. Expected an object.`);
     }
-    if (!('paused' in decoded && typeof decoded.paused === 'boolean')) {
-        throw new Error(`Invalid event details: ${JSON.stringify(decoded)}. Expected 'paused' to be a boolean`);
-    }
 
     return decoded as TokenPauseEventDetails;
 }

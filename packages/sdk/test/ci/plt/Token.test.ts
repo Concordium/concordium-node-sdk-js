@@ -514,7 +514,12 @@ describe('Token governance operation', () => {
         ).rejects.toThrow(Token.UnauthorizedGovernanceOperationError);
 
         // Pause function
-        await expect(Token.pause(token, sender, true, signer, undefined, { validate: true })).rejects.toThrow(
+        await expect(Token.pause(token, sender, signer, undefined, { validate: true })).rejects.toThrow(
+            Token.UnauthorizedGovernanceOperationError
+        );
+
+        // Unpause function
+        await expect(Token.unpause(token, sender, signer, undefined, { validate: true })).rejects.toThrow(
             Token.UnauthorizedGovernanceOperationError
         );
     });

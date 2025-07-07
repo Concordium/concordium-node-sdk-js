@@ -567,6 +567,7 @@ export class TokenUpdateHandler implements AccountTransactionHandler<TokenUpdate
                     energyCost += PLT_LIST_UPDATE_COST;
                     break;
                 case TokenOperationType.Pause in operation:
+                case TokenOperationType.Unpause in operation:
                     energyCost += PLT_PAUSE_COST;
                     break;
             }

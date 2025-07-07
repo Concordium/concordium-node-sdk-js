@@ -12,6 +12,7 @@ import {
     TokenRemoveAllowListOperation,
     TokenRemoveDenyListOperation,
     TokenTransferOperation,
+    TokenUnpauseOperation,
     createTokenUpdatePayload,
     parseModuleEvent,
 } from '../../../src/plt/module.js';
@@ -57,18 +58,33 @@ describe('PLT parseModuleEvent', () => {
     testEventParsing('removeDenyList', 0x18);
 
     it('parses pause event', () => {
-        const details: TokenPauseEventDetails = { paused: true };
+        const details: TokenPauseEventDetails = {};
         const validEvent: EncodedTokenModuleEvent = {
             tag: TransactionEventTag.TokenModuleEvent,
             tokenId: TokenId.fromString('PLT'),
             type: 'pause',
             details: Cbor.encode(details),
         };
-        expect(validEvent.details.toString()).toEqual('a166706175736564f5');
+        expect(validEvent.details.toString()).toEqual('a0');
 
         const parsedEvent = parseModuleEvent(validEvent);
         expect(parsedEvent.type).toEqual('pause');
-        expect(parsedEvent.details).toEqual({ paused: true });
+        expect(parsedEvent.details).toEqual({});
+    });
+
+    it('parses unpause event', () => {
+        const details: TokenPauseEventDetails = {};
+        const validEvent: EncodedTokenModuleEvent = {
+            tag: TransactionEventTag.TokenModuleEvent,
+            tokenId: TokenId.fromString('PLT'),
+            type: 'unpause',
+            details: Cbor.encode(details),
+        };
+        expect(validEvent.details.toString()).toEqual('a0');
+
+        const parsedEvent = parseModuleEvent(validEvent);
+        expect(parsedEvent.type).toEqual('unpause');
+        expect(parsedEvent.details).toEqual({});
     });
 
     it('throws an error for invalid event type', () => {
@@ -81,7 +97,7 @@ describe('PLT parseModuleEvent', () => {
         expect(() => parseModuleEvent(invalidEvent)).toThrowError(/invalidType/);
     });
 
-    it('throws an error for invalid event details', () => {
+    it('throws an error for invalid event details for list update events', () => {
         const invalidDetailsEvent: EncodedTokenModuleEvent = {
             tag: TransactionEventTag.TokenModuleEvent,
             tokenId: TokenId.fromString('PLT'),
@@ -91,7 +107,7 @@ describe('PLT parseModuleEvent', () => {
         expect(() => parseModuleEvent(invalidDetailsEvent)).toThrowError(/null/);
     });
 
-    it("throws an error if 'target' is missing or invalid", () => {
+    it("throws an error if 'target' is missing or invalid for list update events", () => {
         const missingTargetEvent: EncodedTokenModuleEvent = {
             tag: TransactionEventTag.TokenModuleEvent,
             tokenId: TokenId.fromString('PLT'),
@@ -101,14 +117,24 @@ describe('PLT parseModuleEvent', () => {
         expect(() => parseModuleEvent(missingTargetEvent)).toThrowError(/{}/);
     });
 
-    it("throws an error if 'paused' is missing or invalid for pause events", () => {
-        const missingTargetEvent: EncodedTokenModuleEvent = {
+    it('throws an error for invalid event details for pause events', () => {
+        const invalidEvent: EncodedTokenModuleEvent = {
             tag: TransactionEventTag.TokenModuleEvent,
             tokenId: TokenId.fromString('PLT'),
             type: 'pause',
-            details: Cbor.encode({}),
+            details: Cbor.encode(null),
         };
-        expect(() => parseModuleEvent(missingTargetEvent)).toThrowError(/{}/);
+        expect(() => parseModuleEvent(invalidEvent)).toThrowError(/null/);
+    });
+
+    it('throws an error for invalid event details for unpause events', () => {
+        const invalidEvent: EncodedTokenModuleEvent = {
+            tag: TransactionEventTag.TokenModuleEvent,
+            tokenId: TokenId.fromString('PLT'),
+            type: 'unpause',
+            details: Cbor.encode(null),
+        };
+        expect(() => parseModuleEvent(invalidEvent)).toThrowError(/null/);
     });
 });
 
@@ -416,9 +442,40 @@ describe('PLT transactions', () => {
         expect(des).toEqual(payload);
     });
 
+    it('(de)serializes unpause operations correctly', () => {
+        const removeDenyList: TokenUnpauseOperation = {
+            [TokenOperationType.Unpause]: {},
+        };
+
+        const payload = createTokenUpdatePayload(token, removeDenyList);
+
+        // This is a CBOR encoded byte sequence representing the unpause operation:
+        // - 81: An array of 1 item
+        // - a1: A map with 1 key-value pair
+        // - 67756e7061757365 a0: A string key "unpause" with an empty map as the value
+        const expectedOperations = Buffer.from(
+            `
+            81
+              a1
+                67756e7061757365 a0
+            `.replace(/\s/g, ''),
+            'hex'
+        );
+
+        expect(payload.operations.toString()).toEqual(expectedOperations.toString('hex'));
+
+        const decoded = Cbor.decode(payload.operations);
+        expect(decoded).toEqual([removeDenyList]);
+
+        const ser = serializeAccountTransactionPayload({ payload, type: AccountTransactionType.TokenUpdate });
+        const serPayload = ser.slice(1);
+        const des = new TokenUpdateHandler().deserialize(Cursor.fromBuffer(serPayload));
+        expect(des).toEqual(payload);
+    });
+
     it('(de)serializes pause operations correctly', () => {
         const removeDenyList: TokenPauseOperation = {
-            [TokenOperationType.Pause]: true,
+            [TokenOperationType.Pause]: {},
         };
 
         const payload = createTokenUpdatePayload(token, removeDenyList);
@@ -426,12 +483,12 @@ describe('PLT transactions', () => {
         // This is a CBOR encoded byte sequence representing the pause operation:
         // - 81: An array of 1 item
         // - a1: A map with 1 key-value pair
-        //   - 65 7061757365 f5: Key "pause" (in UTF-8), value true
+        // - 657061757365 a0: A string key "pause" with an empty map as the value
         const expectedOperations = Buffer.from(
             `
             81
               a1
-                65 7061757365f5
+                657061757365 a0
             `.replace(/\s/g, ''),
             'hex'
         );

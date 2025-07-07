@@ -13,6 +13,7 @@ export enum TokenOperationType {
     AddDenyList = 'addDenyList',
     RemoveDenyList = 'removeDenyList',
     Pause = 'pause',
+    Unpause = 'unpause',
 }
 
 export type Memo = CborMemo.Type | Uint8Array;
@@ -91,10 +92,16 @@ export type TokenAddDenyListOperation = TokenOperationGen<TokenOperationType.Add
 export type TokenRemoveDenyListOperation = TokenOperationGen<TokenOperationType.RemoveDenyList, TokenListUpdate>;
 
 /**
- * Represents an operation to pause the execution of the "mint", "burn",
- * and "transfer" operations of the token.
+ * Represents an operation to pause the execution any operation that involves token balance
+ * changes.
  */
-export type TokenPauseOperation = TokenOperationGen<TokenOperationType.Pause, boolean>;
+export type TokenPauseOperation = TokenOperationGen<TokenOperationType.Pause, {}>;
+
+/**
+ * Represents an operation to unpause the execution any operation that involves token balance
+ * changes.
+ */
+export type TokenUnpauseOperation = TokenOperationGen<TokenOperationType.Unpause, {}>;
 
 /**
  * Union type representing all possible operations for a token.
@@ -107,7 +114,8 @@ export type TokenOperation =
     | TokenRemoveAllowListOperation
     | TokenAddDenyListOperation
     | TokenRemoveDenyListOperation
-    | TokenPauseOperation;
+    | TokenPauseOperation
+    | TokenUnpauseOperation;
 
 /**
  * Creates a payload for token operations.
@@ -227,10 +235,7 @@ export type TokenListUpdateEventDetails = {
 /**
  * The structure of a pause event for a PLT.
  */
-export type TokenPauseEventDetails = {
-    /** Whether the token is paused */
-    paused: boolean;
-};
+export type TokenPauseEventDetails = {};
 
 export type TokenEventDetails = TokenListUpdateEventDetails | TokenPauseEventDetails;
 
@@ -270,6 +275,12 @@ export type TokenRemoveDenyListEvent = GenericTokenModuleEvent<
 export type TokenPauseEvent = GenericTokenModuleEvent<TokenOperationType.Pause, TokenPauseEventDetails>;
 
 /**
+ * An event occuring as the result of a "pause" operation, describing whether execution
+ * of the associated token operations are paused or not.
+ */
+export type TokenUnpauseEvent = GenericTokenModuleEvent<TokenOperationType.Unpause, TokenPauseEventDetails>;
+
+/**
  * A union of all token module events.
  */
 export type TokenModuleEvent =
@@ -277,7 +288,8 @@ export type TokenModuleEvent =
     | TokenAddDenyListEvent
     | TokenRemoveAllowListEvent
     | TokenRemoveDenyListEvent
-    | TokenPauseEvent;
+    | TokenPauseEvent
+    | TokenUnpauseEvent;
 
 /**
  * Parses a token module event, decoding the details from CBOR format. If the desired outcome is to be able to handle
@@ -311,6 +323,7 @@ export function parseModuleEvent(event: EncodedTokenModuleEvent): TokenModuleEve
         case TokenOperationType.RemoveDenyList:
             return { ...event, type: event.type, details: Cbor.decode(event.details, 'TokenListUpdateEventDetails') };
         case TokenOperationType.Pause:
+        case TokenOperationType.Unpause:
             return { ...event, type: event.type, details: Cbor.decode(event.details, 'TokenPauseEventDetails') };
         default:
             throw new Error(`Cannot parse event as token module event: ${event.type}`);

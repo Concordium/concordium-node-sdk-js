@@ -125,9 +125,10 @@ function decodeTokenModuleState(value: Cbor): TokenModuleState {
     if (!('governanceAccount' in decoded && TokenHolder.instanceOf(decoded.governanceAccount))) {
         throw new Error('Invalid TokenModuleState: missing or invalid governanceAccount');
     }
-    if (!('metadata' in decoded && TokenMetadataUrl.instanceOf(decoded.metadata))) {
-        throw new Error('Invalid TokenModuleState: missing or invalid metadataUrl');
+    if (!('metadata' in decoded)) {
+        throw new Error('Invalid TokenModuleState: missing metadataUrl');
     }
+    let metadata = TokenMetadataUrl.fromCBORValue(decoded.metadata);
     if (!('name' in decoded && typeof decoded.name === 'string')) {
         throw new Error('Invalid TokenModuleState: missing or invalid name');
     }
@@ -146,7 +147,7 @@ function decodeTokenModuleState(value: Cbor): TokenModuleState {
         throw new Error('Invalid TokenModuleState: burnable must be a boolean');
     }
 
-    return decoded as TokenModuleState;
+    return { ...decoded, metadata } as TokenModuleState;
 }
 
 function decodeTokenModuleAccountState(value: Cbor): TokenModuleAccountState {

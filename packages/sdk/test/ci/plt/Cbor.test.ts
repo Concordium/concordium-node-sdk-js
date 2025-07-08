@@ -61,7 +61,7 @@ describe('Cbor', () => {
                 governanceAccount: TokenHolder.fromAccountAddress(accountAddress),
             };
             const encoded3 = Cbor.encode(invalidState3);
-            expect(() => Cbor.decode(encoded3, 'TokenModuleState')).toThrow(/missing or invalid metadataUrl/);
+            expect(() => Cbor.decode(encoded3, 'TokenModuleState')).toThrow(/missing metadataUrl/);
         });
 
         test('should throw error if TokenModuleState has invalid field types', () => {

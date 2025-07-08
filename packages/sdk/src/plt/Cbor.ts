@@ -126,7 +126,7 @@ function decodeTokenModuleState(value: Cbor): TokenModuleState {
         throw new Error('Invalid TokenModuleState: missing or invalid governanceAccount');
     }
     if (!('metadata' in decoded)) {
-        throw new Error('Invalid TokenModuleState: missing or invalid metadataUrl');
+        throw new Error('Invalid TokenModuleState: missing metadataUrl');
     }
     let metadata = TokenMetadataUrl.fromCBORValue(decoded.metadata);
     if (!('name' in decoded && typeof decoded.name === 'string')) {

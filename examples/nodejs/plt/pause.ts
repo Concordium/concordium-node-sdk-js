@@ -95,7 +95,8 @@ const client = new ConcordiumGRPCNodeClient(
             console.log(`Attempting to ${action} token ${tokenId.toString()}...`);
 
             // Execute the pause operation
-            const transaction = await Token.pause(token, sender, pause, signer);
+            const operation = pause ? Token.pause(token, sender, signer) : Token.unpause(token, sender, signer);
+            const transaction = await operation;
             console.log(`Transaction submitted with hash: ${transaction}`);
 
             const result = await client.waitForTransactionFinalization(transaction);

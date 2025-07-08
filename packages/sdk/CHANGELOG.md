@@ -58,6 +58,12 @@
 
 - Energy cost of PLT mint/burn changed from 100 to 50
 
+## 10.0.0-alpha.11
+
+### Fixed
+
+- An issue where the token module state of a PLT could not be correctly decoded from it's CBOR representation.
+
 ## 10.0.0-alpha.10
 
 ### Fixed

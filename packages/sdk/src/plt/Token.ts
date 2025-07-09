@@ -254,7 +254,7 @@ export async function sendRaw(
     sender: AccountAddress.Type,
     payload: TokenUpdatePayload,
     signer: AccountSigner,
-    { expiry = TransactionExpiry.futureMinutes(5), nonce }: TokenUpdateMetadata
+    { expiry = TransactionExpiry.futureMinutes(5), nonce }: TokenUpdateMetadata = {}
 ): Promise<TransactionHash.Type> {
     const { nonce: nextNonce } = nonce ? { nonce } : await token.grpc.getNextAccountNonce(sender);
     const header: AccountTransactionHeader = {
@@ -412,7 +412,7 @@ export async function transfer(
     sender: AccountAddress.Type,
     payload: TokenTransfer | TokenTransfer[],
     signer: AccountSigner,
-    metadata: TokenUpdateMetadata,
+    metadata?: TokenUpdateMetadata,
     opts: TransferOtions = { autoScale: true, validate: true }
 ): Promise<TransactionHash.Type> {
     let transfers: TokenTransfer[] = [payload].flat();
@@ -472,7 +472,7 @@ export async function mint(
     sender: AccountAddress.Type,
     amounts: TokenAmount.Type | TokenAmount.Type[],
     signer: AccountSigner,
-    metadata: TokenUpdateMetadata,
+    metadata?: TokenUpdateMetadata,
     opts: SupplyUpdateOptions = { autoScale: true, validate: true }
 ): Promise<TransactionHash.Type> {
     let amountsList = [amounts].flat();
@@ -510,7 +510,7 @@ export async function burn(
     sender: AccountAddress.Type,
     amounts: TokenAmount.Type | TokenAmount.Type[],
     signer: AccountSigner,
-    metadata: TokenUpdateMetadata,
+    metadata?: TokenUpdateMetadata,
     opts: SupplyUpdateOptions = { autoScale: true, validate: true }
 ): Promise<TransactionHash.Type> {
     let amountsList = [amounts].flat();
@@ -552,7 +552,7 @@ export async function addAllowList(
     sender: AccountAddress.Type,
     targets: TokenHolder.Type | TokenHolder.Type[],
     signer: AccountSigner,
-    metadata: TokenUpdateMetadata,
+    metadata?: TokenUpdateMetadata,
     { validate }: UpdateListOptions = { validate: true }
 ): Promise<TransactionHash.Type> {
     if (validate) {
@@ -583,7 +583,7 @@ export async function removeAllowList(
     sender: AccountAddress.Type,
     targets: TokenHolder.Type | TokenHolder.Type[],
     signer: AccountSigner,
-    metadata: TokenUpdateMetadata,
+    metadata?: TokenUpdateMetadata,
     { validate }: UpdateListOptions = { validate: true }
 ): Promise<TransactionHash.Type> {
     if (validate) {
@@ -614,7 +614,7 @@ export async function addDenyList(
     sender: AccountAddress.Type,
     targets: TokenHolder.Type | TokenHolder.Type[],
     signer: AccountSigner,
-    metadata: TokenUpdateMetadata,
+    metadata?: TokenUpdateMetadata,
     { validate }: UpdateListOptions = { validate: true }
 ): Promise<TransactionHash.Type> {
     if (validate) {
@@ -645,7 +645,7 @@ export async function removeDenyList(
     sender: AccountAddress.Type,
     targets: TokenHolder.Type | TokenHolder.Type[],
     signer: AccountSigner,
-    metadata: TokenUpdateMetadata,
+    metadata?: TokenUpdateMetadata,
     { validate }: UpdateListOptions = { validate: true }
 ): Promise<TransactionHash.Type> {
     if (validate) {
@@ -674,7 +674,7 @@ export async function sendOperations(
     sender: AccountAddress.Type,
     operations: TokenOperation[],
     signer: AccountSigner,
-    metadata: TokenUpdateMetadata
+    metadata?: TokenUpdateMetadata
 ): Promise<TransactionHash.Type> {
     const payload = createTokenUpdatePayload(token.info.id, operations);
     return sendRaw(token, sender, payload, signer, metadata);

@@ -10,7 +10,7 @@ import {
     TransactionHash,
 } from '../pub/types.js';
 import { AccountSigner, signTransaction } from '../signHelpers.js';
-import { SequenceNumber } from '../types/index.ts';
+import { SequenceNumber } from '../types/index.js';
 import { Cbor, TokenAmount, TokenHolder, TokenId, TokenInfo, TokenModuleReference } from './index.js';
 import {
     TokenAddAllowListOperation,

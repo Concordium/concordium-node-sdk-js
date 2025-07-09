@@ -10,6 +10,7 @@ import {
     TransactionHash,
 } from '../pub/types.js';
 import { AccountSigner, signTransaction } from '../signHelpers.js';
+import { SequenceNumber } from '../types/index.ts';
 import { Cbor, TokenAmount, TokenHolder, TokenId, TokenInfo, TokenModuleReference } from './index.js';
 import {
     TokenAddAllowListOperation,
@@ -244,7 +245,7 @@ export function scaleAmount(token: Token, amount: TokenAmount.Type): TokenAmount
  * @param {AccountAddress.Type} sender - The account address initiating the transaction.
  * @param {TokenUpdatePayload} payload - The transaction payload.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
- * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
+ * @param {TokenUpdateMetadata} [metadata={ expiry: TransactionExpiry.futureMinutes(5) }] - The metadata for the token update.
  *
  * @returns {Promise<TransactionHash.Type>} A promise that resolves to the transaction hash.
  */
@@ -253,12 +254,12 @@ export async function sendRaw(
     sender: AccountAddress.Type,
     payload: TokenUpdatePayload,
     signer: AccountSigner,
-    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5)
+    { expiry = TransactionExpiry.futureMinutes(5), nonce }: TokenUpdateMetadata
 ): Promise<TransactionHash.Type> {
-    const { nonce } = await token.grpc.getNextAccountNonce(sender);
+    const { nonce: nextNonce } = nonce ? { nonce } : await token.grpc.getNextAccountNonce(sender);
     const header: AccountTransactionHeader = {
         expiry,
-        nonce: nonce,
+        nonce: nextNonce,
         sender,
     };
     const transaction: AccountTransaction = {
@@ -372,6 +373,18 @@ export async function validateTransfer(
     return true;
 }
 
+export type TokenUpdateMetadata = {
+    /**
+     * The expiry time for the transaction.
+     */
+    expiry?: TransactionExpiry.Type;
+    /**
+     * The the sender account "nonce" for to use for the transaction. If not specified, the
+     * nonce will be queried from the node used for the transaction.
+     */
+    nonce?: SequenceNumber.Type;
+};
+
 type TransferOtions = {
     /** Whether to automatically scale a token amount to the correct number of decimals as the token */
     autoScale?: boolean;
@@ -386,7 +399,7 @@ type TransferOtions = {
  * @param {AccountAddress.Type} sender - The account address of the sender.
  * @param {TokenTransfer | TokenTransfer[]} payload - The transfer payload.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
- * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
+ * @param {TokenUpdateMetadata} [metadata={ expiry: TransactionExpiry.futureMinutes(5) }] - The metadata for the token update.
  * @param {TransferOtions} [opts={ autoScale: true, validate: true }] - Options for the transfer.
  *
  * @returns {Promise<TransactionHash.Type>} A promise that resolves to the transaction hash.
@@ -399,7 +412,7 @@ export async function transfer(
     sender: AccountAddress.Type,
     payload: TokenTransfer | TokenTransfer[],
     signer: AccountSigner,
-    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
+    metadata: TokenUpdateMetadata,
     opts: TransferOtions = { autoScale: true, validate: true }
 ): Promise<TransactionHash.Type> {
     let transfers: TokenTransfer[] = [payload].flat();
@@ -412,8 +425,7 @@ export async function transfer(
     }
 
     const ops: TokenTransferOperation[] = transfers.map((p) => ({ [TokenOperationType.Transfer]: p }));
-    const encoded = createTokenUpdatePayload(token.info.id, ops);
-    return sendRaw(token, sender, encoded, signer, expiry);
+    return sendOperations(token, sender, ops, signer, metadata);
 }
 
 /**
@@ -448,7 +460,7 @@ type SupplyUpdateOptions = {
  * @param {AccountAddress.Type} sender - The account address of the sender.
  * @param {TokenAmount.Type | TokenAmount.Type[]} amounts - The amount(s) of tokens to mint.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
- * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
+ * @param {TokenUpdateMetadata} [metadata={ expiry: TransactionExpiry.futureMinutes(5) }] - The metadata for the token update.
  * @param {SupplyUpdateOptions} [opts={ autoScale: true, validate: true }] - Options for supply update operations.
  *
  * @returns A promise that resolves to the transaction hash.
@@ -460,7 +472,7 @@ export async function mint(
     sender: AccountAddress.Type,
     amounts: TokenAmount.Type | TokenAmount.Type[],
     signer: AccountSigner,
-    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
+    metadata: TokenUpdateMetadata,
     opts: SupplyUpdateOptions = { autoScale: true, validate: true }
 ): Promise<TransactionHash.Type> {
     let amountsList = [amounts].flat();
@@ -476,7 +488,7 @@ export async function mint(
     const ops: TokenMintOperation[] = amountsList.map((amount) => ({
         [TokenOperationType.Mint]: { amount },
     }));
-    return sendOperations(token, sender, ops, signer, expiry);
+    return sendOperations(token, sender, ops, signer, metadata);
 }
 
 /**
@@ -486,7 +498,7 @@ export async function mint(
  * @param {AccountAddress.Type} sender - The account address of the sender.
  * @param {TokenAmount.Type | TokenAmount.Type[]} amounts - The amount(s) of tokens to burn.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
- * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
+ * @param {TokenUpdateMetadata} [metadata={ expiry: TransactionExpiry.futureMinutes(5) }] - The metadata for the token update.
  * @param {SupplyUpdateOptions} [opts={ autoScale: true, validate: true }] - Options for supply update operations.
  *
  * @returns A promise that resolves to the transaction hash.
@@ -498,7 +510,7 @@ export async function burn(
     sender: AccountAddress.Type,
     amounts: TokenAmount.Type | TokenAmount.Type[],
     signer: AccountSigner,
-    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
+    metadata: TokenUpdateMetadata,
     opts: SupplyUpdateOptions = { autoScale: true, validate: true }
 ): Promise<TransactionHash.Type> {
     let amountsList = [amounts].flat();
@@ -514,7 +526,7 @@ export async function burn(
     const ops: TokenBurnOperation[] = amountsList.map((amount) => ({
         [TokenOperationType.Burn]: { amount },
     }));
-    return sendOperations(token, sender, ops, signer, expiry);
+    return sendOperations(token, sender, ops, signer, metadata);
 }
 
 type UpdateListOptions = {
@@ -529,7 +541,7 @@ type UpdateListOptions = {
  * @param {AccountAddress.Type} sender - The account address of the sender.
  * @param {TokenHolder.Type | TokenHolder.Type[]} targets - The account address(es) to be added to the list.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
- * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
+ * @param {TokenUpdateMetadata} [metadata={ expiry: TransactionExpiry.futureMinutes(5) }] - The metadata for the token update.
  * @param {UpdateListOptions} [opts={ validate: true }] - Options for updating the allow/deny list.
  *
  * @returns A promise that resolves to the transaction hash.
@@ -540,7 +552,7 @@ export async function addAllowList(
     sender: AccountAddress.Type,
     targets: TokenHolder.Type | TokenHolder.Type[],
     signer: AccountSigner,
-    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
+    metadata: TokenUpdateMetadata,
     { validate }: UpdateListOptions = { validate: true }
 ): Promise<TransactionHash.Type> {
     if (validate) {
@@ -550,7 +562,7 @@ export async function addAllowList(
     const ops: TokenAddAllowListOperation[] = [targets]
         .flat()
         .map((target) => ({ [TokenOperationType.AddAllowList]: { target } }));
-    return sendOperations(token, sender, ops, signer, expiry);
+    return sendOperations(token, sender, ops, signer, metadata);
 }
 
 /**
@@ -560,7 +572,7 @@ export async function addAllowList(
  * @param {AccountAddress.Type} sender - The account address of the sender.
  * @param {TokenHolder.Type | TokenHolder.Type[]} targets - The account address(es) to be added to the list.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
- * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
+ * @param {TokenUpdateMetadata} [metadata={ expiry: TransactionExpiry.futureMinutes(5) }] - The metadata for the token update.
  * @param {UpdateListOptions} [opts={ validate: true }] - Options for updating the allow/deny list.
  *
  * @returns A promise that resolves to the transaction hash.
@@ -571,7 +583,7 @@ export async function removeAllowList(
     sender: AccountAddress.Type,
     targets: TokenHolder.Type | TokenHolder.Type[],
     signer: AccountSigner,
-    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
+    metadata: TokenUpdateMetadata,
     { validate }: UpdateListOptions = { validate: true }
 ): Promise<TransactionHash.Type> {
     if (validate) {
@@ -581,7 +593,7 @@ export async function removeAllowList(
     const ops: TokenRemoveAllowListOperation[] = [targets]
         .flat()
         .map((target) => ({ [TokenOperationType.RemoveAllowList]: { target } }));
-    return sendOperations(token, sender, ops, signer, expiry);
+    return sendOperations(token, sender, ops, signer, metadata);
 }
 
 /**
@@ -591,7 +603,7 @@ export async function removeAllowList(
  * @param {AccountAddress.Type} sender - The account address of the sender.
  * @param {TokenHolder.Type | TokenHolder.Type[]} targets - The account address(es) to be added to the list.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
- * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
+ * @param {TokenUpdateMetadata} [metadata={ expiry: TransactionExpiry.futureMinutes(5) }] - The metadata for the token update.
  * @param {UpdateListOptions} [opts={ validate: true }] - Options for updating the allow/deny list.
  *
  * @returns A promise that resolves to the transaction hash.
@@ -602,7 +614,7 @@ export async function addDenyList(
     sender: AccountAddress.Type,
     targets: TokenHolder.Type | TokenHolder.Type[],
     signer: AccountSigner,
-    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
+    metadata: TokenUpdateMetadata,
     { validate }: UpdateListOptions = { validate: true }
 ): Promise<TransactionHash.Type> {
     if (validate) {
@@ -612,7 +624,7 @@ export async function addDenyList(
     const ops: TokenAddDenyListOperation[] = [targets]
         .flat()
         .map((target) => ({ [TokenOperationType.AddDenyList]: { target } }));
-    return sendOperations(token, sender, ops, signer, expiry);
+    return sendOperations(token, sender, ops, signer, metadata);
 }
 
 /**
@@ -622,7 +634,7 @@ export async function addDenyList(
  * @param {AccountAddress.Type} sender - The account address of the sender.
  * @param {TokenHolder.Type | TokenHolder.Type[]} targets - The account address(es) to be added to the list.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
- * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
+ * @param {TokenUpdateMetadata} [metadata={ expiry: TransactionExpiry.futureMinutes(5) }] - The metadata for the token update.
  * @param {UpdateListOptions} [opts={ validate: true }] - Options for updating the allow/deny list.
  *
  * @returns A promise that resolves to the transaction hash.
@@ -633,7 +645,7 @@ export async function removeDenyList(
     sender: AccountAddress.Type,
     targets: TokenHolder.Type | TokenHolder.Type[],
     signer: AccountSigner,
-    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
+    metadata: TokenUpdateMetadata,
     { validate }: UpdateListOptions = { validate: true }
 ): Promise<TransactionHash.Type> {
     if (validate) {
@@ -643,7 +655,7 @@ export async function removeDenyList(
     const ops: TokenRemoveDenyListOperation[] = [targets]
         .flat()
         .map((target) => ({ [TokenOperationType.RemoveDenyList]: { target } }));
-    return sendOperations(token, sender, ops, signer, expiry);
+    return sendOperations(token, sender, ops, signer, metadata);
 }
 
 /**
@@ -653,7 +665,7 @@ export async function removeDenyList(
  * @param {AccountAddress.Type} sender - The account address of the sender.
  * @param {TokenOperation[]} operations - An array of governance operations to execute.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
- * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
+ * @param {TokenUpdateMetadata} [metadata={ expiry: TransactionExpiry.futureMinutes(5) }] - The metadata for the token update.
  *
  * @returns A promise that resolves to the transaction hash.
  */
@@ -662,8 +674,8 @@ export async function sendOperations(
     sender: AccountAddress.Type,
     operations: TokenOperation[],
     signer: AccountSigner,
-    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5)
+    metadata: TokenUpdateMetadata
 ): Promise<TransactionHash.Type> {
     const payload = createTokenUpdatePayload(token.info.id, operations);
-    return sendRaw(token, sender, payload, signer, expiry);
+    return sendRaw(token, sender, payload, signer, metadata);
 }

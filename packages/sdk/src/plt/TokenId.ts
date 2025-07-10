@@ -1,6 +1,5 @@
 import type * as Proto from '../grpc-api/v2/concordium/protocol-level-tokens.js';
 
-
 /**
  * Protocol level token (PLT) ID JSON representation.
  */
@@ -39,30 +38,21 @@ export class Err extends Error {
      * Creates a TokenId.Err indicating the length exceeds the max allowed.
      */
     public static exceedsMaxLength(): Err {
-        return new Err(
-            ErrorType.EXCEEDS_MAX_LENGTH,
-            `Token ID cannot be longer than ${MAX_LENGTH} characters`
-        );
+        return new Err(ErrorType.EXCEEDS_MAX_LENGTH, `Token ID cannot be longer than ${MAX_LENGTH} characters`);
     }
 
     /**
      * Creates a TokenId.Err indicating the length is below the min allowed.
      */
     public static belowMinLength(): Err {
-        return new Err(
-            ErrorType.BELOW_MIN_LENGTH,
-            `Token ID must be at least ${MIN_LENGTH} character`
-        );
+        return new Err(ErrorType.BELOW_MIN_LENGTH, `Token ID must be at least ${MIN_LENGTH} character`);
     }
 
     /**
      * Creates a TokenId.Err indicating the token ID contains invalid characters.
      */
     public static invalidCharacters(): Err {
-        return new Err(
-            ErrorType.INVALID_CHARACTERS,
-            'Token ID can only contain characters: a-z, A-Z, 0-9, -, ., %'
-        );
+        return new Err(ErrorType.INVALID_CHARACTERS, 'Token ID can only contain characters: a-z, A-Z, 0-9, -, ., %');
     }
 }
 

@@ -62,6 +62,14 @@
 ### Changed
 
 - Energy cost of PLT mint/burn changed from 100 to 50
+- Changed the functions exposed for submitting token updates on `Token` to take optional `TokenUpdateMetadata` instead of 
+  getting the corresponding data from chain.
+
+## 10.0.0-alpha.11
+
+### Fixed
+
+- An issue where the token module state of a PLT could not be correctly decoded from it's CBOR representation.
 
 ## 10.0.0-alpha.10
 

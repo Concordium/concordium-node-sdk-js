@@ -53,6 +53,7 @@
 
 - Changed the representation of `TokenEvent` to a more flattened version in line with the representation in concordium-base.
 - Replaced `TokenUpdateEvent` with the flattened `TokenEvent` mentioned above.
+- Revised the constraints associated with `TokenId`.
 
 ### Added
 

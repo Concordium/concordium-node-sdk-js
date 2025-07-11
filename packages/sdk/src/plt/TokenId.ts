@@ -1,21 +1,24 @@
 import type * as Proto from '../grpc-api/v2/concordium/protocol-level-tokens.js';
-import { isValidUTF8 } from '../util.js';
 
 /**
  * Protocol level token (PLT) ID JSON representation.
  */
 export type JSON = string;
 
-const MAX_LENGTH = 255;
+const MIN_LENGTH = 1;
+const MAX_LENGTH = 128;
+const ALLOWED_CHARS_REGEX = /^[a-zA-Z0-9\-\.%]+$/;
 
 /**
  * Enum representing the types of errors that can occur with token IDs.
  */
 export enum ErrorType {
-    /** Error type indicating the length length exceeds the max allowed. */
+    /** Error type indicating the length exceeds the max allowed. */
     EXCEEDS_MAX_LENGTH = 'EXCEEDS_MAX_LENGTH',
-    /** Error type indicating the token ID is invalid. */
-    INVALID = 'INVALID',
+    /** Error type indicating the length is below the min allowed. */
+    BELOW_MIN_LENGTH = 'BELOW_MIN_LENGTH',
+    /** Error type indicating the token ID contains invalid characters. */
+    INVALID_CHARACTERS = 'INVALID_CHARACTERS',
 }
 
 /**
@@ -35,17 +38,21 @@ export class Err extends Error {
      * Creates a TokenId.Err indicating the length exceeds the max allowed.
      */
     public static exceedsMaxLength(): Err {
-        return new Err(
-            ErrorType.EXCEEDS_MAX_LENGTH,
-            `Token ID's cannot be longer than ${MAX_LENGTH} utf-8 encoded bytes`
-        );
+        return new Err(ErrorType.EXCEEDS_MAX_LENGTH, `Token ID cannot be longer than ${MAX_LENGTH} characters`);
     }
 
     /**
-     * Creates a TokenId.Err indicating the token ID is invalid.
+     * Creates a TokenId.Err indicating the length is below the min allowed.
      */
-    public static invalid(): Err {
-        return new Err(ErrorType.INVALID, 'Token ID can only contain utf8 characters');
+    public static belowMinLength(): Err {
+        return new Err(ErrorType.BELOW_MIN_LENGTH, `Token ID must be at least ${MIN_LENGTH} character`);
+    }
+
+    /**
+     * Creates a TokenId.Err indicating the token ID contains invalid characters.
+     */
+    public static invalidCharacters(): Err {
+        return new Err(ErrorType.INVALID_CHARACTERS, 'Token ID can only contain characters: a-z, A-Z, 0-9, -, ., %');
     }
 }
 
@@ -57,21 +64,22 @@ class TokenId {
 
     /**
      * Constructs a new TokenId instance.
-     * Validates that the value is smaller than the allowed utf-8 byte length.
+     * Validates that the value matches the allowed constraints.
      *
-     * @throws {Err} If the value is longer than 255 utf-8 encoded bytes or contains invalid UTF-8.
+     * @throws {Err} If the value is not valid according to the constraints.
      */
     constructor(
-        /** The inner value */
+        /** The inner value, as provided */
         public readonly value: string
     ) {
-        if (!isValidUTF8(value)) {
-            throw Err.invalid();
+        if (value.length < MIN_LENGTH) {
+            throw Err.belowMinLength();
         }
-
-        // Check if the value exceeds 255 UTF-8 bytes
-        if (new TextEncoder().encode(value).length > MAX_LENGTH) {
+        if (value.length > MAX_LENGTH) {
             throw Err.exceedsMaxLength();
+        }
+        if (!ALLOWED_CHARS_REGEX.test(value)) {
+            throw Err.invalidCharacters();
         }
     }
 
@@ -173,7 +181,7 @@ export function fromBytes(bytes: ArrayBuffer): TokenId {
         let value = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
         return new TokenId(value);
     } catch (error) {
-        throw Err.invalid();
+        throw Err.invalidCharacters();
     }
 }
 
@@ -184,5 +192,6 @@ export function fromBytes(bytes: ArrayBuffer): TokenId {
  * @returns {boolean} True if they are equal.
  */
 export function equals(left: TokenId, right: TokenId): boolean {
-    return left.value === right.value;
+    // Case-insensitive: compare lowercased values
+    return left.value.toLowerCase() === right.value.toLowerCase();
 }

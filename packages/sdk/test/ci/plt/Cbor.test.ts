@@ -158,11 +158,7 @@ describe('Cbor', () => {
 
     describe('TOkenPauseEventDetails', () => {
         test('should encode and decode TokenEventDetails correctly', () => {
-            const accountAddress = AccountAddress.fromBase58('3XSLuJcXg6xEua6iBPnWacc3iWh93yEDMCqX8FbE3RDSbEnT9P');
-            const tokenHolder = TokenHolder.fromAccountAddress(accountAddress);
-
             const details: TokenPauseEventDetails = {};
-
             const encoded = Cbor.encode(details);
             const decoded = Cbor.decode(encoded, 'TokenPauseEventDetails');
             expect(decoded).toEqual(details);

@@ -5,6 +5,7 @@ import { HexString } from '../types.js';
 import { cborDecode, cborEncode } from '../types/cbor.js';
 import { TokenHolder, TokenMetadataUrl } from './index.js';
 import {
+    TokenInitializationParameters,
     TokenListUpdateEventDetails,
     TokenModuleAccountState,
     TokenModuleState,
@@ -196,11 +197,50 @@ function decodeTokenPauseEventDetails(value: Cbor): TokenPauseEventDetails {
     return decoded as TokenPauseEventDetails;
 }
 
+function decodeTokenInitializationParameters(value: Cbor): TokenInitializationParameters {
+    const decoded = cborDecode(value.bytes);
+    if (typeof decoded !== 'object' || decoded === null) {
+        throw new Error('Invalid CBOR data for TokenInitializationParameters');
+    }
+
+    // Validate required fields
+    if (!('governanceAccount' in decoded && TokenHolder.instanceOf(decoded.governanceAccount))) {
+        throw new Error('Invalid TokenInitializationParameters: missing or invalid governanceAccount');
+    }
+    if (!('metadata' in decoded)) {
+        throw new Error('Invalid TokenInitializationParameters: missing metadataUrl');
+    }
+    let metadata = TokenMetadataUrl.fromCBORValue(decoded.metadata);
+    if (!('name' in decoded && typeof decoded.name === 'string')) {
+        throw new Error('Invalid TokenInitializationParameters: missing or invalid name');
+    }
+
+    // Validate optional fields
+    if ('allowList' in decoded && typeof decoded.allowList !== 'boolean') {
+        throw new Error('Invalid TokenInitializationParameters: allowList must be a boolean');
+    }
+    if ('denyList' in decoded && typeof decoded.denyList !== 'boolean') {
+        throw Error('Invalid TokenInitializationParameters: denyList must be a boolean');
+    }
+    if ('mintable' in decoded && typeof decoded.mintable !== 'boolean') {
+        throw new Error('Invalid TokenInitializationParameters: mintable must be a boolean');
+    }
+    if ('burnable' in decoded && typeof decoded.burnable !== 'boolean') {
+        throw new Error('Invalid TokenInitializationParameters: burnable must be a boolean');
+    }
+    if ('paused' in decoded && typeof decoded.paused !== 'boolean') {
+        throw new Error('Invalid TokenInitializationParameters: paused must be a boolean');
+    }
+
+    return { ...decoded, metadata } as TokenInitializationParameters;
+}
+
 type DecodeTypeMap = {
     TokenModuleState: TokenModuleState;
     TokenModuleAccountState: TokenModuleAccountState;
     TokenListUpdateEventDetails: TokenListUpdateEventDetails;
     TokenPauseEventDetails: TokenPauseEventDetails;
+    TokenInitializationParameters: TokenInitializationParameters;
 };
 
 export function decode<T extends keyof DecodeTypeMap>(cbor: Cbor, type: T): DecodeTypeMap[T];
@@ -222,6 +262,8 @@ export function decode<T extends keyof DecodeTypeMap | undefined>(cbor: Cbor, ty
             return decodeTokenListUpdateEventDetails(cbor);
         case 'TokenPauseEventDetails':
             return decodeTokenPauseEventDetails(cbor);
+        case 'TokenInitializationParameters':
+            return decodeTokenInitializationParameters(cbor);
         default:
             return cborDecode(cbor.bytes);
     }

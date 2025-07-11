@@ -4,7 +4,13 @@ import * as Proto from '../grpc-api/v2/concordium/protocol-level-tokens.js';
 import { HexString } from '../types.js';
 import { cborDecode, cborEncode } from '../types/cbor.js';
 import { TokenHolder, TokenMetadataUrl } from './index.js';
-import { TokenEventDetails, TokenModuleAccountState, TokenModuleState } from './module.js';
+import {
+    TokenInitializationParameters,
+    TokenListUpdateEventDetails,
+    TokenModuleAccountState,
+    TokenModuleState,
+    TokenPauseEventDetails,
+} from './module.js';
 
 export type JSON = HexString;
 
@@ -146,6 +152,9 @@ function decodeTokenModuleState(value: Cbor): TokenModuleState {
     if ('burnable' in decoded && typeof decoded.burnable !== 'boolean') {
         throw new Error('Invalid TokenModuleState: burnable must be a boolean');
     }
+    if ('paused' in decoded && typeof decoded.paused !== 'boolean') {
+        throw new Error('Invalid TokenModuleState: paused must be a boolean');
+    }
 
     return { ...decoded, metadata } as TokenModuleState;
 }
@@ -167,7 +176,7 @@ function decodeTokenModuleAccountState(value: Cbor): TokenModuleAccountState {
     return decoded as TokenModuleAccountState;
 }
 
-function decodeTokenEventDetails(value: Cbor): TokenEventDetails {
+function decodeTokenListUpdateEventDetails(value: Cbor): TokenListUpdateEventDetails {
     const decoded = cborDecode(value.bytes);
     if (typeof decoded !== 'object' || decoded === null) {
         throw new Error(`Invalid event details: ${JSON.stringify(decoded)}. Expected an object.`);
@@ -176,13 +185,62 @@ function decodeTokenEventDetails(value: Cbor): TokenEventDetails {
         throw new Error(`Invalid event details: ${JSON.stringify(decoded)}. Expected 'target' to be a TokenHolder`);
     }
 
-    return decoded as TokenEventDetails;
+    return decoded as TokenListUpdateEventDetails;
+}
+
+function decodeTokenPauseEventDetails(value: Cbor): TokenPauseEventDetails {
+    const decoded = cborDecode(value.bytes);
+    if (typeof decoded !== 'object' || decoded === null) {
+        throw new Error(`Invalid event details: ${JSON.stringify(decoded)}. Expected an object.`);
+    }
+
+    return decoded as TokenPauseEventDetails;
+}
+
+function decodeTokenInitializationParameters(value: Cbor): TokenInitializationParameters {
+    const decoded = cborDecode(value.bytes);
+    if (typeof decoded !== 'object' || decoded === null) {
+        throw new Error('Invalid CBOR data for TokenInitializationParameters');
+    }
+
+    // Validate required fields
+    if (!('governanceAccount' in decoded && TokenHolder.instanceOf(decoded.governanceAccount))) {
+        throw new Error('Invalid TokenInitializationParameters: missing or invalid governanceAccount');
+    }
+    if (!('metadata' in decoded)) {
+        throw new Error('Invalid TokenInitializationParameters: missing metadataUrl');
+    }
+    let metadata = TokenMetadataUrl.fromCBORValue(decoded.metadata);
+    if (!('name' in decoded && typeof decoded.name === 'string')) {
+        throw new Error('Invalid TokenInitializationParameters: missing or invalid name');
+    }
+
+    // Validate optional fields
+    if ('allowList' in decoded && typeof decoded.allowList !== 'boolean') {
+        throw new Error('Invalid TokenInitializationParameters: allowList must be a boolean');
+    }
+    if ('denyList' in decoded && typeof decoded.denyList !== 'boolean') {
+        throw Error('Invalid TokenInitializationParameters: denyList must be a boolean');
+    }
+    if ('mintable' in decoded && typeof decoded.mintable !== 'boolean') {
+        throw new Error('Invalid TokenInitializationParameters: mintable must be a boolean');
+    }
+    if ('burnable' in decoded && typeof decoded.burnable !== 'boolean') {
+        throw new Error('Invalid TokenInitializationParameters: burnable must be a boolean');
+    }
+    if ('paused' in decoded && typeof decoded.paused !== 'boolean') {
+        throw new Error('Invalid TokenInitializationParameters: paused must be a boolean');
+    }
+
+    return { ...decoded, metadata } as TokenInitializationParameters;
 }
 
 type DecodeTypeMap = {
     TokenModuleState: TokenModuleState;
     TokenModuleAccountState: TokenModuleAccountState;
-    TokenEventDetails: TokenEventDetails;
+    TokenListUpdateEventDetails: TokenListUpdateEventDetails;
+    TokenPauseEventDetails: TokenPauseEventDetails;
+    TokenInitializationParameters: TokenInitializationParameters;
 };
 
 export function decode<T extends keyof DecodeTypeMap>(cbor: Cbor, type: T): DecodeTypeMap[T];
@@ -200,8 +258,12 @@ export function decode<T extends keyof DecodeTypeMap | undefined>(cbor: Cbor, ty
             return decodeTokenModuleState(cbor);
         case 'TokenModuleAccountState':
             return decodeTokenModuleAccountState(cbor);
-        case 'TokenEventDetails':
-            return decodeTokenEventDetails(cbor);
+        case 'TokenListUpdateEventDetails':
+            return decodeTokenListUpdateEventDetails(cbor);
+        case 'TokenPauseEventDetails':
+            return decodeTokenPauseEventDetails(cbor);
+        case 'TokenInitializationParameters':
+            return decodeTokenInitializationParameters(cbor);
         default:
             return cborDecode(cbor.bytes);
     }

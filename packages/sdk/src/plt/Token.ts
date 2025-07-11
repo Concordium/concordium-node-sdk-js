@@ -11,6 +11,7 @@ import {
 } from '../pub/types.js';
 import { AccountSigner, signTransaction } from '../signHelpers.js';
 import { SequenceNumber } from '../types/index.js';
+import { bail } from '../util.js';
 import { Cbor, TokenAmount, TokenHolder, TokenId, TokenInfo, TokenModuleReference } from './index.js';
 import {
     TokenAddAllowListOperation,
@@ -21,10 +22,12 @@ import {
     TokenModuleState,
     TokenOperation,
     TokenOperationType,
+    TokenPauseOperation,
     TokenRemoveAllowListOperation,
     TokenRemoveDenyListOperation,
     TokenTransfer,
     TokenTransferOperation,
+    TokenUnpauseOperation,
     createTokenUpdatePayload,
 } from './module.js';
 
@@ -46,6 +49,7 @@ export enum TokenErrorCode {
     /** Error representing an attempt to transfer tokens from an account that does not have enough tokens to cover the
      * amount */
     INSUFFICIENT_FUNDS = 'INSUFFICIENT_FUNDS',
+    PAUSED = 'PAUSED',
 }
 
 /**
@@ -161,9 +165,28 @@ export class InsufficientFundsError extends TokenError {
 }
 
 /**
+ * Error type indicating that the token is paused.
+ */
+export class PausedError extends TokenError {
+    public readonly code = TokenErrorCode.PAUSED;
+
+    /**
+     * Constructs a new TokenPausedError.
+     *
+     * @param {TokenId.Type} tokenId - The ID of the token.
+     */
+    constructor(public readonly tokenId: TokenId.Type) {
+        super(`Token ${tokenId} is paused.`);
+    }
+}
+
+/**
  * Class representing a token.
  */
 class Token {
+    /** The parsed module state of the token. */
+    public readonly moduleState: TokenModuleState;
+
     /**
      * Constructs a new Token.
      * @param {ConcordiumGRPCClient} grpc - The gRPC client for interacting with the Concordium network.
@@ -172,7 +195,9 @@ class Token {
     public constructor(
         public readonly grpc: ConcordiumGRPCClient,
         public readonly info: TokenInfo
-    ) {}
+    ) {
+        this.moduleState = Cbor.decode(info.state.moduleState, 'TokenModuleState');
+    }
 }
 
 export type Type = Token;
@@ -324,14 +349,16 @@ export function balanceOf(
  * @throws {InvalidTokenAmountError} If any token amount is not compatible with the token.
  * @throws {InsufficientFundsError} If the sender does not have enough tokens.
  * @throws {NotAllowedError} If the sender or receiver is not allowed to send/receive tokens.
+ * @throws {PausedError} If `opts.validate` and the token is paused.
  */
 export async function validateTransfer(
     token: Token,
     sender: AccountAddress.Type,
     payload: TokenTransfer | TokenTransfer[]
 ): Promise<true> {
-    const payloads = [payload].flat();
+    token.moduleState.paused && bail(new PausedError(token.info.id));
 
+    const payloads = [payload].flat();
     // Validate all amounts
     payloads.forEach((p) => validateAmount(token, p.amount));
 
@@ -348,8 +375,7 @@ export async function validateTransfer(
         throw new InsufficientFundsError(sender, TokenAmount.fromDecimal(payloadTotal, decimals));
     }
 
-    const moduleState = Cbor.decode(token.info.state.moduleState) as TokenModuleState;
-    if (!moduleState.allowList && !moduleState.denyList) {
+    if (!token.moduleState.allowList && !token.moduleState.denyList) {
         // If the token neither has a deny list nor allow list, we can skip the check.
         return true;
     }
@@ -364,9 +390,9 @@ export async function validateTransfer(
                 ? undefined
                 : (Cbor.decode(accountToken.moduleState) as TokenModuleAccountState);
 
-        if (moduleState.denyList && accountModuleState?.denyList)
+        if (token.moduleState.denyList && accountModuleState?.denyList)
             throw new NotAllowedError(TokenHolder.fromAccountAddress(r.accountAddress));
-        if (moduleState.allowList && !accountModuleState?.allowList)
+        if (token.moduleState.allowList && !accountModuleState?.allowList)
             throw new NotAllowedError(TokenHolder.fromAccountAddress(r.accountAddress));
     });
 
@@ -406,6 +432,7 @@ type TransferOtions = {
  * @throws {InvalidTokenAmountError} If `opts.validate` and any token amount is not compatible with the token.
  * @throws {InsufficientFundsError} If `opts.validate` and the sender does not have enough tokens.
  * @throws {NotAllowedError} If `opts.validate` and a sender or receiver is not allowed to send/receive tokens.
+ * @throws {PausedError} If `opts.validate` and the token is paused.
  */
 export async function transfer(
     token: Token,
@@ -413,14 +440,14 @@ export async function transfer(
     payload: TokenTransfer | TokenTransfer[],
     signer: AccountSigner,
     metadata?: TokenUpdateMetadata,
-    opts: TransferOtions = { autoScale: true, validate: true }
+    { autoScale = true, validate = true }: TransferOtions = {}
 ): Promise<TransactionHash.Type> {
     let transfers: TokenTransfer[] = [payload].flat();
-    if (opts.autoScale) {
+    if (autoScale) {
         transfers = transfers.map((p) => ({ ...p, amount: scaleAmount(token, p.amount) }));
     }
 
-    if (opts.validate) {
+    if (validate) {
         await validateTransfer(token, sender, transfers);
     }
 
@@ -466,6 +493,7 @@ type SupplyUpdateOptions = {
  * @returns A promise that resolves to the transaction hash.
  * @throws {InvalidTokenAmountError} If `opts.validate` and the token amount is not compatible with the token.
  * @throws {UnauthorizedGovernanceOperationError} If `opts.validate` and the sender is not the token issuer.
+ * @throws {PausedError} If `opts.validate` and the token is paused.
  */
 export async function mint(
     token: Token,
@@ -473,14 +501,15 @@ export async function mint(
     amounts: TokenAmount.Type | TokenAmount.Type[],
     signer: AccountSigner,
     metadata?: TokenUpdateMetadata,
-    opts: SupplyUpdateOptions = { autoScale: true, validate: true }
+    { autoScale = true, validate = true }: SupplyUpdateOptions = {}
 ): Promise<TransactionHash.Type> {
     let amountsList = [amounts].flat();
-    if (opts.autoScale) {
+    if (autoScale) {
         amountsList = amountsList.map((amount) => scaleAmount(token, amount));
     }
 
-    if (opts.validate) {
+    if (validate) {
+        token.moduleState.paused && bail(new PausedError(token.info.id));
         validateGovernanceOperation(token, sender);
         amountsList.forEach((amount) => validateAmount(token, amount));
     }
@@ -504,6 +533,7 @@ export async function mint(
  * @returns A promise that resolves to the transaction hash.
  * @throws {InvalidTokenAmountError} If `opts.validate` and the token amount is not compatible with the token.
  * @throws {UnauthorizedGovernanceOperationError} If `opts.validate` and the sender is not the token issuer.
+ * @throws {PausedError} If `opts.validate` and the token is paused.
  */
 export async function burn(
     token: Token,
@@ -511,14 +541,15 @@ export async function burn(
     amounts: TokenAmount.Type | TokenAmount.Type[],
     signer: AccountSigner,
     metadata?: TokenUpdateMetadata,
-    opts: SupplyUpdateOptions = { autoScale: true, validate: true }
+    { autoScale = true, validate = true }: SupplyUpdateOptions = {}
 ): Promise<TransactionHash.Type> {
     let amountsList = [amounts].flat();
-    if (opts.autoScale) {
+    if (autoScale) {
         amountsList = amountsList.map((amount) => scaleAmount(token, amount));
     }
 
-    if (opts.validate) {
+    if (validate) {
+        token.moduleState.paused && bail(new PausedError(token.info.id));
         validateGovernanceOperation(token, sender);
         amountsList.forEach((amount) => validateAmount(token, amount));
     }
@@ -553,7 +584,7 @@ export async function addAllowList(
     targets: TokenHolder.Type | TokenHolder.Type[],
     signer: AccountSigner,
     metadata?: TokenUpdateMetadata,
-    { validate }: UpdateListOptions = { validate: true }
+    { validate = true }: UpdateListOptions = {}
 ): Promise<TransactionHash.Type> {
     if (validate) {
         validateGovernanceOperation(token, sender);
@@ -584,7 +615,7 @@ export async function removeAllowList(
     targets: TokenHolder.Type | TokenHolder.Type[],
     signer: AccountSigner,
     metadata?: TokenUpdateMetadata,
-    { validate }: UpdateListOptions = { validate: true }
+    { validate = true }: UpdateListOptions = {}
 ): Promise<TransactionHash.Type> {
     if (validate) {
         validateGovernanceOperation(token, sender);
@@ -615,7 +646,7 @@ export async function addDenyList(
     targets: TokenHolder.Type | TokenHolder.Type[],
     signer: AccountSigner,
     metadata?: TokenUpdateMetadata,
-    { validate }: UpdateListOptions = { validate: true }
+    { validate = true }: UpdateListOptions = {}
 ): Promise<TransactionHash.Type> {
     if (validate) {
         validateGovernanceOperation(token, sender);
@@ -646,7 +677,7 @@ export async function removeDenyList(
     targets: TokenHolder.Type | TokenHolder.Type[],
     signer: AccountSigner,
     metadata?: TokenUpdateMetadata,
-    { validate }: UpdateListOptions = { validate: true }
+    { validate = true }: UpdateListOptions = {}
 ): Promise<TransactionHash.Type> {
     if (validate) {
         validateGovernanceOperation(token, sender);
@@ -656,6 +687,68 @@ export async function removeDenyList(
         .flat()
         .map((target) => ({ [TokenOperationType.RemoveDenyList]: { target } }));
     return sendOperations(token, sender, ops, signer, metadata);
+}
+
+/**
+ * Options to be passed to the {@linkcode pause} function.
+ */
+export type PauseOptions = {
+    /** Whether to validate the payload executing it */
+    validate?: boolean;
+};
+
+/**
+ * Suspends execution of any operation involving balance changes for the token.
+ *
+ * @param {Token} token - The token to pause/unpause.
+ * @param {AccountAddress.Type} sender - The account address of the sender.
+ * @param {AccountSigner} signer - The signer responsible for signing the transaction.
+ * @param {TokenUpdateMetadata} [metadata={ expiry: TransactionExpiry.futureMinutes(5) }] - The metadata for the token update.
+ * @param {PauseOptions} [opts={ validate: true }] - Options for the pause operation.
+ *
+ * @returns A promise that resolves to the transaction hash.
+ * @throws {UnauthorizedGovernanceOperationError} If `opts.validate` and the sender is not the token issuer.
+ */
+export async function pause(
+    token: Token,
+    sender: AccountAddress.Type,
+    signer: AccountSigner,
+    metadata?: TokenUpdateMetadata,
+    { validate = true }: PauseOptions = {}
+): Promise<TransactionHash.Type> {
+    if (validate) {
+        validateGovernanceOperation(token, sender);
+    }
+
+    const operation: TokenPauseOperation = { [TokenOperationType.Pause]: {} };
+    return sendOperations(token, sender, [operation], signer, metadata);
+}
+
+/**
+ * Resumes execution of any operation involving balance changes for the token.
+ *
+ * @param {Token} token - The token to pause/unpause.
+ * @param {AccountAddress.Type} sender - The account address of the sender.
+ * @param {AccountSigner} signer - The signer responsible for signing the transaction.
+ * @param {TokenUpdateMetadata} [metadata={ expiry: TransactionExpiry.futureMinutes(5) }] - The metadata for the token update.
+ * @param {PauseOptions} [opts={ validate: true }] - Options for the pause operation.
+ *
+ * @returns A promise that resolves to the transaction hash.
+ * @throws {UnauthorizedGovernanceOperationError} If `opts.validate` and the sender is not the token issuer.
+ */
+export async function unpause(
+    token: Token,
+    sender: AccountAddress.Type,
+    signer: AccountSigner,
+    metadata?: TokenUpdateMetadata,
+    { validate = true }: PauseOptions = {}
+): Promise<TransactionHash.Type> {
+    if (validate) {
+        validateGovernanceOperation(token, sender);
+    }
+
+    const operation: TokenUnpauseOperation = { [TokenOperationType.Unpause]: {} };
+    return sendOperations(token, sender, [operation], signer, metadata);
 }
 
 /**

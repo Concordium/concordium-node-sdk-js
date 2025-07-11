@@ -55,6 +55,11 @@
 - Replaced `TokenUpdateEvent` with the flattened `TokenEvent` mentioned above.
 - Revised the constraints associated with `TokenId`.
 
+### Added
+
+- `pause` and `unpause` functions added to the `Token` module, which can be used to pause/unpause execution of token operations respectively.
+- `moduleState` added to `Token` instances, which is the parsed token module state of a PLT instance.
+
 ### Changed
 
 - Energy cost of PLT mint/burn changed from 100 to 50

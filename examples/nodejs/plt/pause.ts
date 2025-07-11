@@ -1,5 +1,4 @@
 import {
-    AccountAddress,
     AccountTransactionType,
     RejectReasonTag,
     TransactionEventTag,
@@ -8,16 +7,7 @@ import {
     serializeAccountTransactionPayload,
 } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
-import {
-    Cbor,
-    Token,
-    TokenHolder,
-    TokenId,
-    TokenListUpdate,
-    TokenOperation,
-    TokenOperationType,
-    createTokenUpdatePayload,
-} from '@concordium/web-sdk/plt';
+import { Cbor, Token, TokenId, TokenOperation, createTokenUpdatePayload } from '@concordium/web-sdk/plt';
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
 
@@ -26,11 +16,10 @@ import { parseEndpoint, parseKeysFile } from '../shared/util.js';
 const cli = meow(
     `
   Usage
-    $ yarn run-example <path-to-this-file> <list-name> <action> [options]
+    $ yarn run-example <path-to-this-file> <action> [options]
 
   Required
-    --token-id,     -t  The unique id of the token to transfer
-    --address,      -a  The account address to add to the allow list (in base58 format)
+    --token-id,     -t  The unique id of the token to pause/unpause
 
   Options
     --help,         -h  Displays this message
@@ -46,13 +35,6 @@ const cli = meow(
                 alias: 't',
                 isRequired: true,
             },
-            address: {
-                type: 'string',
-                alias: 'a',
-                isRequired: true,
-            },
-
-            // optional
             endpoint: {
                 type: 'string',
                 alias: 'e',
@@ -71,7 +53,7 @@ const cli = meow(
     }
 );
 
-const { tokenId: id, address, walletFile, endpoint } = cli.flags;
+const { tokenId: id, walletFile, endpoint } = cli.flags;
 
 const [addr, port] = parseEndpoint(endpoint);
 const client = new ConcordiumGRPCNodeClient(
@@ -84,28 +66,22 @@ const client = new ConcordiumGRPCNodeClient(
     // #region documentation-snippet
 
     // parse input
-    const [list, action] = cli.input;
+    const action = cli.input[0];
 
-    if (!list || !action) {
-        console.error('Missing required arguments: <list-name> <action>');
+    if (!action) {
+        console.error('Missing required argument: <action>');
         return;
     }
 
     // Validate action
-    if (action !== 'add' && action !== 'remove') {
-        console.error('Invalid action. Use "add" or "remove".');
+    if (action !== 'pause' && action !== 'unpause') {
+        console.error('Invalid action. Use "pause" or "unpause".');
         return;
     }
 
-    // Validate list name
-    if (list !== 'allow' && list !== 'deny') {
-        console.error('Invalid list name. Use "allow" or "deny".');
-        return;
-    }
-
-    // parse the arguments
+    // parse the token id
     const tokenId = TokenId.fromString(id);
-    const targetAddress = TokenHolder.fromAccountAddress(AccountAddress.fromBase58(address));
+    const pause = action === 'pause';
 
     if (walletFile !== undefined) {
         // Read wallet-file
@@ -115,23 +91,12 @@ const client = new ConcordiumGRPCNodeClient(
             // create the token instance
             const token = await Token.fromId(client, tokenId);
 
-            // Only the token issuer can modify the allow list
-            console.log(
-                `Attempting to ${action} ${targetAddress.toString()} to the ${list} list for ${tokenId.toString()}...`
-            );
+            // Only the token issuer can pause/unpause the token
+            console.log(`Attempting to ${action} token ${tokenId.toString()}...`);
 
-            // Execute the list operation
-            let modify: typeof Token.addDenyList;
-            if (list === 'deny' && action === 'add') {
-                modify = Token.addDenyList;
-            } else if (list === 'deny' && action === 'remove') {
-                modify = Token.removeDenyList;
-            } else if (list === 'allow' && action === 'add') {
-                modify = Token.addAllowList;
-            } else {
-                modify = Token.removeAllowList;
-            }
-            const transaction = await modify(token, sender, targetAddress, signer);
+            // Execute the pause operation
+            const operation = pause ? Token.pause(token, sender, signer) : Token.unpause(token, sender, signer);
+            const transaction = await operation;
             console.log(`Transaction submitted with hash: ${transaction}`);
 
             const result = await client.waitForTransactionFinalization(transaction);
@@ -147,7 +112,7 @@ const client = new ConcordiumGRPCNodeClient(
                         if (e.tag !== TransactionEventTag.TokenModuleEvent) {
                             throw new Error('Unexpected event type: ' + e.tag);
                         }
-                        console.log('Token module event:', e, Cbor.decode(e.details, 'TokenListUpdateEventDetails'));
+                        console.log('Token module event:', e, Cbor.decode(e.details, 'TokenPauseEventDetails'));
                     });
                     break;
                 case TransactionKindString.Failed:
@@ -161,19 +126,15 @@ const client = new ConcordiumGRPCNodeClient(
                     throw new Error('Unexpected transaction kind: ' + result.summary.transactionType);
             }
         } catch (error) {
-            console.error('Error during list operation:', error);
+            console.error('Error during pause operation:', error);
         }
     } else {
-        const operationType = `${action}-${list}-list` as TokenOperationType;
         // Or from a wallet perspective:
-        // Create list payload. The payload is the same for both add and remove operations on all lists.
-        const listPayload: TokenListUpdate = { target: targetAddress };
-        const listOperation = {
-            [operationType]: listPayload,
-        } as TokenOperation; // Normally the cast is not necessary unless done in the same dynamic way as here.
-        console.log('Specified list action:', JSON.stringify(listOperation, null, 2));
+        // Create pause payload
+        const pauseOperation = { pause } as TokenOperation;
+        console.log(`Specified ${action} action:`, JSON.stringify(pauseOperation, null, 2));
 
-        const payload = createTokenUpdatePayload(tokenId, listOperation);
+        const payload = createTokenUpdatePayload(tokenId, pauseOperation);
         console.log('Created payload:', payload);
 
         // Serialize payload for signing/submission

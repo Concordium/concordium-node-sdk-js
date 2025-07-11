@@ -1,6 +1,7 @@
 import * as Cbor from '../../../src/plt/Cbor.js';
 import * as TokenHolder from '../../../src/plt/TokenHolder.js';
 import * as TokenMetadataUrl from '../../../src/plt/TokenMetadataUrl.js';
+import { TokenListUpdateEventDetails, TokenPauseEventDetails } from '../../../src/plt/module.js';
 import { AccountAddress } from '../../../src/types/index.js';
 
 describe('Cbor', () => {
@@ -81,6 +82,84 @@ describe('Cbor', () => {
         });
     });
 
+    describe('TokenInitializationParameters', () => {
+        test('should encode and decode TokenInitializationParameters correctly', () => {
+            const accountAddress = AccountAddress.fromBase58('3XSLuJcXg6xEua6iBPnWacc3iWh93yEDMCqX8FbE3RDSbEnT9P');
+            const tokenHolder = TokenHolder.fromAccountAddress(accountAddress);
+            const metadataUrl = TokenMetadataUrl.fromString('https://example.com/metadata.json');
+
+            const params = {
+                name: 'Test Token',
+                metadata: metadataUrl,
+                governanceAccount: tokenHolder,
+                allowList: true,
+                denyList: false,
+                mintable: true,
+                burnable: true,
+                customField: 'custom value',
+            };
+
+            const encoded = Cbor.encode(params);
+            const decoded = Cbor.decode(encoded, 'TokenInitializationParameters');
+
+            expect(decoded.name).toBe(params.name);
+            expect(decoded.metadata).toEqual(params.metadata);
+            expect(decoded.governanceAccount).toEqual(params.governanceAccount);
+            expect(decoded.allowList).toBe(params.allowList);
+            expect(decoded.denyList).toBe(params.denyList);
+            expect(decoded.mintable).toBe(params.mintable);
+            expect(decoded.burnable).toBe(params.burnable);
+        });
+
+        test('should throw error if TokenInitializationParameters is missing required fields', () => {
+            // Missing governanceAccount
+            const invalidParams1 = {
+                name: 'Test Token',
+                metadata: TokenMetadataUrl.fromString('https://example.com/metadata.json'),
+                // governanceAccount is missing
+            };
+            const encoded1 = Cbor.encode(invalidParams1);
+            expect(() => Cbor.decode(encoded1, 'TokenInitializationParameters')).toThrow(
+                /missing or invalid governanceAccount/
+            );
+
+            // Missing name
+            const accountAddress = AccountAddress.fromBase58('3XSLuJcXg6xEua6iBPnWacc3iWh93yEDMCqX8FbE3RDSbEnT9P');
+            const invalidParams2 = {
+                // name is missing
+                metadata: TokenMetadataUrl.fromString('https://example.com/metadata.json'),
+                governanceAccount: TokenHolder.fromAccountAddress(accountAddress),
+            };
+            const encoded2 = Cbor.encode(invalidParams2);
+            expect(() => Cbor.decode(encoded2, 'TokenInitializationParameters')).toThrow(/missing or invalid name/);
+
+            // Missing metadata
+            const invalidParams3 = {
+                name: 'Test Token',
+                // metadata is missing
+                governanceAccount: TokenHolder.fromAccountAddress(accountAddress),
+            };
+            const encoded3 = Cbor.encode(invalidParams3);
+            expect(() => Cbor.decode(encoded3, 'TokenInitializationParameters')).toThrow(/missing metadataUrl/);
+        });
+
+        test('should throw error if TokenInitializationParameters has invalid field types', () => {
+            const accountAddress = AccountAddress.fromBase58('3XSLuJcXg6xEua6iBPnWacc3iWh93yEDMCqX8FbE3RDSbEnT9P');
+            const tokenHolder = TokenHolder.fromAccountAddress(accountAddress);
+            const metadataUrl = TokenMetadataUrl.fromString('https://example.com/metadata.json');
+
+            // Invalid allowList type
+            const invalidParams = {
+                name: 'Test Token',
+                metadata: metadataUrl,
+                governanceAccount: tokenHolder,
+                allowList: 'yes', // Should be boolean
+            };
+            const encoded = Cbor.encode(invalidParams);
+            expect(() => Cbor.decode(encoded, 'TokenInitializationParameters')).toThrow(/allowList must be a boolean/);
+        });
+    });
+
     describe('TokenModuleAccountState', () => {
         test('should encode and decode TokenModuleAccountState correctly', () => {
             const state = {
@@ -116,17 +195,17 @@ describe('Cbor', () => {
         });
     });
 
-    describe('TokenEventDetails', () => {
+    describe('TokenListUpdateEventDetails', () => {
         test('should encode and decode TokenEventDetails correctly', () => {
             const accountAddress = AccountAddress.fromBase58('3XSLuJcXg6xEua6iBPnWacc3iWh93yEDMCqX8FbE3RDSbEnT9P');
             const tokenHolder = TokenHolder.fromAccountAddress(accountAddress);
 
-            const details = {
+            const details: TokenListUpdateEventDetails = {
                 target: tokenHolder,
             };
 
             const encoded = Cbor.encode(details);
-            const decoded = Cbor.decode(encoded, 'TokenEventDetails');
+            const decoded = Cbor.decode(encoded, 'TokenListUpdateEventDetails');
             expect(decoded.target).toEqual(details.target);
         });
 
@@ -137,7 +216,9 @@ describe('Cbor', () => {
                 additionalInfo: 'Some extra information',
             };
             const encoded = Cbor.encode(invalidDetails);
-            expect(() => Cbor.decode(encoded, 'TokenEventDetails')).toThrow(/Expected 'target' to be a TokenHolder/);
+            expect(() => Cbor.decode(encoded, 'TokenListUpdateEventDetails')).toThrow(
+                /Expected 'target' to be a TokenHolder/
+            );
         });
 
         test('should throw error if TokenEventDetails has invalid target type', () => {
@@ -147,7 +228,27 @@ describe('Cbor', () => {
                 additionalInfo: 'Some extra information',
             };
             const encoded = Cbor.encode(invalidDetails);
-            expect(() => Cbor.decode(encoded, 'TokenEventDetails')).toThrow(/Expected 'target' to be a TokenHolder/);
+            expect(() => Cbor.decode(encoded, 'TokenListUpdateEventDetails')).toThrow(
+                /Expected 'target' to be a TokenHolder/
+            );
+        });
+    });
+
+    describe('TOkenPauseEventDetails', () => {
+        test('should encode and decode TokenEventDetails correctly', () => {
+            const details: TokenPauseEventDetails = {};
+            const encoded = Cbor.encode(details);
+            const decoded = Cbor.decode(encoded, 'TokenPauseEventDetails');
+            expect(decoded).toEqual(details);
+        });
+
+        test('should throw error if TokenEventDetails has invalid target type', () => {
+            // Invalid target type
+            const invalidDetails = 'invalid';
+            const encoded = Cbor.encode(invalidDetails);
+            expect(() => Cbor.decode(encoded, 'TokenPauseEventDetails')).toThrow(
+                /Invalid event details: "invalid". Expected an object./
+            );
         });
     });
 });

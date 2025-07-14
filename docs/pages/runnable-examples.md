@@ -1,6 +1,6 @@
 There is a collection of runnable examples that utilizes the SDK. These are
 located in the examples folder of the repo. To run an example call, navigate
-to the examples directory from the repo and run your example:
+to the examples directory (e.g. `cd ./examples/nodejs`) from the repo and run your example:
 
 ```shell
     yarn run-example /path/to/example.ts [opts]
@@ -14,7 +14,7 @@ Note that you must first build the project using:
     yarn build:dev
 ```
 
-For example, after building, navigate to the `examples` directory from the
+For example, after building, navigate to the `examples/nodejs` directory from the
 repo root and run:
 
 ```shell

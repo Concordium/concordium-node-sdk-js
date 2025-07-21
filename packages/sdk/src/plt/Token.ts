@@ -375,26 +375,29 @@ export async function validateTransfer(
         throw new InsufficientFundsError(sender, TokenAmount.fromDecimal(payloadTotal, decimals));
     }
 
-    if (!token.moduleState.allowList && !token.moduleState.denyList) {
-        // If the token neither has a deny list nor allow list, we can skip the check.
-        return true;
-    }
+    // FIXME: This is currently disable as a hacky-fix until some changes in the node are implemented/released.
+    // https://linear.app/concordium/issue/COR-1650/empty-deny-list-blocking-transfer
 
-    // Check that sender and all receivers are NOT on the deny list (if present), or that they are included in the allow list (if present).
-    const receiverInfos = await Promise.all(payloads.map((p) => token.grpc.getAccountInfo(p.recipient.address)));
-    const accounts = [senderInfo, ...receiverInfos];
-    accounts.forEach((r) => {
-        const accountToken = r.accountTokens.find((t) => t.id.value === token.info.id.value)?.state;
-        const accountModuleState =
-            accountToken?.moduleState === undefined
-                ? undefined
-                : (Cbor.decode(accountToken.moduleState) as TokenModuleAccountState);
+    // if (!token.moduleState.allowList && !token.moduleState.denyList) {
+    //     // If the token neither has a deny list nor allow list, we can skip the check.
+    //     return true;
+    // }
 
-        if (token.moduleState.denyList && accountModuleState?.denyList)
-            throw new NotAllowedError(TokenHolder.fromAccountAddress(r.accountAddress));
-        if (token.moduleState.allowList && !accountModuleState?.allowList)
-            throw new NotAllowedError(TokenHolder.fromAccountAddress(r.accountAddress));
-    });
+    // // Check that sender and all receivers are NOT on the deny list (if present), or that they are included in the allow list (if present).
+    // const receiverInfos = await Promise.all(payloads.map((p) => token.grpc.getAccountInfo(p.recipient.address)));
+    // const accounts = [senderInfo, ...receiverInfos];
+    // accounts.forEach((r) => {
+    //     const accountToken = r.accountTokens.find((t) => t.id.value === token.info.id.value)?.state;
+    //     const accountModuleState =
+    //         accountToken?.moduleState === undefined
+    //             ? undefined
+    //             : (Cbor.decode(accountToken.moduleState) as TokenModuleAccountState);
+
+    //     if (token.moduleState.denyList && accountModuleState?.denyList)
+    //         throw new NotAllowedError(TokenHolder.fromAccountAddress(r.accountAddress));
+    //     if (token.moduleState.allowList && !accountModuleState?.allowList)
+    //         throw new NotAllowedError(TokenHolder.fromAccountAddress(r.accountAddress));
+    // });
 
     return true;
 }

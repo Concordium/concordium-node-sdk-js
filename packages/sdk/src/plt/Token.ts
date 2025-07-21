@@ -18,7 +18,7 @@ import {
     TokenAddDenyListOperation,
     TokenBurnOperation,
     TokenMintOperation,
-    TokenModuleAccountState,
+    // TokenModuleAccountState,
     TokenModuleState,
     TokenOperation,
     TokenOperationType,

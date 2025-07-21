@@ -47,6 +47,12 @@
   with `buildAccountSigner`
 - A new optional field `createPlt` to `AuthorizationsV1` which exposes the access structure for PLT creation.
 
+## 10.0.0-alpha.13
+
+### Changed
+
+- Disable `denyList`/`allowList` validation on plt token transfers.
+
 ## 10.0.0-alpha.12
 
 ### Breaking changes

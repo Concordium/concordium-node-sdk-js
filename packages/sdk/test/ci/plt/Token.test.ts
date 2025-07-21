@@ -195,46 +195,49 @@ describe('Token.validateTransfer', () => {
         await expect(Token.validateTransfer(token, sender, transfer)).rejects.toThrow(Token.InsufficientFundsError);
     });
 
-    it('should throw NotAllowedError when account is on deny list', async () => {
-        const sender = ACCOUNT_1;
-        const recipient = ACCOUNT_2;
-        const tokenId = TokenId.fromString('3f1bfce9');
-        const decimals = 8;
+    // FIXME: This is currently disable as a hacky-fix until some changes in the node are implemented/released.
+    // https://linear.app/concordium/issue/COR-1650/empty-deny-list-blocking-transfer
 
-        // Setup token with deny list enabled
-        const moduleState: TokenModuleState = {
-            name: 'Test Token',
-            metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
-            paused: false,
-            governanceAccount: TokenHolder.fromAccountAddress(sender),
-            denyList: true,
-        };
+    // it('should throw NotAllowedError when account is on deny list', async () => {
+    //     const sender = ACCOUNT_1;
+    //     const recipient = ACCOUNT_2;
+    //     const tokenId = TokenId.fromString('3f1bfce9');
+    //     const decimals = 8;
 
-        const token = createMockToken(decimals, moduleState, tokenId);
+    //     // Setup token with deny list enabled
+    //     const moduleState: TokenModuleState = {
+    //         name: 'Test Token',
+    //         metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
+    //         paused: false,
+    //         governanceAccount: TokenHolder.fromAccountAddress(sender),
+    //         denyList: true,
+    //     };
 
-        // Setup sender account with sufficient balance
-        const senderBalance = TokenAmount.create(BigInt(1000), decimals);
+    //     const token = createMockToken(decimals, moduleState, tokenId);
 
-        // Create sender account info with deny list status
-        const senderAccountState: TokenModuleAccountState = { denyList: true };
-        const senderAccountInfo = createAccountInfo(sender, tokenId, senderBalance, senderAccountState);
+    //     // Setup sender account with sufficient balance
+    //     const senderBalance = TokenAmount.create(BigInt(1000), decimals);
 
-        // Mock getAccountInfo to return sender on deny list
-        token.grpc.getAccountInfo = jest
-            .fn()
-            .mockResolvedValueOnce(senderAccountInfo) // First call for sender
-            .mockResolvedValueOnce(createAccountInfo(recipient, tokenId)); // second call for recipient
+    //     // Create sender account info with deny list status
+    //     const senderAccountState: TokenModuleAccountState = { denyList: true };
+    //     const senderAccountInfo = createAccountInfo(sender, tokenId, senderBalance, senderAccountState);
 
-        // Create transfer payload
-        const transferAmount = TokenAmount.create(BigInt(500), decimals);
-        const transfer: TokenTransfer = {
-            amount: transferAmount,
-            recipient: TokenHolder.fromAccountAddress(recipient),
-        };
+    //     // Mock getAccountInfo to return sender on deny list
+    //     token.grpc.getAccountInfo = jest
+    //         .fn()
+    //         .mockResolvedValueOnce(senderAccountInfo) // First call for sender
+    //         .mockResolvedValueOnce(createAccountInfo(recipient, tokenId)); // second call for recipient
 
-        // Should throw NotAllowedError
-        await expect(Token.validateTransfer(token, sender, transfer)).rejects.toThrow(Token.NotAllowedError);
-    });
+    //     // Create transfer payload
+    //     const transferAmount = TokenAmount.create(BigInt(500), decimals);
+    //     const transfer: TokenTransfer = {
+    //         amount: transferAmount,
+    //         recipient: TokenHolder.fromAccountAddress(recipient),
+    //     };
+
+    //     // Should throw NotAllowedError
+    //     await expect(Token.validateTransfer(token, sender, transfer)).rejects.toThrow(Token.NotAllowedError);
+    // });
 
     it('should validate successfully for tokens with deny list when account does not have a balance', async () => {
         const sender = ACCOUNT_1;
@@ -276,91 +279,97 @@ describe('Token.validateTransfer', () => {
         await expect(Token.validateTransfer(token, sender, transfer)).resolves.toBe(true);
     });
 
-    it('should throw NotAllowedError for tokens with allow list when account does not have a balance', async () => {
-        const sender = ACCOUNT_1;
-        const recipient = ACCOUNT_2;
-        const tokenId = TokenId.fromString('3f1bfce9');
-        const decimals = 8;
+    // FIXME: This is currently disable as a hacky-fix until some changes in the node are implemented/released.
+    // https://linear.app/concordium/issue/COR-1650/empty-deny-list-blocking-transfer
 
-        // Setup token with deny list enabled
-        const moduleState: TokenModuleState = {
-            name: 'Test Token',
-            metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
-            governanceAccount: TokenHolder.fromAccountAddress(sender),
-            allowList: true,
-            paused: false,
-        };
+    // it('should throw NotAllowedError for tokens with allow list when account does not have a balance', async () => {
+    //     const sender = ACCOUNT_1;
+    //     const recipient = ACCOUNT_2;
+    //     const tokenId = TokenId.fromString('3f1bfce9');
+    //     const decimals = 8;
 
-        const token = createMockToken(decimals, moduleState, tokenId);
+    //     // Setup token with deny list enabled
+    //     const moduleState: TokenModuleState = {
+    //         name: 'Test Token',
+    //         metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
+    //         governanceAccount: TokenHolder.fromAccountAddress(sender),
+    //         allowList: true,
+    //         paused: false,
+    //     };
 
-        // Setup sender account with sufficient balance
-        const senderBalance = TokenAmount.create(BigInt(1000), decimals);
+    //     const token = createMockToken(decimals, moduleState, tokenId);
 
-        // Create sender account info with deny list status
-        const senderAccountState: TokenModuleAccountState = { allowList: true };
-        const senderAccountInfo = createAccountInfo(sender, tokenId, senderBalance, senderAccountState);
+    //     // Setup sender account with sufficient balance
+    //     const senderBalance = TokenAmount.create(BigInt(1000), decimals);
 
-        // Mock getAccountInfo to return sender on deny list
-        token.grpc.getAccountInfo = jest
-            .fn()
-            .mockResolvedValueOnce(senderAccountInfo) // First call for balance check
-            .mockResolvedValueOnce(createAccountInfo(recipient)); // second call for recipient, no token balance.
+    //     // Create sender account info with deny list status
+    //     const senderAccountState: TokenModuleAccountState = { allowList: true };
+    //     const senderAccountInfo = createAccountInfo(sender, tokenId, senderBalance, senderAccountState);
 
-        // Create transfer payload
-        const transferAmount = TokenAmount.create(BigInt(500), decimals);
-        const transfer: TokenTransfer = {
-            amount: transferAmount,
-            recipient: TokenHolder.fromAccountAddress(recipient),
-        };
+    //     // Mock getAccountInfo to return sender on deny list
+    //     token.grpc.getAccountInfo = jest
+    //         .fn()
+    //         .mockResolvedValueOnce(senderAccountInfo) // First call for balance check
+    //         .mockResolvedValueOnce(createAccountInfo(recipient)); // second call for recipient, no token balance.
 
-        // Should throw NotAllowedError
-        await expect(Token.validateTransfer(token, sender, transfer)).rejects.toThrow(Token.NotAllowedError);
-    });
+    //     // Create transfer payload
+    //     const transferAmount = TokenAmount.create(BigInt(500), decimals);
+    //     const transfer: TokenTransfer = {
+    //         amount: transferAmount,
+    //         recipient: TokenHolder.fromAccountAddress(recipient),
+    //     };
 
-    it('should throw NotAllowedError when account is not on allow list', async () => {
-        const sender = ACCOUNT_1;
-        const recipient = ACCOUNT_2;
-        const tokenId = TokenId.fromString('3f1bfce9');
-        const decimals = 8;
+    //     // Should throw NotAllowedError
+    //     await expect(Token.validateTransfer(token, sender, transfer)).rejects.toThrow(Token.NotAllowedError);
+    // });
 
-        // Setup token with allow list enabled
-        const moduleState: TokenModuleState = {
-            name: 'Test Token',
-            metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
-            paused: false,
-            governanceAccount: TokenHolder.fromAccountAddress(sender),
-            allowList: true,
-        };
+    // FIXME: This is currently disable as a hacky-fix until some changes in the node are implemented/released.
+    // https://linear.app/concordium/issue/COR-1650/empty-deny-list-blocking-transfer
 
-        const token = createMockToken(decimals, moduleState, tokenId);
+    // it('should throw NotAllowedError when account is not on allow list', async () => {
+    //     const sender = ACCOUNT_1;
+    //     const recipient = ACCOUNT_2;
+    //     const tokenId = TokenId.fromString('3f1bfce9');
+    //     const decimals = 8;
 
-        // Setup sender account with sufficient balance
-        const senderBalance = TokenAmount.create(BigInt(1000), decimals);
+    //     // Setup token with allow list enabled
+    //     const moduleState: TokenModuleState = {
+    //         name: 'Test Token',
+    //         metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
+    //         paused: false,
+    //         governanceAccount: TokenHolder.fromAccountAddress(sender),
+    //         allowList: true,
+    //     };
 
-        // Create sender account info with allow list status set to true
-        const senderAccountState: TokenModuleAccountState = { allowList: true };
-        const senderAccountInfo = createAccountInfo(sender, tokenId, senderBalance, senderAccountState);
+    //     const token = createMockToken(decimals, moduleState, tokenId);
 
-        // Create recipient account info with allow list status set to true
-        const recipientAccountState: TokenModuleAccountState = { allowList: false };
-        const recipientAccountInfo = createAccountInfo(recipient, tokenId, undefined, recipientAccountState);
+    //     // Setup sender account with sufficient balance
+    //     const senderBalance = TokenAmount.create(BigInt(1000), decimals);
 
-        // Mock getAccountInfo to return sender not on allow list
-        token.grpc.getAccountInfo = jest
-            .fn()
-            .mockResolvedValueOnce(senderAccountInfo) // First call for sender
-            .mockResolvedValueOnce(recipientAccountInfo); // second call for recipient
+    //     // Create sender account info with allow list status set to true
+    //     const senderAccountState: TokenModuleAccountState = { allowList: true };
+    //     const senderAccountInfo = createAccountInfo(sender, tokenId, senderBalance, senderAccountState);
 
-        // Create transfer payload
-        const transferAmount = TokenAmount.create(BigInt(500), decimals);
-        const transfer: TokenTransfer = {
-            amount: transferAmount,
-            recipient: TokenHolder.fromAccountAddress(recipient),
-        };
+    //     // Create recipient account info with allow list status set to true
+    //     const recipientAccountState: TokenModuleAccountState = { allowList: false };
+    //     const recipientAccountInfo = createAccountInfo(recipient, tokenId, undefined, recipientAccountState);
 
-        // Should throw NotAllowedError
-        await expect(Token.validateTransfer(token, sender, transfer)).rejects.toThrow(Token.NotAllowedError);
-    });
+    //     // Mock getAccountInfo to return sender not on allow list
+    //     token.grpc.getAccountInfo = jest
+    //         .fn()
+    //         .mockResolvedValueOnce(senderAccountInfo) // First call for sender
+    //         .mockResolvedValueOnce(recipientAccountInfo); // second call for recipient
+
+    //     // Create transfer payload
+    //     const transferAmount = TokenAmount.create(BigInt(500), decimals);
+    //     const transfer: TokenTransfer = {
+    //         amount: transferAmount,
+    //         recipient: TokenHolder.fromAccountAddress(recipient),
+    //     };
+
+    //     // Should throw NotAllowedError
+    //     await expect(Token.validateTransfer(token, sender, transfer)).rejects.toThrow(Token.NotAllowedError);
+    // });
 
     it('should validate batch transfers when total amount is within balance', async () => {
         const sender = ACCOUNT_1;

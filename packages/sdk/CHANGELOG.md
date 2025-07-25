@@ -47,6 +47,12 @@
   with `buildAccountSigner`
 - A new optional field `createPlt` to `AuthorizationsV1` which exposes the access structure for PLT creation.
 
+## 10.0.0-alpha.? (Unreleased)
+
+### Changed
+
+- Client side validation in the PLT `Token` client is now disabled by default and has to be enabled explicitly if wanted
+
 ## 10.0.0-alpha.13
 
 ### Changed

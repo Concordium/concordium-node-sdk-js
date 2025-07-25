@@ -416,7 +416,7 @@ export type TokenUpdateMetadata = {
 type TransferOtions = {
     /** Whether to automatically scale a token amount to the correct number of decimals as the token */
     autoScale?: boolean;
-    /** Whether to validate the payload executing it */
+    /** Whether to validate the operation client side against the latest finalized state (necessary state will be fetched) before submitting it */
     validate?: boolean;
 };
 
@@ -428,7 +428,7 @@ type TransferOtions = {
  * @param {TokenTransfer | TokenTransfer[]} payload - The transfer payload.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @param {TokenUpdateMetadata} [metadata={ expiry: TransactionExpiry.futureMinutes(5) }] - The metadata for the token update.
- * @param {TransferOtions} [opts={ autoScale: true, validate: true }] - Options for the transfer.
+ * @param {TransferOtions} [opts={ autoScale: true, validate: false }] - Options for the transfer.
  *
  * @returns {Promise<TransactionHash.Type>} A promise that resolves to the transaction hash.
  * @throws {InvalidTokenAmountError} If `opts.validate` and any token amount is not compatible with the token.
@@ -442,7 +442,7 @@ export async function transfer(
     payload: TokenTransfer | TokenTransfer[],
     signer: AccountSigner,
     metadata?: TokenUpdateMetadata,
-    { autoScale = true, validate = true }: TransferOtions = {}
+    { autoScale = true, validate = false }: TransferOtions = {}
 ): Promise<TransactionHash.Type> {
     let transfers: TokenTransfer[] = [payload].flat();
     if (autoScale) {
@@ -478,7 +478,7 @@ export function validateGovernanceOperation(token: Token, sender: AccountAddress
 type SupplyUpdateOptions = {
     /** Whether to automatically scale a token amount to the correct number of decimals as the token */
     autoScale?: boolean;
-    /** Whether to validate the payload executing it */
+    /** Whether to validate the operation client side against the latest finalized state (necessary state will be fetched) before submitting it */
     validate?: boolean;
 };
 
@@ -490,7 +490,7 @@ type SupplyUpdateOptions = {
  * @param {TokenAmount.Type | TokenAmount.Type[]} amounts - The amount(s) of tokens to mint.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @param {TokenUpdateMetadata} [metadata={ expiry: TransactionExpiry.futureMinutes(5) }] - The metadata for the token update.
- * @param {SupplyUpdateOptions} [opts={ autoScale: true, validate: true }] - Options for supply update operations.
+ * @param {SupplyUpdateOptions} [opts={ autoScale: true, validate: false }] - Options for supply update operations.
  *
  * @returns A promise that resolves to the transaction hash.
  * @throws {InvalidTokenAmountError} If `opts.validate` and the token amount is not compatible with the token.
@@ -503,7 +503,7 @@ export async function mint(
     amounts: TokenAmount.Type | TokenAmount.Type[],
     signer: AccountSigner,
     metadata?: TokenUpdateMetadata,
-    { autoScale = true, validate = true }: SupplyUpdateOptions = {}
+    { autoScale = true, validate = false }: SupplyUpdateOptions = {}
 ): Promise<TransactionHash.Type> {
     let amountsList = [amounts].flat();
     if (autoScale) {
@@ -530,7 +530,7 @@ export async function mint(
  * @param {TokenAmount.Type | TokenAmount.Type[]} amounts - The amount(s) of tokens to burn.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @param {TokenUpdateMetadata} [metadata={ expiry: TransactionExpiry.futureMinutes(5) }] - The metadata for the token update.
- * @param {SupplyUpdateOptions} [opts={ autoScale: true, validate: true }] - Options for supply update operations.
+ * @param {SupplyUpdateOptions} [opts={ autoScale: true, validate: false }] - Options for supply update operations.
  *
  * @returns A promise that resolves to the transaction hash.
  * @throws {InvalidTokenAmountError} If `opts.validate` and the token amount is not compatible with the token.
@@ -543,7 +543,7 @@ export async function burn(
     amounts: TokenAmount.Type | TokenAmount.Type[],
     signer: AccountSigner,
     metadata?: TokenUpdateMetadata,
-    { autoScale = true, validate = true }: SupplyUpdateOptions = {}
+    { autoScale = true, validate = false }: SupplyUpdateOptions = {}
 ): Promise<TransactionHash.Type> {
     let amountsList = [amounts].flat();
     if (autoScale) {
@@ -563,7 +563,7 @@ export async function burn(
 }
 
 type UpdateListOptions = {
-    /** Whether to validate the payload executing it */
+    /** Whether to validate the operation client side against the latest finalized state (necessary state will be fetched) before submitting it */
     validate?: boolean;
 };
 
@@ -575,7 +575,7 @@ type UpdateListOptions = {
  * @param {TokenHolder.Type | TokenHolder.Type[]} targets - The account address(es) to be added to the list.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @param {TokenUpdateMetadata} [metadata={ expiry: TransactionExpiry.futureMinutes(5) }] - The metadata for the token update.
- * @param {UpdateListOptions} [opts={ validate: true }] - Options for updating the allow/deny list.
+ * @param {UpdateListOptions} [opts={ validate: false }] - Options for updating the allow/deny list.
  *
  * @returns A promise that resolves to the transaction hash.
  * @throws {UnauthorizedGovernanceOperationError} If `opts.validate` and the sender is not the token issuer.
@@ -586,7 +586,7 @@ export async function addAllowList(
     targets: TokenHolder.Type | TokenHolder.Type[],
     signer: AccountSigner,
     metadata?: TokenUpdateMetadata,
-    { validate = true }: UpdateListOptions = {}
+    { validate = false }: UpdateListOptions = {}
 ): Promise<TransactionHash.Type> {
     if (validate) {
         validateGovernanceOperation(token, sender);
@@ -606,7 +606,7 @@ export async function addAllowList(
  * @param {TokenHolder.Type | TokenHolder.Type[]} targets - The account address(es) to be added to the list.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @param {TokenUpdateMetadata} [metadata={ expiry: TransactionExpiry.futureMinutes(5) }] - The metadata for the token update.
- * @param {UpdateListOptions} [opts={ validate: true }] - Options for updating the allow/deny list.
+ * @param {UpdateListOptions} [opts={ validate: false }] - Options for updating the allow/deny list.
  *
  * @returns A promise that resolves to the transaction hash.
  * @throws {UnauthorizedGovernanceOperationError} If `opts.validate` and the sender is not the token issuer.
@@ -617,7 +617,7 @@ export async function removeAllowList(
     targets: TokenHolder.Type | TokenHolder.Type[],
     signer: AccountSigner,
     metadata?: TokenUpdateMetadata,
-    { validate = true }: UpdateListOptions = {}
+    { validate = false }: UpdateListOptions = {}
 ): Promise<TransactionHash.Type> {
     if (validate) {
         validateGovernanceOperation(token, sender);
@@ -637,7 +637,7 @@ export async function removeAllowList(
  * @param {TokenHolder.Type | TokenHolder.Type[]} targets - The account address(es) to be added to the list.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @param {TokenUpdateMetadata} [metadata={ expiry: TransactionExpiry.futureMinutes(5) }] - The metadata for the token update.
- * @param {UpdateListOptions} [opts={ validate: true }] - Options for updating the allow/deny list.
+ * @param {UpdateListOptions} [opts={ validate: false }] - Options for updating the allow/deny list.
  *
  * @returns A promise that resolves to the transaction hash.
  * @throws {UnauthorizedGovernanceOperationError} If `opts.validate` and the sender is not the token issuer.
@@ -648,7 +648,7 @@ export async function addDenyList(
     targets: TokenHolder.Type | TokenHolder.Type[],
     signer: AccountSigner,
     metadata?: TokenUpdateMetadata,
-    { validate = true }: UpdateListOptions = {}
+    { validate = false }: UpdateListOptions = {}
 ): Promise<TransactionHash.Type> {
     if (validate) {
         validateGovernanceOperation(token, sender);
@@ -668,7 +668,7 @@ export async function addDenyList(
  * @param {TokenHolder.Type | TokenHolder.Type[]} targets - The account address(es) to be added to the list.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @param {TokenUpdateMetadata} [metadata={ expiry: TransactionExpiry.futureMinutes(5) }] - The metadata for the token update.
- * @param {UpdateListOptions} [opts={ validate: true }] - Options for updating the allow/deny list.
+ * @param {UpdateListOptions} [opts={ validate: false }] - Options for updating the allow/deny list.
  *
  * @returns A promise that resolves to the transaction hash.
  * @throws {UnauthorizedGovernanceOperationError} If `opts.validate` and the sender is not the token issuer.
@@ -679,7 +679,7 @@ export async function removeDenyList(
     targets: TokenHolder.Type | TokenHolder.Type[],
     signer: AccountSigner,
     metadata?: TokenUpdateMetadata,
-    { validate = true }: UpdateListOptions = {}
+    { validate = false }: UpdateListOptions = {}
 ): Promise<TransactionHash.Type> {
     if (validate) {
         validateGovernanceOperation(token, sender);
@@ -695,7 +695,7 @@ export async function removeDenyList(
  * Options to be passed to the {@linkcode pause} function.
  */
 export type PauseOptions = {
-    /** Whether to validate the payload executing it */
+    /** Whether to validate the operation client side against the latest finalized state (necessary state will be fetched) before submitting it */
     validate?: boolean;
 };
 
@@ -706,7 +706,7 @@ export type PauseOptions = {
  * @param {AccountAddress.Type} sender - The account address of the sender.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @param {TokenUpdateMetadata} [metadata={ expiry: TransactionExpiry.futureMinutes(5) }] - The metadata for the token update.
- * @param {PauseOptions} [opts={ validate: true }] - Options for the pause operation.
+ * @param {PauseOptions} [opts={ validate: false }] - Options for the pause operation.
  *
  * @returns A promise that resolves to the transaction hash.
  * @throws {UnauthorizedGovernanceOperationError} If `opts.validate` and the sender is not the token issuer.
@@ -716,7 +716,7 @@ export async function pause(
     sender: AccountAddress.Type,
     signer: AccountSigner,
     metadata?: TokenUpdateMetadata,
-    { validate = true }: PauseOptions = {}
+    { validate = false }: PauseOptions = {}
 ): Promise<TransactionHash.Type> {
     if (validate) {
         validateGovernanceOperation(token, sender);
@@ -733,7 +733,7 @@ export async function pause(
  * @param {AccountAddress.Type} sender - The account address of the sender.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @param {TokenUpdateMetadata} [metadata={ expiry: TransactionExpiry.futureMinutes(5) }] - The metadata for the token update.
- * @param {PauseOptions} [opts={ validate: true }] - Options for the pause operation.
+ * @param {PauseOptions} [opts={ validate: false }] - Options for the pause operation.
  *
  * @returns A promise that resolves to the transaction hash.
  * @throws {UnauthorizedGovernanceOperationError} If `opts.validate` and the sender is not the token issuer.
@@ -743,7 +743,7 @@ export async function unpause(
     sender: AccountAddress.Type,
     signer: AccountSigner,
     metadata?: TokenUpdateMetadata,
-    { validate = true }: PauseOptions = {}
+    { validate = false }: PauseOptions = {}
 ): Promise<TransactionHash.Type> {
     if (validate) {
         validateGovernanceOperation(token, sender);

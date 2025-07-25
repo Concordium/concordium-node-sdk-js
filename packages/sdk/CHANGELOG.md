@@ -47,7 +47,7 @@
   with `buildAccountSigner`
 - A new optional field `createPlt` to `AuthorizationsV1` which exposes the access structure for PLT creation.
 
-## 10.0.0-alpha.14 (to be released)
+## 10.0.0-alpha.? (Unreleased)
 
 ### Changed
 

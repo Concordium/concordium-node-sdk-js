@@ -54,6 +54,10 @@
 - Enable `denyList`/`allowList` validation on plt token transfers.
 - Client side validation in the PLT `Token` client is now disabled by default and has to be enabled explicitly if wanted
 
+### Added
+
+- Add helper function `createPLTPayload` for creating `CreatePLTPayload`s for the corresponding chain update.
+
 ## 10.0.0-alpha.13
 
 ### Changed

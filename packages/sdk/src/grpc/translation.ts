@@ -2340,6 +2340,7 @@ export function nextUpdateSequenceNumbers(nextNums: GRPC.NextUpdateSequenceNumbe
         finalizationCommiteeParameters: unwrap(nextNums.finalizationCommitteeParameters?.value),
         // We fall back to be backwards compatible.
         validatorScoreParameters: nextNums.validatorScoreParameters?.value ?? 1n,
+        protocolLevelTokens: nextNums.protocolLevelTokens?.value ?? 1n,
     };
 }
 

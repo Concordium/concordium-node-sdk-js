@@ -56,6 +56,7 @@
 
 ### Added
 
+- Add `protocolLevelTokens` field to `NextUpdateSequenceNumbers` type.
 - Add helper function `createPLTPayload` for creating `CreatePLTPayload`s for the corresponding chain update.
 
 ## 10.0.0-alpha.13

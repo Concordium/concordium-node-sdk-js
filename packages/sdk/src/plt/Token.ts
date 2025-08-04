@@ -39,17 +39,22 @@ export enum TokenErrorCode {
     INCORRECT_MODULE_VERSION = 'INCORRECT_MODULE_VERSION',
     /** Error type indicating the supplied token amount is not compatible with the token. */
     INVALID_TOKEN_AMOUNT = 'INVALID_TOKEN_AMOUNT',
-    /** Error type indicating an unauthorized governance operation was attempted. */
-    UNAUTHORIZED_GOVERNANCE_OPERATION = 'UNAUTHORIZED_GOVERNANCE_OPERATION',
-    /**
-     * Error representing an attempt transfer funds to an account which is either not on the token allow list, or is on
-     * the token deny list
+    /** Error representing an attempt transfer funds to an account which is either not on the token allow list,
+     * or is on the token deny list.
      */
     NOT_ALLOWED = 'NOT_ALLOWED',
     /** Error representing an attempt to transfer tokens from an account that does not have enough tokens to cover the
-     * amount */
+     * amount. */
     INSUFFICIENT_FUNDS = 'INSUFFICIENT_FUNDS',
+    /** Error type Error indicating that supply change operation is prohibited while the token is in the paused state.
+     */
     PAUSED = 'PAUSED',
+    /** Error that indicates that the token does not support minting. */
+    NOT_MINTABLE = 'NOT_MINTABLE',
+    /** Error that indicates that the token does not support burning. */
+    NOT_BURNABLE = 'NOT_BURNABLE',
+    /** Error that indicates that allow/deny list is not available for this token. */
+    NO_LIST = 'NO_LIST',
 }
 
 /**
@@ -114,19 +119,6 @@ export class InvalidTokenAmountError extends TokenError {
     }
 }
 
-/** Error type indicating an unauthorized governance operation was attempted. */
-export class UnauthorizedGovernanceOperationError extends TokenError {
-    public readonly code = TokenErrorCode.UNAUTHORIZED_GOVERNANCE_OPERATION;
-
-    /**
-     * Constructs a new UnauthorizedGovernanceOperationError.
-     * @param {AccountAddress.Type} sender - The account address attempting the unauthorized operation.
-     */
-    constructor(public readonly sender: AccountAddress.Type) {
-        super(`Unauthorized governance operation attempted by account: ${sender}.`);
-    }
-}
-
 /**
  * Error type indicating an attempt transfer funds to/from an account which is either not on the token allow list, or is on the token deny list
  */
@@ -171,12 +163,60 @@ export class PausedError extends TokenError {
     public readonly code = TokenErrorCode.PAUSED;
 
     /**
-     * Constructs a new TokenPausedError.
+     * Constructs a new PausedError.
      *
      * @param {TokenId.Type} tokenId - The ID of the token.
      */
     constructor(public readonly tokenId: TokenId.Type) {
         super(`Token ${tokenId} is paused.`);
+    }
+}
+
+/**
+ * Error type indicating that the token is not mintable.
+ */
+export class NotMintableError extends TokenError {
+    public readonly code = TokenErrorCode.NOT_MINTABLE;
+
+    /**
+     * Constructs a new NotMintableError.
+     *
+     * @param {TokenId.Type} tokenId - The ID of the token.
+     */
+    constructor(public readonly tokenId: TokenId.Type) {
+        super(`Token ${tokenId} is not mintable.`)
+    }
+}
+
+/**
+ * Error type indicating that the token is not burnable.
+ */
+export class NotBurnableError extends TokenError {
+    public readonly code = TokenErrorCode.NOT_BURNABLE;
+
+    /**
+     * Constructs a new NotBurnableError.
+     *
+     * @param {TokenId.Type} tokenId - The ID of the token.
+     */
+    constructor(public readonly tokenId: TokenId.Type) {
+        super(`Token ${tokenId} is not burnable.`)
+    }
+}
+
+/**
+ * Error type indicating that the token has no allow/deny list.
+ */
+export class NoListError extends TokenError {
+    public readonly code = TokenErrorCode.NO_LIST;
+
+    /**
+     * Constructs a new NoListError.
+     *
+     * @param {TokenId.Type} tokenId - The ID of the token.
+     */
+    constructor(public readonly tokenId: TokenId.Type) {
+        super(`Token ${tokenId} does not have allow/deny list.`)
     }
 }
 
@@ -455,19 +495,6 @@ export async function transfer(
     return sendOperations(token, sender, ops, signer, metadata);
 }
 
-/**
- * Validates that the sender is authorized to perform governance operations on the token.
- *
- * @param {Token} token - The token to validate governance operations for.
- * @param {AccountAddress.Type} sender - The account address of the sender.
- *
- * @returns {true} If the sender is authorized.
- * @throws {UnauthorizedGovernanceOperationError} If the sender is not the governance account of the token.
- */
-export function validateGovernanceOperation(token: Token, sender: AccountAddress.Type): true {
-    return true;
-}
-
 type SupplyUpdateOptions = {
     /** Whether to automatically scale a token amount to the correct number of decimals as the token */
     autoScale?: boolean;
@@ -487,8 +514,8 @@ type SupplyUpdateOptions = {
  *
  * @returns A promise that resolves to the transaction hash.
  * @throws {InvalidTokenAmountError} If `opts.validate` and the token amount is not compatible with the token.
- * @throws {UnauthorizedGovernanceOperationError} If `opts.validate` and the sender is not the token issuer.
  * @throws {PausedError} If `opts.validate` and the token is paused.
+ * @throws {NotMintableError} If `opts.validate` and the token is not mintable.
  */
 export async function mint(
     token: Token,
@@ -505,6 +532,7 @@ export async function mint(
 
     if (validate) {
         token.moduleState.paused && bail(new PausedError(token.info.id));
+        token.moduleState.mintable && bail(new NotMintableError(token.info.id));
         amountsList.forEach((amount) => validateAmount(token, amount));
     }
 
@@ -526,8 +554,8 @@ export async function mint(
  *
  * @returns A promise that resolves to the transaction hash.
  * @throws {InvalidTokenAmountError} If `opts.validate` and the token amount is not compatible with the token.
- * @throws {UnauthorizedGovernanceOperationError} If `opts.validate` and the sender is not the token issuer.
  * @throws {PausedError} If `opts.validate` and the token is paused.
+ * @throws {NotBurnableError} If `opts.validate` and the token is not burnable.
  */
 export async function burn(
     token: Token,
@@ -544,6 +572,7 @@ export async function burn(
 
     if (validate) {
         token.moduleState.paused && bail(new PausedError(token.info.id));
+        token.moduleState.burnable && bail(new NotBurnableError(token.info.id));
         amountsList.forEach((amount) => validateAmount(token, amount));
     }
 
@@ -569,7 +598,7 @@ type UpdateListOptions = {
  * @param {UpdateListOptions} [opts={ validate: false }] - Options for updating the allow/deny list.
  *
  * @returns A promise that resolves to the transaction hash.
- * @throws {UnauthorizedGovernanceOperationError} If `opts.validate` and the sender is not the token issuer.
+ * @throws {NoListError} If `opts.validate` and the token does not have allow/deny list.
  */
 export async function addAllowList(
     token: Token,
@@ -579,6 +608,10 @@ export async function addAllowList(
     metadata?: TokenUpdateMetadata,
     { validate = false }: UpdateListOptions = {}
 ): Promise<TransactionHash.Type> {
+    if (validate) {
+        token.moduleState.allowList && bail(new NoListError(token.info.id));
+    }
+
     const ops: TokenAddAllowListOperation[] = [targets]
         .flat()
         .map((target) => ({ [TokenOperationType.AddAllowList]: { target } }));
@@ -596,7 +629,7 @@ export async function addAllowList(
  * @param {UpdateListOptions} [opts={ validate: false }] - Options for updating the allow/deny list.
  *
  * @returns A promise that resolves to the transaction hash.
- * @throws {UnauthorizedGovernanceOperationError} If `opts.validate` and the sender is not the token issuer.
+ * @throws {NoListError} If `opts.validate` and the token does not have allow/deny list.
  */
 export async function removeAllowList(
     token: Token,
@@ -606,6 +639,10 @@ export async function removeAllowList(
     metadata?: TokenUpdateMetadata,
     { validate = false }: UpdateListOptions = {}
 ): Promise<TransactionHash.Type> {
+    if (validate) {
+        token.moduleState.allowList && bail(new NoListError(token.info.id));
+    }
+
     const ops: TokenRemoveAllowListOperation[] = [targets]
         .flat()
         .map((target) => ({ [TokenOperationType.RemoveAllowList]: { target } }));
@@ -623,7 +660,7 @@ export async function removeAllowList(
  * @param {UpdateListOptions} [opts={ validate: false }] - Options for updating the allow/deny list.
  *
  * @returns A promise that resolves to the transaction hash.
- * @throws {UnauthorizedGovernanceOperationError} If `opts.validate` and the sender is not the token issuer.
+ * @throws {NoListError} If `opts.validate` and the token does not have allow/deny list.
  */
 export async function addDenyList(
     token: Token,
@@ -633,6 +670,10 @@ export async function addDenyList(
     metadata?: TokenUpdateMetadata,
     { validate = false }: UpdateListOptions = {}
 ): Promise<TransactionHash.Type> {
+    if (validate) {
+        token.moduleState.denyList && bail(new NoListError(token.info.id));
+    }
+
     const ops: TokenAddDenyListOperation[] = [targets]
         .flat()
         .map((target) => ({ [TokenOperationType.AddDenyList]: { target } }));
@@ -650,7 +691,7 @@ export async function addDenyList(
  * @param {UpdateListOptions} [opts={ validate: false }] - Options for updating the allow/deny list.
  *
  * @returns A promise that resolves to the transaction hash.
- * @throws {UnauthorizedGovernanceOperationError} If `opts.validate` and the sender is not the token issuer.
+ * @throws {NoListError} If `opts.validate` and the token does not have allow/deny list.
  */
 export async function removeDenyList(
     token: Token,
@@ -660,19 +701,15 @@ export async function removeDenyList(
     metadata?: TokenUpdateMetadata,
     { validate = false }: UpdateListOptions = {}
 ): Promise<TransactionHash.Type> {
+    if (validate) {
+        token.moduleState.denyList && bail(new NoListError(token.info.id));
+    }
+
     const ops: TokenRemoveDenyListOperation[] = [targets]
         .flat()
         .map((target) => ({ [TokenOperationType.RemoveDenyList]: { target } }));
     return sendOperations(token, sender, ops, signer, metadata);
 }
-
-/**
- * Options to be passed to the {@linkcode pause} function.
- */
-export type PauseOptions = {
-    /** Whether to validate the operation client side against the latest finalized state (necessary state will be fetched) before submitting it */
-    validate?: boolean;
-};
 
 /**
  * Suspends execution of any operation involving balance changes for the token.
@@ -681,17 +718,14 @@ export type PauseOptions = {
  * @param {AccountAddress.Type} sender - The account address of the sender.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @param {TokenUpdateMetadata} [metadata={ expiry: TransactionExpiry.futureMinutes(5) }] - The metadata for the token update.
- * @param {PauseOptions} [opts={ validate: false }] - Options for the pause operation.
  *
  * @returns A promise that resolves to the transaction hash.
- * @throws {UnauthorizedGovernanceOperationError} If `opts.validate` and the sender is not the token issuer.
  */
 export async function pause(
     token: Token,
     sender: AccountAddress.Type,
     signer: AccountSigner,
     metadata?: TokenUpdateMetadata,
-    { validate = false }: PauseOptions = {}
 ): Promise<TransactionHash.Type> {
     const operation: TokenPauseOperation = { [TokenOperationType.Pause]: {} };
     return sendOperations(token, sender, [operation], signer, metadata);
@@ -704,17 +738,14 @@ export async function pause(
  * @param {AccountAddress.Type} sender - The account address of the sender.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @param {TokenUpdateMetadata} [metadata={ expiry: TransactionExpiry.futureMinutes(5) }] - The metadata for the token update.
- * @param {PauseOptions} [opts={ validate: false }] - Options for the pause operation.
  *
  * @returns A promise that resolves to the transaction hash.
- * @throws {UnauthorizedGovernanceOperationError} If `opts.validate` and the sender is not the token issuer.
  */
 export async function unpause(
     token: Token,
     sender: AccountAddress.Type,
     signer: AccountSigner,
     metadata?: TokenUpdateMetadata,
-    { validate = false }: PauseOptions = {}
 ): Promise<TransactionHash.Type> {
     const operation: TokenUnpauseOperation = { [TokenOperationType.Unpause]: {} };
     return sendOperations(token, sender, [operation], signer, metadata);

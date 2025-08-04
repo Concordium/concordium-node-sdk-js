@@ -1,5 +1,5 @@
 import { EncodedTokenModuleEvent, TokenUpdatePayload, TransactionEventTag } from '../types.js';
-import { Cbor, CborMemo, TokenAmount, TokenHolder, TokenId, TokenMetadataUrl } from './index.js';
+import { Cbor, CborMemo, CreatePLTPayload, TokenAmount, TokenHolder, TokenId, TokenMetadataUrl } from './index.js';
 
 /**
  * Enum representing the types of token operations.
@@ -212,6 +212,23 @@ export type TokenInitializationParameters = {
     /** Whether the token is burnable */
     burnable?: boolean;
 };
+
+/**
+ * Creates a PLT (protocol-level token) payload with the specified initialization parameters.
+ *
+ * @param payload - The base payload for the PLT, excluding the initialization parameters.
+ * @param params - The initialization parameters for the token, such as name, metadata, governance account, and feature flags.
+ * @returns The complete PLT payload including the CBOR-encoded initialization parameters.
+ */
+export function createPltPayload(
+    payload: Omit<CreatePLTPayload, 'initializationParameters'>,
+    params: TokenInitializationParameters
+): CreatePLTPayload {
+    return {
+        ...payload,
+        initializationParameters: Cbor.encode(params),
+    };
+}
 
 type GenericTokenModuleEvent<E extends TokenOperationType, T extends Object> = {
     /** The tag of the event. */

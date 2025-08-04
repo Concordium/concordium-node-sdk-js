@@ -55,6 +55,7 @@
 
 - Enable `denyList`/`allowList` validation on plt token transfers.
 - Client side validation in the PLT `Token` client is now disabled by default and has to be enabled explicitly if wanted
+- Remove authorization validation for PLT `Token` client.
 
 ### Added
 

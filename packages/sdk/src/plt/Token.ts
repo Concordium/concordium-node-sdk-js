@@ -465,11 +465,6 @@ export async function transfer(
  * @throws {UnauthorizedGovernanceOperationError} If the sender is not the governance account of the token.
  */
 export function validateGovernanceOperation(token: Token, sender: AccountAddress.Type): true {
-    const { governanceAccount } = Cbor.decode(token.info.state.moduleState) as TokenModuleState;
-    if (!AccountAddress.equals(sender, governanceAccount.address)) {
-        throw new UnauthorizedGovernanceOperationError(sender);
-    }
-
     return true;
 }
 
@@ -510,7 +505,6 @@ export async function mint(
 
     if (validate) {
         token.moduleState.paused && bail(new PausedError(token.info.id));
-        validateGovernanceOperation(token, sender);
         amountsList.forEach((amount) => validateAmount(token, amount));
     }
 
@@ -550,7 +544,6 @@ export async function burn(
 
     if (validate) {
         token.moduleState.paused && bail(new PausedError(token.info.id));
-        validateGovernanceOperation(token, sender);
         amountsList.forEach((amount) => validateAmount(token, amount));
     }
 
@@ -586,10 +579,6 @@ export async function addAllowList(
     metadata?: TokenUpdateMetadata,
     { validate = false }: UpdateListOptions = {}
 ): Promise<TransactionHash.Type> {
-    if (validate) {
-        validateGovernanceOperation(token, sender);
-    }
-
     const ops: TokenAddAllowListOperation[] = [targets]
         .flat()
         .map((target) => ({ [TokenOperationType.AddAllowList]: { target } }));
@@ -617,10 +606,6 @@ export async function removeAllowList(
     metadata?: TokenUpdateMetadata,
     { validate = false }: UpdateListOptions = {}
 ): Promise<TransactionHash.Type> {
-    if (validate) {
-        validateGovernanceOperation(token, sender);
-    }
-
     const ops: TokenRemoveAllowListOperation[] = [targets]
         .flat()
         .map((target) => ({ [TokenOperationType.RemoveAllowList]: { target } }));
@@ -648,10 +633,6 @@ export async function addDenyList(
     metadata?: TokenUpdateMetadata,
     { validate = false }: UpdateListOptions = {}
 ): Promise<TransactionHash.Type> {
-    if (validate) {
-        validateGovernanceOperation(token, sender);
-    }
-
     const ops: TokenAddDenyListOperation[] = [targets]
         .flat()
         .map((target) => ({ [TokenOperationType.AddDenyList]: { target } }));
@@ -679,10 +660,6 @@ export async function removeDenyList(
     metadata?: TokenUpdateMetadata,
     { validate = false }: UpdateListOptions = {}
 ): Promise<TransactionHash.Type> {
-    if (validate) {
-        validateGovernanceOperation(token, sender);
-    }
-
     const ops: TokenRemoveDenyListOperation[] = [targets]
         .flat()
         .map((target) => ({ [TokenOperationType.RemoveDenyList]: { target } }));
@@ -716,10 +693,6 @@ export async function pause(
     metadata?: TokenUpdateMetadata,
     { validate = false }: PauseOptions = {}
 ): Promise<TransactionHash.Type> {
-    if (validate) {
-        validateGovernanceOperation(token, sender);
-    }
-
     const operation: TokenPauseOperation = { [TokenOperationType.Pause]: {} };
     return sendOperations(token, sender, [operation], signer, metadata);
 }
@@ -743,10 +716,6 @@ export async function unpause(
     metadata?: TokenUpdateMetadata,
     { validate = false }: PauseOptions = {}
 ): Promise<TransactionHash.Type> {
-    if (validate) {
-        validateGovernanceOperation(token, sender);
-    }
-
     const operation: TokenUnpauseOperation = { [TokenOperationType.Unpause]: {} };
     return sendOperations(token, sender, [operation], signer, metadata);
 }

@@ -233,18 +233,11 @@ function decodeTokenInitializationParameters(value: Cbor): TokenInitializationPa
     }
 
     // Optional initial supply
-    let initialSupply: TokenAmount.Type | undefined;
-    if ('initialSupply' in decoded) {
-        try {
-            initialSupply = TokenAmount.fromCBORValue(decoded.initialSupply);
-        } catch (e) {
-            throw new Error(
-                `Invalid TokenInitializationParameters: Failed to decode "initialSupply": ${(e as Error).message}`
-            );
-        }
+    if ('initialSupply' in decoded && !TokenAmount.instanceOf(decoded.initialSupply)) {
+        throw new Error(`Invalid TokenInitializationParameters: Expected 'initialSupply' to be of type 'TokenAmount'`);
     }
 
-    return { ...decoded, metadata, ...(initialSupply && { initialSupply }) } as TokenInitializationParameters;
+    return { ...decoded, metadata } as TokenInitializationParameters;
 }
 
 type DecodeTypeMap = {

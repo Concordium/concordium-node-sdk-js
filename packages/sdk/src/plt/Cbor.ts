@@ -3,7 +3,7 @@ import { Buffer } from 'buffer/index.js';
 import * as Proto from '../grpc-api/v2/concordium/protocol-level-tokens.js';
 import { HexString } from '../types.js';
 import { cborDecode, cborEncode } from '../types/cbor.js';
-import { TokenHolder, TokenMetadataUrl } from './index.js';
+import { TokenAmount, TokenHolder, TokenMetadataUrl } from './index.js';
 import {
     TokenInitializationParameters,
     TokenListUpdateEventDetails,
@@ -230,6 +230,11 @@ function decodeTokenInitializationParameters(value: Cbor): TokenInitializationPa
     }
     if ('paused' in decoded && typeof decoded.paused !== 'boolean') {
         throw new Error('Invalid TokenInitializationParameters: paused must be a boolean');
+    }
+
+    // Optional initial supply
+    if ('initialSupply' in decoded && !TokenAmount.instanceOf(decoded.initialSupply)) {
+        throw new Error(`Invalid TokenInitializationParameters: Expected 'initialSupply' to be of type 'TokenAmount'`);
     }
 
     return { ...decoded, metadata } as TokenInitializationParameters;

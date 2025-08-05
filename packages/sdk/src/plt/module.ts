@@ -193,7 +193,7 @@ export type TokenModuleAccountState = {
 
 /**
  * These parameters are passed to the token module to initialize the token.
- * The token initialization update will also include the ticker symbol, initial account,
+ * The token initialization update will also include the ticker symbol,
  * number of decimals, and a reference to the token module implementation.
  */
 export type TokenInitializationParameters = {
@@ -207,6 +207,8 @@ export type TokenInitializationParameters = {
     allowList?: boolean;
     /** Whether the token supports an deny list */
     denyList?: boolean;
+    /** The initial amount of tokens to be minted */
+    initialSupply?: TokenAmount.Type;
     /** Whether the token is mintable */
     mintable?: boolean;
     /** Whether the token is burnable */

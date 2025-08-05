@@ -122,12 +122,12 @@ export function toCBOR(value: CborMemo): Uint8Array {
     return new Uint8Array(encode(tagged));
 }
 
-function parseCBORValue(value: unknown): CborMemo {
-    if (!(value instanceof Tag) || value.tag !== TAGGED_MEMO) {
+function fromCBORValue(decoded: unknown): CborMemo {
+    if (!(decoded instanceof Tag) || decoded.tag !== TAGGED_MEMO) {
         throw new Error('Invalid CBOR tag for Memo.');
     }
 
-    const content = value.contents;
+    const content = decoded.contents;
     if (!(content instanceof Uint8Array)) {
         throw new Error('Invalid CBOR value: expected UInt8Array');
     }
@@ -147,7 +147,7 @@ function parseCBORValue(value: unknown): CborMemo {
  * @returns {CborMemo} The decoded CborMemo instance.
  */
 export function fromCBOR(bytes: Uint8Array): CborMemo {
-    return parseCBORValue(decode(bytes));
+    return fromCBORValue(decode(bytes));
 }
 
 /**
@@ -184,7 +184,7 @@ export function registerCBOREncoder(): void {
  * cleanup();
  */
 export function registerCBORDecoder(): () => void {
-    const old = Tag.registerDecoder(TAGGED_MEMO, parseCBORValue);
+    const old = Tag.registerDecoder(TAGGED_MEMO, fromCBORValue);
 
     // return cleanup function to restore the old decoder
     return () => {

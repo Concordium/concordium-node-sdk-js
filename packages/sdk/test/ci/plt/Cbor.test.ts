@@ -1,4 +1,5 @@
 import * as Cbor from '../../../src/plt/Cbor.js';
+import * as TokenAmount from '../../../src/plt/TokenAmount.js';
 import * as TokenHolder from '../../../src/plt/TokenHolder.js';
 import * as TokenMetadataUrl from '../../../src/plt/TokenMetadataUrl.js';
 import { TokenListUpdateEventDetails, TokenPauseEventDetails } from '../../../src/plt/module.js';
@@ -87,6 +88,7 @@ describe('Cbor', () => {
             const accountAddress = AccountAddress.fromBase58('3XSLuJcXg6xEua6iBPnWacc3iWh93yEDMCqX8FbE3RDSbEnT9P');
             const tokenHolder = TokenHolder.fromAccountAddress(accountAddress);
             const metadataUrl = TokenMetadataUrl.fromString('https://example.com/metadata.json');
+            const initialSupply = TokenAmount.fromDecimal('1.002', 3);
 
             const params = {
                 name: 'Test Token',
@@ -94,6 +96,7 @@ describe('Cbor', () => {
                 governanceAccount: tokenHolder,
                 allowList: true,
                 denyList: false,
+                initialSupply,
                 mintable: true,
                 burnable: true,
                 customField: 'custom value',
@@ -107,6 +110,7 @@ describe('Cbor', () => {
             expect(decoded.governanceAccount).toEqual(params.governanceAccount);
             expect(decoded.allowList).toBe(params.allowList);
             expect(decoded.denyList).toBe(params.denyList);
+            expect(decoded.initialSupply).toEqual(params.initialSupply);
             expect(decoded.mintable).toBe(params.mintable);
             expect(decoded.burnable).toBe(params.burnable);
         });
@@ -234,7 +238,7 @@ describe('Cbor', () => {
         });
     });
 
-    describe('TOkenPauseEventDetails', () => {
+    describe('TokenPauseEventDetails', () => {
         test('should encode and decode TokenEventDetails correctly', () => {
             const details: TokenPauseEventDetails = {};
             const encoded = Cbor.encode(details);

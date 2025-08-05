@@ -56,6 +56,7 @@
 
 ### Added
 
+- Add optional `initialSupply` field to `TokenInitializationParameters` type.
 - Add `protocolLevelTokens` field to `NextUpdateSequenceNumbers` type.
 - Add helper function `createPLTPayload` for creating `CreatePLTPayload`s for the corresponding chain update.
 

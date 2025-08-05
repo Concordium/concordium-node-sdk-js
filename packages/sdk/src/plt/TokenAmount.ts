@@ -283,10 +283,10 @@ export function toCBOR(value: TokenAmount): Uint8Array {
  * @returns {TokenAmount} The parsed TokenAmount instance
  * @throws {Error} If the value is not in the expected `decfrac` format
  */
-function parseCBORValue(decoded: unknown): TokenAmount {
+export function fromCBORValue(decoded: unknown): TokenAmount {
     // Verify we have a tagged value with tag DECIMAL_FRACTION_TAG (decimal fraction)
     if (!(decoded instanceof Tag) || decoded.tag !== DECIMAL_FRACTION_TAG) {
-        throw new Error('Invalid CBOR encoded token amount: expected tag DECIMAL_FRACTION_TAG (decimal fraction)');
+        throw new Error(`Invalid CBOR encoded token amount: expected tag ${DECIMAL_FRACTION_TAG} (decimal fraction)`);
     }
 
     const value = decoded.contents;
@@ -325,7 +325,7 @@ function parseCBORValue(decoded: unknown): TokenAmount {
  * @returns {TokenAmount} The decoded TokenAmount instance.
  */
 export function fromCBOR(bytes: Uint8Array): TokenAmount {
-    return parseCBORValue(decode(bytes));
+    return fromCBORValue(decode(bytes));
 }
 
 /**
@@ -362,7 +362,7 @@ export function registerCBOREncoder(): void {
  * cleanup();
  */
 export function registerCBORDecoder(): () => void {
-    const old = Tag.registerDecoder(DECIMAL_FRACTION_TAG, parseCBORValue);
+    const old = Tag.registerDecoder(DECIMAL_FRACTION_TAG, fromCBORValue);
 
     // Return cleanup function to restore the old decoder
     return () => {

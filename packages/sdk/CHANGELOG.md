@@ -49,6 +49,8 @@
 
 ## 10.0.0-alpha.? (Unreleased)
 
+## 10.0.0-alpha.14
+
 ### Changed
 
 - Enable `denyList`/`allowList` validation on plt token transfers.

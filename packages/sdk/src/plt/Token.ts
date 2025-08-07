@@ -1,4 +1,3 @@
-import { TokenInfo } from '../grpc-api/v2/concordium/types.ts';
 import { ConcordiumGRPCClient } from '../grpc/GRPCClient.js';
 import {
     AccountAddress,
@@ -280,6 +279,14 @@ class Token {
     ) {
         this.moduleState = Cbor.decode(info.state.moduleState, 'TokenModuleState');
     }
+
+    /**
+     * Returns a new Token instance with updated info and parsed module state.
+     */
+    public async updateToken(): Promise<Token> {
+        const updatedInfo = await this.grpc.getTokenInfo(this.info.id);
+        return new Token(this.grpc, updatedInfo)
+    }
 }
 
 export type Type = Token;
@@ -493,10 +500,10 @@ export async function validateTransfer(
  * @throws {NotMintableError} If the the token if not mintable.
 */
 export async function validateMint(token: Token, amountsList: TokenAmount.Type[]): Promise<true> {
-    // TODO: add updating token state.
-    token.moduleState.paused && bail(new PausedError(token.info.id));
-    token.moduleState.mintable && bail(new NotMintableError(token.info.id));
-    amountsList.forEach((amount) => validateAmount(token, amount));
+    const updatedToken = await token.updateToken();
+    updatedToken.moduleState.paused && bail(new PausedError(updatedToken.info.id));
+    updatedToken.moduleState.mintable && bail(new NotMintableError(updatedToken.info.id));
+    amountsList.forEach((amount) => validateAmount(updatedToken, amount));
     return true;
 }
 
@@ -512,12 +519,21 @@ export async function validateMint(token: Token, amountsList: TokenAmount.Type[]
  * @throws {NotBurnableError} If the the token if not burnable.
  * @throws {InsufficientSupplyError} If the sender has insufficent amount of tokens for the burn.
 */
-export async function validateBurn(token: Token, amountsList: TokenAmount.Type[]): Promise<true> {
-    // TODO: add updating token state.
-    // TODO: add checking the suffucient supply.
-    token.moduleState.paused && bail(new PausedError(token.info.id));
-    token.moduleState.burnable && bail(new NotBurnableError(token.info.id));
-    amountsList.forEach((amount) => validateAmount(token, amount));
+export async function validateBurn(token: Token, amountsList: TokenAmount.Type[], sender: AccountAddress.Type): Promise<true> {
+    const updatedToken = await token.updateToken();
+    updatedToken.moduleState.paused && bail(new PausedError(updatedToken.info.id));
+    updatedToken.moduleState.burnable && bail(new NotBurnableError(updatedToken.info.id));
+    amountsList.forEach((amount) => validateAmount(updatedToken, amount));
+
+    const { decimals } = updatedToken.info.state;
+    const burnableAmount = await balanceOf(updatedToken, sender) ?? TokenAmount.zero(decimals); 
+    const payloadTotal = amountsList.reduce(
+        (acc, amount ) => acc.add(TokenAmount.toDecimal(amount)),
+        TokenAmount.toDecimal(TokenAmount.zero(decimals))
+    );
+    if (TokenAmount.toDecimal(burnableAmount).lt(payloadTotal)) {
+        throw new InsufficientSupplyError(sender, TokenAmount.fromDecimal(payloadTotal, decimals));
+    }
     return true;
 }
 
@@ -530,8 +546,8 @@ export async function validateBurn(token: Token, amountsList: TokenAmount.Type[]
  * @throws {NoAllowListError} If the token does not have an allow list.
 */
 export async function validateAllowListUpdate(token: Token): Promise<true> {
-    // TODO: add updating token state.
-    token.moduleState.allowList && bail(new NoAllowListError(token.info.id));
+    const updatedToken = await token.updateToken();
+    updatedToken.moduleState.allowList && bail(new NoAllowListError(updatedToken.info.id));
     return true;
 }
 
@@ -544,8 +560,8 @@ export async function validateAllowListUpdate(token: Token): Promise<true> {
  * @throws {NoDenyListError} If the token does not have a deny list.
 */
 export async function validateDenyListUpdate(token: Token): Promise<true> {
-    // TODO: add updating token state.
-    token.moduleState.denyList && bail(new NoDenyListError(token.info.id));
+    const updatedToken = await token.updateToken();
+    updatedToken.moduleState.denyList && bail(new NoDenyListError(updatedToken.info.id));
     return true
 };
 
@@ -680,7 +696,7 @@ export async function burn(
     }
 
     if (validate) {
-        await validateBurn(token, amountsList);
+        await validateBurn(token, amountsList, sender);
     }
 
     const ops: TokenBurnOperation[] = amountsList.map((amount) => ({

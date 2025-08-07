@@ -1,3 +1,4 @@
+import { TokenInfo } from '../grpc-api/v2/concordium/types.ts';
 import { ConcordiumGRPCClient } from '../grpc/GRPCClient.js';
 import {
     AccountAddress,
@@ -53,8 +54,13 @@ export enum TokenErrorCode {
     NOT_MINTABLE = 'NOT_MINTABLE',
     /** Error that indicates that the token does not support burning. */
     NOT_BURNABLE = 'NOT_BURNABLE',
-    /** Error that indicates that allow/deny list is not available for this token. */
-    NO_LIST = 'NO_LIST',
+    /** Error that indicates that allow list is not available for this token. */
+    NO_ALLOW_LIST = 'NO_ALLOW_LIST',
+    /** Error that indicates that deny list is not available for this token. */
+    NO_DENY_LIST = 'NO_DENY_LIST',
+    /** Error that indicates that an account has insufficient amount of token to burn. */
+    INSUFFICIENT_SUPPLY = 'INSUFFICIENT_SUPPLY',
+    // InsufficientSupplyError
 }
 
 /**
@@ -205,18 +211,54 @@ export class NotBurnableError extends TokenError {
 }
 
 /**
- * Error type indicating that the token has no allow/deny list.
+ * Error type indicating that the token has no allow list.
  */
-export class NoListError extends TokenError {
-    public readonly code = TokenErrorCode.NO_LIST;
+export class NoAllowListError extends TokenError {
+    public readonly code = TokenErrorCode.NO_ALLOW_LIST;
 
     /**
-     * Constructs a new NoListError.
+     * Constructs a new NoAllowListError.
      *
      * @param {TokenId.Type} tokenId - The ID of the token.
      */
     constructor(public readonly tokenId: TokenId.Type) {
-        super(`Token ${tokenId} does not have allow/deny list.`)
+        super(`Token ${tokenId} does not have allow list.`)
+    }
+}
+
+/**
+ * Error type indicating that the token has no deny list.
+ */
+export class NoDenyListError extends TokenError {
+    public readonly code = TokenErrorCode.NO_DENY_LIST;
+
+    /**
+     * Constructs a new NoDenyListError.
+     *
+     * @param {TokenId.Type} tokenId - The ID of the token.
+     */
+    constructor(public readonly tokenId: TokenId.Type) {
+        super(`Token ${tokenId} does not have deny list.`)
+    }
+}
+
+/**
+ * Error type indicating insufficient supply for the burning.
+ */
+export class InsufficientSupplyError extends TokenError {
+    public readonly code = TokenErrorCode.INSUFFICIENT_SUPPLY;
+
+    /**
+     * Constructs a new InsufficientSupplyError.
+     *
+     * @param {AccountAddress.Type} sender - The account address of the sender.
+     * @param {TokenAmount.Type} requiredAmount - The amount of tokens required for the burn.
+     */
+    constructor(
+        public readonly sender: AccountAddress.Type,
+        public readonly requiredAmount: TokenAmount.Type
+    ) {
+        super(`Insufficient supply: Sender ${sender} requires at least ${requiredAmount} tokens for the burn.`);
     }
 }
 
@@ -389,7 +431,7 @@ export function balanceOf(
  * @throws {InvalidTokenAmountError} If any token amount is not compatible with the token.
  * @throws {InsufficientFundsError} If the sender does not have enough tokens.
  * @throws {NotAllowedError} If the sender or receiver is not allowed to send/receive tokens.
- * @throws {PausedError} If `opts.validate` and the token is paused.
+ * @throws {PausedError} If the token is paused.
  */
 export async function validateTransfer(
     token: Token,
@@ -438,6 +480,74 @@ export async function validateTransfer(
 
     return true;
 }
+
+/**
+ * Validates a token mint.
+ * 
+ * @param {Token} token - The token to mint.
+ * @param {TokenAmount.Type[]} amountsList - The amounts of tokens to mint.
+ * 
+ * @returns {Promise<true>} A promise that resolves to true if the minting is valid.
+ * @throws {InvalidTokenAmountError} If any token amount is not compatible with the token.
+ * @throws {PausedError} If the token is paused.
+ * @throws {NotMintableError} If the the token if not mintable.
+*/
+export async function validateMint(token: Token, amountsList: TokenAmount.Type[]): Promise<true> {
+    // TODO: add updating token state.
+    token.moduleState.paused && bail(new PausedError(token.info.id));
+    token.moduleState.mintable && bail(new NotMintableError(token.info.id));
+    amountsList.forEach((amount) => validateAmount(token, amount));
+    return true;
+}
+
+/**
+ * Validates a token burn.
+ * 
+ * @param {Token} token - The token to burn.
+ * @param {TokenAmount.Type[]} amountsList - The amounts of tokens to burn.
+ * 
+ * @returns {Promise<true>} A promise that resolves to true if the burning is valid.
+ * @throws {InvalidTokenAmountError} If any token amount is not compatible with the token.
+ * @throws {PausedError} If the token is paused.
+ * @throws {NotBurnableError} If the the token if not burnable.
+ * @throws {InsufficientSupplyError} If the sender has insufficent amount of tokens for the burn.
+*/
+export async function validateBurn(token: Token, amountsList: TokenAmount.Type[]): Promise<true> {
+    // TODO: add updating token state.
+    // TODO: add checking the suffucient supply.
+    token.moduleState.paused && bail(new PausedError(token.info.id));
+    token.moduleState.burnable && bail(new NotBurnableError(token.info.id));
+    amountsList.forEach((amount) => validateAmount(token, amount));
+    return true;
+}
+
+/**
+ * Validates a token allow list update.
+ * 
+ * @param {Token} token - The token that's allow list is to be updated.
+ * 
+ * @returns {Promise<true>} A promise that resolves to true if the token's allow list can be updated.
+ * @throws {NoAllowListError} If the token does not have an allow list.
+*/
+export async function validateAllowListUpdate(token: Token): Promise<true> {
+    // TODO: add updating token state.
+    token.moduleState.allowList && bail(new NoAllowListError(token.info.id));
+    return true;
+}
+
+/**
+ * Validates a token deny list update.
+ * 
+ * @param {Token} token - The token that's deny list is to be updated.
+ * 
+ * @returns {Promise<true>} A promise that resolves to true if the token's deny list can be updated.
+ * @throws {NoDenyListError} If the token does not have a deny list.
+*/
+export async function validateDenyListUpdate(token: Token): Promise<true> {
+    // TODO: add updating token state.
+    token.moduleState.denyList && bail(new NoDenyListError(token.info.id));
+    return true
+};
 
 export type TokenUpdateMetadata = {
     /**
@@ -531,9 +641,7 @@ export async function mint(
     }
 
     if (validate) {
-        token.moduleState.paused && bail(new PausedError(token.info.id));
-        token.moduleState.mintable && bail(new NotMintableError(token.info.id));
-        amountsList.forEach((amount) => validateAmount(token, amount));
+        await validateMint(token, amountsList);
     }
 
     const ops: TokenMintOperation[] = amountsList.map((amount) => ({
@@ -556,6 +664,7 @@ export async function mint(
  * @throws {InvalidTokenAmountError} If `opts.validate` and the token amount is not compatible with the token.
  * @throws {PausedError} If `opts.validate` and the token is paused.
  * @throws {NotBurnableError} If `opts.validate` and the token is not burnable.
+ * @throws {InsufficientSupplyError} If `opts.validate` and the sender has insufficent amount of tokens for the burn.
  */
 export async function burn(
     token: Token,
@@ -571,9 +680,7 @@ export async function burn(
     }
 
     if (validate) {
-        token.moduleState.paused && bail(new PausedError(token.info.id));
-        token.moduleState.burnable && bail(new NotBurnableError(token.info.id));
-        amountsList.forEach((amount) => validateAmount(token, amount));
+        await validateBurn(token, amountsList);
     }
 
     const ops: TokenBurnOperation[] = amountsList.map((amount) => ({
@@ -598,7 +705,7 @@ type UpdateListOptions = {
  * @param {UpdateListOptions} [opts={ validate: false }] - Options for updating the allow/deny list.
  *
  * @returns A promise that resolves to the transaction hash.
- * @throws {NoListError} If `opts.validate` and the token does not have allow/deny list.
+ * @throws {NoAllowListError} If `opts.validate` and the token does not have allow list.
  */
 export async function addAllowList(
     token: Token,
@@ -609,7 +716,7 @@ export async function addAllowList(
     { validate = false }: UpdateListOptions = {}
 ): Promise<TransactionHash.Type> {
     if (validate) {
-        token.moduleState.allowList && bail(new NoListError(token.info.id));
+        await validateAllowListUpdate(token);
     }
 
     const ops: TokenAddAllowListOperation[] = [targets]
@@ -629,7 +736,7 @@ export async function addAllowList(
  * @param {UpdateListOptions} [opts={ validate: false }] - Options for updating the allow/deny list.
  *
  * @returns A promise that resolves to the transaction hash.
- * @throws {NoListError} If `opts.validate` and the token does not have allow/deny list.
+ * @throws {NoAllowListError} If `opts.validate` and the token does not have allow list.
  */
 export async function removeAllowList(
     token: Token,
@@ -640,7 +747,7 @@ export async function removeAllowList(
     { validate = false }: UpdateListOptions = {}
 ): Promise<TransactionHash.Type> {
     if (validate) {
-        token.moduleState.allowList && bail(new NoListError(token.info.id));
+        await validateAllowListUpdate(token);
     }
 
     const ops: TokenRemoveAllowListOperation[] = [targets]
@@ -660,7 +767,7 @@ export async function removeAllowList(
  * @param {UpdateListOptions} [opts={ validate: false }] - Options for updating the allow/deny list.
  *
  * @returns A promise that resolves to the transaction hash.
- * @throws {NoListError} If `opts.validate` and the token does not have allow/deny list.
+ * @throws {NoDenyListError} If `opts.validate` and the token does not have deny list.
  */
 export async function addDenyList(
     token: Token,
@@ -671,7 +778,7 @@ export async function addDenyList(
     { validate = false }: UpdateListOptions = {}
 ): Promise<TransactionHash.Type> {
     if (validate) {
-        token.moduleState.denyList && bail(new NoListError(token.info.id));
+        await validateDenyListUpdate(token);
     }
 
     const ops: TokenAddDenyListOperation[] = [targets]
@@ -691,7 +798,7 @@ export async function addDenyList(
  * @param {UpdateListOptions} [opts={ validate: false }] - Options for updating the allow/deny list.
  *
  * @returns A promise that resolves to the transaction hash.
- * @throws {NoListError} If `opts.validate` and the token does not have allow/deny list.
+ * @throws {NoDenyListError} If `opts.validate` and the token does not have deny list.
  */
 export async function removeDenyList(
     token: Token,
@@ -702,7 +809,7 @@ export async function removeDenyList(
     { validate = false }: UpdateListOptions = {}
 ): Promise<TransactionHash.Type> {
     if (validate) {
-        token.moduleState.denyList && bail(new NoListError(token.info.id));
+        await validateDenyListUpdate(token);
     }
 
     const ops: TokenRemoveDenyListOperation[] = [targets]

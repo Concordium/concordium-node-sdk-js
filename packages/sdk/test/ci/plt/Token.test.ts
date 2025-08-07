@@ -84,40 +84,6 @@ describe('Token.validateAmount', () => {
     });
 });
 
-describe('Token.validateGovernanceOperation', () => {
-    it('should return true when sender is the governance account', () => {
-        const governanceAddress = ACCOUNT_1;
-        const moduleState: TokenModuleState = {
-            name: 'Test Token',
-            metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
-            paused: false,
-            governanceAccount: TokenHolder.fromAccountAddress(governanceAddress),
-        };
-
-        const token = createMockToken(8, moduleState);
-
-        expect(Token.validateGovernanceOperation(token, governanceAddress)).toBe(true);
-    });
-
-    it('should throw UnauthorizedGovernanceOperationError when sender is not the governance account', () => {
-        const governanceAddress = ACCOUNT_1;
-        const nonGovernanceAddress = ACCOUNT_2;
-
-        const moduleState: TokenModuleState = {
-            name: 'Test Token',
-            metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
-            paused: false,
-            governanceAccount: TokenHolder.fromAccountAddress(governanceAddress),
-        };
-
-        const token = createMockToken(8, moduleState);
-
-        expect(() => Token.validateGovernanceOperation(token, nonGovernanceAddress)).toThrow(
-            Token.UnauthorizedGovernanceOperationError
-        );
-    });
-});
-
 describe('Token.validateTransfer', () => {
     beforeEach(() => {
         jest.clearAllMocks();
@@ -469,59 +435,6 @@ describe('Token update supply operation', () => {
         await expect(
             Token.burn(token, governanceAddress, amount, signer, undefined, { validate: true })
         ).rejects.toThrow(Token.PausedError);
-    });
-});
-
-describe('Token governance operation', () => {
-    it('should throw UnauthorizedGovernanceOperationError when trying execute from a non-governance account', async () => {
-        const tokenId = TokenId.fromString('3f1bfce9');
-        const decimals = 8;
-        const signer = undefined as any;
-        const sender = ACCOUNT_2;
-
-        // Setup token with paused state true
-        const moduleState: TokenModuleState = {
-            name: 'Test Token',
-            metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
-            paused: false,
-            governanceAccount: TokenHolder.fromAccountAddress(ACCOUNT_1),
-        };
-
-        const token = createMockToken(decimals, moduleState, tokenId);
-        const amount = TokenAmount.create(BigInt(1000), decimals);
-
-        // Supply update functions
-        await expect(Token.mint(token, sender, amount, signer, undefined, { validate: true })).rejects.toThrow(
-            Token.UnauthorizedGovernanceOperationError
-        );
-        await expect(Token.burn(token, sender, amount, signer, undefined, { validate: true })).rejects.toThrow(
-            Token.UnauthorizedGovernanceOperationError
-        );
-
-        // List update functions
-        const target = TokenHolder.fromAccountAddress(ACCOUNT_2);
-        await expect(Token.addAllowList(token, sender, target, signer, undefined, { validate: true })).rejects.toThrow(
-            Token.UnauthorizedGovernanceOperationError
-        );
-        await expect(
-            Token.removeAllowList(token, sender, target, signer, undefined, { validate: true })
-        ).rejects.toThrow(Token.UnauthorizedGovernanceOperationError);
-        await expect(Token.addDenyList(token, sender, target, signer, undefined, { validate: true })).rejects.toThrow(
-            Token.UnauthorizedGovernanceOperationError
-        );
-        await expect(
-            Token.removeDenyList(token, sender, target, signer, undefined, { validate: true })
-        ).rejects.toThrow(Token.UnauthorizedGovernanceOperationError);
-
-        // Pause function
-        await expect(Token.pause(token, sender, signer, undefined, { validate: true })).rejects.toThrow(
-            Token.UnauthorizedGovernanceOperationError
-        );
-
-        // Unpause function
-        await expect(Token.unpause(token, sender, signer, undefined, { validate: true })).rejects.toThrow(
-            Token.UnauthorizedGovernanceOperationError
-        );
     });
 });
 

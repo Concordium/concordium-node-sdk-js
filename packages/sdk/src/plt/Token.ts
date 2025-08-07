@@ -189,7 +189,7 @@ export class NotMintableError extends TokenError {
      * @param {TokenId.Type} tokenId - The ID of the token.
      */
     constructor(public readonly tokenId: TokenId.Type) {
-        super(`Token ${tokenId} is not mintable.`)
+        super(`Token ${tokenId} is not mintable.`);
     }
 }
 
@@ -205,7 +205,7 @@ export class NotBurnableError extends TokenError {
      * @param {TokenId.Type} tokenId - The ID of the token.
      */
     constructor(public readonly tokenId: TokenId.Type) {
-        super(`Token ${tokenId} is not burnable.`)
+        super(`Token ${tokenId} is not burnable.`);
     }
 }
 
@@ -221,7 +221,7 @@ export class NoAllowListError extends TokenError {
      * @param {TokenId.Type} tokenId - The ID of the token.
      */
     constructor(public readonly tokenId: TokenId.Type) {
-        super(`Token ${tokenId} does not have allow list.`)
+        super(`Token ${tokenId} does not have allow list.`);
     }
 }
 
@@ -237,7 +237,7 @@ export class NoDenyListError extends TokenError {
      * @param {TokenId.Type} tokenId - The ID of the token.
      */
     constructor(public readonly tokenId: TokenId.Type) {
-        super(`Token ${tokenId} does not have deny list.`)
+        super(`Token ${tokenId} does not have deny list.`);
     }
 }
 
@@ -285,7 +285,7 @@ class Token {
      */
     public async updateToken(): Promise<Token> {
         const updatedInfo = await this.grpc.getTokenInfo(this.info.id);
-        return new Token(this.grpc, updatedInfo)
+        return new Token(this.grpc, updatedInfo);
     }
 }
 
@@ -490,15 +490,15 @@ export async function validateTransfer(
 
 /**
  * Validates a token mint.
- * 
+ *
  * @param {Token} token - The token to mint.
  * @param {TokenAmount.Type[]} amountsList - The amounts of tokens to mint.
- * 
+ *
  * @returns {Promise<true>} A promise that resolves to true if the minting is valid.
  * @throws {InvalidTokenAmountError} If any token amount is not compatible with the token.
  * @throws {PausedError} If the token is paused.
  * @throws {NotMintableError} If the the token if not mintable.
-*/
+ */
 export async function validateMint(token: Token, amountsList: TokenAmount.Type[]): Promise<true> {
     const updatedToken = await token.updateToken();
     updatedToken.moduleState.paused && bail(new PausedError(updatedToken.info.id));
@@ -509,26 +509,30 @@ export async function validateMint(token: Token, amountsList: TokenAmount.Type[]
 
 /**
  * Validates a token burn.
- * 
+ *
  * @param {Token} token - The token to burn.
  * @param {TokenAmount.Type[]} amountsList - The amounts of tokens to burn.
- * 
+ *
  * @returns {Promise<true>} A promise that resolves to true if the burning is valid.
  * @throws {InvalidTokenAmountError} If any token amount is not compatible with the token.
  * @throws {PausedError} If the token is paused.
  * @throws {NotBurnableError} If the the token if not burnable.
  * @throws {InsufficientSupplyError} If the sender has insufficent amount of tokens for the burn.
-*/
-export async function validateBurn(token: Token, amountsList: TokenAmount.Type[], sender: AccountAddress.Type): Promise<true> {
+ */
+export async function validateBurn(
+    token: Token,
+    amountsList: TokenAmount.Type[],
+    sender: AccountAddress.Type
+): Promise<true> {
     const updatedToken = await token.updateToken();
     updatedToken.moduleState.paused && bail(new PausedError(updatedToken.info.id));
     updatedToken.moduleState.burnable && bail(new NotBurnableError(updatedToken.info.id));
     amountsList.forEach((amount) => validateAmount(updatedToken, amount));
 
     const { decimals } = updatedToken.info.state;
-    const burnableAmount = await balanceOf(updatedToken, sender) ?? TokenAmount.zero(decimals); 
+    const burnableAmount = (await balanceOf(updatedToken, sender)) ?? TokenAmount.zero(decimals);
     const payloadTotal = amountsList.reduce(
-        (acc, amount ) => acc.add(TokenAmount.toDecimal(amount)),
+        (acc, amount) => acc.add(TokenAmount.toDecimal(amount)),
         TokenAmount.toDecimal(TokenAmount.zero(decimals))
     );
     if (TokenAmount.toDecimal(burnableAmount).lt(payloadTotal)) {
@@ -539,12 +543,12 @@ export async function validateBurn(token: Token, amountsList: TokenAmount.Type[]
 
 /**
  * Validates a token allow list update.
- * 
+ *
  * @param {Token} token - The token that's allow list is to be updated.
- * 
+ *
  * @returns {Promise<true>} A promise that resolves to true if the token's allow list can be updated.
  * @throws {NoAllowListError} If the token does not have an allow list.
-*/
+ */
 export async function validateAllowListUpdate(token: Token): Promise<true> {
     const updatedToken = await token.updateToken();
     updatedToken.moduleState.allowList && bail(new NoAllowListError(updatedToken.info.id));
@@ -553,17 +557,17 @@ export async function validateAllowListUpdate(token: Token): Promise<true> {
 
 /**
  * Validates a token deny list update.
- * 
+ *
  * @param {Token} token - The token that's deny list is to be updated.
- * 
+ *
  * @returns {Promise<true>} A promise that resolves to true if the token's deny list can be updated.
  * @throws {NoDenyListError} If the token does not have a deny list.
-*/
+ */
 export async function validateDenyListUpdate(token: Token): Promise<true> {
     const updatedToken = await token.updateToken();
     updatedToken.moduleState.denyList && bail(new NoDenyListError(updatedToken.info.id));
-    return true
-};
+    return true;
+}
 
 export type TokenUpdateMetadata = {
     /**
@@ -848,7 +852,7 @@ export async function pause(
     token: Token,
     sender: AccountAddress.Type,
     signer: AccountSigner,
-    metadata?: TokenUpdateMetadata,
+    metadata?: TokenUpdateMetadata
 ): Promise<TransactionHash.Type> {
     const operation: TokenPauseOperation = { [TokenOperationType.Pause]: {} };
     return sendOperations(token, sender, [operation], signer, metadata);
@@ -868,7 +872,7 @@ export async function unpause(
     token: Token,
     sender: AccountAddress.Type,
     signer: AccountSigner,
-    metadata?: TokenUpdateMetadata,
+    metadata?: TokenUpdateMetadata
 ): Promise<TransactionHash.Type> {
     const operation: TokenUnpauseOperation = { [TokenOperationType.Unpause]: {} };
     return sendOperations(token, sender, [operation], signer, metadata);

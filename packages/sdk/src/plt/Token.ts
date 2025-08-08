@@ -445,17 +445,18 @@ export async function validateTransfer(
     sender: AccountAddress.Type,
     payload: TokenTransfer | TokenTransfer[]
 ): Promise<true> {
-    token.moduleState.paused && bail(new PausedError(token.info.id));
+    const updatedToken = await token.updateToken();
+    updatedToken.moduleState.paused && bail(new PausedError(updatedToken.info.id));
 
     const payloads = [payload].flat();
     // Validate all amounts
     payloads.forEach((p) => validateAmount(token, p.amount));
 
-    const { decimals } = token.info.state;
-    const senderInfo = await token.grpc.getAccountInfo(sender);
+    const { decimals } = updatedToken.info.state;
+    const senderInfo = await updatedToken.grpc.getAccountInfo(sender);
 
     // Check the sender balance.
-    const senderBalance = balanceOf(token, senderInfo) ?? TokenAmount.zero(decimals); // We fall back to zero, as the `token` has already been validated at this point.
+    const senderBalance = balanceOf(updatedToken, senderInfo) ?? TokenAmount.zero(decimals); // We fall back to zero, as the `token` has already been validated at this point.
     const payloadTotal = payloads.reduce(
         (acc, { amount }) => acc.add(TokenAmount.toDecimal(amount)),
         TokenAmount.toDecimal(TokenAmount.zero(decimals))
@@ -464,24 +465,24 @@ export async function validateTransfer(
         throw new InsufficientFundsError(sender, TokenAmount.fromDecimal(payloadTotal, decimals));
     }
 
-    if (!token.moduleState.allowList && !token.moduleState.denyList) {
+    if (!updatedToken.moduleState.allowList && !updatedToken.moduleState.denyList) {
         // If the token neither has a deny list nor allow list, we can skip the check.
         return true;
     }
 
     // Check that sender and all receivers are NOT on the deny list (if present), or that they are included in the allow list (if present).
-    const receiverInfos = await Promise.all(payloads.map((p) => token.grpc.getAccountInfo(p.recipient.address)));
+    const receiverInfos = await Promise.all(payloads.map((p) => updatedToken.grpc.getAccountInfo(p.recipient.address)));
     const accounts = [senderInfo, ...receiverInfos];
     accounts.forEach((r) => {
-        const accountToken = r.accountTokens.find((t) => t.id.value === token.info.id.value)?.state;
+        const accountToken = r.accountTokens.find((t) => t.id.value === updatedToken.info.id.value)?.state;
         const accountModuleState =
             accountToken?.moduleState === undefined
                 ? undefined
                 : (Cbor.decode(accountToken.moduleState) as TokenModuleAccountState);
 
-        if (token.moduleState.denyList && accountModuleState?.denyList)
+        if (updatedToken.moduleState.denyList && accountModuleState?.denyList)
             throw new NotAllowedError(TokenHolder.fromAccountAddress(r.accountAddress));
-        if (token.moduleState.allowList && !accountModuleState?.allowList)
+        if (updatedToken.moduleState.allowList && !accountModuleState?.allowList)
             throw new NotAllowedError(TokenHolder.fromAccountAddress(r.accountAddress));
     });
 

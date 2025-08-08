@@ -450,22 +450,17 @@ function createMockToken(
     },
     tokenId: TokenId.Type = TokenId.fromString('3f1bfce9')
 ): Token.Type {
-    const info = {
-        id: tokenId,
-        state: {
-            decimals,
-            moduleState: Cbor.encode(moduleState),
-        },
-    };
-
-    const grpc = {
-        getAccountInfo: jest.fn(),
-        getTokenInfo: jest.fn().mockResolvedValue(info),
-    };
-
     const mockToken = {
-        info,
-        grpc,
+        info: {
+            id: tokenId,
+            state: {
+                decimals,
+                moduleState: moduleState === undefined ? undefined : Cbor.encode(moduleState),
+            },
+        },
+        grpc: {
+            getAccountInfo: jest.fn(),
+        },
         moduleState,
         updateToken: async () => mockToken,
     };

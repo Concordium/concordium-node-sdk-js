@@ -266,7 +266,8 @@ export class InsufficientSupplyError extends TokenError {
  */
 class Token {
     /** The parsed module state of the token. */
-    public readonly moduleState: TokenModuleState;
+    private _info: TokenInfo;
+    private _moduleState: TokenModuleState;
 
     /**
      * Constructs a new Token.
@@ -275,17 +276,28 @@ class Token {
      */
     public constructor(
         public readonly grpc: ConcordiumGRPCClient,
-        public readonly info: TokenInfo
+        info: TokenInfo
     ) {
-        this.moduleState = Cbor.decode(info.state.moduleState, 'TokenModuleState');
+        this._info = info;
+        this._moduleState = Cbor.decode(info.state.moduleState, 'TokenModuleState');
+    }
+
+    public get info(): TokenInfo {
+        return this._info;
+    }
+    public get moduleState(): TokenModuleState {
+        return this._moduleState;
     }
 
     /**
-     * Returns a new Token instance with updated info and parsed module state.
+     * Mutates this instance with fresh info and keeps fields in sync.
+     * Returns `this` for ergonomic chaining / capturing a reference if desired.
      */
-    public async updateToken(): Promise<Token> {
-        const updatedInfo = await this.grpc.getTokenInfo(this.info.id);
-        return new Token(this.grpc, updatedInfo);
+    public async update(): Promise<this> {
+        const next = await this.grpc.getTokenInfo(this._info.id);
+        this._info = next;
+        this._moduleState = Cbor.decode(next.state.moduleState, 'TokenModuleState');
+        return this;
     }
 }
 
@@ -445,18 +457,18 @@ export async function validateTransfer(
     sender: AccountAddress.Type,
     payload: TokenTransfer | TokenTransfer[]
 ): Promise<true> {
-    const updatedToken = await token.updateToken();
-    updatedToken.moduleState.paused && bail(new PausedError(updatedToken.info.id));
+    await token.update();
+    token.moduleState.paused && bail(new PausedError(token.info.id));
 
     const payloads = [payload].flat();
     // Validate all amounts
     payloads.forEach((p) => validateAmount(token, p.amount));
 
-    const { decimals } = updatedToken.info.state;
-    const senderInfo = await updatedToken.grpc.getAccountInfo(sender);
+    const { decimals } = token.info.state;
+    const senderInfo = await token.grpc.getAccountInfo(sender);
 
     // Check the sender balance.
-    const senderBalance = balanceOf(updatedToken, senderInfo) ?? TokenAmount.zero(decimals); // We fall back to zero, as the `token` has already been validated at this point.
+    const senderBalance = balanceOf(token, senderInfo) ?? TokenAmount.zero(decimals); // We fall back to zero, as the `token` has already been validated at this point.
     const payloadTotal = payloads.reduce(
         (acc, { amount }) => acc.add(TokenAmount.toDecimal(amount)),
         TokenAmount.toDecimal(TokenAmount.zero(decimals))
@@ -465,24 +477,24 @@ export async function validateTransfer(
         throw new InsufficientFundsError(sender, TokenAmount.fromDecimal(payloadTotal, decimals));
     }
 
-    if (!updatedToken.moduleState.allowList && !updatedToken.moduleState.denyList) {
+    if (!token.moduleState.allowList && !token.moduleState.denyList) {
         // If the token neither has a deny list nor allow list, we can skip the check.
         return true;
     }
 
     // Check that sender and all receivers are NOT on the deny list (if present), or that they are included in the allow list (if present).
-    const receiverInfos = await Promise.all(payloads.map((p) => updatedToken.grpc.getAccountInfo(p.recipient.address)));
+    const receiverInfos = await Promise.all(payloads.map((p) => token.grpc.getAccountInfo(p.recipient.address)));
     const accounts = [senderInfo, ...receiverInfos];
     accounts.forEach((r) => {
-        const accountToken = r.accountTokens.find((t) => t.id.value === updatedToken.info.id.value)?.state;
+        const accountToken = r.accountTokens.find((t) => t.id.value === token.info.id.value)?.state;
         const accountModuleState =
             accountToken?.moduleState === undefined
                 ? undefined
                 : (Cbor.decode(accountToken.moduleState) as TokenModuleAccountState);
 
-        if (updatedToken.moduleState.denyList && accountModuleState?.denyList)
+        if (token.moduleState.denyList && accountModuleState?.denyList)
             throw new NotAllowedError(TokenHolder.fromAccountAddress(r.accountAddress));
-        if (updatedToken.moduleState.allowList && !accountModuleState?.allowList)
+        if (token.moduleState.allowList && !accountModuleState?.allowList)
             throw new NotAllowedError(TokenHolder.fromAccountAddress(r.accountAddress));
     });
 
@@ -501,10 +513,10 @@ export async function validateTransfer(
  * @throws {NotMintableError} If the the token if not mintable.
  */
 export async function validateMint(token: Token, amountsList: TokenAmount.Type[]): Promise<true> {
-    const updatedToken = await token.updateToken();
-    updatedToken.moduleState.paused && bail(new PausedError(updatedToken.info.id));
-    updatedToken.moduleState.mintable && bail(new NotMintableError(updatedToken.info.id));
-    amountsList.forEach((amount) => validateAmount(updatedToken, amount));
+    await token.update();
+    token.moduleState.paused && bail(new PausedError(token.info.id));
+    token.moduleState.mintable && bail(new NotMintableError(token.info.id));
+    amountsList.forEach((amount) => validateAmount(token, amount));
     return true;
 }
 
@@ -525,13 +537,13 @@ export async function validateBurn(
     amountsList: TokenAmount.Type[],
     sender: AccountAddress.Type
 ): Promise<true> {
-    const updatedToken = await token.updateToken();
-    updatedToken.moduleState.paused && bail(new PausedError(updatedToken.info.id));
-    updatedToken.moduleState.burnable && bail(new NotBurnableError(updatedToken.info.id));
-    amountsList.forEach((amount) => validateAmount(updatedToken, amount));
+    await token.update();
+    token.moduleState.paused && bail(new PausedError(token.info.id));
+    token.moduleState.burnable && bail(new NotBurnableError(token.info.id));
+    amountsList.forEach((amount) => validateAmount(token, amount));
 
-    const { decimals } = updatedToken.info.state;
-    const burnableAmount = (await balanceOf(updatedToken, sender)) ?? TokenAmount.zero(decimals);
+    const { decimals } = token.info.state;
+    const burnableAmount = (await balanceOf(token, sender)) ?? TokenAmount.zero(decimals);
     const payloadTotal = amountsList.reduce(
         (acc, amount) => acc.add(TokenAmount.toDecimal(amount)),
         TokenAmount.toDecimal(TokenAmount.zero(decimals))
@@ -551,8 +563,8 @@ export async function validateBurn(
  * @throws {NoAllowListError} If the token does not have an allow list.
  */
 export async function validateAllowListUpdate(token: Token): Promise<true> {
-    const updatedToken = await token.updateToken();
-    updatedToken.moduleState.allowList && bail(new NoAllowListError(updatedToken.info.id));
+    await token.update();
+    token.moduleState.allowList && bail(new NoAllowListError(token.info.id));
     return true;
 }
 
@@ -565,8 +577,8 @@ export async function validateAllowListUpdate(token: Token): Promise<true> {
  * @throws {NoDenyListError} If the token does not have a deny list.
  */
 export async function validateDenyListUpdate(token: Token): Promise<true> {
-    const updatedToken = await token.updateToken();
-    updatedToken.moduleState.denyList && bail(new NoDenyListError(updatedToken.info.id));
+    await token.update();
+    token.moduleState.denyList && bail(new NoDenyListError(token.info.id));
     return true;
 }
 

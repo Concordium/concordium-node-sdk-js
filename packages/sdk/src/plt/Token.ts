@@ -578,7 +578,7 @@ export async function validateBurn(
  */
 export async function validateAllowListUpdate(token: Token): Promise<true> {
     await token.update();
-    token.moduleState.allowList && bail(new NoAllowListError(token.info.id));
+    !token.moduleState.allowList && bail(new NoAllowListError(token.info.id));
     return true;
 }
 
@@ -592,7 +592,7 @@ export async function validateAllowListUpdate(token: Token): Promise<true> {
  */
 export async function validateDenyListUpdate(token: Token): Promise<true> {
     await token.update();
-    token.moduleState.denyList && bail(new NoDenyListError(token.info.id));
+    !token.moduleState.denyList && bail(new NoDenyListError(token.info.id));
     return true;
 }
 

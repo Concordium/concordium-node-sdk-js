@@ -49,24 +49,30 @@
 
 ## 10.0.0-alpha.? (Unreleased)
 
-## 10.0.0-alpha.14
-
 ### Changed
 
-- Enable `denyList`/`allowList` validation on plt token transfers.
-- Client side validation in the PLT `Token` client is now disabled by default and has to be enabled explicitly if wanted
 - Remove authorization validation for PLT `Token` client.
 - All `Token` operations' validations are done in a separate respective functions.
 - Removed `UnauthorizedGovernanceOperationError` from `Token` PLT client.
 
 ### Added
 
-- Add optional `initialSupply` field to `TokenInitializationParameters` type.
-- Add `protocolLevelTokens` field to `NextUpdateSequenceNumbers` type.
-- Add helper function `createPLTPayload` for creating `CreatePLTPayload`s for the corresponding chain update.
 - Add helper function `validateMint`, `validateBurn`, `validateAllowListUpdate`, `validateDenyListUpdate`
   for validating PLT token client operations.
 - Add `updateToken` method that returns the latest finilized block state of a token.
+
+## 10.0.0-alpha.14
+
+### Changed
+
+- Enable `denyList`/`allowList` validation on plt token transfers.
+- Client side validation in the PLT `Token` client is now disabled by default and has to be enabled explicitly if wanted
+
+### Added
+
+- Add optional `initialSupply` field to `TokenInitializationParameters` type.
+- Add `protocolLevelTokens` field to `NextUpdateSequenceNumbers` type.
+- Add helper function `createPLTPayload` for creating `CreatePLTPayload`s for the corresponding chain update.
 
 ## 10.0.0-alpha.13
 

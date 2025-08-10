@@ -410,6 +410,88 @@ describe('Token.validateTransfer', () => {
     });
 });
 
+describe('Token.validateMint', () => {
+    it('should throw NotMintableError when the token is not mintable', async () => {
+        const sender = ACCOUNT_1;
+        const tokenId = TokenId.fromString('3f1bfce9');
+        const decimals = 8;
+
+        // Setup non mintable token
+        const moduleState: TokenModuleState = {
+            name: 'Test Token',
+            metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
+            mintable: false,
+            governanceAccount: TokenHolder.fromAccountAddress(sender),
+        };
+
+        const token = createMockToken(decimals, moduleState, tokenId);
+        const amount = TokenAmount.create(BigInt(1000), decimals);
+
+
+        await expect(Token.validateMint(token, amount)).rejects.toThrow(Token.NotMintableError);
+    });
+});
+
+describe('Token.validateBurn', () => {
+    it('should throw NotBurnableError when the token is not burnable', async () => {
+        const sender = ACCOUNT_1;
+        const tokenId = TokenId.fromString('3f1bfce9');
+        const decimals = 8;
+
+        // Setup non burnable token
+        const moduleState: TokenModuleState = {
+            name: 'Test Token',
+            metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
+            burnable: false,
+            governanceAccount: TokenHolder.fromAccountAddress(sender),
+        };
+
+        const token = createMockToken(decimals, moduleState, tokenId);
+        const amount = TokenAmount.create(BigInt(1000), decimals);
+
+
+        await expect(Token.validateBurn(token, amount, sender)).rejects.toThrow(Token.NotBurnableError);
+    });
+});
+
+describe('Token.validateAllowListUpdate', () => {
+    it('should throw NoAllowListError when the token has no allow list', async () => {
+        const sender = ACCOUNT_1;
+        const tokenId = TokenId.fromString('3f1bfce9');
+        const decimals = 8;
+
+        const moduleState: TokenModuleState = {
+            name: 'Test Token',
+            metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
+            allowList: false,
+            governanceAccount: TokenHolder.fromAccountAddress(sender),
+        };
+
+        const token = createMockToken(decimals, moduleState, tokenId);
+
+        await expect(Token.validateAllowListUpdate(token)).rejects.toThrow(Token.NoAllowListError);
+    });
+});
+
+describe('Token.validateDenyListUpdate', () => {
+    it('should throw NoDenyListError when the token has no deny list', async () => {
+        const sender = ACCOUNT_1;
+        const tokenId = TokenId.fromString('3f1bfce9');
+        const decimals = 8;
+
+        const moduleState: TokenModuleState = {
+            name: 'Test Token',
+            metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
+            denyList: false,
+            governanceAccount: TokenHolder.fromAccountAddress(sender),
+        };
+
+        const token = createMockToken(decimals, moduleState, tokenId);
+
+        await expect(Token.validateDenyListUpdate(token)).rejects.toThrow(Token.NoDenyListError);
+    });
+});
+
 describe('Token update supply operation', () => {
     it('should throw PausedError when trying to mint/burn tokens while token is paused', async () => {
         const governanceAddress = ACCOUNT_1;
@@ -451,7 +533,7 @@ function createMockToken(
     tokenId: TokenId.Type = TokenId.fromString('3f1bfce9')
 ): Token.Type {
     const mockToken = {
-        info: {
+        _info: {
             id: tokenId,
             state: {
                 decimals,
@@ -462,7 +544,7 @@ function createMockToken(
             getAccountInfo: jest.fn(),
         },
         moduleState,
-        updateToken: async () => mockToken,
+        update: async () => mockToken,
     };
 
     return mockToken as unknown as Token.Type;

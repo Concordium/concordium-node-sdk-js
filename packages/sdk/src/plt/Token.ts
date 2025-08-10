@@ -505,17 +505,18 @@ export async function validateTransfer(
  * Validates a token mint.
  *
  * @param {Token} token - The token to mint.
- * @param {TokenAmount.Type[]} amountsList - The amounts of tokens to mint.
+ * @param {TokenAmount.Type | TokenAmount.Type[]} amounts - The amounts of tokens to mint.
  *
  * @returns {Promise<true>} A promise that resolves to true if the minting is valid.
  * @throws {InvalidTokenAmountError} If any token amount is not compatible with the token.
  * @throws {PausedError} If the token is paused.
  * @throws {NotMintableError} If the the token if not mintable.
  */
-export async function validateMint(token: Token, amountsList: TokenAmount.Type[]): Promise<true> {
+export async function validateMint(token: Token, amounts: TokenAmount.Type | TokenAmount.Type[]): Promise<true> {
+    const amountsList = [amounts].flat();
     await token.update();
     token.moduleState.paused && bail(new PausedError(token.info.id));
-    token.moduleState.mintable && bail(new NotMintableError(token.info.id));
+    !token.moduleState.mintable && bail(new NotMintableError(token.info.id));
     amountsList.forEach((amount) => validateAmount(token, amount));
     return true;
 }
@@ -524,7 +525,7 @@ export async function validateMint(token: Token, amountsList: TokenAmount.Type[]
  * Validates a token burn.
  *
  * @param {Token} token - The token to burn.
- * @param {TokenAmount.Type[]} amountsList - The amounts of tokens to burn.
+ * @param {TokenAmount.Type | TokenAmount.Type[]} amounts - The amounts of tokens to burn.
  *
  * @returns {Promise<true>} A promise that resolves to true if the burning is valid.
  * @throws {InvalidTokenAmountError} If any token amount is not compatible with the token.
@@ -534,22 +535,35 @@ export async function validateMint(token: Token, amountsList: TokenAmount.Type[]
  */
 export async function validateBurn(
     token: Token,
-    amountsList: TokenAmount.Type[],
-    sender: AccountAddress.Type
+    amounts: TokenAmount.Type | TokenAmount.Type[],
+    sender: AccountAddress.Type | AccountInfo,
 ): Promise<true> {
+    const amountsList = [amounts].flat();
     await token.update();
     token.moduleState.paused && bail(new PausedError(token.info.id));
-    token.moduleState.burnable && bail(new NotBurnableError(token.info.id));
+    !token.moduleState.burnable && bail(new NotBurnableError(token.info.id));
     amountsList.forEach((amount) => validateAmount(token, amount));
 
     const { decimals } = token.info.state;
-    const burnableAmount = (await balanceOf(token, sender)) ?? TokenAmount.zero(decimals);
+
+    let senderBalance: BalanceOfResponse;
+    let senderAdderss: AccountAddress.Type;
+
+    if (AccountAddress.instanceOf(sender)) {
+        senderAdderss = sender;
+        senderBalance = await balanceOf(token, sender);
+    } else {
+        senderAdderss = sender.accountAddress;
+        senderBalance = balanceOf(token, sender);
+    }
+
+    const burnableAmount = senderBalance ?? TokenAmount.zero(decimals);
     const payloadTotal = amountsList.reduce(
         (acc, amount) => acc.add(TokenAmount.toDecimal(amount)),
         TokenAmount.toDecimal(TokenAmount.zero(decimals))
     );
     if (TokenAmount.toDecimal(burnableAmount).lt(payloadTotal)) {
-        throw new InsufficientSupplyError(sender, TokenAmount.fromDecimal(payloadTotal, decimals));
+        throw new InsufficientSupplyError(senderAdderss, TokenAmount.fromDecimal(payloadTotal, decimals));
     }
     return true;
 }

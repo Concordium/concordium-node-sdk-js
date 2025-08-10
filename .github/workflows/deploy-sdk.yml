@@ -129,7 +129,7 @@ jobs:
           echo "npm_tag=$npm_tag" >> $GITHUB_OUTPUT
 
       - name: Get build-output
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: build-release
           path: packages/sdk
@@ -167,7 +167,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Get typedoc
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           path: typedoc
           name: typedoc-build

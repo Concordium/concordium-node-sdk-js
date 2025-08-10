@@ -171,6 +171,16 @@
   with `buildAccountSigner`
 - A new optional field `createPlt` to `AuthorizationsV1` which exposes the access structure for PLT creation.
 
+## 9.2.0
+
+### Fixed
+
+- Fixed an issue an internal dependency not being handled correctly in the UMD build.
+
+### Added
+
+- Method (`getContractUpdateEnergyCost`) for estimating energy usage of contract update.
+
 ## 9.1.1
 
 ### Changes

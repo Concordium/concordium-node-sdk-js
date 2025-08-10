@@ -30,6 +30,10 @@ function configFor(target: 'web' | 'node' | 'react-native'): webpack.Configurati
                 '.js': ['.ts', '.js'],
             },
             extensions: ['.tsx', '.ts', '.js'],
+            alias: {
+                // Fix bignumber.js export issue - ensure it resolves to the BigNumber constructor
+                'bignumber.js': resolve(__dirname, '../../node_modules/bignumber.js/bignumber.js'),
+            },
         },
         module: {
             rules: [

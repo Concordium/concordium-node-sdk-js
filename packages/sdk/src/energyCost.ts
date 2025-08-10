@@ -1,7 +1,11 @@
 import { getAccountTransactionHandler } from './accountTransactions.js';
+import { getUpdatePayloadSize } from './contractHelpers.js';
+import { ConcordiumGRPCClient } from './grpc/GRPCClient.js';
+import { AccountAddress, ContractAddress, Parameter, ReceiveName } from './pub/types.js';
 import { collapseRatio, multiplyRatio } from './ratioHelpers.js';
 import { serializeAccountTransactionPayload } from './serialization.js';
 import { AccountTransactionPayload, AccountTransactionType, ChainParameters, Ratio } from './types.js';
+import * as BlockHash from './types/BlockHash.js';
 import * as CcdAmount from './types/CcdAmount.js';
 import * as Energy from './types/Energy.js';
 
@@ -50,6 +54,54 @@ export function getEnergyCost(
     const size = serializeAccountTransactionPayload({ payload, type: transactionType }).length;
     const handler = getAccountTransactionHandler(transactionType);
     return calculateEnergyCost(signatureCount, BigInt(size), handler.getBaseEnergyCost(payload));
+}
+
+/**
+ * Get contract update energy cost
+ * Estimated by calculateEnergyCost, where transactionSpecificCost received from invokeContract used energy
+ * @param {ConcordiumGRPCClient} grpcClient - The client to be used for the query
+ * @param {ContractAddress.Type} contractAddress - The address of the contract to query
+ * @param {AccountAddress.Type} invoker - Representation of an account address
+ * @param {Parameter.Type} parameter - Input for contract function
+ * @param {ReceiveName.Type} method - Represents a receive-function in a smart contract module
+ * @param {bigint} signatureCount - Number of expected signatures
+ * @param {BlockHash.Type} [blockHash] - Optional block hash allowing for dry-running the contract update at the end of a specific block.
+ *
+ * @throws {Error} 'no response' if either the block does not exist, or then node fails to parse any of the inputs
+ * If the response tag is `failure`, then error contains a response message
+ *
+ * @returns {Energy} estimated amount of energy for the last finalized block according to the node,
+ * this means that the actual energy cost might be different depending on the implementation of the smart contract
+ * and the interaction with the instance, since this was estimated
+ */
+export async function getContractUpdateEnergyCost(
+    grpcClient: ConcordiumGRPCClient,
+    contractAddress: ContractAddress.Type,
+    invoker: AccountAddress.Type,
+    parameter: Parameter.Type,
+    method: ReceiveName.Type,
+    signatureCount: bigint,
+    blockHash?: BlockHash.Type
+): Promise<Energy.Type> {
+    const res = await grpcClient.invokeContract(
+        {
+            contract: contractAddress,
+            invoker,
+            parameter,
+            method,
+        },
+        blockHash
+    );
+
+    if (!res || res.tag === 'failure') {
+        throw new Error(res?.reason?.tag || 'no response');
+    }
+
+    return calculateEnergyCost(
+        signatureCount,
+        getUpdatePayloadSize(parameter.buffer.length, method.toString().length),
+        res.usedEnergy.value
+    );
 }
 
 /**

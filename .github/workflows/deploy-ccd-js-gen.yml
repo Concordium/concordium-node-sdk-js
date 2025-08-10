@@ -108,7 +108,7 @@ jobs:
         run: test "${{ steps.get_tag.outputs.tag }}" = "$(jq -r ".version" packages/ccd-js-gen/package.json)" || exit 1
 
       - name: Get build-output
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           path: packages/ccd-js-gen
           name: build-release

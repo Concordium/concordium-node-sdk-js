@@ -427,7 +427,6 @@ describe('Token.validateMint', () => {
         const token = createMockToken(decimals, moduleState, tokenId);
         const amount = TokenAmount.create(BigInt(1000), decimals);
 
-
         await expect(Token.validateMint(token, amount)).rejects.toThrow(Token.NotMintableError);
     });
 });
@@ -448,7 +447,6 @@ describe('Token.validateBurn', () => {
 
         const token = createMockToken(decimals, moduleState, tokenId);
         const amount = TokenAmount.create(BigInt(1000), decimals);
-
 
         await expect(Token.validateBurn(token, amount, sender)).rejects.toThrow(Token.NotBurnableError);
     });
@@ -533,7 +531,7 @@ function createMockToken(
     tokenId: TokenId.Type = TokenId.fromString('3f1bfce9')
 ): Token.Type {
     const mockToken = {
-        _info: {
+        info: {
             id: tokenId,
             state: {
                 decimals,

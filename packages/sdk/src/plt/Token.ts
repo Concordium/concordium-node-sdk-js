@@ -536,7 +536,7 @@ export async function validateMint(token: Token, amounts: TokenAmount.Type | Tok
 export async function validateBurn(
     token: Token,
     amounts: TokenAmount.Type | TokenAmount.Type[],
-    sender: AccountAddress.Type | AccountInfo,
+    sender: AccountAddress.Type | AccountInfo
 ): Promise<true> {
     const amountsList = [amounts].flat();
     await token.update();

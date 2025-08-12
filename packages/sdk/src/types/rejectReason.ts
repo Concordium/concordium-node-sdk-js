@@ -1,3 +1,4 @@
+import { TokenId, TokenModuleRejectReason } from '../plt/index.js';
 import { Address, BakerId, Base58String, HexString } from '../types.js';
 import type * as CcdAmount from './CcdAmount.js';
 import type * as ContractAddress from './ContractAddress.js';
@@ -70,6 +71,8 @@ export enum RejectReasonTag {
     StakeOverMaximumThresholdForPool = 'StakeOverMaximumThresholdForPool',
     PoolWouldBecomeOverDelegated = 'PoolWouldBecomeOverDelegated',
     PoolClosed = 'PoolClosed',
+    NonExistentTokenId = 'NonExistentTokenId',
+    TokenUpdateTransactionFailed = 'TokenUpdateTransactionFailed',
 }
 
 export interface RejectedReceive {
@@ -138,6 +141,8 @@ export type StringRejectReasonTag =
     | AccountAddressRejectReasonTag
     | RejectReasonTag.DuplicateAggregationKey;
 
+export type TokenRejectReasonTag = RejectReasonTag.NonExistentTokenId | RejectReasonTag.TokenUpdateTransactionFailed;
+
 export interface StringRejectReason {
     tag: StringRejectReasonTag;
     contents: HexString | Base58String;
@@ -189,6 +194,20 @@ export interface CredIdsRejectReason {
     contents: string[];
 }
 
+export type NonExistingTokenIdRejectReason = {
+    tag: RejectReasonTag.NonExistentTokenId;
+    /** The non-existent token ID that caused the rejection */
+    contents: TokenId.Type;
+};
+
+export type TokenUpdateTransactionFailedRejectReason = {
+    tag: RejectReasonTag.TokenUpdateTransactionFailed;
+    /** The specific token module reject reason that caused the transaction to fail */
+    contents: TokenModuleRejectReason;
+};
+
+export type TokenRejectReason = NonExistingTokenIdRejectReason | TokenUpdateTransactionFailedRejectReason;
+
 type RejectReasonCommon =
     | SimpleRejectReason
     | StringRejectReason
@@ -202,4 +221,5 @@ export type RejectReason =
     | BakerIdRejectReason
     | InvalidReceiveMethod
     | InvalidInitMethod
-    | AmountTooLarge;
+    | AmountTooLarge
+    | TokenRejectReason;

@@ -1,6 +1,6 @@
 import type { Config } from '@jest/types';
 
-const esModules = ['@concordium/web-sdk', '@noble/ed25519'].join('|');
+const esModules = ['@concordium/web-sdk', '@noble/ed25519', 'cbor2'].join('|');
 
 const config: Config.InitialOptions = {
     preset: 'ts-jest/presets/js-with-ts-esm',

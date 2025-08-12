@@ -5,13 +5,13 @@ import {
     GenericNonMembershipStatement,
     GenericRangeStatement,
 } from '../../src/commonProofTypes.js';
+import { MAX_U64 } from '../../src/constants.js';
 import {
     AttributeKeyString,
     CIS4,
     ConcordiumHdWallet,
     ContractAddress,
     MAX_DATE_TIMESTAMP,
-    MAX_U64,
     MIN_DATE_TIMESTAMP,
     RequestStatement,
     StatementTypes,

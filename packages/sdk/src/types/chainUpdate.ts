@@ -1,3 +1,4 @@
+import { CreatePLTPayload } from '../plt/types.js';
 import type {
     ArInfo,
     AuthorizationsV0,
@@ -107,6 +108,8 @@ export type PendingAuthorizationKeysUpdate = ChainUpdate<UpdateType.Authorizatio
 /** A pending update to validator score parameters */
 export type PendingValidatorScoreUpdate = ChainUpdate<UpdateType.ValidatorScoreParameters, ValidatorScoreParameters>;
 
+export type CreatePLTUpdate = ChainUpdate<UpdateType.CreatePLT, CreatePLTPayload>;
+
 /** A union of chain updates, barring key updates */
 export type CommonUpdate =
     | MicroGtuPerEuroUpdate
@@ -128,7 +131,8 @@ export type CommonUpdate =
     | MinBlockTimeUpdate
     | BlockEnergyLimitUpdate
     | FinalizationCommitteeParametersUpdate
-    | PendingValidatorScoreUpdate;
+    | PendingValidatorScoreUpdate
+    | CreatePLTUpdate;
 
 /** A union of chain updates */
 export type UpdateInstructionPayload = CommonUpdate | RootUpdate | Level1Update;
@@ -172,6 +176,7 @@ export enum UpdateType {
     BlockEnergyLimit = 'blockEnergyLimit',
     FinalizationCommitteeParameters = 'finalizationCommitteeParameters',
     ValidatorScoreParameters = 'validatorScoreParameters',
+    CreatePLT = 'createPLT',
 }
 
 export type KeyUpdate = HigherLevelKeyUpdate | AuthorizationKeysUpdate;

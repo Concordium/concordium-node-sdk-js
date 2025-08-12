@@ -1,6 +1,8 @@
 import { Buffer } from 'buffer/index.js';
 
 import { Cursor } from './deserializationHelpers.js';
+import { Cbor, TokenId } from './plt/index.js';
+import { TokenOperation, TokenOperationType } from './plt/module.js';
 import { ContractAddress, ContractName, Energy, ModuleReference } from './pub/types.js';
 import { serializeCredentialDeploymentInfo } from './serialization.js';
 import {
@@ -8,6 +10,7 @@ import {
     encodeWord8,
     encodeWord32,
     encodeWord64,
+    packBufferWithWord8Length,
     packBufferWithWord16Length,
     packBufferWithWord32Length,
     serializeConfigureBakerPayload,
@@ -30,6 +33,7 @@ import {
     RegisterDataPayload,
     SimpleTransferPayload,
     SimpleTransferWithMemoPayload,
+    TokenUpdatePayload,
     UpdateContractPayload,
     UpdateCredentialsPayload,
     UrlString,
@@ -514,6 +518,77 @@ export class ConfigureDelegationHandler
     }
 }
 
+export type TokenUpdatePayloadJSON = {
+    tokenId: TokenId.JSON;
+    operations: Cbor.JSON;
+};
+
+export class TokenUpdateHandler implements AccountTransactionHandler<TokenUpdatePayload, TokenUpdatePayloadJSON> {
+    serialize(payload: TokenUpdatePayload): Buffer {
+        const tokenId = packBufferWithWord8Length(TokenId.toBytes(payload.tokenId));
+        const ops = packBufferWithWord32Length(payload.operations.bytes);
+        return Buffer.concat([tokenId, ops]);
+    }
+    deserialize(serializedPayload: Cursor): TokenUpdatePayload {
+        let len = serializedPayload.read(1).readUInt8(0);
+        const tokenId = TokenId.fromBytes(serializedPayload.read(len));
+
+        len = serializedPayload.read(4).readUInt32BE(0);
+        const operations = Cbor.fromBuffer(serializedPayload.read(len));
+        return { tokenId, operations };
+    }
+    getBaseEnergyCost(payload: TokenUpdatePayload): bigint {
+        // TODO: update costs when finalized costs are determined.
+        const operations = Cbor.decode(payload.operations) as TokenOperation[];
+        // The base cost for a token transaction.
+        let energyCost = 300n;
+        // Additional cost of specific PLT operations
+        const PLT_TRANSFER_COST = 100n;
+        const PLT_MINT_COST = 50n;
+        const PLT_BURN_COST = 50n;
+        const PLT_LIST_UPDATE_COST = 50n;
+        const PLT_PAUSE_COST = 50n;
+
+        for (const operation of operations) {
+            switch (true) {
+                case TokenOperationType.Transfer in operation:
+                    energyCost += PLT_TRANSFER_COST;
+                    break;
+                case TokenOperationType.Mint in operation:
+                    energyCost += PLT_MINT_COST;
+                    break;
+                case TokenOperationType.Burn in operation:
+                    energyCost += PLT_BURN_COST;
+                    break;
+                case TokenOperationType.AddAllowList in operation:
+                case TokenOperationType.RemoveAllowList in operation:
+                case TokenOperationType.AddDenyList in operation:
+                case TokenOperationType.RemoveDenyList in operation:
+                    energyCost += PLT_LIST_UPDATE_COST;
+                    break;
+                case TokenOperationType.Pause in operation:
+                case TokenOperationType.Unpause in operation:
+                    energyCost += PLT_PAUSE_COST;
+                    break;
+            }
+        }
+
+        return energyCost;
+    }
+    toJSON(payload: TokenUpdatePayload): TokenUpdatePayloadJSON {
+        return {
+            tokenId: payload.tokenId.toJSON(),
+            operations: payload.operations.toJSON(),
+        };
+    }
+    fromJSON(json: TokenUpdatePayloadJSON): TokenUpdatePayload {
+        return {
+            tokenId: TokenId.fromJSON(json.tokenId),
+            operations: Cbor.fromJSON(json.operations),
+        };
+    }
+}
+
 export type AccountTransactionPayloadJSON =
     | SimpleTransferPayloadJSON
     | SimpleTransferWithMemoPayloadJSON
@@ -523,7 +598,8 @@ export type AccountTransactionPayloadJSON =
     | UpdateCredentialsPayload
     | RegisterDataPayloadJSON
     | ConfigureDelegationPayloadJSON
-    | ConfigureBakerPayloadJSON;
+    | ConfigureBakerPayloadJSON
+    | TokenUpdatePayloadJSON;
 
 export function getAccountTransactionHandler(type: AccountTransactionType.Transfer): SimpleTransferHandler;
 export function getAccountTransactionHandler(
@@ -538,6 +614,7 @@ export function getAccountTransactionHandler(
     type: AccountTransactionType.ConfigureDelegation
 ): ConfigureDelegationHandler;
 export function getAccountTransactionHandler(type: AccountTransactionType.ConfigureBaker): ConfigureBakerHandler;
+export function getAccountTransactionHandler(type: AccountTransactionType.TokenUpdate): TokenUpdateHandler;
 export function getAccountTransactionHandler(
     type: AccountTransactionType
 ): AccountTransactionHandler<AccountTransactionPayload, AccountTransactionPayloadJSON>;
@@ -564,6 +641,8 @@ export function getAccountTransactionHandler(
             return new ConfigureDelegationHandler();
         case AccountTransactionType.ConfigureBaker:
             return new ConfigureBakerHandler();
+        case AccountTransactionType.TokenUpdate:
+            return new TokenUpdateHandler();
         default:
             throw new Error('The provided type does not have a handler: ' + type);
     }

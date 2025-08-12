@@ -42,8 +42,7 @@ import {
     getAccountTransactionSignDigest,
     serializeAccountTransactionPayload,
 } from '../../src/index.js';
-import * as AccountAddress from '../../src/types/AccountAddress.js';
-import * as TransactionExpiry from '../../src/types/TransactionExpiry.js';
+import { AccountAddress, TransactionExpiry } from '../../src/pub/types.js';
 
 const senderAccountAddress = '4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M';
 const expiry = TransactionExpiry.fromDate(new Date(1675872215));

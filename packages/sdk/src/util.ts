@@ -29,6 +29,15 @@ export function isHex(str: string): boolean {
 }
 
 /**
+ * Checks if the input string is a valid utf8 string. Specifically, it checks if the string
+ * contains any invalid surrogate pairs.
+ * @param str the string to check
+ */
+export function isValidUTF8(str: string) {
+    return !/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|[\uDC00-\uDFFF](?![\uD800-\uDBFF])/.test(str);
+}
+
+/**
  * Checks whether the input string looks to be a valid hash,
  * i.e. it has length 64 and consists of hexadecimal characters.
  * @param hash the string to check
@@ -173,12 +182,12 @@ export function toBuffer(s: string, encoding?: string): Buffer {
 
 /**
  * Immediately returns an {@linkcode Error} with the message passed. This allows use of throwing errors as expressions.
- * @param message - The message to pass to the error
+ * @param error - The message to pass to the error
  * @throws an error immediately
  *
  * @example
  * const value = maybeValue ?? bail('Turns out there was not value anyway...');
  */
-export const bail = (message: string): never => {
-    throw new Error(message);
+export const bail = (error: string | Error): never => {
+    throw error instanceof Error ? error : new Error(error);
 };

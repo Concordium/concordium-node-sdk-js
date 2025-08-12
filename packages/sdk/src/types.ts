@@ -1,6 +1,8 @@
 /**
  * @module Common GRPC-Client
  */
+import { Cbor, TokenId } from './plt/index.js';
+import { TokenAccountInfo } from './plt/types.js';
 import * as AccountAddress from './types/AccountAddress.js';
 import type * as BlockHash from './types/BlockHash.js';
 import type * as CcdAmount from './types/CcdAmount.js';
@@ -528,6 +530,8 @@ export interface AuthorizationsV1 extends AuthorizationsCommon {
     version: 1;
     cooldownParameters: Authorization;
     timeParameters: Authorization;
+    /** Available from protocol 9 */
+    createPlt?: Authorization;
 }
 
 export type Authorizations = AuthorizationsV0 | AuthorizationsV1;
@@ -1100,14 +1104,36 @@ export enum AccountInfoType {
 }
 
 interface AccountInfoCommon {
+    /** Canonical address of the account. This is derived from the first credential that created the account. */
     accountAddress: AccountAddress.Type;
+    /** Next sequence number to be used for transactions signed from this account. */
     accountNonce: SequenceNumber.Type;
+    /** Current (unencrypted) balance of the account. */
     accountAmount: CcdAmount.Type;
+    /**
+     * Internal index of the account. Accounts on the chain get sequential
+     * indices. These should generally not be used outside of the chain,
+     * the account address is meant to be used to refer to accounts,
+     * however the account index serves the role of the baker id, if the
+     * account is a baker. Hence it is exposed here as well.
+     */
     accountIndex: bigint;
+    /**
+     * Lower bound on how many credentials must sign any given transaction from this account
+     */
     accountThreshold: number;
+    /** The public key for sending encrypted balances to the account. */
     accountEncryptionKey: string;
+    /** The encrypted balance of the account. */
     accountEncryptedAmount: AccountEncryptedAmount;
+    /** Release schedule for any locked up amount. This could be an empty release schedule. */
     accountReleaseSchedule: AccountReleaseSchedule;
+    /**
+     * Map of all currently active credentials on the account.
+     * This includes public keys that can sign for the given credentials, as
+     * well as any revealed attributes. This map always contains a credential
+     * with index 0.
+     */
     accountCredentials: Record<number, AccountCredential>;
     /**
      * The stake on the account that is in cooldown.
@@ -1124,6 +1150,8 @@ interface AccountInfoCommon {
      * This was introduced with node version 7.0
      */
     accountAvailableBalance: CcdAmount.Type;
+    /** The protocol leveltokens held by the account. */
+    accountTokens: TokenAccountInfo[];
 }
 
 export interface AccountInfoSimple extends AccountInfoCommon {
@@ -1228,6 +1256,7 @@ export interface NextUpdateSequenceNumbers {
     blockEnergyLimit: bigint;
     finalizationCommiteeParameters: bigint;
     validatorScoreParameters: bigint;
+    protocolLevelTokens: bigint;
 }
 
 export type BlockFinalizationSummary = BlockFinalizationSummary_None | BlockFinalizationSummary_Record;
@@ -1287,6 +1316,7 @@ export enum AccountTransactionType {
     TransferWithScheduleAndMemo = 24,
     ConfigureBaker = 25,
     ConfigureDelegation = 26,
+    TokenUpdate = 27,
 }
 
 export function isAccountTransactionType(candidate: number): candidate is AccountTransactionType {
@@ -1449,6 +1479,25 @@ export interface ConfigureDelegationPayload {
     delegationTarget?: DelegationTarget;
 }
 
+/**
+ * The payload for a token update transaction. The contents of the byte array is a CBOR encoding of the update type and
+ * (e.g. "mint") and the associated update details.
+ *
+ * @example
+ * const payload = Cbor.encode(['mint', {amount}]); // plt v1 mint payload
+ */
+export type TokenUpdatePayload = {
+    /** The token id identifying the token to perform the list of operations on */
+    tokenId: TokenId.Type;
+    /**
+     * The CBOR encoded operations
+     *
+     * @example
+     * const operations = Cbor.encode([{mint: { amount } }]); // plt mint payload
+     */
+    operations: Cbor.Type;
+};
+
 export type AccountTransactionPayload =
     | SimpleTransferPayload
     | SimpleTransferWithMemoPayload
@@ -1458,7 +1507,8 @@ export type AccountTransactionPayload =
     | UpdateContractPayload
     | UpdateCredentialsPayload
     | ConfigureBakerPayload
-    | ConfigureDelegationPayload;
+    | ConfigureDelegationPayload
+    | TokenUpdatePayload;
 
 export interface AccountTransaction {
     type: AccountTransactionType;

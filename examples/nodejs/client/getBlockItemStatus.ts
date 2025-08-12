@@ -16,6 +16,7 @@ const cli = meow(
   Options
     --help,     -h  Displays this message
     --endpoint, -e  Specify endpoint of the form "address:port", defaults to localhost:20000
+    --secure,   -s  Whether to use TLS or not. Defaults to false.
 `,
     {
         importMeta: import.meta,
@@ -24,6 +25,11 @@ const cli = meow(
                 type: 'string',
                 alias: 'e',
                 default: 'localhost:20000',
+            },
+            secure: {
+                type: 'boolean',
+                alias: 's',
+                default: false,
             },
             transaction: {
                 type: 'string',
@@ -36,7 +42,11 @@ const cli = meow(
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
 
-const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.createInsecure());
+const client = new ConcordiumGRPCNodeClient(
+    address,
+    Number(port),
+    cli.flags.secure ? credentials.createSsl() : credentials.createInsecure()
+);
 
 /**
  * Retrieves status information about a block item (transaction).
@@ -92,6 +102,7 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
                     // Another transaction kind encountered
                     const otherType = summary.transactionType;
                     console.log('The transaction is of type:', otherType);
+                    console.log('Transaction details:', summary);
             }
         } else if (summary.type === 'updateTransaction') {
             console.log('The block item is a chain update');

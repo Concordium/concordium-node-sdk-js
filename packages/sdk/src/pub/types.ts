@@ -1,26 +1,28 @@
-import * as AccountAddress from '../types/AccountAddress.js';
-import * as BlockHash from '../types/BlockHash.js';
-import * as CcdAmount from '../types/CcdAmount.js';
-import * as ContractAddress from '../types/ContractAddress.js';
-import * as ContractEvent from '../types/ContractEvent.js';
 import * as ContractName from '../types/ContractName.js';
 import * as CredentialRegistrationId from '../types/CredentialRegistrationId.js';
-import * as Duration from '../types/Duration.js';
-import * as Energy from '../types/Energy.js';
 import * as EntrypointName from '../types/EntrypointName.js';
-import * as InitName from '../types/InitName.js';
 import * as ModuleClient from '../types/ModuleClient.js';
-import * as ModuleReference from '../types/ModuleReference.js';
-import * as Parameter from '../types/Parameter.js';
-import * as ReceiveName from '../types/ReceiveName.js';
-import * as ReturnValue from '../types/ReturnValue.js';
-import * as SequenceNumber from '../types/SequenceNumber.js';
-import * as Timestamp from '../types/Timestamp.js';
-import * as TransactionExpiry from '../types/TransactionExpiry.js';
-import * as TransactionHash from '../types/TransactionHash.js';
+// To limit the exports meant only for internal use, we re-create the module exports.
+import * as AccountAddress from './types/AccountAddress.js';
+import * as BlockHash from './types/BlockHash.js';
+import * as CcdAmount from './types/CcdAmount.js';
+import * as ContractAddress from './types/ContractAddress.js';
+import * as ContractEvent from './types/ContractEvent.js';
+import * as Duration from './types/Duration.js';
+import * as Energy from './types/Energy.js';
+import * as InitName from './types/InitName.js';
+import * as ModuleReference from './types/ModuleReference.js';
+import * as Parameter from './types/Parameter.js';
+import * as ReceiveName from './types/ReceiveName.js';
+import * as ReturnValue from './types/ReturnValue.js';
+import * as SequenceNumber from './types/SequenceNumber.js';
+import * as Timestamp from './types/Timestamp.js';
+import * as TransactionExpiry from './types/TransactionExpiry.js';
+import * as TransactionHash from './types/TransactionHash.js';
 
 // Functionality revolving concordium domain types and utitlity for working with these types.
 export * from '../types.js';
+export { DataBlob } from '../types/DataBlob.js';
 export {
     getAccountTransactionHash,
     getAccountTransactionSignDigest,
@@ -33,7 +35,6 @@ export {
 export { encodeHexString } from '../serializationHelpers.js';
 export { sha256 } from '../hash.js';
 
-export { DataBlob } from '../types/DataBlob.js';
 export * from '../types/VersionedModuleSource.js';
 export {
     VerifiablePresentation,
@@ -92,3 +93,5 @@ export {
     TransactionExpiry,
     ModuleReference,
 };
+
+export * from '../types/cbor.js';

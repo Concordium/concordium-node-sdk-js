@@ -544,6 +544,7 @@ export const seqNums: NextUpdateSequenceNumbers = {
     minBlockTime: 1n,
     finalizationCommiteeParameters: 1n,
     validatorScoreParameters: 1n,
+    protocolLevelTokens: 1n,
 };
 
 export const specialEventList: BlockSpecialEvent[] = [
@@ -1318,6 +1319,7 @@ export const poolWouldBecomeOverDelegatedRejectReason = {
 };
 export const bakerAccountInfo: AccountInfoBaker = {
     type: AccountInfoType.Baker,
+    accountTokens: [],
     accountNonce: SequenceNumber.create(1),
     accountAmount: CcdAmount.fromMicroCcd(7449646704751788n),
     accountReleaseSchedule: { total: CcdAmount.zero(), schedule: [] },
@@ -1414,6 +1416,7 @@ export const bakerAccountInfo: AccountInfoBaker = {
 
 export const delegatorAccountInfo: AccountInfoDelegator = {
     type: AccountInfoType.Delegator,
+    accountTokens: [],
     accountNonce: SequenceNumber.create(11),
     accountAmount: CcdAmount.fromMicroCcd(620948501142n),
     accountReleaseSchedule: { total: CcdAmount.zero(), schedule: [] },
@@ -1521,6 +1524,7 @@ export const delegatorAccountInfo: AccountInfoDelegator = {
 
 export const regularAccountInfo: AccountInfoSimple = {
     type: AccountInfoType.Simple,
+    accountTokens: [],
     accountNonce: SequenceNumber.create(19),
     accountAmount: CcdAmount.fromMicroCcd(35495453082577742n),
     accountReleaseSchedule: { total: CcdAmount.zero(), schedule: [] },

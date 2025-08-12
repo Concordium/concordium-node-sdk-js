@@ -1,3 +1,4 @@
+import * as PLT from '../plt/index.js';
 import type {
     Address,
     BakerId,
@@ -59,6 +60,10 @@ export enum TransactionEventTag {
     Resumed = 'Resumed',
     Updated = 'Updated',
     Upgraded = 'Upgraded',
+    TokenModuleEvent = 'TokenModuleEvent',
+    TokenTransfer = 'TokenTransfer',
+    TokenMint = 'TokenMint',
+    TokenBurn = 'TokenBurn',
 }
 
 export type TransactionEvent =
@@ -76,21 +81,10 @@ export type TransactionEvent =
     | CredentialDeployedEvent
     | CredentialKeysUpdatedEvent
     | CredentialsUpdatedEvent
-    | DelegatorEvent
-    | DelegationSetDelegationTargetEvent
-    | DelegationSetRestakeEarningsEvent
-    | DelegationStakeChangedEvent
-    | BakerAddedEvent
-    | BakerRemovedEvent
-    | BakerStakeChangedEvent
-    | BakerSetRestakeEarningsEvent
-    | BakerKeysUpdatedEvent
-    | BakerSetOpenStatusEvent
-    | BakerSetMetadataURLEvent
-    | BakerSetFinalizationRewardCommissionEvent
-    | BakerSetBakingRewardCommissionEvent
-    | BakerSetTransactionFeeCommissionEvent
-    | UpdateEnqueuedEvent;
+    | UpdateEnqueuedEvent
+    | DelegationEvent
+    | BakerEvent
+    | TokenEvent;
 
 // Contract Events
 
@@ -130,6 +124,8 @@ export interface UpgradedEvent {
     from: ModuleRef;
     to: ModuleRef;
 }
+
+// Transaction Events
 
 export interface DataRegisteredEvent {
     tag: TransactionEventTag.DataRegistered;
@@ -354,6 +350,67 @@ export interface UpdateEnqueuedEvent {
     payload: UpdateInstructionPayload;
 }
 
+/**
+ * Token (PLT) event with CBOR encoded details.
+ */
+export type EncodedTokenModuleEvent = {
+    /** The type of the event */
+    tag: TransactionEventTag.TokenModuleEvent;
+    /** The token ID of the token the event originates from */
+    tokenId: PLT.TokenId.Type;
+    /** The type of the event emitted by the token module. */
+    type: string;
+    /** Additional details about the event (CBOR encoded). */
+    details: PLT.Cbor.Type;
+};
+
+/**
+ * Token (PLT) transfer event.
+ */
+export type TokenTransferEvent = {
+    /** The type of the event */
+    tag: TransactionEventTag.TokenTransfer;
+    /** The token ID of the token the event originates from */
+    tokenId: PLT.TokenId.Type;
+    /** The token holder sending the tokens. */
+    from: PLT.TokenHolder.Type;
+    /** The token holder receiving the tokens. */
+    to: PLT.TokenHolder.Type;
+    /** The amount of tokens transferred. */
+    amount: PLT.TokenAmount.Type;
+    /** An optional memo associated with the transfer. */
+    memo?: PLT.CborMemo.Type;
+};
+
+/**
+ * Token (PLT) mint event.
+ */
+export type TokenMintEvent = {
+    /** The type of the event */
+    tag: TransactionEventTag.TokenMint;
+    /** The token ID of the token the event originates from */
+    tokenId: PLT.TokenId.Type;
+    /** The token holder whose supply is updated. */
+    target: PLT.TokenHolder.Type;
+    /** The amount by which the token supply is updated. */
+    amount: PLT.TokenAmount.Type;
+};
+
+/**
+ * Token (PLT) burn event.
+ */
+export type TokenBurnEvent = {
+    /** The type of the event */
+    tag: TransactionEventTag.TokenBurn;
+    /** The token ID of the token the event originates from */
+    tokenId: PLT.TokenId.Type;
+    /** The token holder whose supply is updated. */
+    target: PLT.TokenHolder.Type;
+    /** The amount by which the token supply is updated. */
+    amount: PLT.TokenAmount.Type;
+};
+
+export type TokenEvent = EncodedTokenModuleEvent | TokenTransferEvent | TokenMintEvent | TokenBurnEvent;
 export type ContractTraceEvent = ResumedEvent | InterruptedEvent | UpdatedEvent | UpgradedEvent | TransferredEvent;
 export type BakerEvent =
     | BakerSetTransactionFeeCommissionEvent

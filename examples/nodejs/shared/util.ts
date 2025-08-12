@@ -1,4 +1,12 @@
-import { AccountAddress, ContractAddress } from '@concordium/web-sdk';
+import {
+    AccountAddress,
+    AccountSigner,
+    ContractAddress,
+    buildAccountSigner,
+    parseSimpleWallet,
+    parseWallet,
+} from '@concordium/web-sdk';
+import { readFileSync } from 'node:fs';
 
 export const parseAddress = (input: string): AccountAddress.Type | ContractAddress.Type => {
     if (!input.includes(',')) {
@@ -35,4 +43,23 @@ export const parseEndpoint = (endpoint: string): [string, number, string | undef
     const port = Number(noSchemeEndpoint.substring(lastColonIndex + 1));
 
     return [address, port, scheme];
+};
+
+export const parseKeysFile = (path: string): [AccountAddress.Type, AccountSigner] => {
+    const walletFile = readFileSync(path, 'utf8');
+    let signer: AccountSigner;
+    let sender: AccountAddress.Type;
+    // Read wallet-file
+    try {
+        const wallet = parseWallet(walletFile);
+        signer = buildAccountSigner(wallet);
+        sender = AccountAddress.fromBase58(wallet.value.address);
+    } catch (e) {
+        // If the wallet file is not a wallet export, try to parse it as a simple wallet, i.e. genesis format
+        const wallet = parseSimpleWallet(walletFile);
+        sender = AccountAddress.fromBase58(wallet.address);
+        signer = buildAccountSigner(wallet);
+    }
+
+    return [sender, signer];
 };

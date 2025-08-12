@@ -1,7 +1,7 @@
 import bs58check from 'bs58check';
 import { Buffer } from 'buffer/index.js';
 
-import type * as Proto from '../grpc-api/v2/concordium/types.js';
+import type * as Proto from '../grpc-api/v2/concordium/kernel.js';
 import { Base58String } from '../types.js';
 import { TypedJson, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 
@@ -154,10 +154,10 @@ export function fromSchemaValue(accountAddress: SchemaValue): AccountAddress {
     return fromBase58(accountAddress);
 }
 
-const addressByteLength = 32;
-const aliasBytesLength = 3;
-const commonBytesLength = addressByteLength - aliasBytesLength;
-const maxCount = 16777215; // 2^(8 * 3) - 1
+export const BYTES_LENGTH = 32;
+const ALIAS_BYTES_LENGTH = 3;
+const COMMON_BYTES_LENGTH = BYTES_LENGTH - ALIAS_BYTES_LENGTH;
+const MAX_COUNT = 16777215; // 2^(8 * 3) - 1
 
 /**
  * Given two accountAddresses, return whether they are aliases.
@@ -168,7 +168,13 @@ const maxCount = 16777215; // 2^(8 * 3) - 1
 export function isAlias(address: AccountAddress, alias: AccountAddress): boolean {
     return (
         0 ===
-        Buffer.from(address.decodedAddress).compare(alias.decodedAddress, 0, commonBytesLength, 0, commonBytesLength)
+        Buffer.from(address.decodedAddress).compare(
+            alias.decodedAddress,
+            0,
+            COMMON_BYTES_LENGTH,
+            0,
+            COMMON_BYTES_LENGTH
+        )
     );
 }
 
@@ -180,14 +186,14 @@ export function isAlias(address: AccountAddress, alias: AccountAddress): boolean
  * @returns an AccountAddress, which is an alias to the given address
  */
 export function getAlias(address: AccountAddress, counter: number): AccountAddress {
-    if (counter < 0 || counter > maxCount) {
+    if (counter < 0 || counter > MAX_COUNT) {
         throw new Error(
             `An invalid counter value was given: ${counter}. The value has to satisfy that 0 <= counter < 2^24`
         );
     }
-    const commonBytes = address.decodedAddress.slice(0, commonBytesLength);
-    const aliasBytes = Buffer.alloc(aliasBytesLength);
-    aliasBytes.writeUIntBE(counter, 0, aliasBytesLength);
+    const commonBytes = address.decodedAddress.slice(0, COMMON_BYTES_LENGTH);
+    const aliasBytes = Buffer.alloc(ALIAS_BYTES_LENGTH);
+    aliasBytes.writeUIntBE(counter, 0, ALIAS_BYTES_LENGTH);
     return fromBuffer(Buffer.concat([commonBytes, aliasBytes]));
 }
 

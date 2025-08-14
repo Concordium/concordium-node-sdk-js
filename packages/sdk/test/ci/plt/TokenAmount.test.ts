@@ -26,7 +26,15 @@ describe('PLT TokenAmount', () => {
 
     test('Token amounts with invalid values throws', () => {
         expect(() => TokenAmount.create(-504n, 0)).toThrow(TokenAmount.Err.negative());
+        expect(() => TokenAmount.create(-504n, 1)).toThrow(TokenAmount.Err.negative());
+        expect(() => TokenAmount.fromDecimal(-504n, 0)).toThrow(TokenAmount.Err.negative());
+        expect(() => TokenAmount.fromDecimal(-504n, 1)).toThrow(TokenAmount.Err.negative());
         expect(() => TokenAmount.create(MAX_U64 + 1n, 0)).toThrow(TokenAmount.Err.exceedsMaxValue());
+        expect(() => TokenAmount.create(99999999999999999999999999n, 1)).toThrow(TokenAmount.Err.exceedsMaxValue());
+        expect(() => TokenAmount.fromDecimal(MAX_U64 + 1n, 0)).toThrow(TokenAmount.Err.exceedsMaxValue());
+        expect(() => TokenAmount.fromDecimal(99999999999999999999999999n, 1)).toThrow(
+            TokenAmount.Err.exceedsMaxValue()
+        );
     });
 
     test('Returns expected amount', () => {

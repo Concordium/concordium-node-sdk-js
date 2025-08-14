@@ -163,8 +163,7 @@ export function fromDecimal(amount: BigSource | bigint, decimals: number): Token
     }
 
     const bigAmount = Big(parsed);
-    const parsedDecimals = bigAmount.toString().split('.')[1]?.length ?? 0;
-
+    const parsedDecimals = bigAmount.toFixed(0).split('.')[1]?.length ?? 0;
     if (parsedDecimals > decimals) {
         throw new Error('The amount has more decimal places than the specified decimals.');
     }

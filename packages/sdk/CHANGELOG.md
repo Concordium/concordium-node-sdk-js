@@ -49,6 +49,10 @@
 
 ## 10.0.0-alpha.? (Unreleased)
 
+### Fixed
+
+- Fix conversion in `TokenAmount.fromDecimals` function when used with large `decimal` values.
+
 ### Changed
 
 - Remove authorization validation for PLT `Token` client.

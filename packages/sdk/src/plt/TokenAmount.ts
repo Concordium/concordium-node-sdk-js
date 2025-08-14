@@ -170,7 +170,7 @@ export function fromDecimal(amount: BigSource | bigint, decimals: number): Token
     }
 
     const intAmount = bigAmount.mul(Big((10n ** BigInt(decimals)).toString()));
-    return new TokenAmount(BigInt(intAmount.toString()), decimals);
+    return new TokenAmount(BigInt(intAmount.toFixed(0)), decimals);
 }
 
 /**

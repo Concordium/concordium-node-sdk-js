@@ -49,6 +49,10 @@
 
 ## 10.0.0-alpha.? (Unreleased)
 
+### Fixed
+
+- Fix conversion in `TokenAmount.fromDecimals` function when used with large `tokenAmount` values with small `decimal` values.
+
 ## 10.0.0-alpha.15
 
 ### Fixed

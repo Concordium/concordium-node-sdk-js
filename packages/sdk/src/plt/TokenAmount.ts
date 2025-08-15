@@ -147,6 +147,18 @@ export function instanceOf(value: unknown): value is TokenAmount {
 }
 
 /**
+ * Get decimal places from a Big {@linkcode Big}.
+ *
+ * @param big The number to get the decimal places.
+ * @returns {number} The number of decimal places in above number.
+ */
+function getDecimalPlaces(big: Big): number {
+    // `b.c` is an array of single digits (coefficient), `b.e` is the exponent (0-based index of highest digit)
+    const decimals = big.c.length - (big.e + 1);
+    return decimals > 0 ? decimals : 0;
+}
+
+/**
  * Creates a TokenAmount from a number, string, {@linkcode Big}, or bigint.
  *
  * @param amount The amount of tokens as a number, string, big or bigint.
@@ -163,8 +175,7 @@ export function fromDecimal(amount: BigSource | bigint, decimals: number): Token
     }
 
     const bigAmount = Big(parsed);
-    const parsedDecimals = bigAmount.toString().split('.')[1]?.length ?? 0;
-
+    const parsedDecimals = getDecimalPlaces(bigAmount);
     if (parsedDecimals > decimals) {
         throw new Error('The amount has more decimal places than the specified decimals.');
     }

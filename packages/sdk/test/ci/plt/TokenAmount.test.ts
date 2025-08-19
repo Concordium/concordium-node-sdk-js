@@ -12,11 +12,36 @@ describe('PLT TokenAmount', () => {
         expect(TokenAmount.fromDecimal('15.002456687544126548', 18)).toEqual(
             TokenAmount.create(15002456687544126548n, 18)
         );
+        expect(TokenAmount.fromDecimal(MAX_U64, 0)).toEqual(TokenAmount.create(MAX_U64, 0));
+    });
+
+    test('Parses large decimal values correctly', () => {
+        expect(() => TokenAmount.fromDecimal('1', 255)).toThrow(TokenAmount.Err.exceedsMaxValue());
+        expect(
+            TokenAmount.fromDecimal(
+                '0.000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001',
+                255
+            )
+        ).toEqual(TokenAmount.create(1n, 255));
     });
 
     test('Token amounts with invalid values throws', () => {
         expect(() => TokenAmount.create(-504n, 0)).toThrow(TokenAmount.Err.negative());
+        expect(() => TokenAmount.create(-504n, 1)).toThrow(TokenAmount.Err.negative());
+        expect(() => TokenAmount.fromDecimal(-504n, 0)).toThrow(TokenAmount.Err.negative());
+        expect(() => TokenAmount.fromDecimal(-504n, 1)).toThrow(TokenAmount.Err.negative());
         expect(() => TokenAmount.create(MAX_U64 + 1n, 0)).toThrow(TokenAmount.Err.exceedsMaxValue());
+        expect(() => TokenAmount.create(99999999999999999999999999n, 1)).toThrow(TokenAmount.Err.exceedsMaxValue());
+        expect(() => TokenAmount.fromDecimal(MAX_U64 + 1n, 0)).toThrow(TokenAmount.Err.exceedsMaxValue());
+        expect(() => TokenAmount.fromDecimal(99999999999999999999999999n, 1)).toThrow(
+            TokenAmount.Err.exceedsMaxValue()
+        );
+    });
+
+    test('Token amounts with more decimals than specified throws', () => {
+        expect(() => TokenAmount.fromDecimal('1.000003', 0)).toThrow(
+            'The amount has more decimal places than the specified decimals.'
+        );
     });
 
     test('Returns expected amount', () => {

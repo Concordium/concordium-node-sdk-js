@@ -2,9 +2,14 @@
 
 ## Unreleased
 
-## 10.0.0
+## 10.0.1
 
-Adds support for integrating with Concordium nodes running version 9.
+### Fixed
+
+- Added missing support for the new transaction summary type `TokenCreation`. This has been added to the
+  `BlockItemSummary` union type.
+
+## 10.0.0
 
 ### Breaking changes
 
@@ -17,6 +22,146 @@ Adds support for integrating with Concordium nodes running version 9.
 - Removed `toProto` and `fromProto` from the exposed API for all custom types in the SDK. This should have no impact, as
   the parameter/return values are internal-only.
 - Added `TokenUpdatePayload` to `AccountTransactionPayload` union type.
+- Added reject reasons related to PLT transactions to `RejectReason` union type.
+- `CcdAmount.fromDecimal` no longer supports creation from a string with comma used as the decimal separator, e.g.
+  "10,123".
+
+### Added
+
+- A new package export scoped to hold types and functionality for interacting with PLTs, available at
+  `@concordium/web-sdk/plt`.
+- New types representing entities within the domain of protocol level tokens (PLTs)
+  - `Cbor`: Represents CBOR encoded details for PLT module state, events, and operations
+  - `CborMemo`: Represents CBOR encoded memos for PLT transactions
+  - `TokenId`: A unique text identifier of a PLT
+  - `TokenAmount`: A representation of a PLT amount
+  - `TokenModuleReference`: The module reference of a PLT instance
+  - `TokenMetadataUrl`: An object containing the url for token metadata
+  - `TokenHolder`: A representation of the different token holder entities. Currently, only accounts are supported.
+  - `TokenAccountState`, `TokenState`, `TokenInfo`, and `TokenAccountInfo`, all representing PLT related data returned by the
+    GRPC API of a Concordium node. 
+- `Token`, which is a client for interacting with PLTs
+- `parseModuleEvent`, which attempts to parse an `EncodedTokenModuleEvent` into a `TokenModuleEvent`.
+- CBOR conversion functionality to `AccountAddress`.
+- An extension for `cbor2`, which registers CBOR encoders for all relevant Concordium types. This is accessible at the
+  `@concordium/web-sdk/extensions/cbor2` entrypoint.
+- `cborEncode` and `cborDecode` functions for deterministic encoding/decoding of objects composed of Concordium domain
+  types.
+- `registerCborDecoders` and `registerCborEncoders` for registering Concordium domain type encoders/decoders globally
+  for `cbor2`
+  - **NOTE**: By registering decoders globally without using the returned cleanup function, the registration overrides
+  any previously registered decoder for the corresponding CBOR tag.
+- `TokenUpdateHandler`, which is also accessible by passing the corresponding `TransactionType` to `getAccountTransactionHandler`.
+- Function `parseSimpleWallet` which parses a `SimpleWalletFormat` (also a subset of `GenesisFormat`), which can be used
+  with `buildAccountSigner`
+- A new optional field `createPlt` to `AuthorizationsV1` which exposes the access structure for PLT creation.
+
+## 10.0.0-alpha.? (Unreleased)
+
+### Fixed
+
+- Fix conversion in `TokenAmount.fromDecimals` function when used with large `tokenAmount` values with small `decimal` values.
+
+## 10.0.0-alpha.15
+
+### Fixed
+
+- Fix conversion in `TokenAmount.fromDecimals` function when used with large `decimal` values.
+
+### Changed
+
+- Remove authorization validation for PLT `Token` client.
+- All `Token` operations' validations are done in a separate respective functions.
+- Removed `UnauthorizedGovernanceOperationError` from `Token` PLT client.
+
+### Added
+
+- Add helper function `validateMint`, `validateBurn`, `validateAllowListUpdate`, `validateDenyListUpdate`
+  for validating PLT token client operations.
+- Add `updateToken` method that returns the latest finilized block state of a token.
+
+## 10.0.0-alpha.14
+
+### Changed
+
+- Enable `denyList`/`allowList` validation on plt token transfers.
+- Client side validation in the PLT `Token` client is now disabled by default and has to be enabled explicitly if wanted
+
+### Added
+
+- Add optional `initialSupply` field to `TokenInitializationParameters` type.
+- Add `protocolLevelTokens` field to `NextUpdateSequenceNumbers` type.
+- Add helper function `createPLTPayload` for creating `CreatePLTPayload`s for the corresponding chain update.
+
+## 10.0.0-alpha.13
+
+### Changed
+
+- Disable `denyList`/`allowList` validation on plt token transfers.
+
+## 10.0.0-alpha.12
+
+### Breaking changes
+
+- Changed the representation of `TokenEvent` to a more flattened version in line with the representation in concordium-base.
+- Replaced `TokenUpdateEvent` with the flattened `TokenEvent` mentioned above.
+- Revised the constraints associated with `TokenId`.
+
+### Added
+
+- `pause` and `unpause` functions added to the `Token` module, which can be used to pause/unpause execution of token operations respectively.
+- `moduleState` added to `Token` instances, which is the parsed token module state of a PLT instance.
+
+### Changed
+
+- Energy cost of PLT mint/burn changed from 100 to 50
+- Changed the functions exposed for submitting token updates on `Token` to take optional `TokenUpdateMetadata` instead of 
+  getting the corresponding data from chain.
+
+## 10.0.0-alpha.11
+
+### Fixed
+
+- An issue where the token module state of a PLT could not be correctly decoded from it's CBOR representation.
+
+## 10.0.0-alpha.10
+
+### Fixed
+
+- Fixed a bug where PLT transfer validation would fail when the reciever had no balance if the token had a deny list.
+
+## 10.0.0-alpha.9
+
+### Breaking changes
+
+- Consolidate `TokenHolderPayload` and `TokenGovernancePayload` into `TokenUpdatePayload`, and correspondingly on the
+  enums `AccountTransactionType` and `TransactionKindString`.
+- Consolidate `TokenHolderUpdateHandler` and `TokenGovernanceUpdateHandler` into `TokenUpdateHandler`.
+- Consolidate `TokenHolderSummary` and `TokenGovernanceSummary` into `TokenUpdateSummary`, and correspondingly on the `TransactionEvent` enum.
+- Consolidate `TokenHolderTransactionFailedRejectReason` and `TokenGovernanceTransactionFailedRejectReason`
+  into `TokenUpdateTransactionFailedRejectReason`, and correspondingly on the `RejectReasonTag` enum.
+- Functionality exposed on `V1.Token` and `V1.Governance` is now available on `Token`, which is a client for interacting with PLTs.
+  Any functionality previously exposed on the `V1` namespace, has been moved to the root of `@concordium/web-sdk/plt`.
+- Removed `UnauthorizedTokenGovernance` type and the corresponding `RejectReasonTag.UnauthorizedTokenGovernance`. This will now happen
+  as a `EncodedTokenModuleEvent` instead.
+- Changed the representation of accounts on any PLT related type from `AccountAddress` to `TokenHolder`.
+
+### Added
+
+- `TokenHolder`: A representation of the different token holder entities. Currently, only accounts are supported.
+
+## 10.0.0-alpha.8
+
+### Breaking changes
+
+- Add `TokenHolderSummary` and `TokenGovernanceSummary` to the possible transaction outcomes declared by
+- `AccountTransactionSummary`, and correspondingly `TokenHolderEvent` and `TokenGovernanceEvent` to `TransactionEvent`.
+- Added new variants `TokenHolder` and `TokenGovernance` to `TransactionEventTag`, `AccountTransactionType` and correspondingly `TransactionKindString`.
+- Added new variant `CreatePLT` to `UpdateType`.
+- Updated `AccountInfo` to hold information about the PLTs held by an account.
+- Removed `toProto` and `fromProto` from the exposed API for all custom types in the SDK. This should have no impact, as
+  the parameter/return values are internal-only.
+- Added `TokenHolderPayload` and `TokenGovernancePayload` to `AccountTransactionPayload` union type.
 - Added reject reasons related to PLT transactions to `RejectReason` union type.
 - `CcdAmount.fromDecimal` no longer supports creation from a string with comma used as the decimal separator, e.g.
   "10,123".

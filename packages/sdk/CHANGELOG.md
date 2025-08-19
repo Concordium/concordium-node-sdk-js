@@ -11,6 +11,8 @@
 
 ## 10.0.0
 
+- Adds support for integrating with Concordium nodes running version 9.
+
 ### Breaking changes
 
 - Add `TokenUpdateSummary` to the possible transaction outcomes declared by `AccountTransactionSummary`

@@ -2081,32 +2081,51 @@ function tokenEvent(event: GRPC_PLT.TokenEvent): TokenEvent {
     }
 }
 
+function trCreatePltPayload(payload: GRPC_PLT.CreatePLT): PLT.CreatePLTPayload {
+    return {
+        tokenId: PLT.TokenId.fromProto(unwrap(payload.tokenId)),
+        decimals: payload.decimals,
+        moduleRef: PLT.TokenModuleReference.fromProto(unwrap(payload.tokenModule)),
+        initializationParameters: PLT.Cbor.fromProto(unwrap(payload.initializationParameters)),
+    };
+}
+
 export function blockItemSummary(summary: GRPC.BlockItemSummary): SDK.BlockItemSummary {
     const base = {
         index: unwrap(summary.index?.value),
         energyCost: Energy.fromProto(unwrap(summary.energyCost)),
         hash: TransactionHash.fromProto(unwrap(summary.hash)),
     };
-    if (summary.details.oneofKind === 'accountTransaction') {
-        return trAccountTransactionSummary(summary.details.accountTransaction, base);
-    } else if (summary.details.oneofKind === 'accountCreation') {
-        return {
-            type: SDK.TransactionSummaryType.AccountCreation,
-            ...base,
-            credentialType:
-                summary.details.accountCreation.credentialType === GRPC.CredentialType.INITIAL ? 'initial' : 'normal',
-            address: AccountAddress.fromProto(unwrap(summary.details.accountCreation.address)),
-            regId: unwrapValToHex(summary.details.accountCreation.regId),
-        };
-    } else if (summary.details.oneofKind === 'update') {
-        return {
-            type: SDK.TransactionSummaryType.UpdateTransaction,
-            ...base,
-            effectiveTime: unwrap(summary.details.update.effectiveTime?.value),
-            payload: trUpdatePayload(summary.details.update.payload),
-        };
-    } else {
-        throw Error('Invalid BlockItemSummary encountered!');
+    switch (summary.details.oneofKind) {
+        case 'accountTransaction':
+            return trAccountTransactionSummary(summary.details.accountTransaction, base);
+        case 'accountCreation':
+            return {
+                type: SDK.TransactionSummaryType.AccountCreation,
+                ...base,
+                credentialType:
+                    summary.details.accountCreation.credentialType === GRPC.CredentialType.INITIAL
+                        ? 'initial'
+                        : 'normal',
+                address: AccountAddress.fromProto(unwrap(summary.details.accountCreation.address)),
+                regId: unwrapValToHex(summary.details.accountCreation.regId),
+            };
+        case 'update':
+            return {
+                type: SDK.TransactionSummaryType.UpdateTransaction,
+                ...base,
+                effectiveTime: unwrap(summary.details.update.effectiveTime?.value),
+                payload: trUpdatePayload(summary.details.update.payload),
+            };
+        case 'tokenCreation':
+            return {
+                type: SDK.TransactionSummaryType.TokenCreation,
+                ...base,
+                payload: trCreatePltPayload(unwrap(summary.details.tokenCreation.createPlt)),
+                events: summary.details.tokenCreation.events.map(tokenEvent),
+            };
+        default:
+            throw Error('Invalid BlockItemSummary encountered!');
     }
 }
 

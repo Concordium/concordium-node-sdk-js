@@ -1,4 +1,5 @@
 import { isEqualContractAddress } from '../contractHelpers.js';
+import { CreatePLTPayload } from '../plt/types.js';
 import { AccountTransactionType, TransactionStatusEnum, TransactionSummaryType } from '../types.js';
 import { isDefined } from '../util.js';
 import * as AccountAddress from './AccountAddress.js';
@@ -251,7 +252,17 @@ export interface UpdateSummary extends BaseBlockItemSummary {
     payload: UpdateInstructionPayload;
 }
 
-export type BlockItemSummary = AccountTransactionSummary | AccountCreationSummary | UpdateSummary;
+export type TokenCreationSummary = {
+    type: TransactionSummaryType.TokenCreation;
+    payload: CreatePLTPayload;
+    events: TokenEvent[];
+};
+
+export type BlockItemSummary =
+    | AccountTransactionSummary
+    | AccountCreationSummary
+    | UpdateSummary
+    | TokenCreationSummary;
 
 export interface BlockItemSummaryInBlock {
     blockHash: BlockHash.Type;

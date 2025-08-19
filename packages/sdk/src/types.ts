@@ -198,6 +198,7 @@ export enum TransactionSummaryType {
     CredentialDeploymentTransaction = 'credentialDeploymentTransaction',
     AccountCreation = 'accountCreation',
     UpdateTransaction = 'updateTransaction',
+    TokenCreation = 'tokenCreation',
 }
 
 interface BaseTransactionSummaryType {

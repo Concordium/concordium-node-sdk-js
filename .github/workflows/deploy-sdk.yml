@@ -10,7 +10,7 @@ on:
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -101,9 +101,10 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    # environment: deploy
+    environment: deploy
     outputs:
       npm_tag: ${{ steps.determine_npm_tag.outputs.npm_tag }}
+      version: ${{ steps.get_tag.outputs.tag }}
     steps:
       - name: Checkout sources
         uses: actions/checkout@v5
@@ -112,9 +113,7 @@ jobs:
 
       - name: Extract tag name
         id: get_tag
-        # ${GITHUB_REF#refs/tags/sdk/}
-        # Hardcoded for testing
-        run: echo "tag=10.0.1" >> $GITHUB_OUTPUT
+        run: echo "tag=${GITHUB_REF#refs/tags/sdk/}" >> $GITHUB_OUTPUT
 
       - name: Test that tag version matches package.json version
         run: test "${{ steps.get_tag.outputs.tag }}" = "$(jq -r ".version" packages/sdk/package.json)" || exit 1
@@ -130,38 +129,37 @@ jobs:
           fi
           echo "npm_tag=$npm_tag" >> $GITHUB_OUTPUT
 
-      # - name: Get build-output
-      #   uses: actions/download-artifact@v5
-      #   with:
-      #     name: build-release
-      #     path: packages/sdk
+      - name: Get build-output
+        uses: actions/download-artifact@v5
+        with:
+          name: build-release
+          path: packages/sdk
 
-      # - uses: actions/setup-node@v4
-      #   with:
-      #     node-version: ${{ env.NODE_VERSION }}
-      #     cache: yarn
-      #     registry-url: 'https://registry.npmjs.org'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
+          registry-url: 'https://registry.npmjs.org'
 
-      # - name: Publish to NPM
-      #   run: |
-      #     yarn config set npmAuthToken $NPM_AUTH_TOKEN
-      #     yarn workspace @concordium/web-sdk npm publish --tag ${{ steps.determine_npm_tag.outputs.npm_tag }}
-      #   env:
-      #     NPM_AUTH_TOKEN: '${{secrets.NPM_PUBLISH_TOKEN}}'
+      - name: Publish to NPM
+        run: |
+          yarn config set npmAuthToken $NPM_AUTH_TOKEN
+          yarn workspace @concordium/web-sdk npm publish --tag ${{ steps.determine_npm_tag.outputs.npm_tag }}
+        env:
+          NPM_AUTH_TOKEN: '${{secrets.NPM_PUBLISH_TOKEN}}'
 
-      # - name: Create a GitHub release
-      #   uses: ncipollo/release-action@v1
-      #   with:
-      #     tag: sdk/${{ steps.get_tag.outputs.tag }}
-      #     name: SDK Release v${{ steps.get_tag.outputs.tag }}
-      #     draft: true
+      - name: Create a GitHub release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: sdk/${{ steps.get_tag.outputs.tag }}
+          name: SDK Release v${{ steps.get_tag.outputs.tag }}
+          draft: true
 
   deploy-typedoc:
     needs:
       - upload-release
-    # environment:
-    #   name: github-pages
-    #   url: ${{ steps.deployment.outputs.page_url }}
+    environment:
+      name: github-pages
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
@@ -173,28 +171,52 @@ jobs:
           path: typedoc
           name: typedoc-build
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-
-      # Put docs into a versioned subfolder
-      - name: Move typedoc into versioned folder
+      # Clone old `gh-pages` branch so we can later build a list of
+      # available documentation versions.
+      - name: Clone old gh-pages content
         run: |
-          VERSION=${{ steps.get_tag.outputs.tag }}
-          mkdir -p docs/$VERSION
-          cp -r typedoc/* docs/latest
+          # Make a local work folder
+          mkdir -p gh-pages
 
-      # (Optional) symlink "latest" → newest tag
-      - name: Update latest symlink
+          # Copy its content into local `gh-pages` folder
+          git clone --branch gh-pages --depth 1 https://github.com/${{ github.repository }} old-gh-pages
+          cp -r old-gh-pages/* gh-pages/ || true
+
+      # Put new docs into a versioned subfolder
+      - name: Generate versioned subfolder
+        run: |
+          VERSION=${{ needs.upload-release.outputs.version }}
+          mkdir -p gh-pages/$VERSION
+          cp -r typedoc/* gh-pages/$VERSION
+
+      # Update the "latest" subfolder content with the newest doc version.
+      - name: Update `latest` subfolder content
         if: needs.upload-release.outputs.npm_tag == 'latest'
         run: |
-          rm -rf docs/latest
-          mv typedoc/* docs/$VERSION
+          mkdir -p gh-pages/latest
+          rm -rf gh-pages/latest/*
+          cp -r typedoc/* gh-pages/latest
 
-      - name: Upload GH Pages artifact
-        uses: actions/upload-pages-artifact@v3
+      # Generate list of available documentation versions.
+      # This needs to be done after the `gh-pages` branch has been fetched with the old docs.
+      - name: Generate docs index
+        run: |
+          echo "<!DOCTYPE html>" > gh-pages/index.html
+          echo "<html><head><title>Documentation Versions</title></head><body>" >> gh-pages/index.html
+          echo "<h1>Available Documentation Versions</h1><ul>" >> gh-pages/index.html
+
+          # Loop over all directories in gh-pages/
+          for d in gh-pages/*/ ; do
+            version=$(basename "$d")
+            echo "<li><a href=\"./$version/\">$version</a></li>" >> gh-pages/index.html
+          done
+
+          echo "</ul>" >> gh-pages/index.html
+          echo "</body></html>" >> gh-pages/index.html
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          path: './docs'
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./gh-pages
+          keep_files: true

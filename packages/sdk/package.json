@@ -73,6 +73,7 @@
         "isomorphic-fetch": "^3.0.0",
         "jest": "^29.6.2",
         "jest-environment-jsdom": "^29.7.0",
+        "mkdirp": "^3.0.1",
         "prettier": "^3.2.5",
         "react-native": "^0.74.1",
         "rimraf": "^5.0.1",
@@ -84,8 +85,8 @@
         "webpack-cli": "^5.1.4"
     },
     "scripts": {
-        "generate-ts-v2": "yarn run grpc_tools_node_protoc --plugin=protoc-gen-ts=../../node_modules/@protobuf-ts/plugin/bin/protoc-gen-ts --ts_opt 'optimize_code_size' --ts_out=src/grpc-api -I ../../deps/concordium-base/concordium-grpc-api ../../deps/concordium-base/concordium-grpc-api/v2/concordium/*.proto",
-        "generate": "([ -e \"../../deps/concordium-base/concordium-grpc-api\" ] && yarn generate-ts-v2 && node scripts/proto-node-esm-compat.js src/grpc-api) || echo 'Please checkout submodules before building'",
+        "generate-ts-v2": "node scripts/run-protoc.js",
+        "generate": "node scripts/generate.js",
         "lint": "eslint . --cache --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
         "lint-fix": "yarn lint --fix",
         "prettier": "prettier . --ignore-path ../../.gitignore --ignore-path ../../.prettierignore --ignore-path .gitignore",
@@ -95,9 +96,9 @@
         "test-rn": "yarn test -c jest.config.react-native.ts",
         "test-web": "yarn test -c jest.config.web.ts",
         "test-ci": "yarn test ./test/ci && yarn test-rn ./test/ci && yarn test-web ./test/ci",
-        "build": "yarn clean; mkdir -p src/grpc-api; yarn generate && yarn build-dev",
+        "build": "yarn clean && mkdirp src/grpc-api && yarn generate && yarn build-dev",
         "build-dev": "tsc -p tsconfig.build.json && yarn webpack",
-        "webpack": "tsx ../../node_modules/.bin/webpack --config webpack.config.ts",
+        "webpack": "tsx ../../node_modules/webpack-cli/bin/cli.js --config webpack.config.ts",
         "clean": "rimraf -- lib src/grpc-api",
         "size": "yarn build && size-limit",
         "size:no-build": "size-limit"

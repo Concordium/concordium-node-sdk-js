@@ -36,6 +36,7 @@ import { getEmbeddedModuleSchema } from '../types/VersionedModuleSource.js';
 import type { BlockItemStatus, BlockItemSummary } from '../types/blockItemSummary.js';
 import { countSignatures, isHex, isValidIp, mapRecord, mapStream, unwrap } from '../util.js';
 import * as translate from './translation.js';
+import type { Upward } from './upward.js';
 
 /**
  * @hidden
@@ -947,7 +948,10 @@ export class ConcordiumGRPCClient {
      * @param abortSignal an optional AbortSignal to close the stream.
      * @returns a stream of block item summaries
      */
-    getBlockTransactionEvents(blockHash?: BlockHash.Type, abortSignal?: AbortSignal): AsyncIterable<BlockItemSummary> {
+    getBlockTransactionEvents(
+        blockHash?: BlockHash.Type,
+        abortSignal?: AbortSignal
+    ): AsyncIterable<Upward<BlockItemSummary>> {
         const blockItemSummaries = this.client.getBlockTransactionEvents(getBlockHashInput(blockHash), {
             abort: abortSignal,
         }).responses;

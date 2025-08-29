@@ -1,4 +1,5 @@
 import { isEqualContractAddress } from '../contractHelpers.js';
+import type { Upward } from '../grpc/upward.js';
 import { CreatePLTPayload } from '../plt/types.js';
 import { AccountTransactionType, TransactionStatusEnum, TransactionSummaryType } from '../types.js';
 import { isDefined } from '../util.js';
@@ -266,7 +267,7 @@ export type BlockItemSummary =
 
 export interface BlockItemSummaryInBlock {
     blockHash: BlockHash.Type;
-    summary: BlockItemSummary;
+    summary: Upward<BlockItemSummary>;
 }
 
 export interface PendingBlockItem {

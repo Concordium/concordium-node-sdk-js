@@ -1,4 +1,4 @@
-import { bail } from '../util.ts';
+import { bail } from '../util.js';
 
 /**
  * Represents types returned by the GRPC API which are possibly unknown to the SDK version.
@@ -46,7 +46,7 @@ export function isKnown<T>(value: Upward<T>): value is T {
  * @param error - Error to throw if value is unknown.
  * @returns True as a type predicate when value is known.
  */
-export function assertKnown<T>(value: Upward<T>, error: Error): value is T {
+export function assertKnown<T>(value: Upward<T>, error: Error | string): value is T {
     return isKnown(value) || bail(error);
 }
 
@@ -58,7 +58,7 @@ export function assertKnown<T>(value: Upward<T>, error: Error): value is T {
  * @param error - Error to throw if value is unknown.
  * @returns The unwrapped known value of type T.
  */
-export function knownOrError<T>(value: Upward<T>, error: Error): T {
-    if (!isKnown(value)) throw error;
+export function knownOrError<T>(value: Upward<T>, error: Error | string): T {
+    if (!isKnown(value)) throw error instanceof Error ? error : new Error(error);
     return value;
 }

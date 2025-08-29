@@ -23,6 +23,7 @@ import * as SequenceNumber from '../types/SequenceNumber.js';
 import * as Timestamp from '../types/Timestamp.js';
 import * as TransactionHash from '../types/TransactionHash.js';
 import { mapRecord, unwrap } from '../util.js';
+import type { Upward } from './upward.js';
 
 function unwrapToHex(bytes: Uint8Array | undefined): SDK.HexString {
     return Buffer.from(unwrap(bytes)).toString('hex');
@@ -2090,7 +2091,7 @@ function trCreatePltPayload(payload: GRPC_PLT.CreatePLT): PLT.CreatePLTPayload {
     };
 }
 
-export function blockItemSummary(summary: GRPC.BlockItemSummary): SDK.BlockItemSummary {
+export function blockItemSummary(summary: GRPC.BlockItemSummary): Upward<SDK.BlockItemSummary> {
     const base = {
         index: unwrap(summary.index?.value),
         energyCost: Energy.fromProto(unwrap(summary.energyCost)),
@@ -2125,7 +2126,7 @@ export function blockItemSummary(summary: GRPC.BlockItemSummary): SDK.BlockItemS
                 events: summary.details.tokenCreation.events.map(tokenEvent),
             };
         default:
-            throw Error('Invalid BlockItemSummary encountered!');
+            return null;
     }
 }
 

@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+## 10.0.1
+
+### Fixed
+
+- Added missing support for the new transaction summary type `TokenCreation`. This has been added to the
+  `BlockItemSummary` union type.
+
+## 10.0.0
+
+- Adds support for integrating with Concordium nodes running version 9.
+
 ### Breaking changes
 
 - Add `TokenUpdateSummary` to the possible transaction outcomes declared by `AccountTransactionSummary`
@@ -48,6 +59,16 @@
 - A new optional field `createPlt` to `AuthorizationsV1` which exposes the access structure for PLT creation.
 
 ## 10.0.0-alpha.? (Unreleased)
+
+### Fixed
+
+- Fix conversion in `TokenAmount.fromDecimals` function when used with large `tokenAmount` values with small `decimal` values.
+
+## 10.0.0-alpha.15
+
+### Fixed
+
+- Fix conversion in `TokenAmount.fromDecimals` function when used with large `decimal` values.
 
 ### Changed
 

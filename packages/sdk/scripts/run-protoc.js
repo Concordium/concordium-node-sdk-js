@@ -10,12 +10,14 @@ const protocGenTs = isWindows ?
     path.resolve("scripts", "protoc-gen-ts.cmd") :
     path.resolve("../../node_modules/@protobuf-ts/plugin/bin", "protoc-gen-ts");
 
+const grpcApiDir = path.resolve("../../deps/concordium-base/concordium-grpc-api");
+
 const args = [
     `--plugin=protoc-gen-ts=${protocGenTs}`,
     "--ts_opt", "optimize_code_size",
     "--ts_out=src/grpc-api",
-    "-I", "../../deps/concordium-base/concordium-grpc-api",
-    "../../deps/concordium-base/concordium-grpc-api/v2/concordium/*.proto",
+    "-I", grpcApiDir,
+    `${grpcApiDir}/v2/concordium/*.proto`,
 ];
 
 const result = spawnSync(protoc, args, { stdio: 'inherit', shell: isWindows });

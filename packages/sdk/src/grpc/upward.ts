@@ -1,8 +1,8 @@
 import { bail } from '../util.js';
 
 /**
- * Represents types returned by the GRPC API which are possibly unknown to the SDK version.
- * `null` means that the type is unknown.
+ * Represents types returned by the GRPC API of a Concordium node which are
+ * possibly unknown to the SDK version. `null` means that the type is unknown.
  *
  * @template T - The type representing the known variants
  *

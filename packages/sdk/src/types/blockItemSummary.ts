@@ -267,6 +267,12 @@ export type BlockItemSummary =
 
 export interface BlockItemSummaryInBlock {
     blockHash: BlockHash.Type;
+    /**
+     * The summary/outcome of processing the block item.
+     *
+     * **Please note**, this can possibly be unknown if the SDK is not fully compatible with the Concordium
+     * node queried, in which case `null` is returned.
+     */
     summary: Upward<BlockItemSummary>;
 }
 

@@ -2125,7 +2125,7 @@ export function blockItemSummary(summary: GRPC.BlockItemSummary): Upward<SDK.Blo
                 payload: trCreatePltPayload(unwrap(summary.details.tokenCreation.createPlt)),
                 events: summary.details.tokenCreation.events.map(tokenEvent),
             };
-        default:
+        case undefined:
             return null;
     }
 }

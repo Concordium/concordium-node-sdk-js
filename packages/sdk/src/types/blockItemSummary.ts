@@ -250,6 +250,12 @@ export interface AccountCreationSummary extends BaseBlockItemSummary {
 export interface UpdateSummary extends BaseBlockItemSummary {
     type: TransactionSummaryType.UpdateTransaction;
     effectiveTime: bigint;
+    /**
+     * The payload of update.
+     *
+     * **Please note**, this can possibly be unknown if the SDK is not fully compatible with the Concordium
+     * node queried, in which case `null` is returned.
+     */
     payload: Upward<UpdateInstructionPayload>;
 }
 

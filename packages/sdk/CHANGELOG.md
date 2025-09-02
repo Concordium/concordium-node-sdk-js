@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+### Added
+
+- `Upward<T>` as a means of representing possibly unknown variants of a type encounted when querying the GRPC API
+  of *future* Concordium node versions. This is a type alias of `T | null`, i.e. unknown variants will be represented
+  as `null`.
+
+### Breaking changes
+
+#### GRPC API query response types
+
+- `BlockItemSummaryInBlock.summary` now has the type `Upward<BlockItemSummary>`.
+
+#### `ConcordiumGRPCClient`:
+
+- `waitForTransactionFinalization` is affected by the changes to `BlockItemSummaryInBlock`
+- `getBlockTransactionEvents` now returns `AsyncIterable<Upward<BlockItemSummary>>`.
+
 ## 10.0.1
 
 ### Fixed

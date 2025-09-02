@@ -3,6 +3,7 @@ import {
     RejectReasonTag,
     TransactionKindString,
     TransactionSummaryType,
+    isKnown,
     serializeAccountTransactionPayload,
 } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
@@ -110,6 +111,9 @@ const client = new ConcordiumGRPCNodeClient(addr, Number(port), credentials.crea
             const result = await client.waitForTransactionFinalization(transaction);
             console.log('Transaction finalized:', result);
 
+            if (!isKnown(result.summary)) {
+                throw new Error('Unexpected transaction outcome');
+            }
             if (result.summary.type !== TransactionSummaryType.AccountTransaction) {
                 throw new Error('Unexpected transaction type: ' + result.summary.type);
             }

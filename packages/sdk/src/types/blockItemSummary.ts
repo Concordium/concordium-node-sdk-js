@@ -1,4 +1,5 @@
 import { isEqualContractAddress } from '../contractHelpers.js';
+import type { Upward } from '../grpc/upward.js';
 import { CreatePLTPayload } from '../plt/types.js';
 import { AccountTransactionType, TransactionStatusEnum, TransactionSummaryType } from '../types.js';
 import { isDefined } from '../util.js';
@@ -266,7 +267,13 @@ export type BlockItemSummary =
 
 export interface BlockItemSummaryInBlock {
     blockHash: BlockHash.Type;
-    summary: BlockItemSummary;
+    /**
+     * The summary/outcome of processing the block item.
+     *
+     * **Please note**, this can possibly be unknown if the SDK is not fully compatible with the Concordium
+     * node queried, in which case `null` is returned.
+     */
+    summary: Upward<BlockItemSummary>;
 }
 
 export interface PendingBlockItem {

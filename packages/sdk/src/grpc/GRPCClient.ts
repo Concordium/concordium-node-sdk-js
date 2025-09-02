@@ -36,6 +36,7 @@ import { getEmbeddedModuleSchema } from '../types/VersionedModuleSource.js';
 import type { BlockItemStatus, BlockItemSummary } from '../types/blockItemSummary.js';
 import { countSignatures, isHex, isValidIp, mapRecord, mapStream, unwrap } from '../util.js';
 import * as translate from './translation.js';
+import type { Upward } from './upward.js';
 
 /**
  * @hidden
@@ -946,8 +947,14 @@ export class ConcordiumGRPCClient {
      * @param blockHash an optional block hash to get the transaction events at, otherwise retrieves from last finalized block.
      * @param abortSignal an optional AbortSignal to close the stream.
      * @returns a stream of block item summaries
+     *
+     * **Please note**, any of these can possibly be unknown if the SDK is not fully compatible with the Concordium
+     * node queried, in which case `null` is returned.
      */
-    getBlockTransactionEvents(blockHash?: BlockHash.Type, abortSignal?: AbortSignal): AsyncIterable<BlockItemSummary> {
+    getBlockTransactionEvents(
+        blockHash?: BlockHash.Type,
+        abortSignal?: AbortSignal
+    ): AsyncIterable<Upward<BlockItemSummary>> {
         const blockItemSummaries = this.client.getBlockTransactionEvents(getBlockHashInput(blockHash), {
             abort: abortSignal,
         }).responses;

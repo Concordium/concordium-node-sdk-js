@@ -1,4 +1,4 @@
-import { unwrap } from '@concordium/web-sdk';
+import { isKnown, unwrap } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
@@ -71,6 +71,9 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
         // Get transactions for block
         const trxStream = client.getBlockTransactionEvents(block.hash);
         for await (const trx of trxStream) {
+            if (!isKnown(trx)) {
+                continue;
+            }
             if (trx.type === 'accountCreation' && trx.credentialType === 'initial') {
                 initAccounts.push(trx.address);
             }

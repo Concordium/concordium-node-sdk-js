@@ -1147,6 +1147,9 @@ export class ConcordiumGRPCClient {
      * @param blockHash an optional block hash to get the special events at, otherwise retrieves from last finalized block.
      * @param abortSignal an optional AbortSignal to close the stream.
      * @returns a stream of block item summaries
+     *
+     * **Please note**, these can possibly be unknown if the SDK is not fully compatible with the Concordium
+     * node queried, in which case `null` is returned.
      */
     getBlockSpecialEvents(
         blockHash?: BlockHash.Type,

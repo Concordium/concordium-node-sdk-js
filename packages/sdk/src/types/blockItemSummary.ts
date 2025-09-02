@@ -250,7 +250,7 @@ export interface AccountCreationSummary extends BaseBlockItemSummary {
 export interface UpdateSummary extends BaseBlockItemSummary {
     type: TransactionSummaryType.UpdateTransaction;
     effectiveTime: bigint;
-    payload: UpdateInstructionPayload;
+    payload: Upward<UpdateInstructionPayload>;
 }
 
 export type TokenCreationSummary = {

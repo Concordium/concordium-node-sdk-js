@@ -1,3 +1,4 @@
+import { Upward } from '../grpc/index.js';
 import * as PLT from '../plt/index.js';
 import type {
     Address,
@@ -347,7 +348,7 @@ export interface BakerResumedEvent {
 export interface UpdateEnqueuedEvent {
     tag: TransactionEventTag.UpdateEnqueued;
     effectiveTime: number;
-    payload: UpdateInstructionPayload;
+    payload: Upward<UpdateInstructionPayload>;
 }
 
 /**

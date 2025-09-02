@@ -1511,9 +1511,13 @@ export function trPendingUpdateEffect(pendingUpdate: GRPC.PendingUpdate): Upward
     }
 }
 
-function trUpdatePayload(updatePayload: GRPC.UpdatePayload | undefined): SDK.UpdateInstructionPayload {
-    const payload = updatePayload?.payload;
-    switch (payload?.oneofKind) {
+function trUpdatePayload(updatePayload: GRPC.UpdatePayload | undefined): Upward<SDK.UpdateInstructionPayload> {
+    if (updatePayload === undefined) {
+        throw new Error('Unexpected missing update payload');
+    }
+
+    const payload = updatePayload.payload;
+    switch (payload.oneofKind) {
         case 'protocolUpdate':
             return trProtocolUpdate(payload.protocolUpdate);
         case 'electionDifficultyUpdate':
@@ -1591,7 +1595,7 @@ function trUpdatePayload(updatePayload: GRPC.UpdatePayload | undefined): SDK.Upd
                 },
             };
         case undefined:
-            throw new Error('Unexpected missing update payload');
+            return null;
     }
 }
 

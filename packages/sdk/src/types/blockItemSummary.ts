@@ -178,11 +178,23 @@ export interface UpdateBakerRestakeEarningsSummary {
 
 export interface ConfigureBakerSummary {
     transactionType: TransactionKindString.ConfigureBaker;
+    /**
+     * The events corresponding to the baker configuration
+     *
+     * **Please note**, these can possibly be unknown if the SDK is not fully compatible with the Concordium
+     * node queried, in which case `null` is returned.
+     */
     events: Upward<BakerEvent>[];
 }
 
 export interface ConfigureDelegationSummary {
     transactionType: TransactionKindString.ConfigureDelegation;
+    /**
+     * The events corresponding to the delegation configuration
+     *
+     * **Please note**, these can possibly be unknown if the SDK is not fully compatible with the Concordium
+     * node queried, in which case `null` is returned.
+     */
     events: Upward<DelegationEvent>[];
 }
 
@@ -206,7 +218,12 @@ export interface FailedTransactionSummary {
  */
 export type TokenUpdateSummary = {
     transactionType: TransactionKindString.TokenUpdate;
-    /** The update details */
+    /**
+     * The token update details
+     *
+     * **Please note**, these can possibly be unknown if the SDK is not fully compatible with the Concordium
+     * node queried, in which case `null` is returned.
+     */
     events: Upward<TokenEvent>[];
 };
 

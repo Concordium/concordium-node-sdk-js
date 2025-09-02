@@ -13,6 +13,9 @@
 #### GRPC API query response types
 
 - `BlockItemSummaryInBlock.summary` now has the type `Upward<BlockItemSummary>`.
+- `UpdateSummary.payload` now has the type `Upward<UpdateInstructionPayload>`.
+- `UpdateEnqueuedEvent.payload` now has the type `Upward<UpdateInstructionPayload>`.
+- `PendingUpdate.effect` now has the type `Upward<PendingUpateEffect>`.
 
 #### `ConcordiumGRPCClient`:
 

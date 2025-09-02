@@ -1148,7 +1148,10 @@ export class ConcordiumGRPCClient {
      * @param abortSignal an optional AbortSignal to close the stream.
      * @returns a stream of block item summaries
      */
-    getBlockSpecialEvents(blockHash?: BlockHash.Type, abortSignal?: AbortSignal): AsyncIterable<SDK.BlockSpecialEvent> {
+    getBlockSpecialEvents(
+        blockHash?: BlockHash.Type,
+        abortSignal?: AbortSignal
+    ): AsyncIterable<Upward<SDK.BlockSpecialEvent>> {
         const blockSpecialEvents = this.client.getBlockSpecialEvents(getBlockHashInput(blockHash), {
             abort: abortSignal,
         }).responses;

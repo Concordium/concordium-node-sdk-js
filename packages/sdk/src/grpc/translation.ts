@@ -2505,7 +2505,7 @@ function trAccountAmount(
     };
 }
 
-export function blockSpecialEvent(specialEvent: GRPC.BlockSpecialEvent): SDK.BlockSpecialEvent {
+export function blockSpecialEvent(specialEvent: GRPC.BlockSpecialEvent): Upward<SDK.BlockSpecialEvent> {
     const event = specialEvent.event;
     switch (event.oneofKind) {
         case 'bakingRewards': {
@@ -2596,7 +2596,7 @@ export function blockSpecialEvent(specialEvent: GRPC.BlockSpecialEvent): SDK.Blo
             };
         }
         case undefined: {
-            throw Error('Error translating BlockSpecialEvent: unexpected undefined');
+            return null;
         }
     }
 }

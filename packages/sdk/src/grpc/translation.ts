@@ -1422,7 +1422,7 @@ export function pendingUpdate(pendingUpdate: GRPC.PendingUpdate): SDK.PendingUpd
     };
 }
 
-export function trPendingUpdateEffect(pendingUpdate: GRPC.PendingUpdate): SDK.PendingUpdateEffect {
+export function trPendingUpdateEffect(pendingUpdate: GRPC.PendingUpdate): Upward<SDK.PendingUpdateEffect> {
     const effect = pendingUpdate.effect;
     switch (effect.oneofKind) {
         case 'protocol':
@@ -1507,7 +1507,7 @@ export function trPendingUpdateEffect(pendingUpdate: GRPC.PendingUpdate): SDK.Pe
                 },
             };
         case undefined:
-            throw Error('Unexpected missing pending update');
+            return null;
     }
 }
 

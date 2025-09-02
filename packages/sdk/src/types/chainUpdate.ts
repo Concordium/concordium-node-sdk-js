@@ -1,3 +1,4 @@
+import { Upward } from '../index.ts';
 import { CreatePLTPayload } from '../plt/types.js';
 import type {
     ArInfo,
@@ -141,8 +142,13 @@ export type UpdateInstructionPayload = CommonUpdate | RootUpdate | Level1Update;
 export type PendingUpdate = {
     /** The effective time of the update */
     effectiveTime: Timestamp.Type;
-    /** The effect of the update */
-    effect: PendingUpdateEffect;
+    /**
+     * The effect of the update.
+     *
+     * **Please note**, this can possibly be unknown if the SDK is not fully compatible with the Concordium
+     * node queried, in which case `null` is returned.
+     */
+    effect: Upward<PendingUpdateEffect>;
 };
 
 /** A union of possible effects */

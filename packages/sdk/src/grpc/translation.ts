@@ -805,7 +805,7 @@ function trContractTraceElement(contractTraceElement: GRPC.ContractTraceElement)
     }
 }
 
-function trBakerEvent(bakerEvent: GRPC.BakerEvent, account: AccountAddress.Type): SDK.BakerEvent {
+function trBakerEvent(bakerEvent: GRPC.BakerEvent, account: AccountAddress.Type): Upward<SDK.BakerEvent> {
     const event = bakerEvent.event;
     switch (event.oneofKind) {
         case 'bakerAdded': {
@@ -926,7 +926,7 @@ function trBakerEvent(bakerEvent: GRPC.BakerEvent, account: AccountAddress.Type)
             };
         }
         case undefined:
-            throw Error('Unrecognized event type. This should be impossible.');
+            return null;
     }
 }
 
@@ -946,7 +946,10 @@ function trDelegTarget(delegationTarget: GRPC.DelegationTarget | undefined): SDK
     }
 }
 
-function trDelegationEvent(delegationEvent: GRPC.DelegationEvent, account: AccountAddress.Type): SDK.DelegationEvent {
+function trDelegationEvent(
+    delegationEvent: GRPC.DelegationEvent,
+    account: AccountAddress.Type
+): Upward<SDK.DelegationEvent> {
     const event = delegationEvent.event;
     switch (event.oneofKind) {
         case 'delegationStakeIncreased': {
@@ -1003,7 +1006,7 @@ function trDelegationEvent(delegationEvent: GRPC.DelegationEvent, account: Accou
                 bakerId: unwrap(event.bakerRemoved.bakerId?.value),
             };
         case undefined:
-            throw Error('Unrecognized event type. This should be impossible.');
+            return null;
     }
 }
 
@@ -2041,7 +2044,7 @@ function trAccountTransactionSummary(
     }
 }
 
-function tokenEvent(event: GRPC_PLT.TokenEvent): TokenEvent {
+function tokenEvent(event: GRPC_PLT.TokenEvent): Upward<TokenEvent> {
     switch (event.event.oneofKind) {
         case 'transferEvent':
             const transferEvent: TokenTransferEvent = {
@@ -2078,7 +2081,7 @@ function tokenEvent(event: GRPC_PLT.TokenEvent): TokenEvent {
                 target: PLT.TokenHolder.fromProto(unwrap(event.event.burnEvent.target)),
             };
         case undefined:
-            throw Error('Failed translating "TokenEvent", encountered undefined value');
+            return null;
     }
 }
 

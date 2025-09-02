@@ -178,12 +178,12 @@ export interface UpdateBakerRestakeEarningsSummary {
 
 export interface ConfigureBakerSummary {
     transactionType: TransactionKindString.ConfigureBaker;
-    events: BakerEvent[];
+    events: Upward<BakerEvent>[];
 }
 
 export interface ConfigureDelegationSummary {
     transactionType: TransactionKindString.ConfigureDelegation;
-    events: DelegationEvent[];
+    events: Upward<DelegationEvent>[];
 }
 
 export interface UpdateCredentialKeysSummary {
@@ -207,7 +207,7 @@ export interface FailedTransactionSummary {
 export type TokenUpdateSummary = {
     transactionType: TransactionKindString.TokenUpdate;
     /** The update details */
-    events: TokenEvent[];
+    events: Upward<TokenEvent>[];
 };
 
 /**
@@ -256,7 +256,7 @@ export interface UpdateSummary extends BaseBlockItemSummary {
 export type TokenCreationSummary = {
     type: TransactionSummaryType.TokenCreation;
     payload: CreatePLTPayload;
-    events: TokenEvent[];
+    events: Upward<TokenEvent>[];
 };
 
 export type BlockItemSummary =

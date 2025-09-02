@@ -1,4 +1,4 @@
-import { Upward } from '../index.ts';
+import { Upward } from '../index.js';
 import { CreatePLTPayload } from '../plt/types.js';
 import type {
     ArInfo,

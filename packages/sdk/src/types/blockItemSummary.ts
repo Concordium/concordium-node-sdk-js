@@ -273,6 +273,12 @@ export interface UpdateSummary extends BaseBlockItemSummary {
 export type TokenCreationSummary = {
     type: TransactionSummaryType.TokenCreation;
     payload: CreatePLTPayload;
+    /**
+     * The token creation details
+     *
+     * **Please note**, these can possibly be unknown if the SDK is not fully compatible with the Concordium
+     * node queried, in which case `null` is returned.
+     */
     events: Upward<TokenEvent>[];
 };
 

@@ -1,5 +1,8 @@
 export * from './types.js';
 export * from './module.js';
+export * from './TokenModuleRejectReason.js';
+export * from './TokenModuleEvent.js';
+export * from './TokenOperation.js';
 
 export * as TokenId from './TokenId.js';
 export * as TokenModuleReference from './TokenModuleReference.js';

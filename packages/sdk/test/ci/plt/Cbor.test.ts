@@ -1,9 +1,25 @@
+import { TransactionEventTag } from '../../../src/index.ts';
 import * as Cbor from '../../../src/plt/Cbor.js';
 import * as TokenAmount from '../../../src/plt/TokenAmount.js';
 import * as TokenHolder from '../../../src/plt/TokenHolder.js';
 import * as TokenMetadataUrl from '../../../src/plt/TokenMetadataUrl.js';
-import { TokenListUpdateEventDetails, TokenPauseEventDetails } from '../../../src/pub/plt.js';
+import { TokenAddAllowListEvent, TokenId, TokenModuleEvent, TokenPauseEvent } from '../../../src/plt/index.ts';
+import {
+    TokenListUpdateEventDetails,
+    TokenOperationType,
+    TokenPauseEventDetails,
+    parseModuleEvent,
+} from '../../../src/pub/plt.js';
 import { AccountAddress } from '../../../src/types/index.js';
+
+function parseAs<T extends TokenModuleEvent>(type: TokenOperationType, details: Cbor.Type): T {
+    return parseModuleEvent({
+        tag: TransactionEventTag.TokenModuleEvent,
+        type,
+        details,
+        tokenId: TokenId.fromString(''),
+    })! as T;
+}
 
 describe('Cbor', () => {
     describe('TokenModuleState', () => {
@@ -209,8 +225,8 @@ describe('Cbor', () => {
             };
 
             const encoded = Cbor.encode(details);
-            const decoded = Cbor.decode(encoded, 'TokenListUpdateEventDetails');
-            expect(decoded.target).toEqual(details.target);
+            const decoded = parseAs<TokenAddAllowListEvent>(TokenOperationType.AddAllowList, encoded);
+            expect(decoded.details).toEqual(details);
         });
 
         test('should throw error if TokenEventDetails is missing required fields', () => {
@@ -220,7 +236,7 @@ describe('Cbor', () => {
                 additionalInfo: 'Some extra information',
             };
             const encoded = Cbor.encode(invalidDetails);
-            expect(() => Cbor.decode(encoded, 'TokenListUpdateEventDetails')).toThrow(
+            expect(() => parseAs<TokenAddAllowListEvent>(TokenOperationType.AddAllowList, encoded)).toThrow(
                 /Expected 'target' to be a TokenHolder/
             );
         });
@@ -232,7 +248,7 @@ describe('Cbor', () => {
                 additionalInfo: 'Some extra information',
             };
             const encoded = Cbor.encode(invalidDetails);
-            expect(() => Cbor.decode(encoded, 'TokenListUpdateEventDetails')).toThrow(
+            expect(() => parseAs<TokenAddAllowListEvent>(TokenOperationType.AddAllowList, encoded)).toThrow(
                 /Expected 'target' to be a TokenHolder/
             );
         });
@@ -242,15 +258,15 @@ describe('Cbor', () => {
         test('should encode and decode TokenEventDetails correctly', () => {
             const details: TokenPauseEventDetails = {};
             const encoded = Cbor.encode(details);
-            const decoded = Cbor.decode(encoded, 'TokenPauseEventDetails');
-            expect(decoded).toEqual(details);
+            const decoded = parseAs<TokenPauseEvent>(TokenOperationType.Pause, encoded);
+            expect(decoded.details).toEqual(details);
         });
 
         test('should throw error if TokenEventDetails has invalid target type', () => {
             // Invalid target type
             const invalidDetails = 'invalid';
             const encoded = Cbor.encode(invalidDetails);
-            expect(() => Cbor.decode(encoded, 'TokenPauseEventDetails')).toThrow(
+            expect(() => parseAs<TokenPauseEvent>(TokenOperationType.Pause, encoded)).toThrow(
                 /Invalid event details: "invalid". Expected an object./
             );
         });

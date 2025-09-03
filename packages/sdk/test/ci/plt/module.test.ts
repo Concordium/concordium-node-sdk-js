@@ -45,7 +45,7 @@ describe('PLT parseModuleEvent', () => {
                 `a166746172676574d99d73a201d99d71a101190397035820${Buffer.from(accountBytes).toString('hex')}`
             );
 
-            const parsedEvent = parseModuleEvent(validEvent);
+            const parsedEvent = parseModuleEvent(validEvent)!;
             expect(parsedEvent.type).toEqual(type);
             expect((parsedEvent.details as TokenListUpdateEventDetails).target.type).toEqual('account');
             expect((parsedEvent.details as TokenListUpdateEventDetails).target.address.decodedAddress).toEqual(
@@ -69,7 +69,7 @@ describe('PLT parseModuleEvent', () => {
         };
         expect(validEvent.details.toString()).toEqual('a0');
 
-        const parsedEvent = parseModuleEvent(validEvent);
+        const parsedEvent = parseModuleEvent(validEvent)!;
         expect(parsedEvent.type).toEqual('pause');
         expect(parsedEvent.details).toEqual({});
     });
@@ -84,7 +84,7 @@ describe('PLT parseModuleEvent', () => {
         };
         expect(validEvent.details.toString()).toEqual('a0');
 
-        const parsedEvent = parseModuleEvent(validEvent);
+        const parsedEvent = parseModuleEvent(validEvent)!;
         expect(parsedEvent.type).toEqual('unpause');
         expect(parsedEvent.details).toEqual({});
     });

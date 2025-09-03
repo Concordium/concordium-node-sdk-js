@@ -91,6 +91,9 @@ npm_config_target_arch=x64 yarn
 
 Note: you need rustup in order to build rust-bindings (can be installed from [rust-lang.org](https://www.rust-lang.org/tools/install))
 
+Please ensure that the rust version used is matching the one in the `pipeline.yml` under `.github/workflows` path.
+For example, at the time of writing, version is 1.73. Use the command `rustup override set 1.73` to set to a specific version.
+
 To build the project run
 
 ```shell

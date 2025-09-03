@@ -1422,7 +1422,7 @@ export function pendingUpdate(pendingUpdate: GRPC.PendingUpdate): SDK.PendingUpd
     };
 }
 
-export function trPendingUpdateEffect(pendingUpdate: GRPC.PendingUpdate): SDK.PendingUpdateEffect {
+export function trPendingUpdateEffect(pendingUpdate: GRPC.PendingUpdate): Upward<SDK.PendingUpdateEffect> {
     const effect = pendingUpdate.effect;
     switch (effect.oneofKind) {
         case 'protocol':
@@ -1507,13 +1507,17 @@ export function trPendingUpdateEffect(pendingUpdate: GRPC.PendingUpdate): SDK.Pe
                 },
             };
         case undefined:
-            throw Error('Unexpected missing pending update');
+            return null;
     }
 }
 
-function trUpdatePayload(updatePayload: GRPC.UpdatePayload | undefined): SDK.UpdateInstructionPayload {
-    const payload = updatePayload?.payload;
-    switch (payload?.oneofKind) {
+function trUpdatePayload(updatePayload: GRPC.UpdatePayload | undefined): Upward<SDK.UpdateInstructionPayload> {
+    if (updatePayload === undefined) {
+        throw new Error('Unexpected missing update payload');
+    }
+
+    const payload = updatePayload.payload;
+    switch (payload.oneofKind) {
         case 'protocolUpdate':
             return trProtocolUpdate(payload.protocolUpdate);
         case 'electionDifficultyUpdate':
@@ -1591,7 +1595,7 @@ function trUpdatePayload(updatePayload: GRPC.UpdatePayload | undefined): SDK.Upd
                 },
             };
         case undefined:
-            throw new Error('Unexpected missing update payload');
+            return null;
     }
 }
 

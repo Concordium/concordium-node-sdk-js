@@ -1,3 +1,4 @@
+import { Upward } from '../grpc/index.js';
 import * as PLT from '../plt/index.js';
 import type {
     Address,
@@ -347,7 +348,13 @@ export interface BakerResumedEvent {
 export interface UpdateEnqueuedEvent {
     tag: TransactionEventTag.UpdateEnqueued;
     effectiveTime: number;
-    payload: UpdateInstructionPayload;
+    /**
+     * The payload of the enqueued update.
+     *
+     * **Please note**, this can possibly be unknown if the SDK is not fully compatible with the Concordium
+     * node queried, in which case `null` is returned.
+     */
+    payload: Upward<UpdateInstructionPayload>;
 }
 
 /**

@@ -2373,7 +2373,7 @@ export function nextUpdateSequenceNumbers(nextNums: GRPC.NextUpdateSequenceNumbe
 
 function trPassiveCommitteeInfo(
     passiveCommitteeInfo: GRPC.NodeInfo_BakerConsensusInfo_PassiveCommitteeInfo
-): SDK.PassiveCommitteeInfo {
+): Upward<SDK.PassiveCommitteeInfo> {
     const passiveCommitteeInfoV2 = GRPC.NodeInfo_BakerConsensusInfo_PassiveCommitteeInfo;
     switch (passiveCommitteeInfo) {
         case passiveCommitteeInfoV2.NOT_IN_COMMITTEE:
@@ -2382,6 +2382,8 @@ function trPassiveCommitteeInfo(
             return SDK.PassiveCommitteeInfo.AddedButNotActiveInCommittee;
         case passiveCommitteeInfoV2.ADDED_BUT_WRONG_KEYS:
             return SDK.PassiveCommitteeInfo.AddedButWrongKeys;
+        default: 
+            return null;
     }
 }
 

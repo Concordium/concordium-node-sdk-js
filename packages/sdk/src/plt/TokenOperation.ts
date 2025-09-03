@@ -136,3 +136,140 @@ export function createTokenUpdatePayload(
         operations: Cbor.encode(ops),
     };
 }
+
+/** Variant used when decoding encounters an unknown or unsupported operation shape. */
+export type UnknownTokenOperation = { [key: string]: unknown };
+
+function parseTransfer(details: unknown): TokenTransfer {
+    if (typeof details !== 'object' || details === null)
+        throw new Error(`Invalid transfer details: ${JSON.stringify(details)}. Expected an object.`);
+    if (!('amount' in details) || !TokenAmount.instanceOf(details.amount))
+        throw new Error(`Invalid transfer details: ${JSON.stringify(details)}. Expected 'amount' to be a TokenAmount`);
+    if (!('recipient' in details) || !TokenHolder.instanceOf(details.recipient))
+        throw new Error(
+            `Invalid transfer details: ${JSON.stringify(details)}. Expected 'recipient' to be a TokenHolder`
+        );
+    if ('memo' in details && !(details.memo instanceof Uint8Array || CborMemo.instanceOf(details.memo)))
+        throw new Error(
+            `Invalid transfer details: ${JSON.stringify(details)}. Expected 'memo' to be Uint8Array | CborMemo`
+        );
+    return details as TokenTransfer;
+}
+
+function parseSupplyUpdate(details: unknown): TokenSupplyUpdate {
+    if (typeof details !== 'object' || details === null) {
+        throw new Error(`Invalid supply update details: ${JSON.stringify(details)}. Expected an object.`);
+    }
+    if (!('amount' in details) || !TokenAmount.instanceOf(details.amount))
+        throw new Error(
+            `Invalid supply update details: ${JSON.stringify(details)}. Expected 'amount' to be a TokenAmount`
+        );
+    return details as TokenSupplyUpdate;
+}
+
+function parseListUpdate(details: unknown): TokenListUpdate {
+    if (typeof details !== 'object' || details === null)
+        throw new Error(`Invalid list update details: ${JSON.stringify(details)}. Expected an object.`);
+    if (!('target' in details) || !TokenHolder.instanceOf(details.target))
+        throw new Error(
+            `Invalid list update details: ${JSON.stringify(details)}. Expected 'target' to be a TokenHolder`
+        );
+    return details as TokenListUpdate;
+}
+
+function parseEmpty(details: unknown): {} {
+    if (typeof details !== 'object' || details === null || Object.keys(details as object).length !== 0)
+        throw new Error(`Invalid operation details: ${JSON.stringify(details)}. Expected empty object {}`);
+    return details;
+}
+
+/**
+ * Decode a single token operation from CBOR. Throws on invalid shapes, only returns Unknown variant when the key is unrecognized.
+ */
+function parseTokenOperation(decoded: unknown): TokenOperation | UnknownTokenOperation {
+    if (typeof decoded !== 'object' || decoded === null)
+        throw new Error(`Invalid token operation: ${JSON.stringify(decoded)}. Expected an object.`);
+
+    const keys = Object.keys(decoded);
+    if (keys.length !== 1)
+        throw new Error(
+            `Invalid token operation: ${JSON.stringify(decoded)}. Expected an object with a single key identifying the operation type.`
+        );
+
+    const type = keys[0];
+    const details = (decoded as Record<string, unknown>)[type];
+    switch (type) {
+        case TokenOperationType.Transfer:
+            return { [type]: parseTransfer(details) };
+        case TokenOperationType.Mint:
+            return { [type]: parseSupplyUpdate(details) };
+        case TokenOperationType.Burn:
+            return { [type]: parseSupplyUpdate(details) };
+        case TokenOperationType.AddAllowList:
+            return { [type]: parseListUpdate(details) };
+        case TokenOperationType.RemoveAllowList:
+            return { [type]: parseListUpdate(details) };
+        case TokenOperationType.AddDenyList:
+            return { [type]: parseListUpdate(details) };
+        case TokenOperationType.RemoveDenyList:
+            return { [type]: parseListUpdate(details) };
+        case TokenOperationType.Pause:
+            return { [type]: parseEmpty(details) };
+        case TokenOperationType.Unpause:
+            return { [type]: parseEmpty(details) };
+        default:
+            return decoded as UnknownTokenOperation;
+    }
+}
+
+/**
+ * Decodes a token operation.
+ *
+ * @param cbor - The CBOR encoding to decode.
+ * @returns The decoded token operation.
+ *
+ * @example
+ * const op = decodeTokenOperation(cbor);
+ * switch (true) {
+ *   case TokenOperationType.Transfer in op: {
+ *     const details = op[TokenOperationType.Transfer]; // type is known at this point.
+ *     console.log(details);
+ *   }
+ *   ...
+ *   default: console.warn('Unknown operation', op);
+ * }
+ */
+export function decodeTokenOperation(cbor: Cbor.Type): TokenOperation | UnknownTokenOperation {
+    const decoded = Cbor.decode(cbor);
+    return parseTokenOperation(decoded);
+}
+
+/**
+ * Parses a token update payload, decoding the operations from CBOR format.
+ *
+ * @param payload - The token update payload to parse.
+ * @returns The parsed token update payload with decoded operations.
+ *
+ * @example
+ * const parsedPayload = parseTokenUpdatePayload(encodedPayload);
+ * parsedPayload.operations.forEach(op => {
+ *   switch (true) {
+ *     case TokenOperationType.Transfer in op: {
+ *       const details = op[TokenOperationType.Transfer]; // type is known at this point.
+ *       console.log(details);
+ *     }
+ *     ...
+ *     default: console.warn('Unknown operation', op);
+ *   }
+ * });
+ */
+export function parseTokenUpdatePayload(
+    payload: TokenUpdatePayload
+): Omit<TokenUpdatePayload, 'operations'> & { operations: (TokenOperation | UnknownTokenOperation)[] } {
+    const decoded = Cbor.decode(payload.operations);
+    if (!Array.isArray(decoded))
+        throw new Error(`Invalid token update operations: ${JSON.stringify(decoded)}. Expected a list of operations.`);
+
+    const operations = decoded.map(parseTokenOperation);
+    return { ...payload, operations };
+}

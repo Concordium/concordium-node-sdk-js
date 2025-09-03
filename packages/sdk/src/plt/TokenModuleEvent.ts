@@ -1,4 +1,3 @@
-import { Upward } from '../grpc/index.js';
 import { EncodedTokenModuleEvent, TransactionEventTag } from '../types.js';
 import { TokenOperationType } from './TokenOperation.js';
 import { Cbor, TokenHolder, TokenId } from './index.js';

@@ -18,6 +18,7 @@
 - `UpdateSummary.payload` now has the type `Upward<UpdateInstructionPayload>`.
 - `UpdateEnqueuedEvent.payload` now has the type `Upward<UpdateInstructionPayload>`.
 - `PendingUpdate.effect` now has the type `Upward<PendingUpateEffect>`.
+- `PassiveCommitteeInfo` now has been wrapped in `Upward`.
 - `NodeInfoConsensusStatus` and `NodeCatchupStatus` now have been wrapped in `Upward`.
 
 #### `ConcordiumGRPCClient`:

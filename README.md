@@ -59,6 +59,12 @@ A collection of useful packages for building typescript/javascript applications 
   React components and hooks for implementing features commonly needed by dApps.
   The components only manage React state and pass data to application components - no actual HTML is being rendered.
 
+## Rust version
+
+Please ensure that the rust version used is matching the one in the pipeline.yml under .github/workflows.
+At the time of writing, version is 1.73. Use the command rustup override set 1.73, to make sure.
+Then, the build:all should run without any issue
+
 ## Install/updating dependencies
 
 To install/update dependencies for the project, run

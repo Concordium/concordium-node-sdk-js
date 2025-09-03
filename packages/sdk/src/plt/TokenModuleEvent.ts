@@ -78,27 +78,25 @@ export type TokenModuleEvent =
  * Parses a token module event, decoding the details from CBOR format. If the desired outcome is to be able to handle
  * arbitrary token events, it's recommended to use {@link Cbor.decode} instead.
  *
+ * **Please note**, this can possibly be unknown if the SDK is not fully compatible with the Concordium
+ * node queried, in which case `null` is returned.
+ *
  * @param event - The token module event to parse.
  * @returns The parsed token module event with decoded details.
- * @throws {Error} If the event cannot be parsed as a token module event.
  *
  * @example
- * try {
- *   const parsedEvent = parseModuleEvent(encodedEvent);
- *   switch (parsedEvent.type) {
- *     // typed details are now available, e.g.:
- *     case TokenOperationType.AddAllowList: console.log(parsedEvent.details.target);
- *     ...
- *   }
- * } catch (error) {
- *   // Fall back to using Cbor.decode
- *   const decodedDetails = Cbor.decode(encodedEvent.details);
- *   switch (encodedEvent.type) {
- *     // do something with the decoded details
- *   }
+ * const parsedEvent = parseModuleEvent(encodedEvent);
+ * if (!isKnown(parsedEvent)) {
+ *   return; // or throw to fail early
+ * }
+ *
+ * switch (parsedEvent.type) {
+ *   // typed details are now available, e.g.:
+ *   case TokenOperationType.AddAllowList: console.log(parsedEvent.details.target);
+ *   ...
  * }
  */
-export function parseModuleEvent(event: EncodedTokenModuleEvent): TokenModuleEvent {
+export function parseModuleEvent(event: EncodedTokenModuleEvent): Upward<TokenModuleEvent> {
     switch (event.type) {
         case TokenOperationType.AddAllowList:
         case TokenOperationType.RemoveAllowList:
@@ -109,6 +107,6 @@ export function parseModuleEvent(event: EncodedTokenModuleEvent): TokenModuleEve
         case TokenOperationType.Unpause:
             return { ...event, type: event.type, details: Cbor.decode(event.details, 'TokenPauseEventDetails') };
         default:
-            throw new Error(`Cannot parse event as token module event: ${event.type}`);
+            return null;
     }
 }

@@ -1,4 +1,5 @@
 import type { HexString, IpAddressString } from '../types.js';
+import type { Upward } from '../grpc/upward.js';
 
 export interface PeerInfo {
     peerId: HexString;
@@ -22,7 +23,7 @@ export interface PeerConsensusInfoBootstrapper {
 
 export interface PeerConsensusInfoCatchupStatus {
     tag: 'nodeCatchupStatus';
-    catchupStatus: NodeCatchupStatus;
+    catchupStatus: Upward<NodeCatchupStatus>;
 }
 
 export enum NodeCatchupStatus {

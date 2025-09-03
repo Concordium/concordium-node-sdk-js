@@ -21,6 +21,7 @@
 
 - `waitForTransactionFinalization` is affected by the changes to `BlockItemSummaryInBlock`
 - `getBlockTransactionEvents` now returns `AsyncIterable<Upward<BlockItemSummary>>`.
+- `getBlockSpecialEvents` now returns `AsyncIterable<Upward<BlockSpecialEvent>>`.
 
 ## 10.0.1
 

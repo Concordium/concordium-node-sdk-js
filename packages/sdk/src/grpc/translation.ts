@@ -2462,7 +2462,7 @@ export function nodeInfo(nodeInfo: GRPC.NodeInfo): SDK.NodeInfo {
     };
 }
 
-function trCatchupStatus(catchupStatus: GRPC.PeersInfo_Peer_CatchupStatus): SDK.NodeCatchupStatus {
+function trCatchupStatus(catchupStatus: GRPC.PeersInfo_Peer_CatchupStatus): Upward<SDK.NodeCatchupStatus> {
     const CatchupStatus = GRPC.PeersInfo_Peer_CatchupStatus;
     switch (catchupStatus) {
         case CatchupStatus.CATCHINGUP:
@@ -2471,6 +2471,8 @@ function trCatchupStatus(catchupStatus: GRPC.PeersInfo_Peer_CatchupStatus): SDK.
             return SDK.NodeCatchupStatus.Pending;
         case CatchupStatus.UPTODATE:
             return SDK.NodeCatchupStatus.UpToDate;
+        default:
+            return null;
     }
 }
 

@@ -15,11 +15,15 @@
 - `BlockItemSummaryInBlock.summary` now has the type `Upward<BlockItemSummary>`.
 - `ConfigureBakerSummary`, `ConfigureDelegationSummary`, `TokenCreationSummary`, and `TokenUpdateSummary` events
   have been wrapped in `Upward`.
+- `UpdateSummary.payload` now has the type `Upward<UpdateInstructionPayload>`.
+- `UpdateEnqueuedEvent.payload` now has the type `Upward<UpdateInstructionPayload>`.
+- `PendingUpdate.effect` now has the type `Upward<PendingUpateEffect>`.
 
 #### `ConcordiumGRPCClient`:
 
 - `waitForTransactionFinalization` is affected by the changes to `BlockItemSummaryInBlock`
 - `getBlockTransactionEvents` now returns `AsyncIterable<Upward<BlockItemSummary>>`.
+- `getBlockSpecialEvents` now returns `AsyncIterable<Upward<BlockSpecialEvent>>`.
 
 ## 10.0.1
 

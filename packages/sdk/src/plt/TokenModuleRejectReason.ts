@@ -1,3 +1,4 @@
+import { cborDecode } from '../index.js';
 import { TokenAmount, TokenHolder } from './index.js';
 import { EncodedTokenModuleRejectReason } from './types.js';
 
@@ -15,6 +16,11 @@ type RejectReasonGen<T extends TokenRejectReasonType, D> = Omit<EncodedTokenModu
     type: T;
     /** Additional details about the rejection. */
     details: D;
+};
+
+type UnknownTokenRejectReason = Omit<EncodedTokenModuleRejectReason, 'details'> & {
+    /** Additional details about the rejection. */
+    details: unknown;
 };
 
 /**
@@ -148,3 +154,166 @@ export type TokenModuleRejectReason =
     | UnsupportedOperationRejectReason
     | OperationNotPermittedRejectReason
     | MintWouldOverflowRejectReason;
+
+function parseAddressNotFound(decoded: unknown): AddressNotFoundDetails {
+    if (typeof decoded !== 'object' || decoded === null) {
+        throw new Error(`Invalid reason details: ${JSON.stringify(decoded)}. Expected an object.`);
+    }
+    // required
+    if (!('index' in decoded) || typeof decoded.index !== 'number') {
+        throw new Error(`Invalid reason details: ${JSON.stringify(decoded)}. Expected 'index' to be a number`);
+    }
+    // required
+    if (!('address' in decoded) || !TokenHolder.instanceOf(decoded.address)) {
+        throw new Error(`Invalid reason details: ${JSON.stringify(decoded)}. Expected 'address' to be a TokenHolder`);
+    }
+
+    return decoded as AddressNotFoundDetails;
+}
+
+function parseMintWouldOverflow(decoded: unknown): MintWouldOverflowDetails {
+    if (typeof decoded !== 'object' || decoded === null) {
+        throw new Error(`Invalid reason details: ${JSON.stringify(decoded)}. Expected an object.`);
+    }
+    // required
+    if (!('index' in decoded) || typeof decoded.index !== 'number') {
+        throw new Error(`Invalid reason details: ${JSON.stringify(decoded)}. Expected 'index' to be a number`);
+    }
+    // required
+    if (!('requestedAmount' in decoded) || TokenAmount.instanceOf(decoded.requestedAmount)) {
+        throw new Error(
+            `Invalid reason details: ${JSON.stringify(decoded)}. Expected 'requestedAmount' to be a TokenAmount`
+        );
+    }
+    // required
+    if (!('currentSupply' in decoded) || TokenAmount.instanceOf(decoded.currentSupply)) {
+        throw new Error(
+            `Invalid reason details: ${JSON.stringify(decoded)}. Expected 'currentSupply' to be a TokenAmount`
+        );
+    }
+    // required
+    if (!('maxRepresentableAmount' in decoded) || TokenAmount.instanceOf(decoded.maxRepresentableAmount)) {
+        throw new Error(
+            `Invalid reason details: ${JSON.stringify(decoded)}. Expected 'maxRepresentableAmount' to be a TokenAmount`
+        );
+    }
+
+    return decoded as MintWouldOverflowDetails;
+}
+
+function parseTokenBalanceInsufficient(decoded: unknown): TokenBalanceInsufficientDetails {
+    if (typeof decoded !== 'object' || decoded === null) {
+        throw new Error(`Invalid reason details: ${JSON.stringify(decoded)}. Expected an object.`);
+    }
+    // required
+    if (!('index' in decoded) || typeof decoded.index !== 'number') {
+        throw new Error(`Invalid reason details: ${JSON.stringify(decoded)}. Expected 'index' to be a number`);
+    }
+    // required
+    if (!('availableBalance' in decoded) || !TokenAmount.instanceOf(decoded.availableBalance)) {
+        throw new Error(
+            `Invalid reason details: ${JSON.stringify(decoded)}. Expected 'availableBalance' to be a TokenAmount`
+        );
+    }
+    // required
+    if (!('requiredBalance' in decoded) || !TokenAmount.instanceOf(decoded.requiredBalance)) {
+        throw new Error(
+            `Invalid reason details: ${JSON.stringify(decoded)}. Expected 'requiredBalance' to be a TokenAmount`
+        );
+    }
+    return decoded as TokenBalanceInsufficientDetails;
+}
+
+function parseDeserializationFailure(decoded: unknown): DeserializationFailureDetails {
+    if (typeof decoded !== 'object' || decoded === null) {
+        throw new Error(`Invalid reason details: ${JSON.stringify(decoded)}. Expected an object.`);
+    }
+    // optional
+    if ('cause' in decoded && typeof decoded.cause !== 'string') {
+        throw new Error(
+            `Invalid reason details: ${JSON.stringify(decoded)}. Expected 'cause' to be a string if present`
+        );
+    }
+    return decoded as DeserializationFailureDetails;
+}
+
+function parseUnsupportedOperation(decoded: unknown): UnsupportedOperationDetails {
+    if (typeof decoded !== 'object' || decoded === null) {
+        throw new Error(`Invalid reason details: ${JSON.stringify(decoded)}. Expected an object.`);
+    }
+    // required
+    if (!('index' in decoded) || typeof decoded.index !== 'number') {
+        throw new Error(`Invalid reason details: ${JSON.stringify(decoded)}. Expected 'index' to be a number`);
+    }
+    // required
+    if (!('operationType' in decoded) || typeof decoded.operationType !== 'string') {
+        throw new Error(`Invalid reason details: ${JSON.stringify(decoded)}. Expected 'operationType' to be a string`);
+    }
+    // optional
+    if ('reason' in decoded && typeof decoded.reason !== 'string') {
+        throw new Error(
+            `Invalid reason details: ${JSON.stringify(decoded)}. Expected 'reason' to be a string if present`
+        );
+    }
+    return decoded as UnsupportedOperationDetails;
+}
+
+function parseOperationNotPermitted(decoded: unknown): OperationNotPermittedDetails {
+    if (typeof decoded !== 'object' || decoded === null) {
+        throw new Error(`Invalid reason details: ${JSON.stringify(decoded)}. Expected an object.`);
+    }
+    // required
+    if (!('index' in decoded) || typeof decoded.index !== 'number') {
+        throw new Error(`Invalid reason details: ${JSON.stringify(decoded)}. Expected 'index' to be a number`);
+    }
+    // optional
+    if ('address' in decoded && !TokenHolder.instanceOf(decoded.address)) {
+        throw new Error(
+            `Invalid reason details: ${JSON.stringify(decoded)}. Expected 'address' to be a TokenHolder if present`
+        );
+    }
+    // optional
+    if ('reason' in decoded && typeof decoded.reason !== 'string') {
+        throw new Error(
+            `Invalid reason details: ${JSON.stringify(decoded)}. Expected 'reason' to be a string if present`
+        );
+    }
+    return decoded as OperationNotPermittedDetails;
+}
+
+/**
+ * Parses a token module reject reason, decoding the details from CBOR format.
+ *
+ * @param rejectReason - The token module reject reason to parse.
+ * @returns The parsed token module reject reason with decoded details.
+ *
+ * @example
+ * const parsedReason = parseModuleEvent(encodedReason);
+ * switch (parsedReason.type) {
+ *   // typed details are now available, e.g.:
+ *   case TokenRejectReasonType.MintWouldOverflow: console.log(parsedReason.requestedAmount);
+ *   ...
+ *   default: console.warn('Unknown reject reason:', parsedReason);
+ * }
+ */
+export function parseModuleRejectReason(
+    rejectReason: EncodedTokenModuleRejectReason
+): TokenModuleRejectReason | UnknownTokenRejectReason {
+    const decoded = cborDecode(rejectReason.details.bytes);
+    switch (rejectReason.type) {
+        case TokenRejectReasonType.AddressNotFound:
+            return { ...rejectReason, type: rejectReason.type, details: parseAddressNotFound(decoded) };
+        case TokenRejectReasonType.MintWouldOverflow:
+            return { ...rejectReason, type: rejectReason.type, details: parseMintWouldOverflow(decoded) };
+        case TokenRejectReasonType.TokenBalanceInsufficient:
+            return { ...rejectReason, type: rejectReason.type, details: parseTokenBalanceInsufficient(decoded) };
+        case TokenRejectReasonType.DeserializationFailure:
+            return { ...rejectReason, type: rejectReason.type, details: parseDeserializationFailure(decoded) };
+        case TokenRejectReasonType.UnsupportedOperation:
+            return { ...rejectReason, type: rejectReason.type, details: parseUnsupportedOperation(decoded) };
+        case TokenRejectReasonType.OperationNotPermitted:
+            return { ...rejectReason, type: rejectReason.type, details: parseOperationNotPermitted(decoded) };
+        default:
+            return { ...rejectReason, details: decoded };
+    }
+}

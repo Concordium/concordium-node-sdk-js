@@ -2382,7 +2382,7 @@ function trPassiveCommitteeInfo(
             return SDK.PassiveCommitteeInfo.AddedButNotActiveInCommittee;
         case passiveCommitteeInfoV2.ADDED_BUT_WRONG_KEYS:
             return SDK.PassiveCommitteeInfo.AddedButWrongKeys;
-        default: 
+        default:
             return null;
     }
 }

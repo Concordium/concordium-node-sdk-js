@@ -13,6 +13,8 @@
 #### GRPC API query response types
 
 - `BlockItemSummaryInBlock.summary` now has the type `Upward<BlockItemSummary>`.
+- `ConfigureBakerSummary`, `ConfigureDelegationSummary`, `TokenCreationSummary`, and `TokenUpdateSummary` events
+  have been wrapped in `Upward`.
 - `UpdateSummary.payload` now has the type `Upward<UpdateInstructionPayload>`.
 - `UpdateEnqueuedEvent.payload` now has the type `Upward<UpdateInstructionPayload>`.
 - `PendingUpdate.effect` now has the type `Upward<PendingUpateEffect>`.

@@ -178,12 +178,24 @@ export interface UpdateBakerRestakeEarningsSummary {
 
 export interface ConfigureBakerSummary {
     transactionType: TransactionKindString.ConfigureBaker;
-    events: BakerEvent[];
+    /**
+     * The events corresponding to the baker configuration
+     *
+     * **Please note**, these can possibly be unknown if the SDK is not fully compatible with the Concordium
+     * node queried, in which case `null` is returned.
+     */
+    events: Upward<BakerEvent>[];
 }
 
 export interface ConfigureDelegationSummary {
     transactionType: TransactionKindString.ConfigureDelegation;
-    events: DelegationEvent[];
+    /**
+     * The events corresponding to the delegation configuration
+     *
+     * **Please note**, these can possibly be unknown if the SDK is not fully compatible with the Concordium
+     * node queried, in which case `null` is returned.
+     */
+    events: Upward<DelegationEvent>[];
 }
 
 export interface UpdateCredentialKeysSummary {
@@ -206,8 +218,13 @@ export interface FailedTransactionSummary {
  */
 export type TokenUpdateSummary = {
     transactionType: TransactionKindString.TokenUpdate;
-    /** The update details */
-    events: TokenEvent[];
+    /**
+     * The token update details
+     *
+     * **Please note**, these can possibly be unknown if the SDK is not fully compatible with the Concordium
+     * node queried, in which case `null` is returned.
+     */
+    events: Upward<TokenEvent>[];
 };
 
 /**
@@ -262,7 +279,13 @@ export interface UpdateSummary extends BaseBlockItemSummary {
 export type TokenCreationSummary = {
     type: TransactionSummaryType.TokenCreation;
     payload: CreatePLTPayload;
-    events: TokenEvent[];
+    /**
+     * The token creation details
+     *
+     * **Please note**, these can possibly be unknown if the SDK is not fully compatible with the Concordium
+     * node queried, in which case `null` is returned.
+     */
+    events: Upward<TokenEvent>[];
 };
 
 export type BlockItemSummary =

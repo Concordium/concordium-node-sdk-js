@@ -7,7 +7,7 @@ import {
     TokenMintOperation,
     TokenOperationType,
 } from '../../../src/pub/plt.js';
-import { AccountAddress, cborEncode } from '../../../src/pub/types.js';
+import { AccountAddress } from '../../../src/pub/types.js';
 
 describe('PLT Cbor', () => {
     describe('TokenModuleState', () => {

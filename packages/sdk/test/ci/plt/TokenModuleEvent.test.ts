@@ -5,7 +5,7 @@ import {
     TokenId,
     TokenListUpdateEventDetails,
     TokenPauseEventDetails,
-    parseModuleEvent,
+    parseTokenModuleEvent,
 } from '../../../src/plt/index.ts';
 
 describe('PLT TokenModuleEvent', () => {
@@ -25,7 +25,7 @@ describe('PLT TokenModuleEvent', () => {
                 `a166746172676574d99d73a201d99d71a101190397035820${Buffer.from(accountBytes).toString('hex')}`
             );
 
-            const parsedEvent = parseModuleEvent(validEvent)!;
+            const parsedEvent = parseTokenModuleEvent(validEvent)!;
             expect(parsedEvent.type).toEqual(type);
             expect((parsedEvent.details as TokenListUpdateEventDetails).target.type).toEqual('account');
             expect((parsedEvent.details as TokenListUpdateEventDetails).target.address.decodedAddress).toEqual(
@@ -49,7 +49,7 @@ describe('PLT TokenModuleEvent', () => {
         };
         expect(validEvent.details.toString()).toEqual('a0');
 
-        const parsedEvent = parseModuleEvent(validEvent)!;
+        const parsedEvent = parseTokenModuleEvent(validEvent)!;
         expect(parsedEvent.type).toEqual('pause');
         expect(parsedEvent.details).toEqual({});
     });
@@ -64,7 +64,7 @@ describe('PLT TokenModuleEvent', () => {
         };
         expect(validEvent.details.toString()).toEqual('a0');
 
-        const parsedEvent = parseModuleEvent(validEvent)!;
+        const parsedEvent = parseTokenModuleEvent(validEvent)!;
         expect(parsedEvent.type).toEqual('unpause');
         expect(parsedEvent.details).toEqual({});
     });
@@ -76,7 +76,7 @@ describe('PLT TokenModuleEvent', () => {
             type: 'unknown',
             details: Cbor.encode({}),
         };
-        const parsed = parseModuleEvent(unknownEvent);
+        const parsed = parseTokenModuleEvent(unknownEvent);
         expect(parsed.type).toEqual('unknown');
         expect(parsed.details).toEqual({});
     });
@@ -88,7 +88,7 @@ describe('PLT TokenModuleEvent', () => {
             type: 'addAllowList',
             details: Cbor.encode(null),
         };
-        expect(() => parseModuleEvent(invalidDetailsEvent)).toThrowError(/null/);
+        expect(() => parseTokenModuleEvent(invalidDetailsEvent)).toThrowError(/null/);
     });
 
     it("throws an error if 'target' is missing or invalid for list update events", () => {
@@ -98,7 +98,7 @@ describe('PLT TokenModuleEvent', () => {
             type: 'addAllowList',
             details: Cbor.encode({}),
         };
-        expect(() => parseModuleEvent(missingTargetEvent)).toThrowError(/{}/);
+        expect(() => parseTokenModuleEvent(missingTargetEvent)).toThrowError(/{}/);
     });
 
     it('throws an error for invalid event details for pause events', () => {
@@ -108,7 +108,7 @@ describe('PLT TokenModuleEvent', () => {
             type: 'pause',
             details: Cbor.encode(null),
         };
-        expect(() => parseModuleEvent(invalidEvent)).toThrowError(/null/);
+        expect(() => parseTokenModuleEvent(invalidEvent)).toThrowError(/null/);
     });
 
     it('throws an error for invalid event details for unpause events', () => {
@@ -118,6 +118,6 @@ describe('PLT TokenModuleEvent', () => {
             type: 'unpause',
             details: Cbor.encode(null),
         };
-        expect(() => parseModuleEvent(invalidEvent)).toThrowError(/null/);
+        expect(() => parseTokenModuleEvent(invalidEvent)).toThrowError(/null/);
     });
 });

@@ -210,6 +210,12 @@ export interface UpdateCredentialsSummary {
 export interface FailedTransactionSummary {
     transactionType: TransactionKindString.Failed;
     failedTransactionType?: TransactionKindString;
+    /**
+     * The reject reason for the failed transaction
+     *
+     * **Please note**, this can possibly be unknown if the SDK is not fully compatible with the Concordium
+     * node queried, in which case `null` is returned.
+     */
     rejectReason: Upward<RejectReason>;
 }
 

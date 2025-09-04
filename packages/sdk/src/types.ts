@@ -1,6 +1,7 @@
 /**
  * @module Common GRPC-Client
  */
+import type { Upward } from './grpc/upward.js';
 import { Cbor, TokenId } from './plt/index.js';
 import { TokenAccountInfo } from './plt/types.js';
 import * as AccountAddress from './types/AccountAddress.js';
@@ -1590,7 +1591,7 @@ export interface InvokeContractSuccessResult {
 export interface InvokeContractFailedResult {
     tag: 'failure';
     usedEnergy: Energy.Type;
-    reason: RejectReason;
+    reason: Upward<RejectReason>;
     /**
      * Return value from smart contract call, used to provide error messages.
      * Is only defined when smart contract instance is a V1 smart contract and

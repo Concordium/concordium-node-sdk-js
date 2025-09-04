@@ -1011,7 +1011,7 @@ function trDelegationEvent(
 }
 
 function trRejectReason(rejectReason: GRPC.RejectReason | undefined): Upward<SDK.RejectReason> {
-    function simpleReason(tag: SDK.SimpleRejectReasonTag): Upward<SDK.RejectReason> {
+    function simpleReason(tag: SDK.SimpleRejectReasonTag): SDK.RejectReason {
         return {
             tag: SDK.RejectReasonTag[tag],
         };

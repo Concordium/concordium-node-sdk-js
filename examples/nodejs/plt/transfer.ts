@@ -130,8 +130,7 @@ const client = new ConcordiumGRPCNodeClient(
                     break;
                 case TransactionKindString.Failed:
                     if (
-                        !result.summary.rejectReason ||
-                        result.summary.rejectReason.tag !== RejectReasonTag.TokenUpdateTransactionFailed
+                        result.summary.rejectReason?.tag !== RejectReasonTag.TokenUpdateTransactionFailed
                     ) {
                         throw new Error('Unexpected reject reason tag: ' + result.summary.rejectReason?.tag);
                     }

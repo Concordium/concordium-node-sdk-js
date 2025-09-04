@@ -94,7 +94,7 @@ const client = new ConcordiumGRPCNodeClient(
                     const { failedTransactionType, rejectReason } = summary;
                     console.log(
                         'Transaction of type "' + failedTransactionType + '" failed because:',
-                        rejectReason?.tag ?? 'undefined'
+                        rejectReason?.tag ?? 'unknown'
                     );
                     break;
                 default:

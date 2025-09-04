@@ -1,4 +1,4 @@
-import { AccountAddress, AccountInfo, AccountInfoType, BlockHash } from '@concordium/web-sdk';
+import { AccountAddress, AccountInfo, AccountInfoType, AccountInfoUnknown, BlockHash } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
@@ -65,7 +65,7 @@ const client = new ConcordiumGRPCNodeClient(
     // #region documentation-snippet
     const accountAddress = AccountAddress.fromBase58(cli.flags.account);
     const blockHash = cli.flags.block === undefined ? undefined : BlockHash.fromHexString(cli.flags.block);
-    const accountInfo: AccountInfo = await client.getAccountInfo(accountAddress, blockHash);
+    const accountInfo: AccountInfo | AccountInfoUnknown = await client.getAccountInfo(accountAddress, blockHash);
 
     console.log('Account balance:', accountInfo.accountAmount);
     console.log('Account address:', accountInfo.accountAddress);

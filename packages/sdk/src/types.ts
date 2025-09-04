@@ -1189,7 +1189,7 @@ export interface AccountInfoUnknown extends AccountInfoCommon {
     accountBaker: Upward<never>;
 }
 
-export type AccountInfo = AccountInfoSimple | AccountInfoBaker | AccountInfoDelegator;
+export type AccountInfo = AccountInfoSimple | AccountInfoBaker | AccountInfoDelegator | AccountInfoUnknown;
 
 export interface Description {
     name: string;

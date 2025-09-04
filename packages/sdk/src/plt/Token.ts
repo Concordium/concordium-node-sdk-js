@@ -2,7 +2,6 @@ import { ConcordiumGRPCClient } from '../grpc/GRPCClient.js';
 import {
     AccountAddress,
     AccountInfo,
-    AccountInfoUnknown,
     AccountTransaction,
     AccountTransactionHeader,
     AccountTransactionType,
@@ -411,7 +410,7 @@ export type BalanceOfResponse = TokenAmount.Type | undefined;
  *
  * @returns {BalanceOfResponse} The balance of the token for the account.
  */
-export function balanceOf(token: Token, accountInfo: AccountInfo | AccountInfoUnknown): BalanceOfResponse;
+export function balanceOf(token: Token, accountInfo: AccountInfo): BalanceOfResponse;
 /**
  * Retrieves the balance of a token for a given account.
  *
@@ -431,7 +430,7 @@ export async function balanceOf(token: Token, accountAddress: AccountAddress.Typ
  */
 export function balanceOf(
     token: Token,
-    account: AccountInfo | AccountInfoUnknown | AccountAddress.Type
+    account: AccountInfo | AccountAddress.Type
 ): Promise<BalanceOfResponse> | BalanceOfResponse {
     if (!AccountAddress.instanceOf(account)) {
         return account.accountTokens.find((t) => t.id.value === token.info.id.value)?.state.balance;

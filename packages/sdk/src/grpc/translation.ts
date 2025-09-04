@@ -353,7 +353,7 @@ function trTokenAccountInfo(token: GRPC.AccountInfo_Token): PLT.TokenAccountInfo
     };
 }
 
-export function accountInfo(acc: GRPC.AccountInfo): SDK.AccountInfo | SDK.AccountInfoUnknown {
+export function accountInfo(acc: GRPC.AccountInfo): SDK.AccountInfo {
     const aggAmount = acc.encryptedBalance?.aggregatedAmount?.value;
     const numAggregated = acc.encryptedBalance?.numAggregated;
 

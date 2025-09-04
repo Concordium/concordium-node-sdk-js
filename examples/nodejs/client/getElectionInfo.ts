@@ -43,7 +43,12 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
 (async () => {
     // #region documentation-snippet
     const blockHash = cli.flags.block === undefined ? undefined : BlockHash.fromHexString(cli.flags.block);
-    const electionInfo: ElectionInfo = await client.getElectionInfo(blockHash);
+    const electionInfo: ElectionInfo | null = await client.getElectionInfo(blockHash);
+
+    if (electionInfo === null) {
+        console.log('No election info available');
+        return;
+    }
 
     // Discard address, convert to tuple:
     const bakers: [bigint, number][] = electionInfo.bakerElectionInfo.map((info) => [info.baker, info.lotteryPower]);

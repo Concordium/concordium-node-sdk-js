@@ -907,9 +907,9 @@ export class ConcordiumGRPCClient {
      * Get information related to the baker election for a particular block.
      *
      * @param blockHash an optional block hash to get the election info at, otherwise retrieves from last finalized block.
-     * @returns election info for the given block
+     * @returns election info for the given block or null
      */
-    async getElectionInfo(blockHash?: BlockHash.Type): Promise<SDK.ElectionInfo> {
+    async getElectionInfo(blockHash?: BlockHash.Type): Promise<SDK.ElectionInfo | null> {
         const blockHashInput = getBlockHashInput(blockHash);
         const electionInfo = await this.client.getElectionInfo(blockHashInput).response;
         return translate.electionInfo(electionInfo);

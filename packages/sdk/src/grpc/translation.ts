@@ -2322,7 +2322,7 @@ function trBakerElectionInfo(bakerElectionInfo: GRPC.ElectionInfo_Baker): SDK.Ba
     };
 }
 
-export function electionInfo(electionInfo: GRPC.ElectionInfo): SDK.ElectionInfo {
+export function electionInfo(electionInfo: GRPC.ElectionInfo): Upward<SDK.ElectionInfo> {
     const common: SDK.ElectionInfoCommon = {
         electionNonce: unwrapValToHex(electionInfo.electionNonce),
         bakerElectionInfo: electionInfo.bakerElectionInfo.map(trBakerElectionInfo),

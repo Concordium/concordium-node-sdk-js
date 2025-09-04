@@ -181,7 +181,6 @@ function parseMintWouldOverflow(decoded: unknown): MintWouldOverflowDetails {
     }
     // required
     if (!('requestedAmount' in decoded) || !TokenAmount.instanceOf(decoded.requestedAmount)) {
-        console.log(decoded);
         throw new Error(
             `Invalid reason details: ${JSON.stringify(decoded)}. Expected 'requestedAmount' to be a TokenAmount`
         );
@@ -288,7 +287,7 @@ function parseOperationNotPermitted(decoded: unknown): OperationNotPermittedDeta
  * @returns The parsed token module reject reason with decoded details.
  *
  * @example
- * const parsedReason = parseModuleEvent(encodedReason);
+ * const parsedReason = parseTokenModuleRejectReason(encodedReason);
  * switch (parsedReason.type) {
  *   // typed details are now available, e.g.:
  *   case TokenRejectReasonType.MintWouldOverflow: console.log(parsedReason.requestedAmount);
@@ -296,7 +295,7 @@ function parseOperationNotPermitted(decoded: unknown): OperationNotPermittedDeta
  *   default: console.warn('Unknown reject reason:', parsedReason);
  * }
  */
-export function parseModuleRejectReason(
+export function parseTokenModuleRejectReason(
     rejectReason: EncodedTokenModuleRejectReason
 ): TokenModuleRejectReason | UnknownTokenRejectReason {
     const decoded = cborDecode(rejectReason.details.bytes);

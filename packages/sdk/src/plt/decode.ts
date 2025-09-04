@@ -7,6 +7,9 @@ import {
     TokenMetadataUrl,
     TokenModuleAccountState,
     TokenModuleState,
+    TokenOperation,
+    UnknownTokenOperation,
+    decodeTokenOperations,
 } from './index.js';
 
 function decodeTokenModuleState(value: Cbor.Type): TokenModuleState {
@@ -111,6 +114,7 @@ type DecodeTypeMap = {
     TokenModuleState: TokenModuleState;
     TokenModuleAccountState: TokenModuleAccountState;
     TokenInitializationParameters: TokenInitializationParameters;
+    'TokenOperation[]': (TokenOperation | UnknownTokenOperation)[];
 };
 
 /**
@@ -141,6 +145,8 @@ export function decode<T extends keyof DecodeTypeMap | undefined>(cbor: Cbor.Typ
             return decodeTokenModuleAccountState(cbor);
         case 'TokenInitializationParameters':
             return decodeTokenInitializationParameters(cbor);
+        case 'TokenInitializationParameters':
+            return decodeTokenOperations(cbor);
         default:
             return cborDecode(cbor.bytes);
     }

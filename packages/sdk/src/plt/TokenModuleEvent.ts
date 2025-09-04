@@ -112,7 +112,7 @@ function parseTokenPauseEventDetails(decoded: unknown): TokenPauseEventDetails {
  * @returns The parsed token module event with decoded details.
  *
  * @example
- * const parsedEvent = parseModuleEvent(encodedEvent);
+ * const parsedEvent = parseTokenModuleEvent(encodedEvent);
  * switch (parsedEvent.type) {
  *   // typed details are now available, e.g.:
  *   case TokenOperationType.AddAllowList: console.log(parsedEvent.details.target);
@@ -120,7 +120,7 @@ function parseTokenPauseEventDetails(decoded: unknown): TokenPauseEventDetails {
  *   default: console.warn('Unknown event encountered:', parsedEvent);
  * }
  */
-export function parseModuleEvent(event: EncodedTokenModuleEvent): TokenModuleEvent | UnknownTokenModuleEvent {
+export function parseTokenModuleEvent(event: EncodedTokenModuleEvent): TokenModuleEvent | UnknownTokenModuleEvent {
     const decoded = cborDecode(event.details.bytes);
     switch (event.type) {
         case TokenOperationType.AddAllowList:

@@ -18,7 +18,7 @@ import {
     UnknownTokenRejectReason,
     UnsupportedOperationDetails,
     UnsupportedOperationRejectReason,
-    parseModuleRejectReason,
+    parseTokenModuleRejectReason,
 } from '../../../src/pub/plt.ts';
 import { AccountAddress } from '../../../src/pub/types.ts';
 
@@ -42,7 +42,7 @@ describe('PLT TokenModuleRejectReason', () => {
             type: TokenRejectReasonType.AddressNotFound,
             details: Cbor.encode(details),
         };
-        const parsed = parseModuleRejectReason(encoded) as AddressNotFoundRejectReason;
+        const parsed = parseTokenModuleRejectReason(encoded) as AddressNotFoundRejectReason;
         expect(parsed.type).toBe(TokenRejectReasonType.AddressNotFound);
         expect(parsed.details.index).toBe(2);
         expect(parsed.details.address.type).toBe('account');
@@ -59,7 +59,7 @@ describe('PLT TokenModuleRejectReason', () => {
             type: TokenRejectReasonType.TokenBalanceInsufficient,
             details: Cbor.encode(details),
         };
-        const parsed = parseModuleRejectReason(encoded) as TokenBalanceInsufficientRejectReason;
+        const parsed = parseTokenModuleRejectReason(encoded) as TokenBalanceInsufficientRejectReason;
         expect(parsed.type).toBe(TokenRejectReasonType.TokenBalanceInsufficient);
         expect(parsed.details.availableBalance.value).toBe(100n);
         expect(parsed.details.requiredBalance.value).toBe(200n);
@@ -72,7 +72,7 @@ describe('PLT TokenModuleRejectReason', () => {
             type: TokenRejectReasonType.DeserializationFailure,
             details: Cbor.encode(details),
         };
-        const parsed = parseModuleRejectReason(encoded) as DeserializationFailureRejectReason;
+        const parsed = parseTokenModuleRejectReason(encoded) as DeserializationFailureRejectReason;
         expect(parsed.type).toBe(TokenRejectReasonType.DeserializationFailure);
         expect(parsed.details.cause).toBe('bad format');
     });
@@ -84,7 +84,7 @@ describe('PLT TokenModuleRejectReason', () => {
             type: TokenRejectReasonType.UnsupportedOperation,
             details: Cbor.encode(details),
         };
-        const parsed = parseModuleRejectReason(encoded) as UnsupportedOperationRejectReason;
+        const parsed = parseTokenModuleRejectReason(encoded) as UnsupportedOperationRejectReason;
         expect(parsed.type).toBe(TokenRejectReasonType.UnsupportedOperation);
         expect(parsed.details.operationType).toBe('freeze');
         expect(parsed.details.reason).toBe('disabled');
@@ -102,7 +102,7 @@ describe('PLT TokenModuleRejectReason', () => {
             type: TokenRejectReasonType.OperationNotPermitted,
             details: Cbor.encode(details),
         };
-        const parsed = parseModuleRejectReason(encoded) as OperationNotPermittedRejectReason;
+        const parsed = parseTokenModuleRejectReason(encoded) as OperationNotPermittedRejectReason;
         expect(parsed.type).toBe(TokenRejectReasonType.OperationNotPermitted);
         expect(parsed.details.index).toBe(5);
         expect(parsed.details.reason).toBe('paused');
@@ -120,7 +120,7 @@ describe('PLT TokenModuleRejectReason', () => {
             type: TokenRejectReasonType.MintWouldOverflow,
             details: Cbor.encode(details),
         };
-        const parsed = parseModuleRejectReason(encoded) as MintWouldOverflowRejectReason;
+        const parsed = parseTokenModuleRejectReason(encoded) as MintWouldOverflowRejectReason;
         expect(parsed.type).toBe(TokenRejectReasonType.MintWouldOverflow);
         expect(parsed.details.currentSupply.value).toBe(9000n);
     });
@@ -131,7 +131,7 @@ describe('PLT TokenModuleRejectReason', () => {
             type: 'someNewFutureReason',
             details: Cbor.encode({ extra: 1 }),
         };
-        const parsed = parseModuleRejectReason(encoded) as UnknownTokenRejectReason;
+        const parsed = parseTokenModuleRejectReason(encoded) as UnknownTokenRejectReason;
         expect(parsed.type).toBe('someNewFutureReason');
         expect(parsed.details).toEqual({ extra: 1 });
     });
@@ -142,7 +142,7 @@ describe('PLT TokenModuleRejectReason', () => {
             type: TokenRejectReasonType.AddressNotFound,
             details: Cbor.encode({ index: 0 }),
         };
-        expect(() => parseModuleRejectReason(bad)).toThrow(/address/);
+        expect(() => parseTokenModuleRejectReason(bad)).toThrow(/address/);
     });
 
     it('throws for invalid details: tokenBalanceInsufficient wrong availableBalance type', () => {
@@ -151,7 +151,7 @@ describe('PLT TokenModuleRejectReason', () => {
             type: TokenRejectReasonType.TokenBalanceInsufficient,
             details: Cbor.encode({ index: 0, availableBalance: 5, requiredBalance: amt(10) }),
         };
-        expect(() => parseModuleRejectReason(bad)).toThrow(/availableBalance/);
+        expect(() => parseTokenModuleRejectReason(bad)).toThrow(/availableBalance/);
     });
 
     it('throws for invalid details: unsupportedOperation missing operationType', () => {
@@ -160,7 +160,7 @@ describe('PLT TokenModuleRejectReason', () => {
             type: TokenRejectReasonType.UnsupportedOperation,
             details: Cbor.encode({ index: 2 }),
         };
-        expect(() => parseModuleRejectReason(bad)).toThrow(/operationType/);
+        expect(() => parseTokenModuleRejectReason(bad)).toThrow(/operationType/);
     });
 
     it('throws for invalid details: operationNotPermitted wrong address type', () => {
@@ -169,7 +169,7 @@ describe('PLT TokenModuleRejectReason', () => {
             type: TokenRejectReasonType.OperationNotPermitted,
             details: Cbor.encode({ index: 1, address: 'notAHolder' }),
         };
-        expect(() => parseModuleRejectReason(bad)).toThrow(/address/);
+        expect(() => parseTokenModuleRejectReason(bad)).toThrow(/address/);
     });
 
     it('throws for invalid details: mintWouldOverflow missing requestedAmount', () => {
@@ -178,6 +178,6 @@ describe('PLT TokenModuleRejectReason', () => {
             type: TokenRejectReasonType.MintWouldOverflow,
             details: Cbor.encode({ index: 1, currentSupply: amt(1), maxRepresentableAmount: amt(2) }),
         };
-        expect(() => parseModuleRejectReason(bad)).toThrow(/requestedAmount/);
+        expect(() => parseTokenModuleRejectReason(bad)).toThrow(/requestedAmount/);
     });
 });

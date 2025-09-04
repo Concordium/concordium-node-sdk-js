@@ -245,6 +245,33 @@ export function decodeTokenOperation(cbor: Cbor.Type): TokenOperation | UnknownT
 }
 
 /**
+ * Decodes a list of token operations.
+ *
+ * @param cbor - The CBOR encoding to decode.
+ * @returns The decoded token operations.
+ *
+ * @example
+ * const ops = decodeTokenOperations(cbor);
+ * ops.forEach(op => {
+ *   switch (true) {
+ *     case TokenOperationType.Transfer in op: {
+ *       const details = op[TokenOperationType.Transfer]; // type is known at this point.
+ *       console.log(details);
+ *     }
+ *     ...
+ *     default: console.warn('Unknown operation', op);
+ *   }
+ * });
+ */
+export function decodeTokenOperations(cbor: Cbor.Type): (TokenOperation | UnknownTokenOperation)[] {
+    const decoded = Cbor.decode(cbor);
+    if (!Array.isArray(decoded))
+        throw new Error(`Invalid token update operations: ${JSON.stringify(decoded)}. Expected a list of operations.`);
+
+    return decoded.map(parseTokenOperation);
+}
+
+/**
  * Parses a token update payload, decoding the operations from CBOR format.
  *
  * @param payload - The token update payload to parse.
@@ -266,10 +293,6 @@ export function decodeTokenOperation(cbor: Cbor.Type): TokenOperation | UnknownT
 export function parseTokenUpdatePayload(
     payload: TokenUpdatePayload
 ): Omit<TokenUpdatePayload, 'operations'> & { operations: (TokenOperation | UnknownTokenOperation)[] } {
-    const decoded = Cbor.decode(payload.operations);
-    if (!Array.isArray(decoded))
-        throw new Error(`Invalid token update operations: ${JSON.stringify(decoded)}. Expected a list of operations.`);
-
-    const operations = decoded.map(parseTokenOperation);
+    const operations = decodeTokenOperations(payload.operations);
     return { ...payload, operations };
 }

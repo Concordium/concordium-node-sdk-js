@@ -1,27 +1,7 @@
-import { TransactionEventTag } from '../../../src/index.ts';
-import * as Cbor from '../../../src/plt/Cbor.js';
-import * as TokenAmount from '../../../src/plt/TokenAmount.js';
-import * as TokenHolder from '../../../src/plt/TokenHolder.js';
-import * as TokenMetadataUrl from '../../../src/plt/TokenMetadataUrl.js';
-import { TokenAddAllowListEvent, TokenId, TokenModuleEvent, TokenPauseEvent } from '../../../src/plt/index.ts';
-import {
-    TokenListUpdateEventDetails,
-    TokenOperationType,
-    TokenPauseEventDetails,
-    parseModuleEvent,
-} from '../../../src/pub/plt.js';
-import { AccountAddress } from '../../../src/types/index.js';
+import { Cbor, TokenAmount, TokenHolder, TokenMetadataUrl } from '../../../src/pub/plt.js';
+import { AccountAddress } from '../../../src/pub/types.js';
 
-function parseAs<T extends TokenModuleEvent>(type: TokenOperationType, details: Cbor.Type): T {
-    return parseModuleEvent({
-        tag: TransactionEventTag.TokenModuleEvent,
-        type,
-        details,
-        tokenId: TokenId.fromString(''),
-    })! as T;
-}
-
-describe('Cbor', () => {
+describe('PLT Cbor', () => {
     describe('TokenModuleState', () => {
         test('should encode and decode TokenModuleState correctly', () => {
             const accountAddress = AccountAddress.fromBase58('3XSLuJcXg6xEua6iBPnWacc3iWh93yEDMCqX8FbE3RDSbEnT9P');
@@ -212,63 +192,6 @@ describe('Cbor', () => {
             };
             const encoded2 = Cbor.encode(invalidState2);
             expect(() => Cbor.decode(encoded2, 'TokenModuleAccountState')).toThrow(/denyList must be a boolean/);
-        });
-    });
-
-    describe('TokenListUpdateEventDetails', () => {
-        test('should encode and decode TokenEventDetails correctly', () => {
-            const accountAddress = AccountAddress.fromBase58('3XSLuJcXg6xEua6iBPnWacc3iWh93yEDMCqX8FbE3RDSbEnT9P');
-            const tokenHolder = TokenHolder.fromAccountAddress(accountAddress);
-
-            const details: TokenListUpdateEventDetails = {
-                target: tokenHolder,
-            };
-
-            const encoded = Cbor.encode(details);
-            const decoded = parseAs<TokenAddAllowListEvent>(TokenOperationType.AddAllowList, encoded);
-            expect(decoded.details).toEqual(details);
-        });
-
-        test('should throw error if TokenEventDetails is missing required fields', () => {
-            // Missing target
-            const invalidDetails = {
-                // target is missing
-                additionalInfo: 'Some extra information',
-            };
-            const encoded = Cbor.encode(invalidDetails);
-            expect(() => parseAs<TokenAddAllowListEvent>(TokenOperationType.AddAllowList, encoded)).toThrow(
-                /Expected 'target' to be a TokenHolder/
-            );
-        });
-
-        test('should throw error if TokenEventDetails has invalid target type', () => {
-            // Invalid target type
-            const invalidDetails = {
-                target: 'not-a-token-holder',
-                additionalInfo: 'Some extra information',
-            };
-            const encoded = Cbor.encode(invalidDetails);
-            expect(() => parseAs<TokenAddAllowListEvent>(TokenOperationType.AddAllowList, encoded)).toThrow(
-                /Expected 'target' to be a TokenHolder/
-            );
-        });
-    });
-
-    describe('TokenPauseEventDetails', () => {
-        test('should encode and decode TokenEventDetails correctly', () => {
-            const details: TokenPauseEventDetails = {};
-            const encoded = Cbor.encode(details);
-            const decoded = parseAs<TokenPauseEvent>(TokenOperationType.Pause, encoded);
-            expect(decoded.details).toEqual(details);
-        });
-
-        test('should throw error if TokenEventDetails has invalid target type', () => {
-            // Invalid target type
-            const invalidDetails = 'invalid';
-            const encoded = Cbor.encode(invalidDetails);
-            expect(() => parseAs<TokenPauseEvent>(TokenOperationType.Pause, encoded)).toThrow(
-                /Invalid event details: "invalid". Expected an object./
-            );
         });
     });
 });

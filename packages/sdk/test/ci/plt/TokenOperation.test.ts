@@ -1,146 +1,32 @@
-import { Cursor } from '../../../src/deserializationHelpers.js';
-import { TokenHolder } from '../../../src/plt/index.ts';
+import { Cursor } from '../../../src/deserializationHelpers.ts';
 import {
     Cbor,
     TokenAddAllowListOperation,
     TokenAddDenyListOperation,
     TokenAmount,
     TokenBurnOperation,
+    TokenHolder,
     TokenId,
-    TokenListUpdateEventDetails,
     TokenMintOperation,
     TokenOperationType,
-    TokenPauseEventDetails,
     TokenPauseOperation,
     TokenRemoveAllowListOperation,
     TokenRemoveDenyListOperation,
     TokenTransferOperation,
     TokenUnpauseOperation,
+    UnknownTokenOperation,
     createTokenUpdatePayload,
-    parseModuleEvent,
-} from '../../../src/pub/plt.js';
+    parseTokenUpdatePayload,
+} from '../../../src/pub/plt.ts';
 import {
     AccountAddress,
     AccountTransactionType,
-    EncodedTokenModuleEvent,
     TokenUpdateHandler,
-    TransactionEventTag,
+    TokenUpdatePayload,
     serializeAccountTransactionPayload,
-} from '../../../src/pub/types.js';
+} from '../../../src/pub/types.ts';
 
-describe('PLT parseModuleEvent', () => {
-    const testEventParsing = (type: string, targetValue: number) => {
-        it(`parses ${type} events correctly`, () => {
-            const accountBytes = new Uint8Array(32).fill(targetValue);
-            const details: TokenListUpdateEventDetails = {
-                target: TokenHolder.fromAccountAddress(AccountAddress.fromBuffer(accountBytes)),
-            };
-            const validEvent: EncodedTokenModuleEvent = {
-                tag: TransactionEventTag.TokenModuleEvent,
-                type,
-                tokenId: TokenId.fromString('PLT'),
-                details: Cbor.encode(details),
-            };
-            expect(validEvent.details.toString()).toEqual(
-                `a166746172676574d99d73a201d99d71a101190397035820${Buffer.from(accountBytes).toString('hex')}`
-            );
-
-            const parsedEvent = parseModuleEvent(validEvent)!;
-            expect(parsedEvent.type).toEqual(type);
-            expect((parsedEvent.details as TokenListUpdateEventDetails).target.type).toEqual('account');
-            expect((parsedEvent.details as TokenListUpdateEventDetails).target.address.decodedAddress).toEqual(
-                new Uint8Array(32).fill(targetValue)
-            );
-        });
-    };
-
-    testEventParsing('addAllowList', 0x15);
-    testEventParsing('addDenyList', 0x16);
-    testEventParsing('removeAllowList', 0x17);
-    testEventParsing('removeDenyList', 0x18);
-
-    it('parses pause event', () => {
-        const details: TokenPauseEventDetails = {};
-        const validEvent: EncodedTokenModuleEvent = {
-            tag: TransactionEventTag.TokenModuleEvent,
-            tokenId: TokenId.fromString('PLT'),
-            type: 'pause',
-            details: Cbor.encode(details),
-        };
-        expect(validEvent.details.toString()).toEqual('a0');
-
-        const parsedEvent = parseModuleEvent(validEvent)!;
-        expect(parsedEvent.type).toEqual('pause');
-        expect(parsedEvent.details).toEqual({});
-    });
-
-    it('parses unpause event', () => {
-        const details: TokenPauseEventDetails = {};
-        const validEvent: EncodedTokenModuleEvent = {
-            tag: TransactionEventTag.TokenModuleEvent,
-            tokenId: TokenId.fromString('PLT'),
-            type: 'unpause',
-            details: Cbor.encode(details),
-        };
-        expect(validEvent.details.toString()).toEqual('a0');
-
-        const parsedEvent = parseModuleEvent(validEvent)!;
-        expect(parsedEvent.type).toEqual('unpause');
-        expect(parsedEvent.details).toEqual({});
-    });
-
-    it('throws an error for invalid event type', () => {
-        const invalidEvent: EncodedTokenModuleEvent = {
-            tag: TransactionEventTag.TokenModuleEvent,
-            tokenId: TokenId.fromString('PLT'),
-            type: 'invalidType',
-            details: Cbor.encode({}),
-        };
-        expect(() => parseModuleEvent(invalidEvent)).toThrowError(/invalidType/);
-    });
-
-    it('throws an error for invalid event details for list update events', () => {
-        const invalidDetailsEvent: EncodedTokenModuleEvent = {
-            tag: TransactionEventTag.TokenModuleEvent,
-            tokenId: TokenId.fromString('PLT'),
-            type: 'addAllowList',
-            details: Cbor.encode(null),
-        };
-        expect(() => parseModuleEvent(invalidDetailsEvent)).toThrowError(/null/);
-    });
-
-    it("throws an error if 'target' is missing or invalid for list update events", () => {
-        const missingTargetEvent: EncodedTokenModuleEvent = {
-            tag: TransactionEventTag.TokenModuleEvent,
-            tokenId: TokenId.fromString('PLT'),
-            type: 'addAllowList',
-            details: Cbor.encode({}),
-        };
-        expect(() => parseModuleEvent(missingTargetEvent)).toThrowError(/{}/);
-    });
-
-    it('throws an error for invalid event details for pause events', () => {
-        const invalidEvent: EncodedTokenModuleEvent = {
-            tag: TransactionEventTag.TokenModuleEvent,
-            tokenId: TokenId.fromString('PLT'),
-            type: 'pause',
-            details: Cbor.encode(null),
-        };
-        expect(() => parseModuleEvent(invalidEvent)).toThrowError(/null/);
-    });
-
-    it('throws an error for invalid event details for unpause events', () => {
-        const invalidEvent: EncodedTokenModuleEvent = {
-            tag: TransactionEventTag.TokenModuleEvent,
-            tokenId: TokenId.fromString('PLT'),
-            type: 'unpause',
-            details: Cbor.encode(null),
-        };
-        expect(() => parseModuleEvent(invalidEvent)).toThrowError(/null/);
-    });
-});
-
-describe('PLT transactions', () => {
+describe('PLT TokenOperation', () => {
     const token = TokenId.fromString('DKK');
     const testAccountAddress = TokenHolder.fromAccountAddress(AccountAddress.fromBuffer(new Uint8Array(32).fill(0x15)));
     // - d99d73: A tagged (40307) item with a map (a2) containing:
@@ -195,11 +81,7 @@ describe('PLT transactions', () => {
             `.replace(/\s/g, ''),
             'hex'
         );
-
         expect(payload.operations.toString()).toEqual(expectedOperations.toString('hex'));
-
-        const decoded = Cbor.decode(payload.operations);
-        expect(decoded).toEqual([transfer]);
 
         const ser = serializeAccountTransactionPayload({ payload, type: AccountTransactionType.TokenUpdate });
         const expected = Buffer.concat([Buffer.from('1b03444b4b00000052', 'hex'), expectedOperations]);
@@ -208,6 +90,9 @@ describe('PLT transactions', () => {
         const serPayload = ser.slice(1);
         const des = new TokenUpdateHandler().deserialize(Cursor.fromBuffer(serPayload));
         expect(des).toEqual(payload);
+
+        const parsed = parseTokenUpdatePayload(des);
+        expect(parsed.operations).toEqual([transfer]);
     });
 
     it('(de)serializes mint operations correctly', () => {
@@ -241,16 +126,15 @@ describe('PLT transactions', () => {
             `.replace(/\s/g, ''),
             'hex'
         );
-
         expect(payload.operations.toString()).toEqual(expectedOperations.toString('hex'));
-
-        const decoded = Cbor.decode(payload.operations);
-        expect(decoded).toEqual([mint]);
 
         const ser = serializeAccountTransactionPayload({ payload, type: AccountTransactionType.TokenUpdate });
         const serPayload = ser.slice(1);
         const des = new TokenUpdateHandler().deserialize(Cursor.fromBuffer(serPayload));
         expect(des).toEqual(payload);
+
+        const parsed = parseTokenUpdatePayload(des);
+        expect(parsed.operations).toEqual([mint]);
     });
 
     it('(de)serializes burn operations correctly', () => {
@@ -284,16 +168,15 @@ describe('PLT transactions', () => {
             `.replace(/\s/g, ''),
             'hex'
         );
-
         expect(payload.operations.toString()).toEqual(expectedOperations.toString('hex'));
-
-        const decoded = Cbor.decode(payload.operations);
-        expect(decoded).toEqual([burn]);
 
         const ser = serializeAccountTransactionPayload({ payload, type: AccountTransactionType.TokenUpdate });
         const serPayload = ser.slice(1);
         const des = new TokenUpdateHandler().deserialize(Cursor.fromBuffer(serPayload));
         expect(des).toEqual(payload);
+
+        const parsed = parseTokenUpdatePayload(des);
+        expect(parsed.operations).toEqual([burn]);
     });
 
     it('(de)serializes addAllowList operations correctly', () => {
@@ -321,16 +204,15 @@ describe('PLT transactions', () => {
             `.replace(/\s/g, ''),
             'hex'
         );
-
         expect(payload.operations.toString()).toEqual(expectedOperations.toString('hex'));
-
-        const decoded = Cbor.decode(payload.operations);
-        expect(decoded).toEqual([addAllowList]);
 
         const ser = serializeAccountTransactionPayload({ payload, type: AccountTransactionType.TokenUpdate });
         const serPayload = ser.slice(1);
         const des = new TokenUpdateHandler().deserialize(Cursor.fromBuffer(serPayload));
         expect(des).toEqual(payload);
+
+        const parsed = parseTokenUpdatePayload(des);
+        expect(parsed.operations).toEqual([addAllowList]);
     });
 
     it('(de)serializes removeAllowList operations correctly', () => {
@@ -358,16 +240,15 @@ describe('PLT transactions', () => {
             `.replace(/\s/g, ''),
             'hex'
         );
-
         expect(payload.operations.toString()).toEqual(expectedOperations.toString('hex'));
-
-        const decoded = Cbor.decode(payload.operations);
-        expect(decoded).toEqual([removeAllowList]);
 
         const ser = serializeAccountTransactionPayload({ payload, type: AccountTransactionType.TokenUpdate });
         const serPayload = ser.slice(1);
         const des = new TokenUpdateHandler().deserialize(Cursor.fromBuffer(serPayload));
         expect(des).toEqual(payload);
+
+        const parsed = parseTokenUpdatePayload(des);
+        expect(parsed.operations).toEqual([removeAllowList]);
     });
 
     it('(de)serializes addDenyList operations correctly', () => {
@@ -395,16 +276,15 @@ describe('PLT transactions', () => {
             `.replace(/\s/g, ''),
             'hex'
         );
-
         expect(payload.operations.toString()).toEqual(expectedOperations.toString('hex'));
-
-        const decoded = Cbor.decode(payload.operations);
-        expect(decoded).toEqual([addDenyList]);
 
         const ser = serializeAccountTransactionPayload({ payload, type: AccountTransactionType.TokenUpdate });
         const serPayload = ser.slice(1);
         const des = new TokenUpdateHandler().deserialize(Cursor.fromBuffer(serPayload));
         expect(des).toEqual(payload);
+
+        const parsed = parseTokenUpdatePayload(des);
+        expect(parsed.operations).toEqual([addDenyList]);
     });
 
     it('(de)serializes removeDenyList operations correctly', () => {
@@ -432,24 +312,23 @@ describe('PLT transactions', () => {
             `.replace(/\s/g, ''),
             'hex'
         );
-
         expect(payload.operations.toString()).toEqual(expectedOperations.toString('hex'));
-
-        const decoded = Cbor.decode(payload.operations);
-        expect(decoded).toEqual([removeDenyList]);
 
         const ser = serializeAccountTransactionPayload({ payload, type: AccountTransactionType.TokenUpdate });
         const serPayload = ser.slice(1);
         const des = new TokenUpdateHandler().deserialize(Cursor.fromBuffer(serPayload));
         expect(des).toEqual(payload);
+
+        const parsed = parseTokenUpdatePayload(des);
+        expect(parsed.operations).toEqual([removeDenyList]);
     });
 
     it('(de)serializes unpause operations correctly', () => {
-        const removeDenyList: TokenUnpauseOperation = {
+        const uppause: TokenUnpauseOperation = {
             [TokenOperationType.Unpause]: {},
         };
 
-        const payload = createTokenUpdatePayload(token, removeDenyList);
+        const payload = createTokenUpdatePayload(token, uppause);
 
         // This is a CBOR encoded byte sequence representing the unpause operation:
         // - 81: An array of 1 item
@@ -463,24 +342,23 @@ describe('PLT transactions', () => {
             `.replace(/\s/g, ''),
             'hex'
         );
-
         expect(payload.operations.toString()).toEqual(expectedOperations.toString('hex'));
-
-        const decoded = Cbor.decode(payload.operations);
-        expect(decoded).toEqual([removeDenyList]);
 
         const ser = serializeAccountTransactionPayload({ payload, type: AccountTransactionType.TokenUpdate });
         const serPayload = ser.slice(1);
         const des = new TokenUpdateHandler().deserialize(Cursor.fromBuffer(serPayload));
         expect(des).toEqual(payload);
+
+        const parsed = parseTokenUpdatePayload(des);
+        expect(parsed.operations).toEqual([uppause]);
     });
 
     it('(de)serializes pause operations correctly', () => {
-        const removeDenyList: TokenPauseOperation = {
+        const pause: TokenPauseOperation = {
             [TokenOperationType.Pause]: {},
         };
 
-        const payload = createTokenUpdatePayload(token, removeDenyList);
+        const payload = createTokenUpdatePayload(token, pause);
 
         // This is a CBOR encoded byte sequence representing the pause operation:
         // - 81: An array of 1 item
@@ -494,16 +372,49 @@ describe('PLT transactions', () => {
             `.replace(/\s/g, ''),
             'hex'
         );
-
         expect(payload.operations.toString()).toEqual(expectedOperations.toString('hex'));
-
-        const decoded = Cbor.decode(payload.operations);
-        expect(decoded).toEqual([removeDenyList]);
 
         const ser = serializeAccountTransactionPayload({ payload, type: AccountTransactionType.TokenUpdate });
         const serPayload = ser.slice(1);
         const des = new TokenUpdateHandler().deserialize(Cursor.fromBuffer(serPayload));
         expect(des).toEqual(payload);
+
+        const parsed = parseTokenUpdatePayload(des);
+        expect(parsed.operations).toEqual([pause]);
+    });
+
+    it('(de)serializes unknown operations correctly', () => {
+        const unknown: UnknownTokenOperation = {
+            unknownOperation: { test: 'something', test2: 123 },
+        };
+
+        const payload: TokenUpdatePayload = { tokenId: token, operations: Cbor.encode([unknown]) };
+
+        // This is a CBOR encoded byte sequence representing the pause operation:
+        // - 81: An array of 1 item
+        // - a1: A map with 1 key-value pair
+        // - 70 756e6b6e6f776e4f7065726174696f6e a2: A string key "unknownOperation" with map with 2 keys as the value
+        // - 64 74657374 69 736f6d657468696e67: a string key "test" with a string value "something"
+        // - 65 7465737432 18 7b: a string key "test2" with an unsigned int value 123
+        const expectedOperations = Buffer.from(
+            `
+            81
+              a1
+                70 756e6b6e6f776e4f7065726174696f6e a2
+                  64 74657374 69 736f6d657468696e67
+                  65 7465737432 18 7b
+            `.replace(/\s/g, ''),
+            'hex'
+        );
+        expect(payload.operations.toString()).toEqual(expectedOperations.toString('hex'));
+
+        const ser = serializeAccountTransactionPayload({ payload, type: AccountTransactionType.TokenUpdate });
+        const serPayload = ser.slice(1);
+        const des = new TokenUpdateHandler().deserialize(Cursor.fromBuffer(serPayload));
+        expect(des).toEqual(payload);
+
+        const parsed = parseTokenUpdatePayload(des);
+        expect(parsed.operations).toEqual([unknown]);
     });
 
     it('(de)serializes multiple governance operations correctly', () => {
@@ -555,15 +466,14 @@ describe('PLT transactions', () => {
             `.replace(/\s/g, ''),
             'hex'
         );
-
         expect(payload.operations.toString()).toEqual(expectedOperations.toString('hex'));
-
-        const decoded = Cbor.decode(payload.operations);
-        expect(decoded).toEqual(operations);
 
         const ser = serializeAccountTransactionPayload({ payload, type: AccountTransactionType.TokenUpdate });
         const serPayload = ser.slice(1);
         const des = new TokenUpdateHandler().deserialize(Cursor.fromBuffer(serPayload));
         expect(des).toEqual(payload);
+
+        const parsed = parseTokenUpdatePayload(des);
+        expect(parsed.operations).toEqual(operations);
     });
 });

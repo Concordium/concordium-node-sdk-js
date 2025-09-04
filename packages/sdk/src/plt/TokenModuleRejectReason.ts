@@ -18,7 +18,7 @@ type RejectReasonGen<T extends TokenRejectReasonType, D> = Omit<EncodedTokenModu
     details: D;
 };
 
-type UnknownTokenRejectReason = Omit<EncodedTokenModuleRejectReason, 'details'> & {
+export type UnknownTokenRejectReason = Omit<EncodedTokenModuleRejectReason, 'details'> & {
     /** Additional details about the rejection. */
     details: unknown;
 };
@@ -180,24 +180,24 @@ function parseMintWouldOverflow(decoded: unknown): MintWouldOverflowDetails {
         throw new Error(`Invalid reason details: ${JSON.stringify(decoded)}. Expected 'index' to be a number`);
     }
     // required
-    if (!('requestedAmount' in decoded) || TokenAmount.instanceOf(decoded.requestedAmount)) {
+    if (!('requestedAmount' in decoded) || !TokenAmount.instanceOf(decoded.requestedAmount)) {
+        console.log(decoded);
         throw new Error(
             `Invalid reason details: ${JSON.stringify(decoded)}. Expected 'requestedAmount' to be a TokenAmount`
         );
     }
     // required
-    if (!('currentSupply' in decoded) || TokenAmount.instanceOf(decoded.currentSupply)) {
+    if (!('currentSupply' in decoded) || !TokenAmount.instanceOf(decoded.currentSupply)) {
         throw new Error(
             `Invalid reason details: ${JSON.stringify(decoded)}. Expected 'currentSupply' to be a TokenAmount`
         );
     }
     // required
-    if (!('maxRepresentableAmount' in decoded) || TokenAmount.instanceOf(decoded.maxRepresentableAmount)) {
+    if (!('maxRepresentableAmount' in decoded) || !TokenAmount.instanceOf(decoded.maxRepresentableAmount)) {
         throw new Error(
             `Invalid reason details: ${JSON.stringify(decoded)}. Expected 'maxRepresentableAmount' to be a TokenAmount`
         );
     }
-
     return decoded as MintWouldOverflowDetails;
 }
 

@@ -18,6 +18,7 @@ import {
     TokenOperation,
     TokenOperationType,
     createTokenUpdatePayload,
+    parseTokenModuleEvent,
 } from '@concordium/web-sdk/plt';
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
@@ -152,7 +153,7 @@ const client = new ConcordiumGRPCNodeClient(
                         if (e.tag !== TransactionEventTag.TokenModuleEvent) {
                             throw new Error('Unexpected event type: ' + e.tag);
                         }
-                        console.log('Token module event:', e, Cbor.decode(e.details, 'TokenListUpdateEventDetails'));
+                        console.log('Token module event:', parseTokenModuleEvent(e));
                     });
                     break;
                 case TransactionKindString.Failed:

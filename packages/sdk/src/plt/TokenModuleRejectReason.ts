@@ -18,6 +18,9 @@ type RejectReasonGen<T extends TokenRejectReasonType, D> = Omit<EncodedTokenModu
     details: D;
 };
 
+/**
+ * Represents a token module reject reason (found when decoding) unknown to the SDK.
+ */
 export type UnknownTokenRejectReason = Omit<EncodedTokenModuleRejectReason, 'details'> & {
     /** Additional details about the rejection. */
     details: unknown;

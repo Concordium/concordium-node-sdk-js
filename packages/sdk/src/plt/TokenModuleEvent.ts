@@ -14,6 +14,9 @@ type GenTokenModuleEvent<E extends TokenOperationType, T extends Object> = {
     details: T;
 };
 
+/**
+ * Represents a token module event (found when decoding) unknown to the SDK.
+ */
 export type UnknownTokenModuleEvent = {
     /** The tag of the event. */
     tag: TransactionEventTag.TokenModuleEvent;

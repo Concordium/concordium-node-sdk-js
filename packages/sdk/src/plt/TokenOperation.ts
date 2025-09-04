@@ -137,7 +137,9 @@ export function createTokenUpdatePayload(
     };
 }
 
-/** Variant used when decoding encounters an unknown or unsupported operation shape. */
+/**
+ * Represents a token operation (found when decoding) unknown to the SDK.
+ */
 export type UnknownTokenOperation = { [key: string]: unknown };
 
 function parseTransfer(details: unknown): TokenTransfer {

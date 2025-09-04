@@ -886,7 +886,13 @@ export type BakerId = bigint;
 export type DelegatorId = bigint;
 
 export interface BakerPoolInfo {
-    openStatus: OpenStatusText;
+    /**
+     * The status of validator pool
+     *
+     * **Please note**, this can possibly be unknown if the SDK is not fully compatible with the Concordium
+     * node queried, in which case `null` is returned.
+     */
+    openStatus: Upward<OpenStatusText>;
     metadataUrl: UrlString;
     commissionRates: CommissionRates;
 }

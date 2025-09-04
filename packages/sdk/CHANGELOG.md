@@ -22,6 +22,10 @@
 - `PassiveCommitteeInfo` now has been wrapped in `Upward`.
 - `NodeInfoConsensusStatus` and `NodeCatchupStatus` now have been wrapped in `Upward`.
 - `Cooldown.status` now has the type `Upward<CooldownStatus>`. This affects all `AccountInfo` variants.
+- `BakerPoolInfo.openStatus` now has the type `Upward<OpenStatusText>`.
+  - Affects the `AccountInfoBaker` variant of `AccountInfo`.
+  - Affects `BakerPoolStatus`.
+- `BakerSetOpenStatusEvent.openStatus` now has the type `Upward<OpenStatusText>`.
 
 #### `ConcordiumGRPCClient`:
 
@@ -29,6 +33,7 @@
 - `getBlockTransactionEvents` now returns `AsyncIterable<Upward<BlockItemSummary>>`.
 - `getBlockSpecialEvents` now returns `AsyncIterable<Upward<BlockSpecialEvent>>`.
 - `getAccountInfo` now returns `Promise<AccountInfo | AccountInfoUnknown>`
+- `getPoolInfo` is affected by the changes to `BakerPoolInfo`
 
 ## 10.0.1
 

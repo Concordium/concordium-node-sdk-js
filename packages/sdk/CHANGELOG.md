@@ -21,6 +21,9 @@
 - `PassiveCommitteeInfo` now has been wrapped in `Upward`.
 - `NodeInfoConsensusStatus` and `NodeCatchupStatus` now have been wrapped in `Upward`.
 - `RejectReason` now has been wrapped in `Upward`
+- `ContractTraceEvent` uses in reponse types from the GRPC API have now been wrapped in `Upward`.
+  - Affects `InvokeContractResultSuccess`
+  - Affects `UpdateContractSummary`
 
 #### `ConcordiumGRPCClient`:
 

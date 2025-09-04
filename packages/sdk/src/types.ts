@@ -1584,7 +1584,13 @@ export interface ContractContext {
 export interface InvokeContractSuccessResult {
     tag: 'success';
     usedEnergy: Energy.Type;
-    events: ContractTraceEvent[];
+    /**
+     * The events related to the contract invocation.
+     *
+     * **Please note**, these can possibly be unknown if the SDK is not fully compatible with the Concordium
+     * node queried, in which case `null` is returned.
+     */
+    events: Upward<ContractTraceEvent>[];
     returnValue?: ReturnValue.Type;
 }
 

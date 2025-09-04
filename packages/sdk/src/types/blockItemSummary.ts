@@ -1,5 +1,5 @@
 import { isEqualContractAddress } from '../contractHelpers.js';
-import type { Upward } from '../grpc/upward.js';
+import { type Upward, isKnown } from '../grpc/upward.js';
 import { CreatePLTPayload } from '../plt/types.js';
 import { AccountTransactionType, TransactionStatusEnum, TransactionSummaryType } from '../types.js';
 import { isDefined } from '../util.js';
@@ -132,7 +132,13 @@ export interface InitContractSummary {
 
 export interface UpdateContractSummary {
     transactionType: TransactionKindString.Update;
-    events: ContractTraceEvent[];
+    /**
+     * The events related to the contract update.
+     *
+     * **Please note**, these can possibly be unknown if the SDK is not fully compatible with the Concordium
+     * node queried, in which case `null` is returned.
+     */
+    events: Upward<ContractTraceEvent>[];
 }
 
 export interface DataRegisteredSummary {
@@ -473,7 +479,7 @@ export function affectedContracts(summary: BlockItemSummary): ContractAddress.Ty
             return [summary.contractInitialized.address];
         }
         case TransactionKindString.Update: {
-            return summary.events.reduce((addresses: ContractAddress.Type[], event) => {
+            return summary.events.filter(isKnown).reduce((addresses: ContractAddress.Type[], event) => {
                 if (
                     event.tag !== TransactionEventTag.Updated ||
                     addresses.some(isEqualContractAddress(event.address))
@@ -514,7 +520,7 @@ export function affectedAccounts(summary: BlockItemSummary): AccountAddress.Type
         case TransactionKindString.TransferToPublic:
             return [summary.removed.account];
         case TransactionKindString.Update: {
-            return summary.events.reduce(
+            return summary.events.filter(isKnown).reduce(
                 (addresses: AccountAddress.Type[], event) => {
                     if (
                         event.tag === TransactionEventTag.Transferred &&
@@ -564,6 +570,7 @@ export function getSummaryContractUpdateLogs(summary: BlockItemSummary): Summary
     }
 
     return summary.events
+        .filter(isKnown)
         .map((event) => {
             switch (event.tag) {
                 case TransactionEventTag.Updated:

@@ -2382,7 +2382,7 @@ function trPassiveCommitteeInfo(
             return SDK.PassiveCommitteeInfo.AddedButNotActiveInCommittee;
         case passiveCommitteeInfoV2.ADDED_BUT_WRONG_KEYS:
             return SDK.PassiveCommitteeInfo.AddedButWrongKeys;
-        default:
+        case undefined:
             return null;
     }
 }
@@ -2471,7 +2471,7 @@ function trCatchupStatus(catchupStatus: GRPC.PeersInfo_Peer_CatchupStatus): Upwa
             return SDK.NodeCatchupStatus.Pending;
         case CatchupStatus.UPTODATE:
             return SDK.NodeCatchupStatus.UpToDate;
-        default:
+        case undefined:
             return null;
     }
 }

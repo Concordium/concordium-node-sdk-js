@@ -24,6 +24,7 @@
 - `ContractTraceEvent` uses in reponse types from the GRPC API have now been wrapped in `Upward`.
   - Affects `InvokeContractResultSuccess`
   - Affects `UpdateContractSummary`
+- `ContractVersion` enum has been removed and replaced with `number` where it was used.
 
 #### `ConcordiumGRPCClient`:
 

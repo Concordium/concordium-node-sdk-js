@@ -1686,11 +1686,6 @@ export interface IdentityInput {
     randomness: string;
 }
 
-export enum ContractVersion {
-    V0 = 0,
-    V1 = 1,
-}
-
 export enum SchemaVersion {
     V0 = 0, // Used by version 0 smart contracts.
     V1 = 1, // Used by version 1 smart contracts.

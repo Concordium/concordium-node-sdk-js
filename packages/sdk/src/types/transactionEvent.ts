@@ -3,7 +3,6 @@ import * as PLT from '../plt/index.js';
 import type {
     Address,
     BakerId,
-    ContractVersion,
     DelegatorId,
     EventDelegationTarget,
     HexString,
@@ -106,7 +105,7 @@ export interface UpdatedEvent {
     address: ContractAddress.Type;
     instigator: Address;
     amount: CcdAmount.Type;
-    contractVersion: ContractVersion;
+    contractVersion: number;
     message: Parameter.Type;
     receiveName: ReceiveName.Type;
     events: ContractEvent.Type[];
@@ -139,7 +138,7 @@ export interface ContractInitializedEvent {
     amount: CcdAmount.Type;
     initName: InitName.Type;
     events: HexString[];
-    contractVersion: ContractVersion;
+    contractVersion: number;
     ref: ModuleRef;
 }
 

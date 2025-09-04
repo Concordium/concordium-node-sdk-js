@@ -7,6 +7,7 @@
 - `Upward<T>` as a means of representing possibly unknown variants of a type encounted when querying the GRPC API
   of *future* Concordium node versions. This is a type alias of `T | null`, i.e. unknown variants will be represented
   as `null`.
+- `AccountInfoUnknown` which represents accounts with unknown future versions of staking info attached to them. 
 
 ### Breaking changes
 
@@ -20,12 +21,14 @@
 - `PendingUpdate.effect` now has the type `Upward<PendingUpateEffect>`.
 - `PassiveCommitteeInfo` now has been wrapped in `Upward`.
 - `NodeInfoConsensusStatus` and `NodeCatchupStatus` now have been wrapped in `Upward`.
+- `Cooldown.status` now has the type `Upward<CooldownStatus>`. This affects all `AccountInfo` variants.
 
 #### `ConcordiumGRPCClient`:
 
 - `waitForTransactionFinalization` is affected by the changes to `BlockItemSummaryInBlock`
 - `getBlockTransactionEvents` now returns `AsyncIterable<Upward<BlockItemSummary>>`.
 - `getBlockSpecialEvents` now returns `AsyncIterable<Upward<BlockSpecialEvent>>`.
+- `getAccountInfo` now returns `Promise<AccountInfo | AccountInfoUnknown>`
 
 ## 10.0.1
 

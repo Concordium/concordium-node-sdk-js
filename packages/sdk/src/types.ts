@@ -1,28 +1,29 @@
 /**
  * @module Common GRPC-Client
  */
-import { Cbor, TokenId } from './plt/index.js';
-import { TokenAccountInfo } from './plt/types.js';
-import * as AccountAddress from './types/AccountAddress.js';
+import type { Upward } from './grpc/index.js';
+import type { Cbor, TokenId } from './plt/index.js';
+import type { TokenAccountInfo } from './plt/types.js';
+import type * as AccountAddress from './types/AccountAddress.js';
 import type * as BlockHash from './types/BlockHash.js';
 import type * as CcdAmount from './types/CcdAmount.js';
-import * as ContractAddress from './types/ContractAddress.js';
+import type * as ContractAddress from './types/ContractAddress.js';
 import type * as ContractName from './types/ContractName.js';
-import * as CredentialRegistrationId from './types/CredentialRegistrationId.js';
-import { DataBlob } from './types/DataBlob.js';
-import * as Duration from './types/Duration.js';
-import * as Energy from './types/Energy.js';
+import type * as CredentialRegistrationId from './types/CredentialRegistrationId.js';
+import type { DataBlob } from './types/DataBlob.js';
+import type * as Duration from './types/Duration.js';
+import type * as Energy from './types/Energy.js';
 import type * as InitName from './types/InitName.js';
 import type * as ModuleReference from './types/ModuleReference.js';
-import * as Parameter from './types/Parameter.js';
+import type * as Parameter from './types/Parameter.js';
 import type * as ReceiveName from './types/ReceiveName.js';
 import type * as ReturnValue from './types/ReturnValue.js';
 import type * as SequenceNumber from './types/SequenceNumber.js';
-import * as Timestamp from './types/Timestamp.js';
+import type * as Timestamp from './types/Timestamp.js';
 import type * as TransactionExpiry from './types/TransactionExpiry.js';
 import type * as TransactionHash from './types/TransactionHash.js';
-import { RejectReason } from './types/rejectReason.js';
-import { ContractTraceEvent } from './types/transactionEvent.js';
+import type { RejectReason } from './types/rejectReason.js';
+import type { ContractTraceEvent } from './types/transactionEvent.js';
 
 export * from './types/NodeInfo.js';
 export * from './types/PeerInfo.js';
@@ -1102,6 +1103,7 @@ export enum AccountInfoType {
     Simple = 'simple',
     Baker = 'baker',
     Delegator = 'delegator',
+    Unknown = 'unknown',
 }
 
 interface AccountInfoCommon {
@@ -1168,6 +1170,17 @@ export interface AccountInfoBaker extends AccountInfoCommon {
 export interface AccountInfoDelegator extends AccountInfoCommon {
     type: AccountInfoType.Delegator;
     accountDelegation: AccountDelegationDetails;
+}
+
+export interface AccountInfoUnknown extends AccountInfoCommon {
+    type: AccountInfoType.Unknown;
+    /**
+     * This field is named `accountBaker` to align with the JSON representation produced by the
+     * corresponding rust SDK.
+     * `null` represents a variant of staking info for the account which is unknown to the SDK, otherwise
+     * this will always be `undefined`, as otherwise this is represented by {@linkcode AccountInfoBaker}.
+     */
+    accountBaker: Upward<never>;
 }
 
 export type AccountInfo = AccountInfoSimple | AccountInfoBaker | AccountInfoDelegator;
@@ -2014,6 +2027,11 @@ export type Cooldown = {
     timestamp: Timestamp.Type;
     /** The amount that is in cooldown and set to be released at the end of the cooldown period */
     amount: CcdAmount.Type;
-    /** The status of the cooldown */
-    status: CooldownStatus;
+    /**
+     * The status of the cooldown
+     *
+     * **Please note**, this can possibly be unknown if the SDK is not fully compatible with the Concordium
+     * node queried, in which case `null` is returned.
+     */
+    status: Upward<CooldownStatus>;
 };

@@ -120,7 +120,7 @@ export class ConcordiumGRPCClient {
     async getAccountInfo(
         accountIdentifier: SDK.AccountIdentifierInput,
         blockHash?: BlockHash.Type
-    ): Promise<SDK.AccountInfo> {
+    ): Promise<SDK.AccountInfo | SDK.AccountInfoUnknown> {
         const accountInfoRequest: GRPC.AccountInfoRequest = {
             blockHash: getBlockHashInput(blockHash),
             accountIdentifier: getAccountIdentifierInput(accountIdentifier),

@@ -356,7 +356,7 @@ function trTokenAccountInfo(token: GRPC.AccountInfo_Token): PLT.TokenAccountInfo
     };
 }
 
-export function accountInfo(acc: GRPC.AccountInfo): SDK.AccountInfo {
+export function accountInfo(acc: GRPC.AccountInfo): SDK.AccountInfo | SDK.AccountInfoUnknown {
     const aggAmount = acc.encryptedBalance?.aggregatedAmount?.value;
     const numAggregated = acc.encryptedBalance?.numAggregated;
 
@@ -419,20 +419,25 @@ export function accountInfo(acc: GRPC.AccountInfo): SDK.AccountInfo {
         accountTokens: acc.tokens.map(trTokenAccountInfo),
     };
 
-    if (acc.stake?.stakingInfo.oneofKind === 'delegator') {
-        return {
-            ...accInfoCommon,
-            type: SDK.AccountInfoType.Delegator,
-            accountDelegation: trDelegator(acc.stake.stakingInfo.delegator),
-        };
-    } else if (acc.stake?.stakingInfo.oneofKind === 'baker') {
-        return {
-            ...accInfoCommon,
-            type: SDK.AccountInfoType.Baker,
-            accountBaker: trBaker(acc.stake.stakingInfo.baker),
-        };
-    } else {
+    if (acc.stake === undefined) {
         return accInfoCommon;
+    }
+
+    switch (acc.stake.stakingInfo.oneofKind) {
+        case 'delegator':
+            return {
+                ...accInfoCommon,
+                type: SDK.AccountInfoType.Delegator,
+                accountDelegation: trDelegator(acc.stake.stakingInfo.delegator),
+            };
+        case 'baker':
+            return {
+                ...accInfoCommon,
+                type: SDK.AccountInfoType.Baker,
+                accountBaker: trBaker(acc.stake.stakingInfo.baker),
+            };
+        case undefined:
+            return { ...accInfoCommon, type: SDK.AccountInfoType.Unknown, accountBaker: null };
     }
 }
 

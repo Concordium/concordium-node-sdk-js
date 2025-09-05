@@ -156,8 +156,8 @@ const client = new ConcordiumGRPCNodeClient(
                     });
                     break;
                 case TransactionKindString.Failed:
-                    if (result.summary.rejectReason.tag !== RejectReasonTag.TokenUpdateTransactionFailed) {
-                        throw new Error('Unexpected reject reason tag: ' + result.summary.rejectReason.tag);
+                    if (result.summary.rejectReason?.tag !== RejectReasonTag.TokenUpdateTransactionFailed) {
+                        throw new Error('Unexpected reject reason tag: ' + result.summary.rejectReason?.tag);
                     }
                     const details = Cbor.decode(result.summary.rejectReason.contents.details);
                     console.error(result.summary.rejectReason.contents, details);

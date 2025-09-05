@@ -24,6 +24,7 @@
 - `PassiveCommitteeInfo` now has been wrapped in `Upward`.
 - `NodeInfoConsensusStatus` and `NodeCatchupStatus` now have been wrapped in `Upward`.
 - `RejectReason` now has been wrapped in `Upward`
+- `RewardStatus` now has been wrapped in `Upward`
 
 #### `ConcordiumGRPCClient`:
 

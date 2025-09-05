@@ -633,7 +633,7 @@ function translateProtocolVersion(pv: GRPC.ProtocolVersion): bigint {
     return BigInt(pv + 1); // Protocol version enum indexes from 0, i.e. pv.PROTOCOL_VERSION_1 = 0.
 }
 
-export function tokenomicsInfo(info: GRPC.TokenomicsInfo): SDK.RewardStatus {
+export function tokenomicsInfo(info: GRPC.TokenomicsInfo): Upward<SDK.RewardStatus> {
     switch (info.tokenomics.oneofKind) {
         case 'v0': {
             const v0 = info.tokenomics.v0;

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+- Add PLT functionality to UMD releases.
+
 ## 10.0.1
 
 ### Fixed

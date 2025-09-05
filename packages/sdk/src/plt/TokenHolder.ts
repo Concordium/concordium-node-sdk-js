@@ -19,16 +19,13 @@ type TokenHolderAccountJSON = {
 };
 
 class TokenHolderAccount implements TokenHolder<'account'> {
-    readonly #coinInfo: typeof CCD_NETWORK_ID | undefined;
     public readonly type = 'account';
 
     constructor(
         /** The address of the account holding the token. */
         public readonly address: AccountAddress.Type,
-        coinInfo: typeof CCD_NETWORK_ID | undefined = CCD_NETWORK_ID
-    ) {
-        this.#coinInfo = coinInfo;
-    }
+        public readonly coinInfo: typeof CCD_NETWORK_ID | undefined
+    ) {}
 
     public toString(): string {
         return this.address.toString();
@@ -38,7 +35,7 @@ class TokenHolderAccount implements TokenHolder<'account'> {
         return {
             type: this.type,
             address: this.address.toJSON(),
-            coinInfo: this.#coinInfo,
+            coinInfo: this.coinInfo,
         };
     }
 }
@@ -50,7 +47,11 @@ export type Type = Account; // Can be extended to include other token holder typ
 export type JSON = AccountJSON; // Can be extended to include other token holder types in the future
 
 export function fromAccountAddress(address: AccountAddress.Type): TokenHolderAccount {
-    return new TokenHolderAccount(address);
+    return new TokenHolderAccount(address, CCD_NETWORK_ID);
+}
+
+export function fromAccountAddressNoCoinInfo(address: AccountAddress.Type): TokenHolderAccount {
+    return new TokenHolderAccount(address, undefined);
 }
 
 export function fromJSON(json: AccountJSON): Account;
@@ -113,11 +114,18 @@ const TAGGED_COININFO = 40305;
 function toCBORValue(value: Account): Tag;
 function toCBORValue(value: Type): unknown;
 function toCBORValue(value: Type): unknown {
-    const taggedCoinInfo = new Tag(TAGGED_COININFO, new Map([[1, CCD_NETWORK_ID]]));
-    const map = new Map<number, any>([
-        [1, taggedCoinInfo],
-        [3, value.address.decodedAddress],
-    ]);
+    let mapContents : [number, any][];
+    if (value.coinInfo === undefined) {
+        mapContents = [[3, value.address.decodedAddress]];
+    } else {
+        const taggedCoinInfo = new Tag(TAGGED_COININFO, new Map([[1, CCD_NETWORK_ID]]));
+        mapContents = [
+            [1, taggedCoinInfo],
+            [3, value.address.decodedAddress],
+        ];
+    }
+
+    const map = new Map<number, any>(mapContents);
     return new Tag(TAGGED_ADDRESS, map);
 }
 
@@ -200,6 +208,7 @@ function fromCBORValueAccount(decoded: unknown): TokenHolderAccount {
 
     // Optional validation for coin information if present (key 1)
     const coinInfo = value.get(1);
+    let coinInfoValue = undefined;
     if (coinInfo !== undefined) {
         // Verify coin info has the correct tag if present
         if (!(coinInfo instanceof Tag) || coinInfo.tag !== TAGGED_COININFO) {
@@ -215,6 +224,7 @@ function fromCBORValueAccount(decoded: unknown): TokenHolderAccount {
                 `Invalid CBOR token holder account: coin info does not contain Concordium network identifier ${CCD_NETWORK_ID}`
             );
         }
+        coinInfoValue = coinInfoMap.get(1);
 
         // Verify the map corresponds to the BCR-2020-007 `coininfo` format
         const validKeys = [1, 2]; // we allow 2 here, as it is in the spec for BCR-2020-007 `coininfo`, but we don't use it
@@ -224,7 +234,7 @@ function fromCBORValueAccount(decoded: unknown): TokenHolderAccount {
     }
 
     // Create the AccountAddress from the extracted bytes
-    return fromAccountAddress(AccountAddress.fromBuffer(addressBytes));
+    return new TokenHolderAccount(AccountAddress.fromBuffer(addressBytes), coinInfoValue);
 }
 
 /**

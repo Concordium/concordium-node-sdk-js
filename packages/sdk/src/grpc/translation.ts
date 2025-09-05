@@ -207,14 +207,16 @@ function trAmountFraction(amount: GRPC.AmountFraction | undefined): number {
     return unwrap(amount?.partsPerHundredThousand) / 100000;
 }
 
-function trOpenStatus(openStatus: GRPC.OpenStatus | undefined): SDK.OpenStatusText {
-    switch (unwrap(openStatus)) {
+function trOpenStatus(openStatus: GRPC.OpenStatus | undefined): Upward<SDK.OpenStatusText> {
+    switch (openStatus) {
         case GRPC.OpenStatus.OPEN_FOR_ALL:
             return SDK.OpenStatusText.OpenForAll;
         case GRPC.OpenStatus.CLOSED_FOR_NEW:
             return SDK.OpenStatusText.ClosedForNew;
         case GRPC.OpenStatus.CLOSED_FOR_ALL:
             return SDK.OpenStatusText.ClosedForAll;
+        case undefined:
+            return null;
     }
 }
 
@@ -241,15 +243,10 @@ function trBaker(baker: GRPC.AccountStakingInfo_Baker): SDK.AccountBakerDetails 
         return v0;
     }
 
-    const bakerPoolInfo: SDK.BakerPoolInfo = {
-        openStatus: trOpenStatus(baker.poolInfo?.openStatus),
-        metadataUrl: unwrap(baker.poolInfo?.url),
-        commissionRates: trCommissionRates(baker.poolInfo?.commissionRates),
-    };
     return {
         ...v0,
         version: 1,
-        bakerPoolInfo: bakerPoolInfo,
+        bakerPoolInfo: transPoolInfo(baker.poolInfo),
     };
 }
 
@@ -419,20 +416,25 @@ export function accountInfo(acc: GRPC.AccountInfo): SDK.AccountInfo {
         accountTokens: acc.tokens.map(trTokenAccountInfo),
     };
 
-    if (acc.stake?.stakingInfo.oneofKind === 'delegator') {
-        return {
-            ...accInfoCommon,
-            type: SDK.AccountInfoType.Delegator,
-            accountDelegation: trDelegator(acc.stake.stakingInfo.delegator),
-        };
-    } else if (acc.stake?.stakingInfo.oneofKind === 'baker') {
-        return {
-            ...accInfoCommon,
-            type: SDK.AccountInfoType.Baker,
-            accountBaker: trBaker(acc.stake.stakingInfo.baker),
-        };
-    } else {
+    if (acc.stake === undefined) {
         return accInfoCommon;
+    }
+
+    switch (acc.stake.stakingInfo.oneofKind) {
+        case 'delegator':
+            return {
+                ...accInfoCommon,
+                type: SDK.AccountInfoType.Delegator,
+                accountDelegation: trDelegator(acc.stake.stakingInfo.delegator),
+            };
+        case 'baker':
+            return {
+                ...accInfoCommon,
+                type: SDK.AccountInfoType.Baker,
+                accountBaker: trBaker(acc.stake.stakingInfo.baker),
+            };
+        case undefined:
+            return { ...accInfoCommon, type: SDK.AccountInfoType.Unknown, accountBaker: null };
     }
 }
 

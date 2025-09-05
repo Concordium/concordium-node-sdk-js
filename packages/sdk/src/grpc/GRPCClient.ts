@@ -504,7 +504,7 @@ export class ConcordiumGRPCClient {
      * @param blockHash optional block hash to get the reward status at, otherwise retrieves from last finalized block
      * @returns the reward status at the given block, or undefined it the block does not exist.
      */
-    async getTokenomicsInfo(blockHash?: BlockHash.Type): Promise<SDK.TokenomicsInfo> {
+    async getTokenomicsInfo(blockHash?: BlockHash.Type): Promise<Upward<SDK.TokenomicsInfo>> {
         const blockHashInput = getBlockHashInput(blockHash);
 
         const response = await this.client.getTokenomicsInfo(blockHashInput).response;

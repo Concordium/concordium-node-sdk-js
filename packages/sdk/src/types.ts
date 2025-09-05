@@ -1,6 +1,7 @@
 /**
  * @module Common GRPC-Client
  */
+import type { Upward } from './index.js';
 import { Cbor, TokenId } from './plt/index.js';
 import { TokenAccountInfo } from './plt/types.js';
 import * as AccountAddress from './types/AccountAddress.js';
@@ -797,7 +798,13 @@ export interface VerifyKey {
 }
 
 export interface CredentialPublicKeys {
-    keys: Record<number, VerifyKey>;
+    /**
+     * keys for the credential
+     *
+     * **Please note**, these can possibly be unknown if the SDK is not fully compatible with the Concordium
+     * node queried, in which case `null` is returned.
+     */
+    keys: Record<number, Upward<VerifyKey>>;
     threshold: number;
 }
 

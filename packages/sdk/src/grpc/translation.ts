@@ -70,14 +70,15 @@ function trCommits(cmm: GRPC.CredentialCommitments): SDK.CredentialDeploymentCom
     };
 }
 
-function trVerifyKey(verifyKey: GRPC.AccountVerifyKey): SDK.VerifyKey {
-    if (verifyKey.key.oneofKind === 'ed25519Key') {
-        return {
-            schemeId: 'Ed25519',
-            verifyKey: unwrapToHex(verifyKey.key.ed25519Key),
-        };
-    } else {
-        throw Error('AccountVerifyKey was expected to be of type "ed25519Key", but found' + verifyKey.key.oneofKind);
+function trVerifyKey(verifyKey: GRPC.AccountVerifyKey): Upward<SDK.VerifyKey> {
+    switch (verifyKey.key.oneofKind) {
+        case 'ed25519Key':
+            return {
+                schemeId: 'Ed25519',
+                verifyKey: unwrapToHex(verifyKey.key.ed25519Key),
+            };
+        case undefined:
+            return null;
     }
 }
 

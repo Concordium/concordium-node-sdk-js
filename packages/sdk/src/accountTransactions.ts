@@ -57,6 +57,7 @@ export interface AccountTransactionHandler<
      *
      * @param payload - The payload to serialize.
      * @returns The serialized payload.
+     * @throws If serializing the type was not possible.
      */
     serialize: (payload: PayloadType) => Buffer;
 
@@ -64,6 +65,7 @@ export interface AccountTransactionHandler<
      * Deserializes the serialized payload into the payload type.
      * @param serializedPayload - The serialized payload to be deserialized.
      * @returns The deserialized payload.
+     * @throws If deserializing the type was not possible.
      */
     deserialize: (serializedPayload: Cursor) => PayloadType;
 

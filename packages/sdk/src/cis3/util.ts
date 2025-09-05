@@ -4,6 +4,7 @@ import { serializeAccountAddress, serializeContractAddress, serializeReceiveHook
 import { serializeDate } from '../cis4/util.js';
 import { deserializeUint8 } from '../deserialization.js';
 import { Cursor, makeDeserializeListResponse } from '../deserializationHelpers.js';
+import { isKnown } from '../grpc/index.js';
 import {
     encodeWord8,
     encodeWord8FromString,
@@ -314,7 +315,7 @@ export function deserializeCIS3Event(event: ContractEvent.Type): CIS3.Event {
  * @returns {CIS3.NonceEvent[]} The deserialized `nonce` events
  */
 export function deserializeCIS3EventsFromInvokationResult(result: InvokeContractSuccessResult): CIS3.NonceEvent[] {
-    return deserializeCIS3ContractTraceEvents(result.events);
+    return deserializeCIS3ContractTraceEvents(result.events.filter(isKnown));
 }
 
 /**
@@ -331,7 +332,7 @@ export function deserializeCIS3EventsFromSummary(summary: BlockItemSummary): CIS
 
     switch (summary.transactionType) {
         case TransactionKindString.Update:
-            return deserializeCIS3ContractTraceEvents(summary.events);
+            return deserializeCIS3ContractTraceEvents(summary.events.filter(isKnown));
         case TransactionKindString.InitContract:
             const deserializedEvents = [];
             for (const event of summary.contractInitialized.events) {

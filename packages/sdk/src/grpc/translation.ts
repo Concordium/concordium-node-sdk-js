@@ -762,7 +762,7 @@ function trAddress(address: GRPC.Address): SDK.Address {
     }
 }
 
-function trContractTraceElement(contractTraceElement: GRPC.ContractTraceElement): SDK.ContractTraceEvent {
+function trContractTraceElement(contractTraceElement: GRPC.ContractTraceElement): Upward<SDK.ContractTraceEvent> {
     const element = contractTraceElement.element;
     switch (element.oneofKind) {
         case 'updated':
@@ -802,8 +802,8 @@ function trContractTraceElement(contractTraceElement: GRPC.ContractTraceElement)
                 from: unwrapValToHex(element.upgraded.from),
                 to: unwrapValToHex(element.upgraded.to),
             };
-        default:
-            throw Error('Invalid ContractTraceElement received, not able to translate to Transaction Event!');
+        case undefined:
+            return null;
     }
 }
 

@@ -520,6 +520,9 @@ interface AuthorizationsCommon {
      *
      * **Please note**, these can possibly be unknown if the SDK is not fully compatible with the Concordium
      * node queried, in which case `null` is returned.
+     *
+     * In case this is used as part of a transaction sent to the node, none of the values contained can be `null`,
+     * as this will cause the transation to fail.
      */
     keys: Upward<VerifyKey>[];
 }
@@ -815,6 +818,9 @@ export interface CredentialPublicKeys {
      *
      * **Please note**, these can possibly be unknown if the SDK is not fully compatible with the Concordium
      * node queried, in which case `null` is returned.
+     *
+     * In case this is used as part of a transaction sent to the node, none of the values contained can be `null`,
+     * as this will cause the transation to fail.
      */
     keys: Record<number, Upward<VerifyKey>>;
     threshold: number;
@@ -1659,7 +1665,6 @@ interface CdiRandomness {
     randomness: CommitmentsRandomness;
 }
 
-// TODO Should we rename this, As it is not actually the transaction that is sent to the node. (Note that this would be a breaking change)
 export type CredentialDeploymentPayload = CredentialDeploymentDetails & CdiRandomness;
 /** Internal type used when building credentials */
 export type UnsignedCdiWithRandomness = {

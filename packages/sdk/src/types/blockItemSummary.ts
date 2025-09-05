@@ -1,4 +1,3 @@
-import { isEqualContractAddress } from '../contractHelpers.js';
 import { type Upward, isKnown } from '../grpc/upward.js';
 import { CreatePLTPayload } from '../plt/types.js';
 import { AccountTransactionType, TransactionStatusEnum, TransactionSummaryType } from '../types.js';
@@ -454,6 +453,14 @@ export function getReceiverAccount(summary: BlockItemSummary): AccountAddress.Ty
     }
 }
 
+// NOTE: This is O(n*m) i.e. not great, but the expected data set is very small. If that ever changes,
+// consider optimizing.
+function addUnique<T>(list: Upward<T>[], items: T | T[], eq: (a: T, b: T) => boolean): Upward<T>[] {
+    const flattened = Array.isArray(items) ? items : [items];
+    const newItems = flattened.filter((i) => !list.filter(isKnown).some((li) => eq(i, li)));
+    return [...list, ...newItems];
+}
+
 /**
  * Gets a list of {@link ContractAddress} contract addresses affected by the transaction.
  *
@@ -483,14 +490,10 @@ export function affectedContracts(summary: BlockItemSummary): Upward<ContractAdd
                 if (!isKnown(event)) {
                     return [...addresses, null];
                 }
-                if (
-                    event.tag !== TransactionEventTag.Updated ||
-                    addresses.filter(isKnown).some(isEqualContractAddress(event.address))
-                ) {
+                if (event.tag !== TransactionEventTag.Updated) {
                     return addresses;
                 }
-
-                return [...addresses, event.address];
+                return addUnique(addresses, event.address, ContractAddress.equals);
             }, []);
         }
         default: {
@@ -528,13 +531,32 @@ export function affectedAccounts(summary: BlockItemSummary): Upward<AccountAddre
                     if (!isKnown(event)) {
                         return [...addresses, null];
                     }
-                    if (
-                        event.tag === TransactionEventTag.Transferred &&
-                        !addresses.filter(isKnown).some(AccountAddress.equals.bind(undefined, event.to))
-                    ) {
-                        return [...addresses, event.to];
+                    if (event.tag !== TransactionEventTag.Transferred) {
+                        return addresses;
                     }
-                    return addresses;
+                    return addUnique(addresses, event.to, AccountAddress.equals);
+                },
+                [summary.sender]
+            );
+        }
+        case TransactionKindString.TokenUpdate: {
+            return summary.events.reduce(
+                (addresses: Upward<AccountAddress.Type>[], event) => {
+                    if (!isKnown(event)) {
+                        return [...addresses, null];
+                    }
+
+                    switch (event.tag) {
+                        case TransactionEventTag.TokenTransfer:
+                            return addUnique(addresses, [event.to.address, event.from.address], AccountAddress.equals);
+                        case TransactionEventTag.TokenBurn:
+                        case TransactionEventTag.TokenMint:
+                            return addUnique(addresses, [event.target.address], AccountAddress.equals);
+                        case TransactionEventTag.TokenModuleEvent:
+                            // This only includes the encoded events pertaining to list updates and token pausation,
+                            // thus not affecting any accounts
+                            return addresses;
+                    }
                 },
                 [summary.sender]
             );

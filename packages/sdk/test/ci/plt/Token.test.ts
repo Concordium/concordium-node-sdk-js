@@ -26,7 +26,7 @@ jest.mock('../../../src/grpc/GRPCClient.js', () => {
     };
 });
 
-describe('Token.scaleAmount', () => {
+describe('PLT Token.scaleAmount', () => {
     it('should scale token amount correctly when decimals are compatible', () => {
         let token: Token.Type = {
             info: {
@@ -77,7 +77,7 @@ describe('Token.scaleAmount', () => {
     });
 });
 
-describe('Token.validateAmount', () => {
+describe('PLT Token.validateAmount', () => {
     it('should not throw an error when decimals match', () => {
         const token = createMockToken(8);
         const amount = TokenAmount.create(BigInt(100), 8);
@@ -93,7 +93,7 @@ describe('Token.validateAmount', () => {
     });
 });
 
-describe('Token.validateTransfer', () => {
+describe('PLT Token.validateTransfer', () => {
     beforeEach(() => {
         jest.clearAllMocks();
     });
@@ -419,7 +419,7 @@ describe('Token.validateTransfer', () => {
     });
 });
 
-describe('Token.validateMint', () => {
+describe('PLT Token.validateMint', () => {
     it('should throw NotMintableError when the token is not mintable', async () => {
         const sender = ACCOUNT_1;
         const tokenId = TokenId.fromString('3f1bfce9');
@@ -440,7 +440,7 @@ describe('Token.validateMint', () => {
     });
 });
 
-describe('Token.validateBurn', () => {
+describe('PLT Token.validateBurn', () => {
     it('should throw NotBurnableError when the token is not burnable', async () => {
         const sender = ACCOUNT_1;
         const tokenId = TokenId.fromString('3f1bfce9');
@@ -461,7 +461,7 @@ describe('Token.validateBurn', () => {
     });
 });
 
-describe('Token.validateAllowListUpdate', () => {
+describe('PLT Token.validateAllowListUpdate', () => {
     it('should throw NoAllowListError when the token has no allow list', async () => {
         const sender = ACCOUNT_1;
         const tokenId = TokenId.fromString('3f1bfce9');
@@ -480,7 +480,7 @@ describe('Token.validateAllowListUpdate', () => {
     });
 });
 
-describe('Token.validateDenyListUpdate', () => {
+describe('PLT Token.validateDenyListUpdate', () => {
     it('should throw NoDenyListError when the token has no deny list', async () => {
         const sender = ACCOUNT_1;
         const tokenId = TokenId.fromString('3f1bfce9');
@@ -499,7 +499,7 @@ describe('Token.validateDenyListUpdate', () => {
     });
 });
 
-describe('Token update supply operation', () => {
+describe('PLT Token update supply operation', () => {
     it('should throw PausedError when trying to mint/burn tokens while token is paused', async () => {
         const governanceAddress = ACCOUNT_1;
         const tokenId = TokenId.fromString('3f1bfce9');

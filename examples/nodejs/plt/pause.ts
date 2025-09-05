@@ -8,7 +8,14 @@ import {
     serializeAccountTransactionPayload,
 } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
-import { Cbor, Token, TokenId, TokenOperation, createTokenUpdatePayload } from '@concordium/web-sdk/plt';
+import {
+    Cbor,
+    Token,
+    TokenId,
+    TokenOperation,
+    createTokenUpdatePayload,
+    parseTokenModuleEvent,
+} from '@concordium/web-sdk/plt';
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
 
@@ -117,7 +124,7 @@ const client = new ConcordiumGRPCNodeClient(
                         if (e.tag !== TransactionEventTag.TokenModuleEvent) {
                             throw new Error('Unexpected event type: ' + e.tag);
                         }
-                        console.log('Token module event:', e, Cbor.decode(e.details, 'TokenPauseEventDetails'));
+                        console.log('Token module event:', parseTokenModuleEvent(e));
                     });
                     break;
                 case TransactionKindString.Failed:

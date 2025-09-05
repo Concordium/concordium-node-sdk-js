@@ -2,7 +2,7 @@ import { encode } from 'cbor2';
 
 import { Cbor, TokenMetadataUrl } from '../../../src/pub/plt.js';
 
-describe('TokenMetadataUrl', () => {
+describe('PLT TokenMetadataUrl', () => {
     it('should create a TokenMetadataUrl instance using the create function', () => {
         const url = 'https://example.com';
         const checksum = new Uint8Array(32);

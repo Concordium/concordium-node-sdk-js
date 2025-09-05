@@ -4,7 +4,7 @@ import { decode, encode } from 'cbor2';
 import { TokenHolder } from '../../../src/pub/plt.ts';
 import { AccountAddress } from '../../../src/types/index.ts';
 
-describe('TokenHolder CBOR', () => {
+describe('PLT TokenHolder', () => {
     test('Account address cbor encoding', () => {
         const address = TokenHolder.fromAccountAddress(AccountAddress.fromBuffer(new Uint8Array(32).fill(0x15)));
         const encoded = TokenHolder.toCBOR(address);

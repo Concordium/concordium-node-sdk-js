@@ -10,6 +10,9 @@
 
 ### Breaking changes
 
+- Renamed `TokenModuleRejectReason` to `EncodedTokenModuleRejectReason`, aligning with the corresponding types for
+  `TokenModuleEvent`. `TokenModuleRejectReason` now describes the decoded version of `EncodedTokenModuleRejectReason`.
+
 #### GRPC API query response types
 
 - `BlockItemSummaryInBlock.summary` now has the type `Upward<BlockItemSummary>`.

@@ -1,9 +1,12 @@
 import { Cursor } from '../../../src/deserializationHelpers.js';
 import { TokenHolder } from '../../../src/plt/index.ts';
 import {
+    Cbor,
     TokenAddAllowListOperation,
     TokenAddDenyListOperation,
+    TokenAmount,
     TokenBurnOperation,
+    TokenId,
     TokenListUpdateEventDetails,
     TokenMintOperation,
     TokenOperationType,
@@ -15,8 +18,7 @@ import {
     TokenUnpauseOperation,
     createTokenUpdatePayload,
     parseModuleEvent,
-} from '../../../src/plt/module.js';
-import { Cbor, TokenAmount, TokenId } from '../../../src/pub/plt.js';
+} from '../../../src/pub/plt.js';
 import {
     AccountAddress,
     AccountTransactionType,

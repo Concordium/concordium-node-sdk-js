@@ -664,7 +664,7 @@ export function tokenomicsInfo(info: GRPC.TokenomicsInfo): Upward<SDK.RewardStat
             };
         }
         case undefined:
-            throw new Error('Missing tokenomics info');
+            return null;
     }
 }
 

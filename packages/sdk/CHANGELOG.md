@@ -12,6 +12,10 @@
 
 - Renamed `TokenModuleRejectReason` to `EncodedTokenModuleRejectReason`, aligning with the corresponding types for
   `TokenModuleEvent`. `TokenModuleRejectReason` now describes the decoded version of `EncodedTokenModuleRejectReason`.
+- Rename `CredentialDeploymentTransaction` to `CredentialDeploymentPayload`, and correspondingly
+  - `createCredentialDeploymentTransaction` -> `createCredentialDeploymentPayload`
+  - `createCredentialTransaction` -> `createCredentialPayload`
+  - `createCredentialTransactionNoSeed` -> `createCredentialPayloadNoSeed`
 
 #### GRPC API query response types
 
@@ -24,6 +28,12 @@
 - `PassiveCommitteeInfo` now has been wrapped in `Upward`.
 - `NodeInfoConsensusStatus` and `NodeCatchupStatus` now have been wrapped in `Upward`.
 - `RejectReason` now has been wrapped in `Upward`
+- `VerifyKey` uses has now been wrapped in `Upward`, affecting the types
+  - `Authorizations`
+  - `ChainParameters`
+  - `CredentialPublicKeys`, bleeding into top-level types `CredentialDeploymentInfo`, `InitialAccountCredential` and
+    `NormalAccountCredential`
+  - `HigherLevelKeyUpdate`
 
 #### `ConcordiumGRPCClient`:
 

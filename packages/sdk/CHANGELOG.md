@@ -25,12 +25,19 @@
 - `NodeInfoConsensusStatus` and `NodeCatchupStatus` now have been wrapped in `Upward`.
 - `RejectReason` now has been wrapped in `Upward`
 - `RewardStatus` now has been wrapped in `Upward`
+- `Cooldown.status` now has the type `Upward<CooldownStatus>`. This affects all `AccountInfo` variants.
+- `BakerPoolInfo.openStatus` now has the type `Upward<OpenStatusText>`.
+  - Affects the `AccountInfoBaker` variant of `AccountInfo`.
+  - Affects `BakerPoolStatus`.
+- `BakerSetOpenStatusEvent.openStatus` now has the type `Upward<OpenStatusText>`.
+- `AccountInfo` has been extended with a new variant `AccountInfoUnknown`.
 
 #### `ConcordiumGRPCClient`:
 
 - `waitForTransactionFinalization` is affected by the changes to `BlockItemSummaryInBlock`
 - `getBlockTransactionEvents` now returns `AsyncIterable<Upward<BlockItemSummary>>`.
 - `getBlockSpecialEvents` now returns `AsyncIterable<Upward<BlockSpecialEvent>>`.
+- `getPoolInfo` is affected by the changes to `BakerPoolInfo`
 
 ## 10.0.1
 

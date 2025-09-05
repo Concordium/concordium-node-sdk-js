@@ -1181,10 +1181,12 @@ export interface AccountInfoDelegator extends AccountInfoCommon {
 export interface AccountInfoUnknown extends AccountInfoCommon {
     type: AccountInfoType.Unknown;
     /**
-     * This field is named `accountBaker` to align with the JSON representation produced by the
+     * This will only ever be `null`, which represents a variant of staking info for the account which is
+     * unknown to the SDK, for known staking variants this is represented by either {@linkcode AccountInfoBaker}
+     * or {@linkcode AccountInfoDElegator}.
+     *
+     * **Note**: This field is named `accountBaker` to align with the JSON representation produced by the
      * corresponding rust SDK.
-     * `null` represents a variant of staking info for the account which is unknown to the SDK, otherwise
-     * this will always be `undefined`, as otherwise this is represented by {@linkcode AccountInfoBaker}.
      */
     accountBaker: Upward<never>;
 }

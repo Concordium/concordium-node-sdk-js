@@ -316,14 +316,14 @@ export async function getAccount(accountAddress: AccountAddress.Type): Promise<A
             try {
                 const accountInfo = await client.getAccountInfo(accountAddress);
                 if (accountInfo.type === AccountInfoType.Unknown) {
-                    reject();
+                    reject(new Error('Account info unknown'));
                     return false;
                 }
                 resolve(accountInfo);
                 return false;
             } catch {
                 if (escapeCounter > maxRetries) {
-                    reject();
+                    reject(new Error('Max retry counter reached'));
                     return false;
                 } else {
                     escapeCounter += 1;

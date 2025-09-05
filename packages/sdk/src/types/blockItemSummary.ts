@@ -5,7 +5,7 @@ import { AccountTransactionType, TransactionStatusEnum, TransactionSummaryType }
 import { isDefined } from '../util.js';
 import * as AccountAddress from './AccountAddress.js';
 import type * as BlockHash from './BlockHash.js';
-import type * as ContractAddress from './ContractAddress.js';
+import * as ContractAddress from './ContractAddress.js';
 import type * as ContractEvent from './ContractEvent.js';
 import type * as Energy from './Energy.js';
 import type * as TransactionHash from './TransactionHash.js';
@@ -459,17 +459,17 @@ export function getReceiverAccount(summary: BlockItemSummary): AccountAddress.Ty
  *
  * @param {BlockItemSummary} summary - The block item summary to check.
  *
- * @returns {ContractAddress[]} List of contract addresses affected by the transaction.
+ * @returns {Upward<ContractAddress.Type>[]} List of contract addresses affected by the transaction.
  */
 export function affectedContracts<T extends InitContractSummary | UpdateContractSummary>(
     summary: T
-): ContractAddress.Type[];
+): Upward<ContractAddress.Type>[];
 export function affectedContracts(
     summary: Exclude<AccountTransactionSummary, InitContractSummary | UpdateContractSummary>
 ): never[];
 export function affectedContracts(summary: AccountCreationSummary | UpdateSummary): never[];
-export function affectedContracts(summary: BlockItemSummary): ContractAddress.Type[];
-export function affectedContracts(summary: BlockItemSummary): ContractAddress.Type[] {
+export function affectedContracts(summary: BlockItemSummary): Upward<ContractAddress.Type>[];
+export function affectedContracts(summary: BlockItemSummary): Upward<ContractAddress.Type>[] {
     if (summary.type !== TransactionSummaryType.AccountTransaction) {
         return [];
     }
@@ -479,10 +479,13 @@ export function affectedContracts(summary: BlockItemSummary): ContractAddress.Ty
             return [summary.contractInitialized.address];
         }
         case TransactionKindString.Update: {
-            return summary.events.filter(isKnown).reduce((addresses: ContractAddress.Type[], event) => {
+            return summary.events.reduce((addresses: Upward<ContractAddress.Type>[], event) => {
+                if (!isKnown(event)) {
+                    return [...addresses, null];
+                }
                 if (
                     event.tag !== TransactionEventTag.Updated ||
-                    addresses.some(isEqualContractAddress(event.address))
+                    addresses.filter(isKnown).some(isEqualContractAddress(event.address))
                 ) {
                     return addresses;
                 }
@@ -501,12 +504,12 @@ export function affectedContracts(summary: BlockItemSummary): ContractAddress.Ty
  *
  * @param {BlockItemSummary} summary - The block item summary to check.
  *
- * @returns {AccountAddress.Type[]} List of account addresses affected by the transaction.
+ * @returns {Upward<AccountAddress.Type>[]} List of account addresses affected by the transaction.
  */
-export function affectedAccounts(summary: AccountTransactionSummary): AccountAddress.Type[];
+export function affectedAccounts(summary: AccountTransactionSummary): Upward<AccountAddress.Type>[];
 export function affectedAccounts(summary: AccountCreationSummary | UpdateSummary): never[];
-export function affectedAccounts(summary: BlockItemSummary): AccountAddress.Type[];
-export function affectedAccounts(summary: BlockItemSummary): AccountAddress.Type[] {
+export function affectedAccounts(summary: BlockItemSummary): Upward<AccountAddress.Type>[];
+export function affectedAccounts(summary: BlockItemSummary): Upward<AccountAddress.Type>[] {
     if (summary.type !== TransactionSummaryType.AccountTransaction) {
         return [];
     }
@@ -520,11 +523,14 @@ export function affectedAccounts(summary: BlockItemSummary): AccountAddress.Type
         case TransactionKindString.TransferToPublic:
             return [summary.removed.account];
         case TransactionKindString.Update: {
-            return summary.events.filter(isKnown).reduce(
-                (addresses: AccountAddress.Type[], event) => {
+            return summary.events.reduce(
+                (addresses: Upward<AccountAddress.Type>[], event) => {
+                    if (!isKnown(event)) {
+                        return [...addresses, null];
+                    }
                     if (
                         event.tag === TransactionEventTag.Transferred &&
-                        !addresses.some(AccountAddress.equals.bind(undefined, event.to))
+                        !addresses.filter(isKnown).some(AccountAddress.equals.bind(undefined, event.to))
                     ) {
                         return [...addresses, event.to];
                     }
@@ -556,22 +562,27 @@ export type SummaryContractUpdateLog = {
  *
  * @param {BlockItemSummary} summary - The block item summary to check.
  *
- * @returns {SummaryContractUpdateLog[]} List of update logs corresponding to the transaction.
+ * @returns {Upward<SummaryContractUpdateLog>[]} List of update logs corresponding to the transaction.
  */
-export function getSummaryContractUpdateLogs<T extends UpdateContractSummary>(summary: T): SummaryContractUpdateLog[];
+export function getSummaryContractUpdateLogs<T extends UpdateContractSummary>(
+    summary: T
+): Upward<SummaryContractUpdateLog>[];
 export function getSummaryContractUpdateLogs(summary: AccountCreationSummary | UpdateSummary): never[];
 export function getSummaryContractUpdateLogs(
     summary: Exclude<AccountTransactionSummary, UpdateContractSummary>
 ): never[];
-export function getSummaryContractUpdateLogs(summary: BlockItemSummary): SummaryContractUpdateLog[];
-export function getSummaryContractUpdateLogs(summary: BlockItemSummary): SummaryContractUpdateLog[] {
+export function getSummaryContractUpdateLogs(summary: BlockItemSummary): Upward<SummaryContractUpdateLog>[];
+export function getSummaryContractUpdateLogs(summary: BlockItemSummary): Upward<SummaryContractUpdateLog>[] {
     if (summary.type !== TransactionSummaryType.AccountTransaction || !isUpdateContractSummary(summary)) {
         return [];
     }
 
     return summary.events
-        .filter(isKnown)
         .map((event) => {
+            if (!isKnown(event)) {
+                return null;
+            }
+
             switch (event.tag) {
                 case TransactionEventTag.Updated:
                 case TransactionEventTag.Interrupted:

@@ -1012,7 +1012,7 @@ function trDelegationEvent(
     }
 }
 
-function trRejectReason(rejectReason: GRPC.RejectReason | undefined): SDK.RejectReason {
+function trRejectReason(rejectReason: GRPC.RejectReason | undefined): Upward<SDK.RejectReason> {
     function simpleReason(tag: SDK.SimpleRejectReasonTag): SDK.RejectReason {
         return {
             tag: SDK.RejectReasonTag[tag],
@@ -1211,7 +1211,7 @@ function trRejectReason(rejectReason: GRPC.RejectReason | undefined): SDK.Reject
                 },
             };
         case undefined:
-            throw Error('Failed translating RejectReason, encountered undefined value');
+            return null;
     }
 }
 

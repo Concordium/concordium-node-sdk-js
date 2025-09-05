@@ -2,7 +2,7 @@ import * as Cbor from '../../../src/plt/Cbor.js';
 import * as TokenAmount from '../../../src/plt/TokenAmount.js';
 import * as TokenHolder from '../../../src/plt/TokenHolder.js';
 import * as TokenMetadataUrl from '../../../src/plt/TokenMetadataUrl.js';
-import { TokenListUpdateEventDetails, TokenPauseEventDetails } from '../../../src/plt/module.js';
+import { TokenListUpdateEventDetails, TokenPauseEventDetails } from '../../../src/pub/plt.js';
 import { AccountAddress } from '../../../src/types/index.js';
 
 describe('Cbor', () => {

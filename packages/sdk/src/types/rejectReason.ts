@@ -1,4 +1,4 @@
-import { TokenId, TokenModuleRejectReason } from '../plt/index.js';
+import { EncodedTokenModuleRejectReason, TokenId } from '../plt/index.js';
 import { Address, BakerId, Base58String, HexString } from '../types.js';
 import type * as CcdAmount from './CcdAmount.js';
 import type * as ContractAddress from './ContractAddress.js';
@@ -203,7 +203,7 @@ export type NonExistingTokenIdRejectReason = {
 export type TokenUpdateTransactionFailedRejectReason = {
     tag: RejectReasonTag.TokenUpdateTransactionFailed;
     /** The specific token module reject reason that caused the transaction to fail */
-    contents: TokenModuleRejectReason;
+    contents: EncodedTokenModuleRejectReason;
 };
 
 export type TokenRejectReason = NonExistingTokenIdRejectReason | TokenUpdateTransactionFailedRejectReason;

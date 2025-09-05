@@ -210,7 +210,13 @@ export interface UpdateCredentialsSummary {
 export interface FailedTransactionSummary {
     transactionType: TransactionKindString.Failed;
     failedTransactionType?: TransactionKindString;
-    rejectReason: RejectReason;
+    /**
+     * The reject reason for the failed transaction
+     *
+     * **Please note**, this can possibly be unknown if the SDK is not fully compatible with the Concordium
+     * node queried, in which case `null` is returned.
+     */
+    rejectReason: Upward<RejectReason>;
 }
 
 /**
@@ -389,15 +395,15 @@ export const isSuccessTransaction = (
  *
  * @param {BlockItemSummary} summary - The block item summary to check.
  *
- * @returns {RejectReason | undfined} Reject reason if `summary` is a rejected transaction. Otherwise returns undefined.
+ * @returns {RejectReason | undefined} Reject reason if `summary` is a rejected transaction. Otherwise returns undefined.
  */
-export function getTransactionRejectReason<T extends FailedTransactionSummary>(summary: T): RejectReason;
+export function getTransactionRejectReason<T extends FailedTransactionSummary>(summary: T): Upward<RejectReason>;
 export function getTransactionRejectReason(summary: AccountCreationSummary | UpdateSummary): undefined;
 export function getTransactionRejectReason(
     summary: Exclude<AccountTransactionSummary, FailedTransactionSummary>
 ): undefined;
-export function getTransactionRejectReason(summary: BlockItemSummary): RejectReason | undefined;
-export function getTransactionRejectReason(summary: BlockItemSummary): RejectReason | undefined {
+export function getTransactionRejectReason(summary: BlockItemSummary): Upward<RejectReason> | undefined;
+export function getTransactionRejectReason(summary: BlockItemSummary): Upward<RejectReason> | undefined {
     if (!isRejectTransaction(summary)) {
         return undefined;
     }

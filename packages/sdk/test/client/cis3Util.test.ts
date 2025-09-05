@@ -10,7 +10,7 @@ const SPONSOREE = AccountAddress.fromBase58('4NgCvVSCuCyHkALqbAnSX3QEC7zrfoZbig7
 async function getBlockItemSummary(): Promise<BlockItemSummary> {
     const nodeClient = getNodeClientV2();
     const bi = await nodeClient.waitForTransactionFinalization(TRANSACTION_HASH);
-    return bi.summary;
+    return bi.summary!;
 }
 
 test('CIS3 nonce events are deserialized correctly', async () => {

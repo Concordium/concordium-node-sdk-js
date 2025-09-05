@@ -1,3 +1,4 @@
+import type { Upward } from '../grpc/upward.js';
 import type { BakerId, HexString } from '../types.js';
 import type * as Duration from '../types/Duration.js';
 import type * as Timestamp from '../types/Timestamp.js';
@@ -49,7 +50,7 @@ export interface BakerConsensusInfoStatusGeneric {
 
 export interface BakerConsensusInfoStatusPassiveCommitteeInfo {
     tag: 'passiveCommitteeInfo';
-    passiveCommitteeInfo: PassiveCommitteeInfo;
+    passiveCommitteeInfo: Upward<PassiveCommitteeInfo>;
 }
 
 export enum PassiveCommitteeInfo {

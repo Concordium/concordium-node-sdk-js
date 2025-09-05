@@ -1,8 +1,7 @@
 import { Buffer } from 'buffer/index.js';
 
 import { Cursor } from './deserializationHelpers.js';
-import { Cbor, TokenId } from './plt/index.js';
-import { TokenOperation, TokenOperationType } from './plt/module.js';
+import { Cbor, TokenId, TokenOperation, TokenOperationType } from './plt/index.js';
 import { ContractAddress, ContractName, Energy, ModuleReference } from './pub/types.js';
 import { serializeCredentialDeploymentInfo } from './serialization.js';
 import {

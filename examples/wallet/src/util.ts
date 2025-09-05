@@ -1,6 +1,7 @@
 import {
     AccountAddress,
     AccountInfo,
+    AccountInfoType,
     AccountTransaction,
     AccountTransactionHeader,
     AccountTransactionType,
@@ -314,11 +315,15 @@ export async function getAccount(accountAddress: AccountAddress.Type): Promise<A
         await loop(intervalMs, async () => {
             try {
                 const accountInfo = await client.getAccountInfo(accountAddress);
+                if (accountInfo.type === AccountInfoType.Unknown) {
+                    reject(new Error('Account info unknown'));
+                    return false;
+                }
                 resolve(accountInfo);
                 return false;
             } catch {
                 if (escapeCounter > maxRetries) {
-                    reject();
+                    reject(new Error('Max retry counter reached'));
                     return false;
                 } else {
                     escapeCounter += 1;

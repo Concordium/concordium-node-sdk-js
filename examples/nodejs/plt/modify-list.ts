@@ -5,6 +5,7 @@ import {
     TransactionEventTag,
     TransactionKindString,
     TransactionSummaryType,
+    isKnown,
     serializeAccountTransactionPayload,
 } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
@@ -137,13 +138,17 @@ const client = new ConcordiumGRPCNodeClient(
             const result = await client.waitForTransactionFinalization(transaction);
             console.log('Transaction finalized:', result);
 
+            if (!isKnown(result.summary)) {
+                throw new Error('Unexpected transaction outcome');
+            }
+
             if (result.summary.type !== TransactionSummaryType.AccountTransaction) {
                 throw new Error('Unexpected transaction type: ' + result.summary.type);
             }
 
             switch (result.summary.transactionType) {
                 case TransactionKindString.TokenUpdate:
-                    result.summary.events.forEach((e) => {
+                    result.summary.events.filter(isKnown).forEach((e) => {
                         if (e.tag !== TransactionEventTag.TokenModuleEvent) {
                             throw new Error('Unexpected event type: ' + e.tag);
                         }
@@ -151,8 +156,8 @@ const client = new ConcordiumGRPCNodeClient(
                     });
                     break;
                 case TransactionKindString.Failed:
-                    if (result.summary.rejectReason.tag !== RejectReasonTag.TokenUpdateTransactionFailed) {
-                        throw new Error('Unexpected reject reason tag: ' + result.summary.rejectReason.tag);
+                    if (result.summary.rejectReason?.tag !== RejectReasonTag.TokenUpdateTransactionFailed) {
+                        throw new Error('Unexpected reject reason tag: ' + result.summary.rejectReason?.tag);
                     }
                     const details = Cbor.decode(result.summary.rejectReason.contents.details);
                     console.error(result.summary.rejectReason.contents, details);

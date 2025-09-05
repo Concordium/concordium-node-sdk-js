@@ -97,6 +97,7 @@
         "test-ci": "yarn test ./test/ci && yarn test-rn ./test/ci && yarn test-web ./test/ci",
         "build": "yarn clean; mkdir -p src/grpc-api; yarn generate && yarn build-dev",
         "build-dev": "tsc -p tsconfig.build.json && yarn webpack",
+        "typecheck": "tsc -p tsconfig.json",
         "webpack": "tsx ../../node_modules/.bin/webpack --config webpack.config.ts",
         "clean": "rimraf -- lib src/grpc-api",
         "size": "yarn build && size-limit",

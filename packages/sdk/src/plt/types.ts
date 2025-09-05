@@ -50,7 +50,7 @@ export type TokenAccountInfo = {
 /**
  * Represents the reason for a token module operation rejection.
  */
-export type TokenModuleRejectReason = {
+export type EncodedTokenModuleRejectReason = {
     /** The ID of the token for which the operation was rejected. */
     tokenId: TokenId.Type;
     /** The type of rejection. */

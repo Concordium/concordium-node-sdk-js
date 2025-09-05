@@ -12,13 +12,18 @@ import {
 import { AccountSigner, signTransaction } from '../signHelpers.js';
 import { SequenceNumber } from '../types/index.js';
 import { bail } from '../util.js';
-import { Cbor, TokenAmount, TokenHolder, TokenId, TokenInfo, TokenModuleReference } from './index.js';
 import {
+    Cbor,
     TokenAddAllowListOperation,
     TokenAddDenyListOperation,
+    TokenAmount,
     TokenBurnOperation,
+    TokenHolder,
+    TokenId,
+    TokenInfo,
     TokenMintOperation,
     TokenModuleAccountState,
+    TokenModuleReference,
     TokenModuleState,
     TokenOperation,
     TokenOperationType,
@@ -29,7 +34,7 @@ import {
     TokenTransferOperation,
     TokenUnpauseOperation,
     createTokenUpdatePayload,
-} from './module.js';
+} from './index.js';
 
 /**
  * Enum representing the types of errors that can occur when interacting with PLT instances through the client.

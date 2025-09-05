@@ -1,4 +1,5 @@
 import { isEqualContractAddress } from '../contractHelpers.js';
+import type { Upward } from '../grpc/upward.js';
 import { CreatePLTPayload } from '../plt/types.js';
 import { AccountTransactionType, TransactionStatusEnum, TransactionSummaryType } from '../types.js';
 import { isDefined } from '../util.js';
@@ -177,12 +178,24 @@ export interface UpdateBakerRestakeEarningsSummary {
 
 export interface ConfigureBakerSummary {
     transactionType: TransactionKindString.ConfigureBaker;
-    events: BakerEvent[];
+    /**
+     * The events corresponding to the baker configuration
+     *
+     * **Please note**, these can possibly be unknown if the SDK is not fully compatible with the Concordium
+     * node queried, in which case `null` is returned.
+     */
+    events: Upward<BakerEvent>[];
 }
 
 export interface ConfigureDelegationSummary {
     transactionType: TransactionKindString.ConfigureDelegation;
-    events: DelegationEvent[];
+    /**
+     * The events corresponding to the delegation configuration
+     *
+     * **Please note**, these can possibly be unknown if the SDK is not fully compatible with the Concordium
+     * node queried, in which case `null` is returned.
+     */
+    events: Upward<DelegationEvent>[];
 }
 
 export interface UpdateCredentialKeysSummary {
@@ -197,7 +210,13 @@ export interface UpdateCredentialsSummary {
 export interface FailedTransactionSummary {
     transactionType: TransactionKindString.Failed;
     failedTransactionType?: TransactionKindString;
-    rejectReason: RejectReason;
+    /**
+     * The reject reason for the failed transaction
+     *
+     * **Please note**, this can possibly be unknown if the SDK is not fully compatible with the Concordium
+     * node queried, in which case `null` is returned.
+     */
+    rejectReason: Upward<RejectReason>;
 }
 
 /**
@@ -205,8 +224,13 @@ export interface FailedTransactionSummary {
  */
 export type TokenUpdateSummary = {
     transactionType: TransactionKindString.TokenUpdate;
-    /** The update details */
-    events: TokenEvent[];
+    /**
+     * The token update details
+     *
+     * **Please note**, these can possibly be unknown if the SDK is not fully compatible with the Concordium
+     * node queried, in which case `null` is returned.
+     */
+    events: Upward<TokenEvent>[];
 };
 
 /**
@@ -249,13 +273,25 @@ export interface AccountCreationSummary extends BaseBlockItemSummary {
 export interface UpdateSummary extends BaseBlockItemSummary {
     type: TransactionSummaryType.UpdateTransaction;
     effectiveTime: bigint;
-    payload: UpdateInstructionPayload;
+    /**
+     * The payload of update.
+     *
+     * **Please note**, this can possibly be unknown if the SDK is not fully compatible with the Concordium
+     * node queried, in which case `null` is returned.
+     */
+    payload: Upward<UpdateInstructionPayload>;
 }
 
 export type TokenCreationSummary = {
     type: TransactionSummaryType.TokenCreation;
     payload: CreatePLTPayload;
-    events: TokenEvent[];
+    /**
+     * The token creation details
+     *
+     * **Please note**, these can possibly be unknown if the SDK is not fully compatible with the Concordium
+     * node queried, in which case `null` is returned.
+     */
+    events: Upward<TokenEvent>[];
 };
 
 export type BlockItemSummary =
@@ -266,7 +302,13 @@ export type BlockItemSummary =
 
 export interface BlockItemSummaryInBlock {
     blockHash: BlockHash.Type;
-    summary: BlockItemSummary;
+    /**
+     * The summary/outcome of processing the block item.
+     *
+     * **Please note**, this can possibly be unknown if the SDK is not fully compatible with the Concordium
+     * node queried, in which case `null` is returned.
+     */
+    summary: Upward<BlockItemSummary>;
 }
 
 export interface PendingBlockItem {
@@ -353,15 +395,15 @@ export const isSuccessTransaction = (
  *
  * @param {BlockItemSummary} summary - The block item summary to check.
  *
- * @returns {RejectReason | undfined} Reject reason if `summary` is a rejected transaction. Otherwise returns undefined.
+ * @returns {RejectReason | undefined} Reject reason if `summary` is a rejected transaction. Otherwise returns undefined.
  */
-export function getTransactionRejectReason<T extends FailedTransactionSummary>(summary: T): RejectReason;
+export function getTransactionRejectReason<T extends FailedTransactionSummary>(summary: T): Upward<RejectReason>;
 export function getTransactionRejectReason(summary: AccountCreationSummary | UpdateSummary): undefined;
 export function getTransactionRejectReason(
     summary: Exclude<AccountTransactionSummary, FailedTransactionSummary>
 ): undefined;
-export function getTransactionRejectReason(summary: BlockItemSummary): RejectReason | undefined;
-export function getTransactionRejectReason(summary: BlockItemSummary): RejectReason | undefined {
+export function getTransactionRejectReason(summary: BlockItemSummary): Upward<RejectReason> | undefined;
+export function getTransactionRejectReason(summary: BlockItemSummary): Upward<RejectReason> | undefined {
     if (!isRejectTransaction(summary)) {
         return undefined;
     }

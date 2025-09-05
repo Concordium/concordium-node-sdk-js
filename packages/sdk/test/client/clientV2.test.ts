@@ -187,7 +187,7 @@ test.each(clients)('Failed invoke contract', async (client) => {
     }
 
     expect(result.usedEnergy.value).toBe(340n);
-    expect(result.reason.tag).toBe(v1.RejectReasonTag.RejectedReceive);
+    expect(result.reason?.tag).toBe(v1.RejectReasonTag.RejectedReceive);
 });
 
 test.each(clients)('Invoke contract on v0 contract', async (client) => {

@@ -1,5 +1,14 @@
-import { TokenModuleAccountState, TokenModuleState, TokenTransfer } from '../../../src/plt/module.js';
-import { Cbor, Token, TokenAmount, TokenHolder, TokenId, TokenMetadataUrl } from '../../../src/pub/plt.ts';
+import {
+    Cbor,
+    Token,
+    TokenAmount,
+    TokenHolder,
+    TokenId,
+    TokenMetadataUrl,
+    TokenModuleAccountState,
+    TokenModuleState,
+    TokenTransfer,
+} from '../../../src/pub/plt.js';
 import { AccountAddress, AccountInfo } from '../../../src/pub/types.js';
 
 const ACCOUNT_1 = AccountAddress.fromBase58('4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd');

@@ -1,5 +1,8 @@
 export * from '../plt/types.js';
 export * from '../plt/module.js';
+export * from '../plt/TokenModuleRejectReason.js';
+export * from '../plt/TokenModuleEvent.js';
+export * from '../plt/TokenOperation.js';
 
 export * as Token from '../plt/Token.js';
 

@@ -8,7 +8,7 @@ import {
     CcdAmount,
     ConcordiumGRPCWebClient,
     ConcordiumHdWallet,
-    CredentialDeploymentTransaction,
+    CredentialDeploymentPayload,
     CryptographicParameters,
     IdObjectRequestV1,
     IdRecoveryRequest,
@@ -233,7 +233,7 @@ export function createCredentialDeploymentKeysAndRandomness(
  * @returns a promise with the transaction hash of the submitted credential deployment
  */
 export async function sendCredentialDeploymentTransaction(
-    credentialDeployment: CredentialDeploymentTransaction,
+    credentialDeployment: CredentialDeploymentPayload,
     signature: string
 ) {
     const payload = serializeCredentialDeploymentPayload([signature], credentialDeployment);

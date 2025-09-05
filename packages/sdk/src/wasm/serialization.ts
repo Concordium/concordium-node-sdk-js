@@ -2,7 +2,7 @@ import * as wasm from '@concordium/rust-bindings/wallet';
 import { Buffer } from 'buffer/index.js';
 import JSONbig from 'json-bigint';
 
-import type { CredentialDeploymentDetails, CredentialDeploymentTransaction } from '../types.js';
+import type { CredentialDeploymentDetails, CredentialDeploymentPayload } from '../types.js';
 
 interface DeploymentDetailsResult {
     credInfo: string;
@@ -54,7 +54,7 @@ export function serializeCredentialDeploymentTransactionForSubmission(
 
 export function serializeCredentialDeploymentPayload(
     signatures: string[],
-    credentialDeploymentTransaction: CredentialDeploymentTransaction
+    credentialDeploymentTransaction: CredentialDeploymentPayload
 ): Buffer {
     const payloadByteArray = wasm.serializeCredentialDeploymentPayload(
         signatures,

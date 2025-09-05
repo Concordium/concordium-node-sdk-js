@@ -12,6 +12,10 @@
 
 - Renamed `TokenModuleRejectReason` to `EncodedTokenModuleRejectReason`, aligning with the corresponding types for
   `TokenModuleEvent`. `TokenModuleRejectReason` now describes the decoded version of `EncodedTokenModuleRejectReason`.
+- Rename `CredentialDeploymentTransaction` to `CredentialDeploymentPayload`, and correspondingly
+  - `createCredentialDeploymentTransaction` -> `createCredentialDeploymentPayload`
+  - `createCredentialTransaction` -> `createCredentialPayload`
+  - `createCredentialTransactionNoSeed` -> `createCredentialPayloadNoSeed`
 
 #### GRPC API query response types
 
@@ -31,6 +35,12 @@
   - Affects `BakerPoolStatus`.
 - `BakerSetOpenStatusEvent.openStatus` now has the type `Upward<OpenStatusText>`.
 - `AccountInfo` has been extended with a new variant `AccountInfoUnknown`.
+- `VerifyKey` uses has now been wrapped in `Upward`, affecting the types
+  - `Authorizations`
+  - `ChainParameters`
+  - `CredentialPublicKeys`, bleeding into top-level types `CredentialDeploymentInfo`, `InitialAccountCredential` and
+    `NormalAccountCredential`
+  - `HigherLevelKeyUpdate`
 
 #### `ConcordiumGRPCClient`:
 

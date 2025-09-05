@@ -55,7 +55,7 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
 
     // Protocol version 4 expanded the amount of information in the response, so one should check the type to access that.
     // This information includes information about the payday and total amount of funds staked.
-    if(!isKnown(tokenomics)) {
+    if (!isKnown(tokenomics)) {
         console.warn('Unknown tokenomics version found');
         return;
     }

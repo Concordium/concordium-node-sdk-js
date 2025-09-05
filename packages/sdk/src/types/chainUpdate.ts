@@ -261,7 +261,19 @@ export enum HigherLevelKeyUpdateType {
 
 export interface HigherLevelKeyUpdate {
     typeOfUpdate: HigherLevelKeyUpdateType;
+    /**
+     * The authorization keys included in the update.
+     *
+     * **Please note**, these can possibly be unknown if the SDK is not fully compatible with the Concordium
+     * node queried, in which case `null` is returned.
+     *
+     * In case this is used as part of a transaction sent to the node, none of the values contained can be `null`,
+     * as this will cause the transation to fail.
+     */
     updateKeys: Upward<VerifyKey>[];
+    /**
+     * The key threshold needed to perform the update to higher level keys.
+     */
     threshold: number;
 }
 

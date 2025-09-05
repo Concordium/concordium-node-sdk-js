@@ -261,7 +261,7 @@ export enum HigherLevelKeyUpdateType {
 
 export interface HigherLevelKeyUpdate {
     typeOfUpdate: HigherLevelKeyUpdateType;
-    updateKeys: VerifyKey[];
+    updateKeys: Upward<VerifyKey>[];
     threshold: number;
 }
 

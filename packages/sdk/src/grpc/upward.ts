@@ -25,6 +25,26 @@ import { bail } from '../util.js';
  */
 export type Upward<T> = T | null;
 
+// Recursively remove all occurrences of `null` from a type. Since `null` is only
+// used via the Upward<T> sentinel (and never intentionally in other field types),
+// this yields a type appropriate for constructing outbound payloads where all
+// values must be known.
+export type Known<T> = T extends null
+    ? never
+    : T extends Function
+      ? T
+      : T extends Map<infer K, infer V>
+        ? Map<Known<K>, Known<V>>
+        : T extends Set<infer S>
+          ? Set<Known<S>>
+          : T extends readonly (infer U)[]
+            ? T extends readonly [any, ...any[]]
+                ? { [I in keyof T]: Known<T[I]> }
+                : Known<U>[]
+            : T extends object
+              ? { [P in keyof T]: Known<T[P]> }
+              : T;
+
 /**
  * Type guard that checks whether an Upward<T> holds a known value.
  *

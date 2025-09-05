@@ -10,6 +10,9 @@
 
 ### Breaking changes
 
+- Renamed `TokenModuleRejectReason` to `EncodedTokenModuleRejectReason`, aligning with the corresponding types for
+  `TokenModuleEvent`. `TokenModuleRejectReason` now describes the decoded version of `EncodedTokenModuleRejectReason`.
+
 #### GRPC API query response types
 
 - `BlockItemSummaryInBlock.summary` now has the type `Upward<BlockItemSummary>`.
@@ -20,6 +23,7 @@
 - `PendingUpdate.effect` now has the type `Upward<PendingUpateEffect>`.
 - `PassiveCommitteeInfo` now has been wrapped in `Upward`.
 - `NodeInfoConsensusStatus` and `NodeCatchupStatus` now have been wrapped in `Upward`.
+- `RejectReason` now has been wrapped in `Upward`
 
 #### `ConcordiumGRPCClient`:
 

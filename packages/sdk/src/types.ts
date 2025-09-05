@@ -1609,7 +1609,13 @@ export interface InvokeContractSuccessResult {
 export interface InvokeContractFailedResult {
     tag: 'failure';
     usedEnergy: Energy.Type;
-    reason: RejectReason;
+    /**
+     * The reject reason for the failed contract invocation.
+     *
+     * **Please note**, this can possibly be unknown if the SDK is not fully compatible with the Concordium
+     * node queried, in which case `null` is returned.
+     */
+    reason: Upward<RejectReason>;
     /**
      * Return value from smart contract call, used to provide error messages.
      * Is only defined when smart contract instance is a V1 smart contract and

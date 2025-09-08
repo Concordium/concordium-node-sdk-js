@@ -453,12 +453,30 @@ export function getReceiverAccount(summary: BlockItemSummary): AccountAddress.Ty
     }
 }
 
-// NOTE: This is O(n*m) i.e. not great, but the expected data set is very small. If that ever changes,
-// consider optimizing.
+/**
+ *
+ * Takes a list of items and appends another list of items to it, given they are not already in the list
+ * according to the eq function.
+ *
+ * @template T - the type of items in the list
+ * @param list - the list to append to
+ * @param items - the list to append to the existing list
+ * @param eq - the equality function to use for checking uniqueness
+ * @returns A new list consisting of unique items from both lists supplied
+ *
+ * NOTE: This is O(n*m) i.e. not great, but the expected data set is very small. If that ever changes,
+ * consider optimizing.
+ */
 function addUnique<T>(list: Upward<T>[], items: T | T[], eq: (a: T, b: T) => boolean): Upward<T>[] {
+    const next = [...list];
     const flattened = Array.isArray(items) ? items : [items];
-    const newItems = flattened.filter((i) => !list.filter(isKnown).some((li) => eq(i, li)));
-    return [...list, ...newItems];
+    for (let i = 0; i < flattened.length; i++) {
+        const item = flattened[i];
+        if (!next.filter(isKnown).some((li) => eq(item, li))) {
+            next.push(item);
+        }
+    }
+    return next;
 }
 
 /**
@@ -502,21 +520,33 @@ export function affectedContracts(summary: BlockItemSummary): Upward<ContractAdd
     }
 }
 
-/**
- * Gets a list of {@link Base58String} account addresses affected by the transaction.
- *
- * @param {BlockItemSummary} summary - The block item summary to check.
- *
- * @returns {Upward<AccountAddress.Type>[]} List of account addresses affected by the transaction.
- */
-export function affectedAccounts(summary: AccountTransactionSummary): Upward<AccountAddress.Type>[];
-export function affectedAccounts(summary: AccountCreationSummary | UpdateSummary): never[];
-export function affectedAccounts(summary: BlockItemSummary): Upward<AccountAddress.Type>[];
-export function affectedAccounts(summary: BlockItemSummary): Upward<AccountAddress.Type>[] {
-    if (summary.type !== TransactionSummaryType.AccountTransaction) {
-        return [];
-    }
+function tokenEventsAffectedAccounts(
+    events: Upward<TokenEvent>[],
+    sender?: AccountAddress.Type
+): Upward<AccountAddress.Type>[] {
+    return events.reduce(
+        (addresses: Upward<AccountAddress.Type>[], event) => {
+            if (!isKnown(event)) {
+                return [...addresses, null];
+            }
 
+            switch (event.tag) {
+                case TransactionEventTag.TokenTransfer:
+                    return addUnique(addresses, [event.to.address, event.from.address], AccountAddress.equals);
+                case TransactionEventTag.TokenBurn:
+                case TransactionEventTag.TokenMint:
+                    return addUnique(addresses, [event.target.address], AccountAddress.equals);
+                case TransactionEventTag.TokenModuleEvent:
+                    // This only includes the encoded events pertaining to list updates and token pausation,
+                    // thus not affecting any account's balance
+                    return addresses;
+            }
+        },
+        sender !== undefined ? [sender] : []
+    );
+}
+
+function accTransactionsAffectedAccounts(summary: AccountTransactionSummary): Upward<AccountAddress.Type>[] {
     switch (summary.transactionType) {
         case TransactionKindString.EncryptedAmountTransfer:
         case TransactionKindString.EncryptedAmountTransferWithMemo:
@@ -540,36 +570,38 @@ export function affectedAccounts(summary: BlockItemSummary): Upward<AccountAddre
             );
         }
         case TransactionKindString.TokenUpdate: {
-            return summary.events.reduce(
-                (addresses: Upward<AccountAddress.Type>[], event) => {
-                    if (!isKnown(event)) {
-                        return [...addresses, null];
-                    }
-
-                    switch (event.tag) {
-                        case TransactionEventTag.TokenTransfer:
-                            return addUnique(addresses, [event.to.address, event.from.address], AccountAddress.equals);
-                        case TransactionEventTag.TokenBurn:
-                        case TransactionEventTag.TokenMint:
-                            return addUnique(addresses, [event.target.address], AccountAddress.equals);
-                        case TransactionEventTag.TokenModuleEvent:
-                            // This only includes the encoded events pertaining to list updates and token pausation,
-                            // thus not affecting any accounts
-                            return addresses;
-                    }
-                },
-                [summary.sender]
-            );
+            return tokenEventsAffectedAccounts(summary.events, summary.sender);
         }
         default: {
             const receiver = getReceiverAccount(summary);
-
             if (receiver === undefined || AccountAddress.equals(summary.sender, receiver)) {
                 return [summary.sender];
             }
 
             return [summary.sender, receiver];
         }
+    }
+}
+
+/**
+ * Gets a list of {@link Base58String} account addresses affected by the transaction.
+ *
+ * @param {BlockItemSummary} summary - The block item summary to check.
+ *
+ * @returns {Upward<AccountAddress.Type>[]} List of account addresses affected by the transaction.
+ */
+export function affectedAccounts(summary: AccountTransactionSummary): Upward<AccountAddress.Type>[];
+export function affectedAccounts(summary: TokenCreationSummary): Upward<AccountAddress.Type>[];
+export function affectedAccounts(summary: AccountCreationSummary | UpdateSummary): never[];
+export function affectedAccounts(summary: BlockItemSummary): Upward<AccountAddress.Type>[];
+export function affectedAccounts(summary: BlockItemSummary): Upward<AccountAddress.Type>[] {
+    switch (summary.type) {
+        case TransactionSummaryType.AccountTransaction:
+            return accTransactionsAffectedAccounts(summary);
+        case TransactionSummaryType.TokenCreation:
+            return tokenEventsAffectedAccounts(summary.events);
+        default:
+            return [];
     }
 }
 

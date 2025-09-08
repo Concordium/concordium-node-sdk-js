@@ -10,7 +10,7 @@
 - `decodeTokenOperation`, which decodes `Cbor.Type` to `TokenOperation | UnknownTokenOperation`.
 - `parseTokenUpdatePayload`, which decodes the CBOR encoded operations and returns a corresponding payload with the
   operations decoded into `(TokenOperation | UnknownTokenOperation)[]`
-- `parseTokenModuleRejectReason`, which decodes `Cbor.Type` into `TokenModuleRejectReason | UnknownTokenRejectReason`.
+- `parseTokenModuleRejectReason`, which decodes `Cbor.Type` into `TokenModuleRejectReason | UnknownTokenModuleRejectReason`.
 
 ### Breaking changes
 

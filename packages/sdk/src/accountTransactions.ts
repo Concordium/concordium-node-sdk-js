@@ -538,7 +538,7 @@ export class TokenUpdateHandler implements AccountTransactionHandler<TokenUpdate
     }
     getBaseEnergyCost(payload: TokenUpdatePayload): bigint {
         // TODO: update costs when finalized costs are determined.
-        const operations = Cbor.decode(payload.operations) as TokenOperation[];
+        const operations = Cbor.decode(payload.operations, 'TokenOperation[]');
         // The base cost for a token transaction.
         let energyCost = 300n;
         // Additional cost of specific PLT operations

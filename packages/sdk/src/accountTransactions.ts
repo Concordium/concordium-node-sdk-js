@@ -1,7 +1,7 @@
 import { Buffer } from 'buffer/index.js';
 
 import { Cursor } from './deserializationHelpers.js';
-import { Cbor, TokenId, TokenOperation, TokenOperationType } from './plt/index.js';
+import { Cbor, TokenId, TokenOperationType } from './plt/index.js';
 import { ContractAddress, ContractName, Energy, ModuleReference } from './pub/types.js';
 import { serializeCredentialDeploymentInfo } from './serialization.js';
 import {
@@ -289,7 +289,7 @@ export class UpdateContractHandler
         const serializeIndex = encodeWord64(payload.address.index);
         const serializeSubindex = encodeWord64(payload.address.subindex);
         const serializedContractAddress = Buffer.concat([serializeIndex, serializeSubindex]);
-        const receiveNameBuffer = Buffer.from(ReceiveName.toString(payload.receiveName), 'utf8');
+        const receiveNameBuffer = Buffer.from(payload.receiveName.toString(), 'utf8');
         const serializedReceiveName = packBufferWithWord16Length(receiveNameBuffer);
         const parameterBuffer = Parameter.toBuffer(payload.message);
         const serializedParameters = packBufferWithWord16Length(parameterBuffer);
@@ -538,7 +538,7 @@ export class TokenUpdateHandler implements AccountTransactionHandler<TokenUpdate
     }
     getBaseEnergyCost(payload: TokenUpdatePayload): bigint {
         // TODO: update costs when finalized costs are determined.
-        const operations = Cbor.decode(payload.operations) as TokenOperation[];
+        const operations = Cbor.decode(payload.operations, 'TokenOperation[]');
         // The base cost for a token transaction.
         let energyCost = 300n;
         // Additional cost of specific PLT operations

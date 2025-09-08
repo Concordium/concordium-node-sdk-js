@@ -7,11 +7,16 @@
 - `Upward<T>` as a means of representing possibly unknown variants of a type encounted when querying the GRPC API
   of *future* Concordium node versions. This is a type alias of `T | null`, i.e. unknown variants will be represented
   as `null`.
+- `decodeTokenOperation`, which decodes `Cbor.Type` to `TokenOperation | UnknownTokenOperation`.
+- `parseTokenUpdatePayload`, which decodes the CBOR encoded operations and returns a corresponding payload with the
+  operations decoded into `(TokenOperation | UnknownTokenOperation)[]`
+- `parseTokenModuleRejectReason`, which decodes `Cbor.Type` into `TokenModuleRejectReason | UnknownTokenModuleRejectReason`.
 
 ### Breaking changes
 
 - Renamed `TokenModuleRejectReason` to `EncodedTokenModuleRejectReason`, aligning with the corresponding types for
   `TokenModuleEvent`. `TokenModuleRejectReason` now describes the decoded version of `EncodedTokenModuleRejectReason`.
+- `parseTokenModuleEvent` (previously `parseModuleEvent`) now returns `TokenModuleEvent | UnknownTokenModuleEvent`
 
 #### GRPC API query response types
 

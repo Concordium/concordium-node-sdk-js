@@ -1,6 +1,7 @@
 import { EncodedTokenModuleEvent, TransactionEventTag } from '../types.js';
+import { cborDecode } from '../types/cbor.js';
 import { TokenOperationType } from './TokenOperation.js';
-import { Cbor, TokenHolder, TokenId } from './index.js';
+import { TokenHolder, TokenId } from './index.js';
 
 type GenTokenModuleEvent<E extends TokenOperationType, T extends Object> = {
     /** The tag of the event. */
@@ -11,6 +12,20 @@ type GenTokenModuleEvent<E extends TokenOperationType, T extends Object> = {
     type: E;
     /** The details of the event. */
     details: T;
+};
+
+/**
+ * Represents a token module event (found when decoding) unknown to the SDK.
+ */
+export type UnknownTokenModuleEvent = {
+    /** The tag of the event. */
+    tag: TransactionEventTag.TokenModuleEvent;
+    /** The ID of the token. */
+    tokenId: TokenId.Type;
+    /** The type of the event. */
+    type: string;
+    /** The details of the event. */
+    details: unknown;
 };
 
 /**
@@ -74,41 +89,52 @@ export type TokenModuleEvent =
     | TokenPauseEvent
     | TokenUnpauseEvent;
 
+function parseTokenListUpdateEventDetails(decoded: unknown): TokenListUpdateEventDetails {
+    if (typeof decoded !== 'object' || decoded === null) {
+        throw new Error(`Invalid event details: ${JSON.stringify(decoded)}. Expected an object.`);
+    }
+    if (!('target' in decoded && TokenHolder.instanceOf(decoded.target))) {
+        throw new Error(`Invalid event details: ${JSON.stringify(decoded)}. Expected 'target' to be a TokenHolder`);
+    }
+
+    return decoded as TokenListUpdateEventDetails;
+}
+
+function parseTokenPauseEventDetails(decoded: unknown): TokenPauseEventDetails {
+    if (typeof decoded !== 'object' || decoded === null) {
+        throw new Error(`Invalid event details: ${JSON.stringify(decoded)}. Expected an object.`);
+    }
+
+    return decoded as TokenPauseEventDetails;
+}
+
 /**
- * Parses a token module event, decoding the details from CBOR format. If the desired outcome is to be able to handle
- * arbitrary token events, it's recommended to use {@link Cbor.decode} instead.
+ * Parses a token module event, decoding the details from CBOR format.
  *
  * @param event - The token module event to parse.
  * @returns The parsed token module event with decoded details.
- * @throws {Error} If the event cannot be parsed as a token module event.
  *
  * @example
- * try {
- *   const parsedEvent = parseModuleEvent(encodedEvent);
- *   switch (parsedEvent.type) {
- *     // typed details are now available, e.g.:
- *     case TokenOperationType.AddAllowList: console.log(parsedEvent.details.target);
- *     ...
- *   }
- * } catch (error) {
- *   // Fall back to using Cbor.decode
- *   const decodedDetails = Cbor.decode(encodedEvent.details);
- *   switch (encodedEvent.type) {
- *     // do something with the decoded details
- *   }
+ * const parsedEvent = parseTokenModuleEvent(encodedEvent);
+ * switch (parsedEvent.type) {
+ *   // typed details are now available, e.g.:
+ *   case TokenOperationType.AddAllowList: console.log(parsedEvent.details.target);
+ *   ...
+ *   default: console.warn('Unknown event encountered:', parsedEvent);
  * }
  */
-export function parseModuleEvent(event: EncodedTokenModuleEvent): TokenModuleEvent {
+export function parseTokenModuleEvent(event: EncodedTokenModuleEvent): TokenModuleEvent | UnknownTokenModuleEvent {
+    const decoded = cborDecode(event.details.bytes);
     switch (event.type) {
         case TokenOperationType.AddAllowList:
         case TokenOperationType.RemoveAllowList:
         case TokenOperationType.AddDenyList:
         case TokenOperationType.RemoveDenyList:
-            return { ...event, type: event.type, details: Cbor.decode(event.details, 'TokenListUpdateEventDetails') };
+            return { ...event, type: event.type, details: parseTokenListUpdateEventDetails(decoded) };
         case TokenOperationType.Pause:
         case TokenOperationType.Unpause:
-            return { ...event, type: event.type, details: Cbor.decode(event.details, 'TokenPauseEventDetails') };
+            return { ...event, type: event.type, details: parseTokenPauseEventDetails(decoded) };
         default:
-            throw new Error(`Cannot parse event as token module event: ${event.type}`);
+            return { ...event, details: decoded };
     }
 }

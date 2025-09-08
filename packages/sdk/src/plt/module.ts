@@ -1,4 +1,4 @@
-import { Cbor, CreatePLTPayload, TokenAmount, TokenHolder, TokenMetadataUrl } from './index.js';
+import { Cbor, CborAccountAddress, CreatePLTPayload, TokenAmount, TokenMetadataUrl } from './index.js';
 
 /**
  * The Token Module state represents global state information that is maintained by the Token Module,
@@ -19,7 +19,7 @@ export type TokenModuleState = {
     /** A URL pointing to the metadata of the token. */
     metadata: TokenMetadataUrl.Type;
     /** The governance account for the token. */
-    governanceAccount: TokenHolder.Type;
+    governanceAccount: CborAccountAddress.Type;
     /** Whether the token supports an allow list */
     allowList?: boolean;
     /** Whether the token supports an deny list */
@@ -65,7 +65,7 @@ export type TokenInitializationParameters = {
     /** A URL pointing to the metadata of the token. */
     metadata: TokenMetadataUrl.Type;
     /** The governance account for the token. */
-    governanceAccount: TokenHolder.Type;
+    governanceAccount: CborAccountAddress.Type;
     /** Whether the token supports an allow list */
     allowList?: boolean;
     /** Whether the token supports an deny list */

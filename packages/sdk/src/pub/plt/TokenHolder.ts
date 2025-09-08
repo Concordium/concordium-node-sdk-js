@@ -1,13 +1,1 @@
-export {
-    Type,
-    JSON,
-    toCBOR,
-    fromCBOR,
-    registerCBOREncoder,
-    registerCBORDecoder,
-    fromAccountAddress,
-    Account,
-    AccountJSON,
-    instanceOf,
-    fromJSON,
-} from '../../plt/TokenHolder.js';
+export { Type, fromJSON, instanceOf, fromAccountAddress, JSON, Account, AccountJSON } from '../../plt/TokenHolder.js';

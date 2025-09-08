@@ -1,8 +1,8 @@
 import {
     Cbor,
+    CborAccountAddress,
     Token,
     TokenAmount,
-    TokenHolder,
     TokenId,
     TokenMetadataUrl,
     TokenModuleAccountState,
@@ -109,7 +109,7 @@ describe('PLT Token.validateTransfer', () => {
             name: 'Test Token',
             metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
             paused: false,
-            governanceAccount: TokenHolder.fromAccountAddress(sender),
+            governanceAccount: CborAccountAddress.fromAccountAddress(sender),
             allowList: false,
             denyList: false,
         };
@@ -127,7 +127,7 @@ describe('PLT Token.validateTransfer', () => {
         const transferAmount = TokenAmount.create(BigInt(500), decimals);
         const transfer: TokenTransfer = {
             amount: transferAmount,
-            recipient: TokenHolder.fromAccountAddress(recipient),
+            recipient: CborAccountAddress.fromAccountAddress(recipient),
         };
 
         // Should validate successfully
@@ -147,7 +147,7 @@ describe('PLT Token.validateTransfer', () => {
             name: 'Test Token',
             metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
             paused: false,
-            governanceAccount: TokenHolder.fromAccountAddress(sender),
+            governanceAccount: CborAccountAddress.fromAccountAddress(sender),
         };
 
         const token = createMockToken(decimals, moduleState, tokenId);
@@ -163,7 +163,7 @@ describe('PLT Token.validateTransfer', () => {
         const transferAmount = TokenAmount.create(BigInt(500), decimals);
         const transfer: TokenTransfer = {
             amount: transferAmount,
-            recipient: TokenHolder.fromAccountAddress(recipient),
+            recipient: CborAccountAddress.fromAccountAddress(recipient),
         };
 
         // Should throw InsufficientFundsError
@@ -181,7 +181,7 @@ describe('PLT Token.validateTransfer', () => {
             name: 'Test Token',
             metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
             paused: false,
-            governanceAccount: TokenHolder.fromAccountAddress(sender),
+            governanceAccount: CborAccountAddress.fromAccountAddress(sender),
             denyList: true,
         };
 
@@ -204,7 +204,7 @@ describe('PLT Token.validateTransfer', () => {
         const transferAmount = TokenAmount.create(BigInt(500), decimals);
         const transfer: TokenTransfer = {
             amount: transferAmount,
-            recipient: TokenHolder.fromAccountAddress(recipient),
+            recipient: CborAccountAddress.fromAccountAddress(recipient),
         };
 
         // Should throw NotAllowedError
@@ -221,7 +221,7 @@ describe('PLT Token.validateTransfer', () => {
         const moduleState: TokenModuleState = {
             name: 'Test Token',
             metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
-            governanceAccount: TokenHolder.fromAccountAddress(sender),
+            governanceAccount: CborAccountAddress.fromAccountAddress(sender),
             denyList: true,
             paused: false,
         };
@@ -245,7 +245,7 @@ describe('PLT Token.validateTransfer', () => {
         const transferAmount = TokenAmount.create(BigInt(500), decimals);
         const transfer: TokenTransfer = {
             amount: transferAmount,
-            recipient: TokenHolder.fromAccountAddress(recipient),
+            recipient: CborAccountAddress.fromAccountAddress(recipient),
         };
 
         await expect(Token.validateTransfer(token, sender, transfer)).resolves.toBe(true);
@@ -261,7 +261,7 @@ describe('PLT Token.validateTransfer', () => {
         const moduleState: TokenModuleState = {
             name: 'Test Token',
             metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
-            governanceAccount: TokenHolder.fromAccountAddress(sender),
+            governanceAccount: CborAccountAddress.fromAccountAddress(sender),
             allowList: true,
             paused: false,
         };
@@ -285,7 +285,7 @@ describe('PLT Token.validateTransfer', () => {
         const transferAmount = TokenAmount.create(BigInt(500), decimals);
         const transfer: TokenTransfer = {
             amount: transferAmount,
-            recipient: TokenHolder.fromAccountAddress(recipient),
+            recipient: CborAccountAddress.fromAccountAddress(recipient),
         };
 
         // Should throw NotAllowedError
@@ -303,7 +303,7 @@ describe('PLT Token.validateTransfer', () => {
             name: 'Test Token',
             metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
             paused: false,
-            governanceAccount: TokenHolder.fromAccountAddress(sender),
+            governanceAccount: CborAccountAddress.fromAccountAddress(sender),
             allowList: true,
         };
 
@@ -330,7 +330,7 @@ describe('PLT Token.validateTransfer', () => {
         const transferAmount = TokenAmount.create(BigInt(500), decimals);
         const transfer: TokenTransfer = {
             amount: transferAmount,
-            recipient: TokenHolder.fromAccountAddress(recipient),
+            recipient: CborAccountAddress.fromAccountAddress(recipient),
         };
 
         // Should throw NotAllowedError
@@ -348,7 +348,7 @@ describe('PLT Token.validateTransfer', () => {
             name: 'Test Token',
             metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
             paused: false,
-            governanceAccount: TokenHolder.fromAccountAddress(sender),
+            governanceAccount: CborAccountAddress.fromAccountAddress(sender),
         };
 
         const token = createMockToken(decimals, moduleState, tokenId);
@@ -368,11 +368,11 @@ describe('PLT Token.validateTransfer', () => {
         const transfers: TokenTransfer[] = [
             {
                 amount: TokenAmount.create(BigInt(300), decimals),
-                recipient: TokenHolder.fromAccountAddress(recipient1),
+                recipient: CborAccountAddress.fromAccountAddress(recipient1),
             },
             {
                 amount: TokenAmount.create(BigInt(400), decimals),
-                recipient: TokenHolder.fromAccountAddress(recipient2),
+                recipient: CborAccountAddress.fromAccountAddress(recipient2),
             },
         ];
 
@@ -391,7 +391,7 @@ describe('PLT Token.validateTransfer', () => {
             name: 'Test Token',
             metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
             paused: true,
-            governanceAccount: TokenHolder.fromAccountAddress(sender),
+            governanceAccount: CborAccountAddress.fromAccountAddress(sender),
         };
 
         const token = createMockToken(decimals, moduleState, tokenId);
@@ -411,7 +411,7 @@ describe('PLT Token.validateTransfer', () => {
         const transferAmount = TokenAmount.create(BigInt(500), decimals);
         const transfer: TokenTransfer = {
             amount: transferAmount,
-            recipient: TokenHolder.fromAccountAddress(recipient),
+            recipient: CborAccountAddress.fromAccountAddress(recipient),
         };
 
         // Should throw UnsupportedOperationError
@@ -430,7 +430,7 @@ describe('PLT Token.validateMint', () => {
             name: 'Test Token',
             metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
             mintable: false,
-            governanceAccount: TokenHolder.fromAccountAddress(sender),
+            governanceAccount: CborAccountAddress.fromAccountAddress(sender),
         };
 
         const token = createMockToken(decimals, moduleState, tokenId);
@@ -451,7 +451,7 @@ describe('PLT Token.validateBurn', () => {
             name: 'Test Token',
             metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
             burnable: false,
-            governanceAccount: TokenHolder.fromAccountAddress(sender),
+            governanceAccount: CborAccountAddress.fromAccountAddress(sender),
         };
 
         const token = createMockToken(decimals, moduleState, tokenId);
@@ -471,7 +471,7 @@ describe('PLT Token.validateAllowListUpdate', () => {
             name: 'Test Token',
             metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
             allowList: false,
-            governanceAccount: TokenHolder.fromAccountAddress(sender),
+            governanceAccount: CborAccountAddress.fromAccountAddress(sender),
         };
 
         const token = createMockToken(decimals, moduleState, tokenId);
@@ -490,7 +490,7 @@ describe('PLT Token.validateDenyListUpdate', () => {
             name: 'Test Token',
             metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
             denyList: false,
-            governanceAccount: TokenHolder.fromAccountAddress(sender),
+            governanceAccount: CborAccountAddress.fromAccountAddress(sender),
         };
 
         const token = createMockToken(decimals, moduleState, tokenId);
@@ -511,7 +511,7 @@ describe('PLT Token update supply operation', () => {
             name: 'Test Token',
             metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
             paused: true,
-            governanceAccount: TokenHolder.fromAccountAddress(governanceAddress),
+            governanceAccount: CborAccountAddress.fromAccountAddress(governanceAddress),
         };
 
         const token = createMockToken(decimals, moduleState, tokenId);
@@ -535,7 +535,7 @@ function createMockToken(
         name: 'Test Token',
         metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
         paused: false,
-        governanceAccount: TokenHolder.fromAccountAddress(ACCOUNT_1),
+        governanceAccount: CborAccountAddress.fromAccountAddress(ACCOUNT_1),
     },
     tokenId: TokenId.Type = TokenId.fromString('3f1bfce9')
 ): Token.Type {

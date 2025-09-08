@@ -14,11 +14,11 @@ import { SequenceNumber } from '../types/index.js';
 import { bail } from '../util.js';
 import {
     Cbor,
+    CborAccountAddress,
     TokenAddAllowListOperation,
     TokenAddDenyListOperation,
     TokenAmount,
     TokenBurnOperation,
-    TokenHolder,
     TokenId,
     TokenInfo,
     TokenMintOperation,
@@ -137,9 +137,9 @@ export class NotAllowedError extends TokenError {
 
     /**
      * Constructs a new NotAllowedError.
-     * @param {TokenHolder.Type} receiver - The account address of the receiver.
+     * @param {CborAccountAddress.Type} receiver - The account address of the receiver.
      */
-    constructor(public readonly receiver: TokenHolder.Type) {
+    constructor(public readonly receiver: CborAccountAddress.Type) {
         super(
             `Transfering funds from or to the account specified is currently not allowed (${receiver}) because of the allow/deny list.`
         );
@@ -498,9 +498,9 @@ export async function validateTransfer(
                 : (Cbor.decode(accountToken.moduleState) as TokenModuleAccountState);
 
         if (token.moduleState.denyList && accountModuleState?.denyList)
-            throw new NotAllowedError(TokenHolder.fromAccountAddress(r.accountAddress));
+            throw new NotAllowedError(CborAccountAddress.fromAccountAddress(r.accountAddress));
         if (token.moduleState.allowList && !accountModuleState?.allowList)
-            throw new NotAllowedError(TokenHolder.fromAccountAddress(r.accountAddress));
+            throw new NotAllowedError(CborAccountAddress.fromAccountAddress(r.accountAddress));
     });
 
     return true;
@@ -751,7 +751,7 @@ type UpdateListOptions = {
  *
  * @param {Token} token - The token for which to add the list entry.
  * @param {AccountAddress.Type} sender - The account address of the sender.
- * @param {TokenHolder.Type | TokenHolder.Type[]} targets - The account address(es) to be added to the list.
+ * @param {CborAccountAddress.Type | CborAccountAddress.Type[]} targets - The account address(es) to be added to the list.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @param {TokenUpdateMetadata} [metadata={ expiry: TransactionExpiry.futureMinutes(5) }] - The metadata for the token update.
  * @param {UpdateListOptions} [opts={ validate: false }] - Options for updating the allow/deny list.
@@ -762,7 +762,7 @@ type UpdateListOptions = {
 export async function addAllowList(
     token: Token,
     sender: AccountAddress.Type,
-    targets: TokenHolder.Type | TokenHolder.Type[],
+    targets: CborAccountAddress.Type | CborAccountAddress.Type[],
     signer: AccountSigner,
     metadata?: TokenUpdateMetadata,
     { validate = false }: UpdateListOptions = {}
@@ -782,7 +782,7 @@ export async function addAllowList(
  *
  * @param {Token} token - The token for which to add the list entry.
  * @param {AccountAddress.Type} sender - The account address of the sender.
- * @param {TokenHolder.Type | TokenHolder.Type[]} targets - The account address(es) to be added to the list.
+ * @param {CborAccountAddress.Type | CborAccountAddress.Type[]} targets - The account address(es) to be added to the list.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @param {TokenUpdateMetadata} [metadata={ expiry: TransactionExpiry.futureMinutes(5) }] - The metadata for the token update.
  * @param {UpdateListOptions} [opts={ validate: false }] - Options for updating the allow/deny list.
@@ -793,7 +793,7 @@ export async function addAllowList(
 export async function removeAllowList(
     token: Token,
     sender: AccountAddress.Type,
-    targets: TokenHolder.Type | TokenHolder.Type[],
+    targets: CborAccountAddress.Type | CborAccountAddress.Type[],
     signer: AccountSigner,
     metadata?: TokenUpdateMetadata,
     { validate = false }: UpdateListOptions = {}
@@ -813,7 +813,7 @@ export async function removeAllowList(
  *
  * @param {Token} token - The token for which to add the list entry.
  * @param {AccountAddress.Type} sender - The account address of the sender.
- * @param {TokenHolder.Type | TokenHolder.Type[]} targets - The account address(es) to be added to the list.
+ * @param {CborAccountAddress.Type | CborAccountAddress.Type[]} targets - The account address(es) to be added to the list.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @param {TokenUpdateMetadata} [metadata={ expiry: TransactionExpiry.futureMinutes(5) }] - The metadata for the token update.
  * @param {UpdateListOptions} [opts={ validate: false }] - Options for updating the allow/deny list.
@@ -824,7 +824,7 @@ export async function removeAllowList(
 export async function addDenyList(
     token: Token,
     sender: AccountAddress.Type,
-    targets: TokenHolder.Type | TokenHolder.Type[],
+    targets: CborAccountAddress.Type | CborAccountAddress.Type[],
     signer: AccountSigner,
     metadata?: TokenUpdateMetadata,
     { validate = false }: UpdateListOptions = {}
@@ -844,7 +844,7 @@ export async function addDenyList(
  *
  * @param {Token} token - The token for which to add the list entry.
  * @param {AccountAddress.Type} sender - The account address of the sender.
- * @param {TokenHolder.Type | TokenHolder.Type[]} targets - The account address(es) to be added to the list.
+ * @param {CborAccountAddress.Type | CborAccountAddress.Type[]} targets - The account address(es) to be added to the list.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @param {TokenUpdateMetadata} [metadata={ expiry: TransactionExpiry.futureMinutes(5) }] - The metadata for the token update.
  * @param {UpdateListOptions} [opts={ validate: false }] - Options for updating the allow/deny list.
@@ -855,7 +855,7 @@ export async function addDenyList(
 export async function removeDenyList(
     token: Token,
     sender: AccountAddress.Type,
-    targets: TokenHolder.Type | TokenHolder.Type[],
+    targets: CborAccountAddress.Type | CborAccountAddress.Type[],
     signer: AccountSigner,
     metadata?: TokenUpdateMetadata,
     { validate = false }: UpdateListOptions = {}

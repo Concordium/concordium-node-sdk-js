@@ -1,13 +1,13 @@
 import { Buffer } from 'buffer/index.js';
 import { decode, encode } from 'cbor2';
 
-import { TokenHolder } from '../../../src/pub/plt.ts';
+import { CborAccountAddress } from '../../../src/pub/plt.ts';
 import { AccountAddress } from '../../../src/types/index.ts';
 
-describe('PLT TokenHolder', () => {
+describe('PLT CborAccountAddress', () => {
     test('Account address cbor encoding', () => {
-        const address = TokenHolder.fromAccountAddress(AccountAddress.fromBuffer(new Uint8Array(32).fill(0x15)));
-        const encoded = TokenHolder.toCBOR(address);
+        const address = CborAccountAddress.fromAccountAddress(AccountAddress.fromBuffer(new Uint8Array(32).fill(0x15)));
+        const encoded = CborAccountAddress.toCBOR(address);
         // This expected buffer represents the CBOR encoding of an TokenHolder with:
         // - Tag 40307 (0x9d73) for Address
         // - Two properties:
@@ -29,12 +29,12 @@ describe('PLT TokenHolder', () => {
 
     test('Account address cbor decoding with tagged-coininfo', () => {
         // Create a test address with known bytes
-        const originalAddress = TokenHolder.fromAccountAddress(
+        const originalAddress = CborAccountAddress.fromAccountAddress(
             AccountAddress.fromBuffer(new Uint8Array(32).fill(0x15))
         );
 
-        const encoded = TokenHolder.toCBOR(originalAddress);
-        const decoded = TokenHolder.fromCBOR(encoded);
+        const encoded = CborAccountAddress.toCBOR(originalAddress);
+        const decoded = CborAccountAddress.fromCBOR(encoded);
 
         // Verify the decoded address matches the original
         expect(decoded).toEqual(originalAddress);
@@ -42,7 +42,7 @@ describe('PLT TokenHolder', () => {
 
     test('Account address cbor decoding without tagged-coininfo', () => {
         // Create a test address with known bytes
-        const originalAddress = TokenHolder.fromAccountAddress(
+        const originalAddress = CborAccountAddress.fromAccountAddress(
             AccountAddress.fromBuffer(new Uint8Array(32).fill(0x15))
         );
 
@@ -60,7 +60,7 @@ describe('PLT TokenHolder', () => {
             'hex'
         );
 
-        const decoded = TokenHolder.fromCBOR(taggedAddressBytes);
+        const decoded = CborAccountAddress.fromCBOR(taggedAddressBytes);
 
         // Verify the decoded address matches the original
         expect(decoded).toEqual(originalAddress);
@@ -68,12 +68,12 @@ describe('PLT TokenHolder', () => {
 
     test('CBOR encoding/decoding with cbor2 library registration', () => {
         // Register the TokenHolder encoder and decoder
-        TokenHolder.registerCBOREncoder();
-        const cleanup = TokenHolder.registerCBORDecoder();
+        CborAccountAddress.registerCBOREncoder();
+        const cleanup = CborAccountAddress.registerCBORDecoder();
 
         try {
             // Create a test address
-            const originalAddress = TokenHolder.fromAccountAddress(
+            const originalAddress = CborAccountAddress.fromAccountAddress(
                 AccountAddress.fromBuffer(new Uint8Array(32).fill(0x15))
             );
 
@@ -98,16 +98,16 @@ describe('PLT TokenHolder', () => {
             expect(Buffer.from(encoded).toString('hex')).toEqual(taggedAddressHex);
 
             // Decode directly with cbor2 library (should use our registered decoder)
-            const decoded: TokenHolder.Type = decode(encoded);
+            const decoded: CborAccountAddress.Type = decode(encoded);
 
             // Verify it's an TokenHolder instance
-            expect(TokenHolder.instanceOf(decoded)).toBeTruthy();
+            expect(CborAccountAddress.instanceOf(decoded)).toBeTruthy();
 
             // Verify the address matches the original
             expect(decoded).toEqual(originalAddress);
 
             // Test encode-decode roundtrip with cbor2
-            const roundtrip: TokenHolder.Type = decode(encode(originalAddress));
+            const roundtrip: CborAccountAddress.Type = decode(encode(originalAddress));
             expect(roundtrip).toEqual(originalAddress);
         } finally {
             // Clean up the registered decoder

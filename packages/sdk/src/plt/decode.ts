@@ -1,8 +1,8 @@
 import { cborDecode } from '../types/cbor.js';
 import {
     Cbor,
+    CborAccountAddress,
     TokenAmount,
-    TokenHolder,
     TokenInitializationParameters,
     TokenMetadataUrl,
     TokenModuleAccountState,
@@ -19,7 +19,7 @@ function decodeTokenModuleState(value: Cbor.Type): TokenModuleState {
     }
 
     // Validate required fields
-    if (!('governanceAccount' in decoded && TokenHolder.instanceOf(decoded.governanceAccount))) {
+    if (!('governanceAccount' in decoded && CborAccountAddress.instanceOf(decoded.governanceAccount))) {
         throw new Error('Invalid TokenModuleState: missing or invalid governanceAccount');
     }
     if (!('metadata' in decoded)) {
@@ -74,7 +74,7 @@ function decodeTokenInitializationParameters(value: Cbor.Type): TokenInitializat
     }
 
     // Validate required fields
-    if (!('governanceAccount' in decoded && TokenHolder.instanceOf(decoded.governanceAccount))) {
+    if (!('governanceAccount' in decoded && CborAccountAddress.instanceOf(decoded.governanceAccount))) {
         throw new Error('Invalid TokenInitializationParameters: missing or invalid governanceAccount');
     }
     if (!('metadata' in decoded)) {

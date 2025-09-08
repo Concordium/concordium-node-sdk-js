@@ -11,8 +11,8 @@ import {
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import {
     Cbor,
+    CborAccountAddress,
     Token,
-    TokenHolder,
     TokenId,
     TokenListUpdate,
     TokenOperation,
@@ -107,7 +107,7 @@ const client = new ConcordiumGRPCNodeClient(
 
     // parse the arguments
     const tokenId = TokenId.fromString(id);
-    const targetAddress = TokenHolder.fromAccountAddress(AccountAddress.fromBase58(address));
+    const targetAddress = CborAccountAddress.fromAccountAddress(AccountAddress.fromBase58(address));
 
     if (walletFile !== undefined) {
         // Read wallet-file

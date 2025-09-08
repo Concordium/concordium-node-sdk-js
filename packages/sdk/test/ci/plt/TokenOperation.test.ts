@@ -1,11 +1,11 @@
 import { Cursor } from '../../../src/deserializationHelpers.ts';
 import {
     Cbor,
+    CborAccountAddress,
     TokenAddAllowListOperation,
     TokenAddDenyListOperation,
     TokenAmount,
     TokenBurnOperation,
-    TokenHolder,
     TokenId,
     TokenMintOperation,
     TokenOperationType,
@@ -28,7 +28,9 @@ import {
 
 describe('PLT TokenOperation', () => {
     const token = TokenId.fromString('DKK');
-    const testAccountAddress = TokenHolder.fromAccountAddress(AccountAddress.fromBuffer(new Uint8Array(32).fill(0x15)));
+    const testAccountAddress = CborAccountAddress.fromAccountAddress(
+        AccountAddress.fromBuffer(new Uint8Array(32).fill(0x15))
+    );
     // - d99d73: A tagged (40307) item with a map (a2) containing:
     // - a2: A map with 2 key-value pairs
     //   - 01: Key 1.

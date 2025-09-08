@@ -28,6 +28,7 @@
 - `PassiveCommitteeInfo` now has been wrapped in `Upward`.
 - `NodeInfoConsensusStatus` and `NodeCatchupStatus` now have been wrapped in `Upward`.
 - `RejectReason` now has been wrapped in `Upward`
+- `RewardStatus` now has been wrapped in `Upward`
 - `Cooldown.status` now has the type `Upward<CooldownStatus>`. This affects all `AccountInfo` variants.
 - `BakerPoolInfo.openStatus` now has the type `Upward<OpenStatusText>`.
   - Affects the `AccountInfoBaker` variant of `AccountInfo`.

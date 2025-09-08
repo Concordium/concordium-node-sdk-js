@@ -10,6 +10,9 @@
 
 ### Breaking changes
 
+- Renamed `TokenModuleRejectReason` to `EncodedTokenModuleRejectReason`, aligning with the corresponding types for
+  `TokenModuleEvent`. `TokenModuleRejectReason` now describes the decoded version of `EncodedTokenModuleRejectReason`.
+
 #### GRPC API query response types
 
 - `BlockItemSummaryInBlock.summary` now has the type `Upward<BlockItemSummary>`.
@@ -21,6 +24,12 @@
 - `PassiveCommitteeInfo` now has been wrapped in `Upward`.
 - `NodeInfoConsensusStatus` and `NodeCatchupStatus` now have been wrapped in `Upward`.
 - `RejectReason` now has been wrapped in `Upward`
+- `Cooldown.status` now has the type `Upward<CooldownStatus>`. This affects all `AccountInfo` variants.
+- `BakerPoolInfo.openStatus` now has the type `Upward<OpenStatusText>`.
+  - Affects the `AccountInfoBaker` variant of `AccountInfo`.
+  - Affects `BakerPoolStatus`.
+- `BakerSetOpenStatusEvent.openStatus` now has the type `Upward<OpenStatusText>`.
+- `AccountInfo` has been extended with a new variant `AccountInfoUnknown`.
 - `ContractTraceEvent` uses in reponse types from the GRPC API have now been wrapped in `Upward`.
   - Affects `InvokeContractResultSuccess`
   - Affects `UpdateContractSummary`
@@ -31,6 +40,7 @@
 - `waitForTransactionFinalization` is affected by the changes to `BlockItemSummaryInBlock`
 - `getBlockTransactionEvents` now returns `AsyncIterable<Upward<BlockItemSummary>>`.
 - `getBlockSpecialEvents` now returns `AsyncIterable<Upward<BlockSpecialEvent>>`.
+- `getPoolInfo` is affected by the changes to `BakerPoolInfo`
 
 ## 10.0.1
 

@@ -1207,7 +1207,7 @@ export interface AccountInfoUnknown extends AccountInfoCommon {
     /**
      * This will only ever be `null`, which represents a variant of staking info for the account which is
      * unknown to the SDK, for known staking variants this is represented by either {@linkcode AccountInfoBaker}
-     * or {@linkcode AccountInfoDElegator}.
+     * or {@linkcode AccountInfoDelegator}.
      *
      * **Note**: This field is named `accountBaker` to align with the JSON representation produced by the
      * corresponding rust SDK.

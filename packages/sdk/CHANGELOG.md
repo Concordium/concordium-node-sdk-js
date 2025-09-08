@@ -17,6 +17,7 @@
 - Renamed `TokenModuleRejectReason` to `EncodedTokenModuleRejectReason`, aligning with the corresponding types for
   `TokenModuleEvent`. `TokenModuleRejectReason` now describes the decoded version of `EncodedTokenModuleRejectReason`.
 - `parseTokenModuleEvent` (previously `parseModuleEvent`) now returns `TokenModuleEvent | UnknownTokenModuleEvent`
+- `CborAccountAddress` is now used instead of `TokenHolder` for CBOR encoded account addresses in PLT/CIS-7.
 
 #### GRPC API query response types
 

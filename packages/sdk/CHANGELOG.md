@@ -36,6 +36,10 @@
   - Affects `BakerPoolStatus`.
 - `BakerSetOpenStatusEvent.openStatus` now has the type `Upward<OpenStatusText>`.
 - `AccountInfo` has been extended with a new variant `AccountInfoUnknown`.
+- `ContractTraceEvent` uses in reponse types from the GRPC API have now been wrapped in `Upward`.
+  - Affects `InvokeContractResultSuccess`
+  - Affects `UpdateContractSummary`
+- `ContractVersion` enum has been removed and replaced with `number` where it was used.
 
 #### `ConcordiumGRPCClient`:
 

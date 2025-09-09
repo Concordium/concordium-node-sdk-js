@@ -17,6 +17,10 @@
 - Renamed `TokenModuleRejectReason` to `EncodedTokenModuleRejectReason`, aligning with the corresponding types for
   `TokenModuleEvent`. `TokenModuleRejectReason` now describes the decoded version of `EncodedTokenModuleRejectReason`.
 - `parseTokenModuleEvent` (previously `parseModuleEvent`) now returns `TokenModuleEvent | UnknownTokenModuleEvent`
+- Rename `CredentialDeploymentTransaction` to `CredentialDeploymentPayload`, and correspondingly
+  - `createCredentialDeploymentTransaction` -> `createCredentialDeploymentPayload`
+  - `createCredentialTransaction` -> `createCredentialPayload`
+  - `createCredentialTransactionNoSeed` -> `createCredentialPayloadNoSeed`
 
 #### GRPC API query response types
 
@@ -40,6 +44,9 @@
   - Affects `InvokeContractResultSuccess`
   - Affects `UpdateContractSummary`
 - `ContractVersion` enum has been removed and replaced with `number` where it was used.
+- `VerifyKey` uses has now been wrapped in `Upward`, affecting the types
+  - `CredentialPublicKeys`, bleeding into top-level types `CredentialDeploymentInfo`, `InitialAccountCredential` and
+    `NormalAccountCredential`
 
 #### `ConcordiumGRPCClient`:
 

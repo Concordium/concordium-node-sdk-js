@@ -1,7 +1,7 @@
 /**
  * @module Common GRPC-Client
  */
-import type { Upward } from './grpc/index.js';
+import type { Known, Upward } from './grpc/index.js';
 import type { Cbor, TokenId } from './plt/index.js';
 import type { TokenAccountInfo } from './plt/types.js';
 import type * as AccountAddress from './types/AccountAddress.js';
@@ -515,7 +515,8 @@ interface AuthorizationsCommon {
     electionDifficulty: Authorization;
     addAnonymityRevoker: Authorization;
     addIdentityProvider: Authorization;
-    keys: VerifyKey[];
+    /** The authorization keys. */
+    keys: UpdatePublicKey[];
 }
 
 /**
@@ -539,7 +540,8 @@ export interface AuthorizationsV1 extends AuthorizationsCommon {
 export type Authorizations = AuthorizationsV0 | AuthorizationsV1;
 
 export interface KeysWithThreshold {
-    keys: VerifyKey[];
+    /** The authorization keys. */
+    keys: UpdatePublicKey[];
     threshold: number;
 }
 
@@ -797,8 +799,25 @@ export interface VerifyKey {
     verifyKey: HexString;
 }
 
+/**
+ * Represents a public key used for chain updates.
+ */
+export type UpdatePublicKey = {
+    /** The key in hex format */
+    verifyKey: HexString;
+};
+
 export interface CredentialPublicKeys {
-    keys: Record<number, VerifyKey>;
+    /**
+     * keys for the credential
+     *
+     * **Please note**, these can possibly be unknown if the SDK is not fully compatible with the Concordium
+     * node queried, in which case `null` is returned.
+     *
+     * In case this is used as part of a transaction sent to the node, none of the values contained can be `null`,
+     * as this will cause the transation to fail.
+     */
+    keys: Record<number, Upward<VerifyKey>>;
     threshold: number;
 }
 
@@ -1183,7 +1202,7 @@ export interface AccountInfoUnknown extends AccountInfoCommon {
     /**
      * This will only ever be `null`, which represents a variant of staking info for the account which is
      * unknown to the SDK, for known staking variants this is represented by either {@linkcode AccountInfoBaker}
-     * or {@linkcode AccountInfoDElegator}.
+     * or {@linkcode AccountInfoDelegator}.
      *
      * **Note**: This field is named `accountBaker` to align with the JSON representation produced by the
      * corresponding rust SDK.
@@ -1667,11 +1686,10 @@ interface CdiRandomness {
     randomness: CommitmentsRandomness;
 }
 
-// TODO Should we rename this, As it is not actually the transaction that is sent to the node. (Note that this would be a breaking change)
-export type CredentialDeploymentTransaction = CredentialDeploymentDetails & CdiRandomness;
+export type CredentialDeploymentPayload = CredentialDeploymentDetails & CdiRandomness;
 /** Internal type used when building credentials */
 export type UnsignedCdiWithRandomness = {
-    unsignedCdi: UnsignedCredentialDeploymentInformation;
+    unsignedCdi: Known<UnsignedCredentialDeploymentInformation>;
 } & CdiRandomness;
 
 export interface CredentialDeploymentInfo extends CredentialDeploymentValues {

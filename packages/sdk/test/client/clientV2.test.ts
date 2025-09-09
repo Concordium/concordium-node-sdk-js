@@ -9,7 +9,7 @@ import {
     BlockHash,
     buildBasicAccountSigner,
     calculateEnergyCost,
-    createCredentialDeploymentTransaction,
+    createCredentialDeploymentPayload,
     getAccountTransactionHandler,
     getCredentialDeploymentSignDigest,
     serializeAccountTransaction,
@@ -351,7 +351,7 @@ test.each(clients)('createAccount', async (client) => {
         },
     ];
 
-    const credentialDeploymentTransaction: v1.CredentialDeploymentTransaction = createCredentialDeploymentTransaction(
+    const credentialDeploymentTransaction: v1.CredentialDeploymentPayload = createCredentialDeploymentPayload(
         identityInput,
         cryptoParams,
         threshold,

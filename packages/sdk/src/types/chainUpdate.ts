@@ -16,8 +16,8 @@ import type {
     MintRate,
     TimeoutParameters,
     TransactionFeeDistribution,
+    UpdatePublicKey,
     ValidatorScoreParameters,
-    VerifyKey,
 } from '../types.js';
 import type * as CcdAmount from './CcdAmount.js';
 import type * as Duration from './Duration.js';
@@ -250,7 +250,7 @@ export enum KeyUpdateEntryStatus {
 }
 
 export interface KeyWithStatus {
-    key: VerifyKey;
+    key: UpdatePublicKey;
     status: KeyUpdateEntryStatus;
 }
 
@@ -261,7 +261,13 @@ export enum HigherLevelKeyUpdateType {
 
 export interface HigherLevelKeyUpdate {
     typeOfUpdate: HigherLevelKeyUpdateType;
-    updateKeys: VerifyKey[];
+    /**
+     * The authorization keys included in the update.
+     */
+    updateKeys: UpdatePublicKey[];
+    /**
+     * The key threshold needed to perform the update to higher level keys.
+     */
     threshold: number;
 }
 

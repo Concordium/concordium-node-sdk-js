@@ -120,7 +120,7 @@ const client = new ConcordiumGRPCNodeClient(
 
             switch (result.summary.transactionType) {
                 case TransactionKindString.TokenUpdate:
-                    result.summary.events.forEach((e) => {
+                    result.summary.events.filter(isKnown).forEach((e) => {
                         if (e.tag !== TransactionEventTag.TokenModuleEvent) {
                             throw new Error('Unexpected event type: ' + e.tag);
                         }
@@ -128,8 +128,8 @@ const client = new ConcordiumGRPCNodeClient(
                     });
                     break;
                 case TransactionKindString.Failed:
-                    if (result.summary.rejectReason.tag !== RejectReasonTag.TokenUpdateTransactionFailed) {
-                        throw new Error('Unexpected reject reason tag: ' + result.summary.rejectReason.tag);
+                    if (result.summary.rejectReason?.tag !== RejectReasonTag.TokenUpdateTransactionFailed) {
+                        throw new Error('Unexpected reject reason tag: ' + result.summary.rejectReason?.tag);
                     }
                     const details = Cbor.decode(result.summary.rejectReason.contents.details);
                     console.error(result.summary.rejectReason.contents, details);

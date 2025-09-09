@@ -22,7 +22,6 @@ import {
     TokenId,
     TokenInfo,
     TokenMintOperation,
-    TokenModuleAccountState,
     TokenModuleReference,
     TokenModuleState,
     TokenOperation,
@@ -495,7 +494,7 @@ export async function validateTransfer(
         const accountModuleState =
             accountToken?.moduleState === undefined
                 ? undefined
-                : (Cbor.decode(accountToken.moduleState) as TokenModuleAccountState);
+                : Cbor.decode(accountToken.moduleState, 'TokenModuleAccountState');
 
         if (token.moduleState.denyList && accountModuleState?.denyList)
             throw new NotAllowedError(CborAccountAddress.fromAccountAddress(r.accountAddress));

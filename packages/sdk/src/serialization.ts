@@ -2,6 +2,7 @@ import { Buffer } from 'buffer/index.js';
 
 import { getAccountTransactionHandler } from './accountTransactions.js';
 import { calculateEnergyCost } from './energyCost.js';
+import { Known, isKnown } from './grpc/upward.js';
 import { sha256 } from './hash.js';
 import {
     encodeWord8,
@@ -195,9 +196,18 @@ export function serializeAccountTransactionForSubmission(
  * @returns the serialization of CredentialDeploymentValues
  */
 function serializeCredentialDeploymentValues(credential: CredentialDeploymentValues) {
+    // Check that we don't attempt to serialize unknown variants
+    if (Object.values(credential.credentialPublicKeys.keys).some((v) => !isKnown(v)))
+        throw new Error('Cannot serialize unknown key variants');
+
     const buffers = [];
     buffers.push(
-        serializeMap(credential.credentialPublicKeys.keys, encodeWord8, encodeWord8FromString, serializeVerifyKey)
+        serializeMap(
+            credential.credentialPublicKeys.keys as Known<typeof credential.credentialPublicKeys.keys>,
+            encodeWord8,
+            encodeWord8FromString,
+            serializeVerifyKey
+        )
     );
 
     buffers.push(encodeWord8(credential.credentialPublicKeys.threshold));

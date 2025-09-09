@@ -3903,6 +3903,7 @@ __metadata:
     jest: ^29.6.2
     jest-environment-jsdom: ^29.7.0
     json-bigint: ^1.0.0
+    mkdirp: ^3.0.1
     prettier: ^3.2.5
     react-native: ^0.74.1
     rimraf: ^5.0.1
@@ -20689,6 +20690,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"mkdirp@npm:^3.0.1":
+  version: 3.0.1
+  resolution: "mkdirp@npm:3.0.1"
+  bin:
+    mkdirp: dist/cjs/src/bin.js
+  checksum: 972deb188e8fb55547f1e58d66bd6b4a3623bf0c7137802582602d73e6480c1c2268dcbafbfb1be466e00cc7e56ac514d7fd9334b7cf33e3e2ab547c16f83a8d
+  languageName: node
+  linkType: hard
+
 "mlly@npm:^1.6.1, mlly@npm:^1.7.0":
   version: 1.7.0
   resolution: "mlly@npm:1.7.0"
@@ -24401,6 +24411,7 @@ __metadata:
     eslint-plugin-import: ^2.29.1
     markdown-link-check: ^3.1.4
     markdownlint-cli: ^0.34.0
+    mkdirp: ^3.0.1
     prettier: ^3.2.5
   languageName: unknown
   linkType: soft

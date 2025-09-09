@@ -93,7 +93,7 @@
         "build:rust-bindings-wallet": "yarn build-all wallet && webpack --env package=wallet && ts-node ./scripts/build-react-native-wallet.ts && yarn sanitize",
         "build:rust-bindings": "yarn build",
         "clean": "rimraf -- target lib .webpack-cache",
-        "sanitize": "find ./lib -type f -name .gitignore -delete -o -name package.json -delete",
+        "sanitize": "rimraf --glob -- \"lib/**/.gitignore\" \"lib/**/package.json\"",
         "lint": "eslint . --cache --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
         "lint-fix": "yarn lint --fix",
         "prettier": "prettier . --ignore-path ../../.gitignore --ignore-path ../../.prettierignore --ignore-path .gitignore",

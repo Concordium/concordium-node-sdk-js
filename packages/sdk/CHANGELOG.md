@@ -57,6 +57,12 @@
 - `getBlockSpecialEvents` now returns `AsyncIterable<Upward<BlockSpecialEvent>>`.
 - `getPoolInfo` is affected by the changes to `BakerPoolInfo`
 
+## 10.0.2
+
+### Fixed
+
+- Add PLT functionality to UMD releases.
+
 ## 10.0.1
 
 ### Fixed

@@ -15,3 +15,4 @@ export * as TokenId from './plt/TokenId.js';
 export * as TokenModuleReference from './plt/TokenModuleReference.js';
 export * as TokenMetadataUrl from './plt/TokenMetadataUrl.js';
 export * as CborAccountAddress from './plt/CborAccountAddress.js';
+export * as CborContractAddress from './plt/CborContractAddress.js';

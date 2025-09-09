@@ -45,11 +45,8 @@
   - Affects `UpdateContractSummary`
 - `ContractVersion` enum has been removed and replaced with `number` where it was used.
 - `VerifyKey` uses has now been wrapped in `Upward`, affecting the types
-  - `Authorizations`
-  - `ChainParameters`
   - `CredentialPublicKeys`, bleeding into top-level types `CredentialDeploymentInfo`, `InitialAccountCredential` and
     `NormalAccountCredential`
-  - `HigherLevelKeyUpdate`
 
 #### `ConcordiumGRPCClient`:
 

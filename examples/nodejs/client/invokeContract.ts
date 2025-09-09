@@ -9,6 +9,7 @@ import {
     Parameter,
     ReceiveName,
     ReturnValue,
+    Upward,
 } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
@@ -124,7 +125,7 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
             console.log('The return value of the invoked method:', ReturnValue.toHexString(returnValue));
         }
 
-        const events: ContractTraceEvent[] = result.events;
+        const events: Upward<ContractTraceEvent>[] = result.events;
         console.log('A list of effects that the update would have:');
         console.dir(events, { depth: null, colors: true });
     }

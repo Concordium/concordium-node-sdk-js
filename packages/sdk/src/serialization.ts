@@ -196,7 +196,7 @@ export function serializeAccountTransactionForSubmission(
  * @returns the serialization of CredentialDeploymentValues
  */
 function serializeCredentialDeploymentValues(credential: CredentialDeploymentValues) {
-    // Check that we don't attempmt to serialize unknown variants
+    // Check that we don't attempt to serialize unknown variants
     if (Object.values(credential.credentialPublicKeys.keys).some((v) => !isKnown(v)))
         throw new Error('Cannot serialize unknown key variants');
 

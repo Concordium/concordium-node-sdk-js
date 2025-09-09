@@ -16,6 +16,7 @@ import type {
     MintRate,
     TimeoutParameters,
     TransactionFeeDistribution,
+    UpdatePublicKey,
     ValidatorScoreParameters,
     VerifyKey,
 } from '../types.js';
@@ -250,7 +251,7 @@ export enum KeyUpdateEntryStatus {
 }
 
 export interface KeyWithStatus {
-    key: VerifyKey;
+    key: UpdatePublicKey;
     status: KeyUpdateEntryStatus;
 }
 
@@ -263,14 +264,8 @@ export interface HigherLevelKeyUpdate {
     typeOfUpdate: HigherLevelKeyUpdateType;
     /**
      * The authorization keys included in the update.
-     *
-     * **Please note**, these can possibly be unknown if the SDK is not fully compatible with the Concordium
-     * node queried, in which case `null` is returned.
-     *
-     * In case this is used as part of a transaction sent to the node, none of the values contained can be `null`,
-     * as this will cause the transation to fail.
      */
-    updateKeys: Upward<VerifyKey>[];
+    updateKeys: UpdatePublicKey[];
     /**
      * The key threshold needed to perform the update to higher level keys.
      */

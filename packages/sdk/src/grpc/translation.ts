@@ -1611,9 +1611,8 @@ function trCommissionRange(range: GRPC.InclusiveRangeAmountFraction | undefined)
         max: trAmountFraction(range?.max),
     };
 }
-function trUpdatePublicKey(key: GRPC.UpdatePublicKey): SDK.VerifyKey {
+function trUpdatePublicKey(key: GRPC.UpdatePublicKey): SDK.UpdatePublicKey {
     return {
-        schemeId: 'Ed25519',
         verifyKey: unwrapValToHex(key),
     };
 }

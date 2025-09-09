@@ -515,16 +515,8 @@ interface AuthorizationsCommon {
     electionDifficulty: Authorization;
     addAnonymityRevoker: Authorization;
     addIdentityProvider: Authorization;
-    /**
-     * The authorization keys.
-     *
-     * **Please note**, these can possibly be unknown if the SDK is not fully compatible with the Concordium
-     * node queried, in which case `null` is returned.
-     *
-     * In case this is used as part of a transaction sent to the node, none of the values contained can be `null`,
-     * as this will cause the transation to fail.
-     */
-    keys: Upward<VerifyKey>[];
+    /** The authorization keys. */
+    keys: UpdatePublicKey[];
 }
 
 /**
@@ -548,13 +540,8 @@ export interface AuthorizationsV1 extends AuthorizationsCommon {
 export type Authorizations = AuthorizationsV0 | AuthorizationsV1;
 
 export interface KeysWithThreshold {
-    /**
-     * The authorization keys.
-     *
-     * **Please note**, these can possibly be unknown if the SDK is not fully compatible with the Concordium
-     * node queried, in which case `null` is returned.
-     */
-    keys: Upward<VerifyKey>[];
+    /** The authorization keys. */
+    keys: UpdatePublicKey[];
     threshold: number;
 }
 
@@ -811,6 +798,14 @@ export interface VerifyKey {
     schemeId: string;
     verifyKey: HexString;
 }
+
+/**
+ * Represents a public key used for chain updates.
+ */
+export type UpdatePublicKey = {
+    /** The key in hex format */
+    verifyKey: HexString;
+};
 
 export interface CredentialPublicKeys {
     /**

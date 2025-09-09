@@ -145,7 +145,7 @@ export function decode<T extends keyof DecodeTypeMap | undefined>(cbor: Cbor.Typ
             return decodeTokenModuleAccountState(cbor);
         case 'TokenInitializationParameters':
             return decodeTokenInitializationParameters(cbor);
-        case 'TokenInitializationParameters':
+        case 'TokenOperation[]':
             return decodeTokenOperations(cbor);
         default:
             return cborDecode(cbor.bytes);

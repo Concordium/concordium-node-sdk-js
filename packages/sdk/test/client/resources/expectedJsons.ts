@@ -1771,63 +1771,48 @@ export const chainParameters: ChainParametersV1 = {
         },
         keys: [
             {
-                schemeId: 'Ed25519',
                 verifyKey: 'b8ddf4505a37eee2c046671f634b74cf3630f3958ad70a04f39dc843041965be',
             },
             {
-                schemeId: 'Ed25519',
                 verifyKey: '6f39b453a1f2d04be8e1d34822d4819af1bae7bd10bd0d1f05cbdbfc0907886f',
             },
             {
-                schemeId: 'Ed25519',
                 verifyKey: 'bf1dbf2070a9af3f469f829817c929ca98349bf383180abf53fa5d349c2ae72f',
             },
             {
-                schemeId: 'Ed25519',
                 verifyKey: '691dea8d3aeb620e08130d0cddb68156809e894f603763990a2b21af5b17d916',
             },
             {
-                schemeId: 'Ed25519',
                 verifyKey: 'd6e2ec35c642f52681921b313e4563fda16ab893b8597417778ffd57748a4f30',
             },
             {
-                schemeId: 'Ed25519',
                 verifyKey: '4fefb5ee8f8f46ecb86accbf44218e7699eb4937122a284d349db9f8e70a9794',
             },
             {
-                schemeId: 'Ed25519',
                 verifyKey: 'b43e41e008c520c421df2229ea2af816d907d2f085b82b3cadc156165d49ed2a',
             },
             {
-                schemeId: 'Ed25519',
                 verifyKey: '7386b8a50d01797f95e594112ca1734d2dc2984235c58c9cf5c18a07f7cef98c',
             },
             {
-                schemeId: 'Ed25519',
                 verifyKey: '56a75f4399a0671fd8a11d88b59c33be00ffb9328a31a41467ce98ddd932dcb1',
             },
             {
-                schemeId: 'Ed25519',
                 verifyKey: '9974b5868241dd1eee38edda8ad64cfb23722e280ef09286c8a1c7a3c3ba1f40',
             },
             {
-                schemeId: 'Ed25519',
                 verifyKey: 'fd363dfd04f319848c3d766bc617a5f88f0044f1813cc4a2140a6d28e9b62cce',
             },
             {
-                schemeId: 'Ed25519',
                 verifyKey: '528281d04d8d74dba67fac53460fa3e2ff2f171f16363d80f679877821b538d2',
             },
             {
-                schemeId: 'Ed25519',
                 verifyKey: '8ebab6f84c237b331d54a2f611ea8fceeba5b9e0ffff7a096a172f034257999f',
             },
             {
-                schemeId: 'Ed25519',
                 verifyKey: '616fe3f0441f87e2ba32194faf6c3ea658cac5d31353303a45ca3d1d4164a4f1',
             },
             {
-                schemeId: 'Ed25519',
                 verifyKey: 'e1f1c6971705da9c2a50be7967609c092fe295a88c71fbf18dd90cc6d81508f2',
             },
         ],

@@ -504,7 +504,7 @@ export class ConcordiumGRPCClient {
      * @param blockHash optional block hash to get the reward status at, otherwise retrieves from last finalized block
      * @returns the reward status at the given block, or undefined it the block does not exist.
      */
-    async getTokenomicsInfo(blockHash?: BlockHash.Type): Promise<SDK.TokenomicsInfo> {
+    async getTokenomicsInfo(blockHash?: BlockHash.Type): Promise<Upward<SDK.TokenomicsInfo>> {
         const blockHashInput = getBlockHashInput(blockHash);
 
         const response = await this.client.getTokenomicsInfo(blockHashInput).response;
@@ -1147,8 +1147,14 @@ export class ConcordiumGRPCClient {
      * @param blockHash an optional block hash to get the special events at, otherwise retrieves from last finalized block.
      * @param abortSignal an optional AbortSignal to close the stream.
      * @returns a stream of block item summaries
+     *
+     * **Please note**, these can possibly be unknown if the SDK is not fully compatible with the Concordium
+     * node queried, in which case `null` is returned.
      */
-    getBlockSpecialEvents(blockHash?: BlockHash.Type, abortSignal?: AbortSignal): AsyncIterable<SDK.BlockSpecialEvent> {
+    getBlockSpecialEvents(
+        blockHash?: BlockHash.Type,
+        abortSignal?: AbortSignal
+    ): AsyncIterable<Upward<SDK.BlockSpecialEvent>> {
         const blockSpecialEvents = this.client.getBlockSpecialEvents(getBlockHashInput(blockHash), {
             abort: abortSignal,
         }).responses;

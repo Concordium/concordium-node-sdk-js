@@ -18,7 +18,6 @@ import type {
     TransactionFeeDistribution,
     UpdatePublicKey,
     ValidatorScoreParameters,
-    VerifyKey,
 } from '../types.js';
 import type * as CcdAmount from './CcdAmount.js';
 import type * as Duration from './Duration.js';

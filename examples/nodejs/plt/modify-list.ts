@@ -5,6 +5,7 @@ import {
     TransactionEventTag,
     TransactionKindString,
     TransactionSummaryType,
+    isKnown,
     serializeAccountTransactionPayload,
 } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
@@ -17,6 +18,7 @@ import {
     TokenOperation,
     TokenOperationType,
     createTokenUpdatePayload,
+    parseTokenModuleEvent,
 } from '@concordium/web-sdk/plt';
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
@@ -137,22 +139,26 @@ const client = new ConcordiumGRPCNodeClient(
             const result = await client.waitForTransactionFinalization(transaction);
             console.log('Transaction finalized:', result);
 
+            if (!isKnown(result.summary)) {
+                throw new Error('Unexpected transaction outcome');
+            }
+
             if (result.summary.type !== TransactionSummaryType.AccountTransaction) {
                 throw new Error('Unexpected transaction type: ' + result.summary.type);
             }
 
             switch (result.summary.transactionType) {
                 case TransactionKindString.TokenUpdate:
-                    result.summary.events.forEach((e) => {
+                    result.summary.events.filter(isKnown).forEach((e) => {
                         if (e.tag !== TransactionEventTag.TokenModuleEvent) {
                             throw new Error('Unexpected event type: ' + e.tag);
                         }
-                        console.log('Token module event:', e, Cbor.decode(e.details, 'TokenListUpdateEventDetails'));
+                        console.log('Token module event:', parseTokenModuleEvent(e));
                     });
                     break;
                 case TransactionKindString.Failed:
-                    if (result.summary.rejectReason.tag !== RejectReasonTag.TokenUpdateTransactionFailed) {
-                        throw new Error('Unexpected reject reason tag: ' + result.summary.rejectReason.tag);
+                    if (result.summary.rejectReason?.tag !== RejectReasonTag.TokenUpdateTransactionFailed) {
+                        throw new Error('Unexpected reject reason tag: ' + result.summary.rejectReason?.tag);
                     }
                     const details = Cbor.decode(result.summary.rejectReason.contents.details);
                     console.error(result.summary.rejectReason.contents, details);

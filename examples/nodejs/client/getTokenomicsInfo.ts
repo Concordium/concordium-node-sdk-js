@@ -1,4 +1,4 @@
-import { BlockHash } from '@concordium/web-sdk';
+import { BlockHash, isKnown } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
@@ -55,6 +55,11 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
 
     // Protocol version 4 expanded the amount of information in the response, so one should check the type to access that.
     // This information includes information about the payday and total amount of funds staked.
+    if (!isKnown(tokenomics)) {
+        console.warn('Unknown tokenomics version found');
+        return;
+    }
+
     if (tokenomics.version === 1) {
         console.log('Next payday time:', tokenomics.nextPaydayTime);
         console.log('Total staked amount by bakers and delegators', tokenomics.totalStakedCapital);

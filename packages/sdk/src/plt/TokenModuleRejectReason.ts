@@ -1,4 +1,4 @@
-import { cborDecode } from '../index.js';
+import { cborDecode } from '../types/cbor.js';
 import { TokenAmount, TokenHolder } from './index.js';
 import { EncodedTokenModuleRejectReason } from './types.js';
 

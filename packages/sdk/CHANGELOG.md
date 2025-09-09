@@ -11,6 +11,7 @@
 - `parseTokenUpdatePayload`, which decodes the CBOR encoded operations and returns a corresponding payload with the
   operations decoded into `(TokenOperation | UnknownTokenOperation)[]`
 - `parseTokenModuleRejectReason`, which decodes `Cbor.Type` into `TokenModuleRejectReason | UnknownTokenRejectReason`.
+- `CborContractAddress` which represents CIS-7 compatible contract addresses.
 
 ### Breaking changes
 

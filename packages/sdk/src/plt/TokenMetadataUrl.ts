@@ -1,7 +1,8 @@
 import { Buffer } from 'buffer/index.js';
 import { registerEncoder } from 'cbor2/encoder';
 
-import { HexString, cborDecode, cborEncode } from '../index.js';
+import type { HexString } from '../types.js';
+import { cborDecode, cborEncode } from '../types/cbor.js';
 import { Cbor } from './index.js';
 
 /** The JSON representation of a {@linkcode Type} */

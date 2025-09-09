@@ -1,6 +1,7 @@
 import {
     AccountAddress,
     AccountInfo,
+    AccountInfoType,
     AccountTransaction,
     AccountTransactionHeader,
     AccountTransactionType,
@@ -8,7 +9,7 @@ import {
     CcdAmount,
     ConcordiumGRPCWebClient,
     ConcordiumHdWallet,
-    CredentialDeploymentTransaction,
+    CredentialDeploymentPayload,
     CryptographicParameters,
     IdObjectRequestV1,
     IdRecoveryRequest,
@@ -233,7 +234,7 @@ export function createCredentialDeploymentKeysAndRandomness(
  * @returns a promise with the transaction hash of the submitted credential deployment
  */
 export async function sendCredentialDeploymentTransaction(
-    credentialDeployment: CredentialDeploymentTransaction,
+    credentialDeployment: CredentialDeploymentPayload,
     signature: string
 ) {
     const payload = serializeCredentialDeploymentPayload([signature], credentialDeployment);
@@ -314,11 +315,15 @@ export async function getAccount(accountAddress: AccountAddress.Type): Promise<A
         await loop(intervalMs, async () => {
             try {
                 const accountInfo = await client.getAccountInfo(accountAddress);
+                if (accountInfo.type === AccountInfoType.Unknown) {
+                    reject(new Error('Account info unknown'));
+                    return false;
+                }
                 resolve(accountInfo);
                 return false;
             } catch {
                 if (escapeCounter > maxRetries) {
-                    reject();
+                    reject(new Error('Max retry counter reached'));
                     return false;
                 } else {
                     escapeCounter += 1;

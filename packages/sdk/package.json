@@ -99,6 +99,7 @@
         "build": "yarn clean && yarn mkdirp src/grpc-api && yarn generate && yarn build-dev",
         "build-dev": "tsc -p tsconfig.build.json && yarn webpack",
         "webpack": "tsx ../../node_modules/webpack-cli/bin/cli.js --config webpack.config.ts",
+        "typecheck": "tsc -p tsconfig.json",
         "clean": "rimraf -- lib src/grpc-api",
         "size": "yarn build && size-limit",
         "size:no-build": "size-limit"

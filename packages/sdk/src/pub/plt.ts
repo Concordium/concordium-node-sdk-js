@@ -10,5 +10,8 @@ import * as TokenModuleReference from './plt/TokenModuleReference.js';
 
 export * from '../plt/types.js';
 export * from '../plt/module.js';
+export * from '../plt/TokenModuleRejectReason.js';
+export * from '../plt/TokenModuleEvent.js';
+export * from '../plt/TokenOperation.js';
 
 export { Token, Cbor, TokenAmount, CborMemo, TokenId, TokenModuleReference, TokenMetadataUrl, TokenHolder };

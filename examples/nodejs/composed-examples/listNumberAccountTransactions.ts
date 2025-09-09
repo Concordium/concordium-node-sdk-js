@@ -1,4 +1,4 @@
-import { AccountAddress, isTransferLikeSummary, unwrap } from '@concordium/web-sdk';
+import { AccountAddress, isKnown, isTransferLikeSummary, unwrap } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
@@ -75,6 +75,9 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
 
         // For each transaction in the block:
         trxLoop: for await (const trx of trxStream) {
+            if (!isKnown(trx)) {
+                continue;
+            }
             if (isTransferLikeSummary(trx)) {
                 const trxAcc = trx.sender;
 

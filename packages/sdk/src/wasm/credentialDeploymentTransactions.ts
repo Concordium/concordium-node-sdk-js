@@ -4,6 +4,7 @@ import * as wasm from '@concordium/rust-bindings/wallet';
 import * as ed from '@concordium/web-sdk/shims/ed25519';
 import { Buffer } from 'buffer/index.js';
 
+import { Known } from '../grpc/upward.js';
 import { sha256 } from '../hash.js';
 import { getCredentialDeploymentSignDigest } from '../serialization.js';
 import {
@@ -12,7 +13,7 @@ import {
     AttributesKeys,
     CredentialDeploymentDetails,
     CredentialDeploymentInfo,
-    CredentialDeploymentTransaction,
+    CredentialDeploymentPayload,
     CredentialPublicKeys,
     CryptographicParameters,
     HexString,
@@ -84,9 +85,9 @@ function createUnsignedCredentialInfo(
 }
 
 /**
- * Create a credential deployment transaction, which is the transaction used
- * when deploying a new account.
- * @deprecated This function doesn't use allow supplying the randomness. {@link createCredentialTransaction} or {@link createCredentialTransactionNoSeed} should be used instead.
+ * Create a credential deployment transaction payload used when deploying a new account.
+ *
+ * @deprecated This function doesn't use allow supplying the randomness. {@link createCredentialPayload} or {@link createCredentialPayloadNoSeed} should be used instead.
  * @param identity the identity to create a credential for
  * @param cryptographicParameters the global cryptographic parameters from the chain
  * @param threshold the signature threshold for the credential, has to be less than number of public keys
@@ -96,7 +97,7 @@ function createUnsignedCredentialInfo(
  * @param expiry the expiry of the transaction
  * @returns the details used in a credential deployment transaction
  */
-export function createCredentialDeploymentTransaction(
+export function createCredentialDeploymentPayload(
     identity: IdentityInput,
     cryptographicParameters: CryptographicParameters,
     threshold: number,
@@ -104,7 +105,7 @@ export function createCredentialDeploymentTransaction(
     credentialIndex: number,
     revealedAttributes: AttributeKey[],
     expiry: TransactionExpiry.Type
-): CredentialDeploymentTransaction {
+): CredentialDeploymentPayload {
     const unsignedCredentialInfo = createUnsignedCredentialInfo(
         identity,
         cryptographicParameters,
@@ -200,17 +201,17 @@ export type CredentialInputNoSeed = CredentialInputCommon & {
     idCredSec: HexString;
     prfKey: HexString;
     sigRetrievelRandomness: HexString;
-    credentialPublicKeys: CredentialPublicKeys;
+    credentialPublicKeys: Known<CredentialPublicKeys>;
     attributeRandomness: Record<AttributesKeys, HexString>;
 };
 
 /**
  * Creates an unsigned credential for a new account, using the version 1 algorithm, which uses a seed to generate keys and commitments.
  */
-export function createCredentialTransaction(
+export function createCredentialPayload(
     input: CredentialInput,
     expiry: TransactionExpiry.Type
-): CredentialDeploymentTransaction {
+): CredentialDeploymentPayload {
     const wallet = ConcordiumHdWallet.fromHex(input.seedAsHex, input.net);
     const publicKey = wallet
         .getAccountPublicKey(input.ipInfo.ipIdentity, input.identityIndex, input.credNumber)
@@ -253,16 +254,16 @@ export function createCredentialTransaction(
         credNumber: input.credNumber,
     };
 
-    return createCredentialTransactionNoSeed(noSeedInput, expiry);
+    return createCredentialPayloadNoSeed(noSeedInput, expiry);
 }
 
 /**
  * Creates an unsigned credential for a new account, using the version 1 algorithm, but without requiring the seed to be provided directly.
  */
-export function createCredentialTransactionNoSeed(
+export function createCredentialPayloadNoSeed(
     input: CredentialInputNoSeed,
     expiry: TransactionExpiry.Type
-): CredentialDeploymentTransaction {
+): CredentialDeploymentPayload {
     const { sigRetrievelRandomness, ...other } = input;
     const internalInput = {
         ...other,

@@ -101,8 +101,8 @@ test('dryRun.transfer', async () => {
     // Results in 1 transfer event
     expect(
         result.tag === 'success' &&
-            result.events[0].tag === TransactionEventTag.Updated &&
-            result.events[0].events.length
+            result.events[0]!.tag === TransactionEventTag.Updated &&
+            result.events[0]!.events.length
     ).toBe(1);
 
     const resultMulti = await cis2.dryRun.transfer(
@@ -128,8 +128,8 @@ test('dryRun.transfer', async () => {
     // Results in 2 transfer events
     expect(
         resultMulti.tag === 'success' &&
-            resultMulti.events[0].tag === TransactionEventTag.Updated &&
-            resultMulti.events[0].events.length
+            resultMulti.events[0]!.tag === TransactionEventTag.Updated &&
+            resultMulti.events[0]!.events.length
     ).toBe(2);
 
     const resultContractReceiver = await cis2.dryRun.transfer(
@@ -250,8 +250,8 @@ test('dryRun.updateOperator', async () => {
     // Results in 1 transfer event
     expect(
         result.tag === 'success' &&
-            result.events[0].tag === TransactionEventTag.Updated &&
-            result.events[0].events.length
+            result.events[0]!.tag === TransactionEventTag.Updated &&
+            result.events[0]!.events.length
     ).toEqual(1);
 
     const resultMulti = await cis2.dryRun.updateOperator(
@@ -273,8 +273,8 @@ test('dryRun.updateOperator', async () => {
     // Results in 2 transfer events
     expect(
         resultMulti.tag === 'success' &&
-            resultMulti.events[0].tag === TransactionEventTag.Updated &&
-            resultMulti.events[0].events.length
+            resultMulti.events[0]!.tag === TransactionEventTag.Updated &&
+            resultMulti.events[0]!.events.length
     ).toEqual(2);
 });
 

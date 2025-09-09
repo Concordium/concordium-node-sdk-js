@@ -10,7 +10,7 @@
 - `decodeTokenOperation`, which decodes `Cbor.Type` to `TokenOperation | UnknownTokenOperation`.
 - `parseTokenUpdatePayload`, which decodes the CBOR encoded operations and returns a corresponding payload with the
   operations decoded into `(TokenOperation | UnknownTokenOperation)[]`
-- `parseTokenModuleRejectReason`, which decodes `Cbor.Type` into `TokenModuleRejectReason | UnknownTokenRejectReason`.
+- `parseTokenModuleRejectReason`, which decodes `Cbor.Type` into `TokenModuleRejectReason | UnknownTokenModuleRejectReason`.
 - `CborContractAddress` which represents CIS-7 compatible contract addresses.
 
 ### Breaking changes
@@ -18,16 +18,44 @@
 - Renamed `TokenModuleRejectReason` to `EncodedTokenModuleRejectReason`, aligning with the corresponding types for
   `TokenModuleEvent`. `TokenModuleRejectReason` now describes the decoded version of `EncodedTokenModuleRejectReason`.
 - `parseTokenModuleEvent` (previously `parseModuleEvent`) now returns `TokenModuleEvent | UnknownTokenModuleEvent`
+- Rename `CredentialDeploymentTransaction` to `CredentialDeploymentPayload`, and correspondingly
+  - `createCredentialDeploymentTransaction` -> `createCredentialDeploymentPayload`
+  - `createCredentialTransaction` -> `createCredentialPayload`
+  - `createCredentialTransactionNoSeed` -> `createCredentialPayloadNoSeed`
 - `CborAccountAddress` is now used instead of `TokenHolder` for CBOR encoded account addresses in PLT/CIS-7.
 
 #### GRPC API query response types
 
 - `BlockItemSummaryInBlock.summary` now has the type `Upward<BlockItemSummary>`.
+- `ConfigureBakerSummary`, `ConfigureDelegationSummary`, `TokenCreationSummary`, and `TokenUpdateSummary` events
+  have been wrapped in `Upward`.
+- `UpdateSummary.payload` now has the type `Upward<UpdateInstructionPayload>`.
+- `UpdateEnqueuedEvent.payload` now has the type `Upward<UpdateInstructionPayload>`.
+- `PendingUpdate.effect` now has the type `Upward<PendingUpateEffect>`.
+- `PassiveCommitteeInfo` now has been wrapped in `Upward`.
+- `NodeInfoConsensusStatus` and `NodeCatchupStatus` now have been wrapped in `Upward`.
+- `RejectReason` now has been wrapped in `Upward`
+- `RewardStatus` now has been wrapped in `Upward`
+- `Cooldown.status` now has the type `Upward<CooldownStatus>`. This affects all `AccountInfo` variants.
+- `BakerPoolInfo.openStatus` now has the type `Upward<OpenStatusText>`.
+  - Affects the `AccountInfoBaker` variant of `AccountInfo`.
+  - Affects `BakerPoolStatus`.
+- `BakerSetOpenStatusEvent.openStatus` now has the type `Upward<OpenStatusText>`.
+- `AccountInfo` has been extended with a new variant `AccountInfoUnknown`.
+- `ContractTraceEvent` uses in reponse types from the GRPC API have now been wrapped in `Upward`.
+  - Affects `InvokeContractResultSuccess`
+  - Affects `UpdateContractSummary`
+- `ContractVersion` enum has been removed and replaced with `number` where it was used.
+- `VerifyKey` uses has now been wrapped in `Upward`, affecting the types
+  - `CredentialPublicKeys`, bleeding into top-level types `CredentialDeploymentInfo`, `InitialAccountCredential` and
+    `NormalAccountCredential`
 
 #### `ConcordiumGRPCClient`:
 
 - `waitForTransactionFinalization` is affected by the changes to `BlockItemSummaryInBlock`
 - `getBlockTransactionEvents` now returns `AsyncIterable<Upward<BlockItemSummary>>`.
+- `getBlockSpecialEvents` now returns `AsyncIterable<Upward<BlockSpecialEvent>>`.
+- `getPoolInfo` is affected by the changes to `BakerPoolInfo`
 
 ## 10.0.1
 

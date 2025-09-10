@@ -125,6 +125,7 @@ export function fromBase58(address: string): AccountAddress {
 export function toBuffer(accountAddress: AccountAddress): Uint8Array {
     return accountAddress.decodedAddress;
 }
+
 /**
  * Get a base58check string of the account address.
  * @param {AccountAddress} accountAddress The account address.

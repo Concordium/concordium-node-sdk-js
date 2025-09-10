@@ -7,8 +7,11 @@ import { bail } from '../util.js';
 
 const CCD_NETWORK_ID = 919; // Concordium network identifier - Did you know 919 is a palindromic prime and a centred hexagonal number?
 
-type CborAccountAddressJSON = {
+/** JSON representation of a {@link Type}. */
+export type JSON = {
+    /** The address of the account holding the token. */
     address: Base58String;
+    /** Optional coininfo describing the network for the account. */
     coinInfo?: typeof CCD_NETWORK_ID;
 };
 
@@ -18,6 +21,7 @@ class CborAccountAddress {
     constructor(
         /** The address of the account holding the token. */
         public readonly address: AccountAddress.Type,
+        /** Optional coininfo describing the network for the account. */
         coinInfo: typeof CCD_NETWORK_ID | undefined = CCD_NETWORK_ID
     ) {
         this.#coinInfo = coinInfo;
@@ -27,7 +31,11 @@ class CborAccountAddress {
         return this.address.toString();
     }
 
-    public toJSON(): CborAccountAddressJSON {
+    /**
+     * Get a JSON-serializable representation of the account address. This is called implicitly when serialized with JSON.stringify.
+     * @returns {JSON} The JSON representation.
+     */
+    public toJSON(): JSON {
         return {
             address: this.address.toJSON(),
             coinInfo: this.#coinInfo,
@@ -35,22 +43,53 @@ class CborAccountAddress {
     }
 }
 
+/**
+ * Public type alias for the CBOR aware AccountAddress wrapper.
+ * Instances are created via the helper factory functions rather than the class constructor.
+ */
 export type Type = CborAccountAddress;
-export type JSON = CborAccountAddressJSON;
 
+/**
+ * Construct a {@link Type} from an existing {@link AccountAddress.Type}.
+ * Coin information will default to the Concordium network id (919).
+ */
 export function fromAccountAddress(address: AccountAddress.Type): CborAccountAddress {
     return new CborAccountAddress(address);
 }
 
+/**
+ * Recreate a {@link Type} from its JSON form.
+ * @throws {Error} If the supplied coinInfo is present and not the Concordium network id.
+ */
 export function fromJSON(json: JSON): Type {
     if (json.coinInfo !== undefined && json.coinInfo !== CCD_NETWORK_ID) {
-        throw new Error(
-            `Unsupported coin info for token holder account: ${json.coinInfo}. Expected ${CCD_NETWORK_ID}.`
-        );
+        throw new Error(`Unsupported coin info for account address: ${json.coinInfo}. Expected ${CCD_NETWORK_ID}.`);
     }
     return new CborAccountAddress(AccountAddress.fromJSON(json.address), json.coinInfo);
 }
 
+/**
+ * Construct a CborAccountAddress from a base58check string.
+ *
+ * @param {string} address String of base58check encoded account address, must use a byte version of 1.
+ * @returns {CborAccountAddress} The CborAccountAddress.
+ * @throws If the provided string is not: exactly 50 characters, a valid base58check encoding using version byte 1.
+ */
+export function fromBase58(address: string): CborAccountAddress {
+    return fromAccountAddress(AccountAddress.fromBase58(address));
+}
+
+/**
+ * Get a base58check string of the account address.
+ * @param {CborAccountAddress} accountAddress The account address.
+ */
+export function toBase58(accountAddress: CborAccountAddress): string {
+    return accountAddress.address.address;
+}
+
+/**
+ * Type predicate which checks if a value is an instance of {@linkcode Type}
+ */
 export function instanceOf(value: unknown): value is Type {
     return value instanceof CborAccountAddress;
 }
@@ -147,7 +186,7 @@ function fromCBORValueAccount(decoded: unknown): CborAccountAddress {
         !(addressBytes instanceof Uint8Array) ||
         addressBytes.byteLength !== AccountAddress.BYTES_LENGTH
     ) {
-        throw new Error('Invalid CBOR encoded token holder account: missing or invalid address bytes');
+        throw new Error('Invalid CBOR encoded account address: missing or invalid address bytes');
     }
 
     // Optional validation for coin information if present (key 1)

@@ -1,3 +1,4 @@
+import { MAX_U8 } from '../constants.js';
 import { Cbor, CborAccountAddress, CreatePLTPayload, TokenAmount, TokenMetadataUrl } from './index.js';
 
 /**
@@ -89,6 +90,9 @@ export function createPltPayload(
     payload: Omit<CreatePLTPayload, 'initializationParameters'>,
     params: TokenInitializationParameters
 ): CreatePLTPayload {
+    if (payload.decimals < 0 || payload.decimals > MAX_U8) {
+        throw new Error('Token decimals must be in the range 0..255 (inclusive).');
+    }
     return {
         ...payload,
         initializationParameters: Cbor.encode(params),

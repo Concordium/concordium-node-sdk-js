@@ -95,10 +95,10 @@ const client = new ConcordiumGRPCNodeClient(
     const tokenId = TokenId.fromString(cli.flags.tokenId);
     const token = await Token.fromId(client, tokenId);
     const amount = TokenAmount.fromDecimal(cli.flags.amount, token.info.state.decimals);
-    const recipient = CborAccountAddress.fromAccountAddress(AccountAddress.fromBase58(cli.flags.recipient));
+    const recipient = AccountAddress.fromBase58(cli.flags.recipient);
     const memo = cli.flags.memo ? CborMemo.fromString(cli.flags.memo) : undefined;
 
-    const transfer: TokenTransfer = {
+    const transfer: Token.TransferInput = {
         recipient,
         amount,
         memo,
@@ -144,6 +144,11 @@ const client = new ConcordiumGRPCNodeClient(
     } else {
         // Or from a wallet perspective:
         // Create transfer payload
+        const transfer: TokenTransfer = {
+            recipient: CborAccountAddress.fromAccountAddress(recipient),
+            amount,
+            memo,
+        };
         const transferOperation: TokenTransferOperation = {
             transfer,
         };

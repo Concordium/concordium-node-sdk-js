@@ -19,6 +19,7 @@ type TokenHolderAccountJSON = {
 };
 
 class TokenHolderAccount implements TokenHolder<'account'> {
+    #nominal = true;
     public readonly type = 'account';
 
     constructor(

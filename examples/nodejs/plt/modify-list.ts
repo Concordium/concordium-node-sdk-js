@@ -11,8 +11,8 @@ import {
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import {
     Cbor,
+    CborAccountAddress,
     Token,
-    TokenHolder,
     TokenId,
     TokenListUpdate,
     TokenOperation,
@@ -107,7 +107,7 @@ const client = new ConcordiumGRPCNodeClient(
 
     // parse the arguments
     const tokenId = TokenId.fromString(id);
-    const targetAddress = TokenHolder.fromAccountAddress(AccountAddress.fromBase58(address));
+    const targetAddress = AccountAddress.fromBase58(address);
 
     if (walletFile !== undefined) {
         // Read wallet-file
@@ -173,7 +173,7 @@ const client = new ConcordiumGRPCNodeClient(
         const operationType = `${action}-${list}-list` as TokenOperationType;
         // Or from a wallet perspective:
         // Create list payload. The payload is the same for both add and remove operations on all lists.
-        const listPayload: TokenListUpdate = { target: targetAddress };
+        const listPayload: TokenListUpdate = { target: CborAccountAddress.fromAccountAddress(targetAddress) };
         const listOperation = {
             [operationType]: listPayload,
         } as TokenOperation; // Normally the cast is not necessary unless done in the same dynamic way as here.

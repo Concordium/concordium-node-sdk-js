@@ -1,8 +1,8 @@
 import {
     Cbor,
+    CborAccountAddress,
     TokenAddDenyListOperation,
     TokenAmount,
-    TokenHolder,
     TokenMetadataUrl,
     TokenMintOperation,
     TokenOperationType,
@@ -13,7 +13,7 @@ describe('PLT Cbor', () => {
     describe('TokenModuleState', () => {
         test('should encode and decode TokenModuleState correctly', () => {
             const accountAddress = AccountAddress.fromBase58('3XSLuJcXg6xEua6iBPnWacc3iWh93yEDMCqX8FbE3RDSbEnT9P');
-            const tokenHolder = TokenHolder.fromAccountAddress(accountAddress);
+            const tokenHolder = CborAccountAddress.fromAccountAddress(accountAddress);
             const metadataUrl = TokenMetadataUrl.fromString('https://example.com/metadata.json');
 
             const state = {
@@ -55,7 +55,7 @@ describe('PLT Cbor', () => {
             const invalidState2 = {
                 // name is missing
                 metadata: TokenMetadataUrl.fromString('https://example.com/metadata.json'),
-                governanceAccount: TokenHolder.fromAccountAddress(accountAddress),
+                governanceAccount: CborAccountAddress.fromAccountAddress(accountAddress),
             };
             const encoded2 = Cbor.encode(invalidState2);
             expect(() => Cbor.decode(encoded2, 'TokenModuleState')).toThrow(/missing or invalid name/);
@@ -64,7 +64,7 @@ describe('PLT Cbor', () => {
             const invalidState3 = {
                 name: 'Test Token',
                 // metadata is missing
-                governanceAccount: TokenHolder.fromAccountAddress(accountAddress),
+                governanceAccount: CborAccountAddress.fromAccountAddress(accountAddress),
             };
             const encoded3 = Cbor.encode(invalidState3);
             expect(() => Cbor.decode(encoded3, 'TokenModuleState')).toThrow(/missing metadataUrl/);
@@ -72,7 +72,7 @@ describe('PLT Cbor', () => {
 
         test('should throw error if TokenModuleState has invalid field types', () => {
             const accountAddress = AccountAddress.fromBase58('3XSLuJcXg6xEua6iBPnWacc3iWh93yEDMCqX8FbE3RDSbEnT9P');
-            const tokenHolder = TokenHolder.fromAccountAddress(accountAddress);
+            const tokenHolder = CborAccountAddress.fromAccountAddress(accountAddress);
             const metadataUrl = TokenMetadataUrl.fromString('https://example.com/metadata.json');
 
             // Invalid allowList type
@@ -90,7 +90,7 @@ describe('PLT Cbor', () => {
     describe('TokenInitializationParameters', () => {
         test('should encode and decode TokenInitializationParameters correctly', () => {
             const accountAddress = AccountAddress.fromBase58('3XSLuJcXg6xEua6iBPnWacc3iWh93yEDMCqX8FbE3RDSbEnT9P');
-            const tokenHolder = TokenHolder.fromAccountAddress(accountAddress);
+            const tokenHolder = CborAccountAddress.fromAccountAddress(accountAddress);
             const metadataUrl = TokenMetadataUrl.fromString('https://example.com/metadata.json');
             const initialSupply = TokenAmount.fromDecimal('1.002', 3);
 
@@ -136,7 +136,7 @@ describe('PLT Cbor', () => {
             const invalidParams2 = {
                 // name is missing
                 metadata: TokenMetadataUrl.fromString('https://example.com/metadata.json'),
-                governanceAccount: TokenHolder.fromAccountAddress(accountAddress),
+                governanceAccount: CborAccountAddress.fromAccountAddress(accountAddress),
             };
             const encoded2 = Cbor.encode(invalidParams2);
             expect(() => Cbor.decode(encoded2, 'TokenInitializationParameters')).toThrow(/missing or invalid name/);
@@ -145,7 +145,7 @@ describe('PLT Cbor', () => {
             const invalidParams3 = {
                 name: 'Test Token',
                 // metadata is missing
-                governanceAccount: TokenHolder.fromAccountAddress(accountAddress),
+                governanceAccount: CborAccountAddress.fromAccountAddress(accountAddress),
             };
             const encoded3 = Cbor.encode(invalidParams3);
             expect(() => Cbor.decode(encoded3, 'TokenInitializationParameters')).toThrow(/missing metadataUrl/);
@@ -153,7 +153,7 @@ describe('PLT Cbor', () => {
 
         test('should throw error if TokenInitializationParameters has invalid field types', () => {
             const accountAddress = AccountAddress.fromBase58('3XSLuJcXg6xEua6iBPnWacc3iWh93yEDMCqX8FbE3RDSbEnT9P');
-            const tokenHolder = TokenHolder.fromAccountAddress(accountAddress);
+            const tokenHolder = CborAccountAddress.fromAccountAddress(accountAddress);
             const metadataUrl = TokenMetadataUrl.fromString('https://example.com/metadata.json');
 
             // Invalid allowList type
@@ -205,7 +205,9 @@ describe('PLT Cbor', () => {
 
     describe('TokenOperation[]', () => {
         test('should (de)serialize multiple governance operations correctly', () => {
-            const account = TokenHolder.fromAccountAddress(AccountAddress.fromBuffer(new Uint8Array(32).fill(0x15)));
+            const account = CborAccountAddress.fromAccountAddress(
+                AccountAddress.fromBuffer(new Uint8Array(32).fill(0x15))
+            );
             // - d99d73: A tagged (40307) item with a map (a2) containing:
             // - a2: A map with 2 key-value pairs
             //   - 01: Key 1.

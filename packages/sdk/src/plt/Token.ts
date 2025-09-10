@@ -14,11 +14,11 @@ import { SequenceNumber } from '../types/index.js';
 import { bail } from '../util.js';
 import {
     Cbor,
+    CborAccountAddress,
     TokenAddAllowListOperation,
     TokenAddDenyListOperation,
     TokenAmount,
     TokenBurnOperation,
-    TokenHolder,
     TokenId,
     TokenInfo,
     TokenMintOperation,
@@ -136,9 +136,9 @@ export class NotAllowedError extends TokenError {
 
     /**
      * Constructs a new NotAllowedError.
-     * @param {TokenHolder.Type} receiver - The account address of the receiver.
+     * @param {AccountAddress.Type} receiver - The account address of the receiver.
      */
-    constructor(public readonly receiver: TokenHolder.Type) {
+    constructor(public readonly receiver: AccountAddress.Type) {
         super(
             `Transfering funds from or to the account specified is currently not allowed (${receiver}) because of the allow/deny list.`
         );
@@ -496,10 +496,8 @@ export async function validateTransfer(
                 ? undefined
                 : Cbor.decode(accountToken.moduleState, 'TokenModuleAccountState');
 
-        if (token.moduleState.denyList && accountModuleState?.denyList)
-            throw new NotAllowedError(TokenHolder.fromAccountAddress(r.accountAddress));
-        if (token.moduleState.allowList && !accountModuleState?.allowList)
-            throw new NotAllowedError(TokenHolder.fromAccountAddress(r.accountAddress));
+        if (token.moduleState.denyList && accountModuleState?.denyList) throw new NotAllowedError(r.accountAddress);
+        if (token.moduleState.allowList && !accountModuleState?.allowList) throw new NotAllowedError(r.accountAddress);
     });
 
     return true;
@@ -619,12 +617,17 @@ type TransferOtions = {
     validate?: boolean;
 };
 
+export type TransferInput = Omit<TokenTransfer, 'recipient'> & {
+    /** The recipient of the transfer. */
+    recipient: AccountAddress.Type;
+};
+
 /**
  * Transfers tokens from the sender to the specified recipients.
  *
  * @param {Token} token - The token to transfer.
  * @param {AccountAddress.Type} sender - The account address of the sender.
- * @param {TokenTransfer | TokenTransfer[]} payload - The transfer payload.
+ * @param {TransferInput | TransferInput[]} payload - The transfer payload.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @param {TokenUpdateMetadata} [metadata={ expiry: TransactionExpiry.futureMinutes(5) }] - The metadata for the token update.
  * @param {TransferOtions} [opts={ autoScale: true, validate: false }] - Options for the transfer.
@@ -638,15 +641,16 @@ type TransferOtions = {
 export async function transfer(
     token: Token,
     sender: AccountAddress.Type,
-    payload: TokenTransfer | TokenTransfer[],
+    payload: TransferInput | TransferInput[],
     signer: AccountSigner,
     metadata?: TokenUpdateMetadata,
     { autoScale = true, validate = false }: TransferOtions = {}
 ): Promise<TransactionHash.Type> {
-    let transfers: TokenTransfer[] = [payload].flat();
-    if (autoScale) {
-        transfers = transfers.map((p) => ({ ...p, amount: scaleAmount(token, p.amount) }));
-    }
+    let transfers: TokenTransfer[] = [payload].flat().map((p) => ({
+        ...p,
+        recipient: CborAccountAddress.fromAccountAddress(p.recipient),
+        amount: autoScale ? scaleAmount(token, p.amount) : p.amount,
+    }));
 
     if (validate) {
         await validateTransfer(token, sender, transfers);
@@ -750,7 +754,7 @@ type UpdateListOptions = {
  *
  * @param {Token} token - The token for which to add the list entry.
  * @param {AccountAddress.Type} sender - The account address of the sender.
- * @param {TokenHolder.Type | TokenHolder.Type[]} targets - The account address(es) to be added to the list.
+ * @param {AccountAddress.Type | AccountAddress.Type[]} targets - The account address(es) to be added to the list.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @param {TokenUpdateMetadata} [metadata={ expiry: TransactionExpiry.futureMinutes(5) }] - The metadata for the token update.
  * @param {UpdateListOptions} [opts={ validate: false }] - Options for updating the allow/deny list.
@@ -761,7 +765,7 @@ type UpdateListOptions = {
 export async function addAllowList(
     token: Token,
     sender: AccountAddress.Type,
-    targets: TokenHolder.Type | TokenHolder.Type[],
+    targets: AccountAddress.Type | AccountAddress.Type[],
     signer: AccountSigner,
     metadata?: TokenUpdateMetadata,
     { validate = false }: UpdateListOptions = {}
@@ -770,9 +774,9 @@ export async function addAllowList(
         await validateAllowListUpdate(token);
     }
 
-    const ops: TokenAddAllowListOperation[] = [targets]
-        .flat()
-        .map((target) => ({ [TokenOperationType.AddAllowList]: { target } }));
+    const ops: TokenAddAllowListOperation[] = [targets].flat().map((target) => ({
+        [TokenOperationType.AddAllowList]: { target: CborAccountAddress.fromAccountAddress(target) },
+    }));
     return sendOperations(token, sender, ops, signer, metadata);
 }
 
@@ -781,7 +785,7 @@ export async function addAllowList(
  *
  * @param {Token} token - The token for which to add the list entry.
  * @param {AccountAddress.Type} sender - The account address of the sender.
- * @param {TokenHolder.Type | TokenHolder.Type[]} targets - The account address(es) to be added to the list.
+ * @param {AccountAddress.Type | AccountAddress.Type[]} targets - The account address(es) to be added to the list.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @param {TokenUpdateMetadata} [metadata={ expiry: TransactionExpiry.futureMinutes(5) }] - The metadata for the token update.
  * @param {UpdateListOptions} [opts={ validate: false }] - Options for updating the allow/deny list.
@@ -792,7 +796,7 @@ export async function addAllowList(
 export async function removeAllowList(
     token: Token,
     sender: AccountAddress.Type,
-    targets: TokenHolder.Type | TokenHolder.Type[],
+    targets: AccountAddress.Type | AccountAddress.Type[],
     signer: AccountSigner,
     metadata?: TokenUpdateMetadata,
     { validate = false }: UpdateListOptions = {}
@@ -801,9 +805,9 @@ export async function removeAllowList(
         await validateAllowListUpdate(token);
     }
 
-    const ops: TokenRemoveAllowListOperation[] = [targets]
-        .flat()
-        .map((target) => ({ [TokenOperationType.RemoveAllowList]: { target } }));
+    const ops: TokenRemoveAllowListOperation[] = [targets].flat().map((target) => ({
+        [TokenOperationType.RemoveAllowList]: { target: CborAccountAddress.fromAccountAddress(target) },
+    }));
     return sendOperations(token, sender, ops, signer, metadata);
 }
 
@@ -812,7 +816,7 @@ export async function removeAllowList(
  *
  * @param {Token} token - The token for which to add the list entry.
  * @param {AccountAddress.Type} sender - The account address of the sender.
- * @param {TokenHolder.Type | TokenHolder.Type[]} targets - The account address(es) to be added to the list.
+ * @param {AccountAddress.Type | AccountAddress.Type[]} targets - The account address(es) to be added to the list.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @param {TokenUpdateMetadata} [metadata={ expiry: TransactionExpiry.futureMinutes(5) }] - The metadata for the token update.
  * @param {UpdateListOptions} [opts={ validate: false }] - Options for updating the allow/deny list.
@@ -823,7 +827,7 @@ export async function removeAllowList(
 export async function addDenyList(
     token: Token,
     sender: AccountAddress.Type,
-    targets: TokenHolder.Type | TokenHolder.Type[],
+    targets: AccountAddress.Type | AccountAddress.Type[],
     signer: AccountSigner,
     metadata?: TokenUpdateMetadata,
     { validate = false }: UpdateListOptions = {}
@@ -832,9 +836,9 @@ export async function addDenyList(
         await validateDenyListUpdate(token);
     }
 
-    const ops: TokenAddDenyListOperation[] = [targets]
-        .flat()
-        .map((target) => ({ [TokenOperationType.AddDenyList]: { target } }));
+    const ops: TokenAddDenyListOperation[] = [targets].flat().map((target) => ({
+        [TokenOperationType.AddDenyList]: { target: CborAccountAddress.fromAccountAddress(target) },
+    }));
     return sendOperations(token, sender, ops, signer, metadata);
 }
 
@@ -843,7 +847,7 @@ export async function addDenyList(
  *
  * @param {Token} token - The token for which to add the list entry.
  * @param {AccountAddress.Type} sender - The account address of the sender.
- * @param {TokenHolder.Type | TokenHolder.Type[]} targets - The account address(es) to be added to the list.
+ * @param {AccountAddress.Type | AccountAddress.Type[]} targets - The account address(es) to be added to the list.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @param {TokenUpdateMetadata} [metadata={ expiry: TransactionExpiry.futureMinutes(5) }] - The metadata for the token update.
  * @param {UpdateListOptions} [opts={ validate: false }] - Options for updating the allow/deny list.
@@ -854,7 +858,7 @@ export async function addDenyList(
 export async function removeDenyList(
     token: Token,
     sender: AccountAddress.Type,
-    targets: TokenHolder.Type | TokenHolder.Type[],
+    targets: AccountAddress.Type | AccountAddress.Type[],
     signer: AccountSigner,
     metadata?: TokenUpdateMetadata,
     { validate = false }: UpdateListOptions = {}
@@ -863,9 +867,9 @@ export async function removeDenyList(
         await validateDenyListUpdate(token);
     }
 
-    const ops: TokenRemoveDenyListOperation[] = [targets]
-        .flat()
-        .map((target) => ({ [TokenOperationType.RemoveDenyList]: { target } }));
+    const ops: TokenRemoveDenyListOperation[] = [targets].flat().map((target) => ({
+        [TokenOperationType.RemoveDenyList]: { target: CborAccountAddress.fromAccountAddress(target) },
+    }));
     return sendOperations(token, sender, ops, signer, metadata);
 }
 

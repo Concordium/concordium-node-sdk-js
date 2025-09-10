@@ -532,10 +532,14 @@ function tokenEventsAffectedAccounts(
 
             switch (event.tag) {
                 case TransactionEventTag.TokenTransfer:
-                    return addUnique(addresses, [event.to.address, event.from.address], AccountAddress.equals);
+                    return addUnique(
+                        addresses,
+                        [event.to?.address, event.from?.address].filter(isDefined),
+                        AccountAddress.equals
+                    );
                 case TransactionEventTag.TokenBurn:
                 case TransactionEventTag.TokenMint:
-                    return addUnique(addresses, [event.target.address], AccountAddress.equals);
+                    return addUnique(addresses, [event.target?.address].filter(isDefined), AccountAddress.equals);
                 case TransactionEventTag.TokenModuleEvent:
                     // This only includes the encoded events pertaining to list updates and token pausation,
                     // thus not affecting any account's balance

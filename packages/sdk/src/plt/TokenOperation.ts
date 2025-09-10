@@ -1,5 +1,5 @@
 import { TokenUpdatePayload } from '../types.js';
-import { Cbor, CborMemo, TokenAmount, TokenHolder, TokenId } from './index.js';
+import { Cbor, CborAccountAddress, CborMemo, TokenAmount, TokenId } from './index.js';
 
 /**
  * Enum representing the types of token operations.
@@ -25,7 +25,7 @@ export type TokenTransfer = {
     /** The amount to transfer. */
     amount: TokenAmount.Type;
     /** The recipient of the transfer. */
-    recipient: TokenHolder.Type;
+    recipient: CborAccountAddress.Type;
     /** An optional memo for the transfer. A string will be CBOR encoded, while raw bytes are included in the
      * transaction as is. */
     memo?: Memo;
@@ -68,7 +68,7 @@ export type TokenBurnOperation = TokenOperationGen<TokenOperationType.Burn, Toke
  */
 export type TokenListUpdate = {
     /** The target of the list update. */
-    target: TokenHolder.Type;
+    target: CborAccountAddress.Type;
 };
 
 /**
@@ -147,7 +147,7 @@ function parseTransfer(details: unknown): TokenTransfer {
         throw new Error(`Invalid transfer details: ${JSON.stringify(details)}. Expected an object.`);
     if (!('amount' in details) || !TokenAmount.instanceOf(details.amount))
         throw new Error(`Invalid transfer details: ${JSON.stringify(details)}. Expected 'amount' to be a TokenAmount`);
-    if (!('recipient' in details) || !TokenHolder.instanceOf(details.recipient))
+    if (!('recipient' in details) || !CborAccountAddress.instanceOf(details.recipient))
         throw new Error(
             `Invalid transfer details: ${JSON.stringify(details)}. Expected 'recipient' to be a TokenHolder`
         );
@@ -172,7 +172,7 @@ function parseSupplyUpdate(details: unknown): TokenSupplyUpdate {
 function parseListUpdate(details: unknown): TokenListUpdate {
     if (typeof details !== 'object' || details === null)
         throw new Error(`Invalid list update details: ${JSON.stringify(details)}. Expected an object.`);
-    if (!('target' in details) || !TokenHolder.instanceOf(details.target))
+    if (!('target' in details) || !CborAccountAddress.instanceOf(details.target))
         throw new Error(
             `Invalid list update details: ${JSON.stringify(details)}. Expected 'target' to be a TokenHolder`
         );

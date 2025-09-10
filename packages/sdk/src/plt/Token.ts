@@ -617,7 +617,7 @@ type TransferOtions = {
     validate?: boolean;
 };
 
-export type TokenTransferInput = Omit<TokenTransfer, 'recipient'> & {
+export type TransferInput = Omit<TokenTransfer, 'recipient'> & {
     /** The recipient of the transfer. */
     recipient: AccountAddress.Type;
 };
@@ -627,7 +627,7 @@ export type TokenTransferInput = Omit<TokenTransfer, 'recipient'> & {
  *
  * @param {Token} token - The token to transfer.
  * @param {AccountAddress.Type} sender - The account address of the sender.
- * @param {TokenTransferInput | TokenTransferInput[]} payload - The transfer payload.
+ * @param {TransferInput | TransferInput[]} payload - The transfer payload.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @param {TokenUpdateMetadata} [metadata={ expiry: TransactionExpiry.futureMinutes(5) }] - The metadata for the token update.
  * @param {TransferOtions} [opts={ autoScale: true, validate: false }] - Options for the transfer.
@@ -641,7 +641,7 @@ export type TokenTransferInput = Omit<TokenTransfer, 'recipient'> & {
 export async function transfer(
     token: Token,
     sender: AccountAddress.Type,
-    payload: TokenTransferInput | TokenTransferInput[],
+    payload: TransferInput | TransferInput[],
     signer: AccountSigner,
     metadata?: TokenUpdateMetadata,
     { autoScale = true, validate = false }: TransferOtions = {}

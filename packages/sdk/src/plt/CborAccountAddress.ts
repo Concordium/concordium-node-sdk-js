@@ -63,9 +63,7 @@ export function fromAccountAddress(address: AccountAddress.Type): CborAccountAdd
  */
 export function fromJSON(json: JSON): Type {
     if (json.coinInfo !== undefined && json.coinInfo !== CCD_NETWORK_ID) {
-        throw new Error(
-            `Unsupported coin info for account address: ${json.coinInfo}. Expected ${CCD_NETWORK_ID}.`
-        );
+        throw new Error(`Unsupported coin info for account address: ${json.coinInfo}. Expected ${CCD_NETWORK_ID}.`);
     }
     return new CborAccountAddress(AccountAddress.fromJSON(json.address), json.coinInfo);
 }

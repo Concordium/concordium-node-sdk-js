@@ -82,6 +82,7 @@ class CborContractAddress {
         return { index: this.index, subindex: this.#subindex };
     }
 
+    /** The subindex of the smart contract address */
     public get subindex(): bigint {
         return this.#subindex ?? 0n;
     }
@@ -91,6 +92,13 @@ class CborContractAddress {
  * CIS-7 CBOR representation of a `ContractAddress`.
  */
 export type Type = CborContractAddress;
+
+/**
+ * Type predicate for {@linkcode Type}.
+ *
+ * @param v - a value of unknown type to check
+ * @returns whether the type is an instance of {@linkcode Type}
+ */
 export const instanceOf = (v: unknown): v is CborContractAddress => v instanceof CborContractAddress;
 
 /**

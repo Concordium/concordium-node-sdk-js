@@ -42,7 +42,7 @@ describe('TokenHolder CBOR', () => {
 
     test('Account address cbor decoding without tagged-coininfo', () => {
         // Create a test address with known bytes
-        const originalAddress = TokenHolder.fromAccountAddress(
+        const originalAddress = TokenHolder.fromAccountAddressNoCoinInfo(
             AccountAddress.fromBuffer(new Uint8Array(32).fill(0x15))
         );
 

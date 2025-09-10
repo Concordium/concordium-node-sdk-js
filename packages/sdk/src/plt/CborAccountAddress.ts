@@ -64,7 +64,7 @@ export function fromAccountAddress(address: AccountAddress.Type): CborAccountAdd
 export function fromJSON(json: JSON): Type {
     if (json.coinInfo !== undefined && json.coinInfo !== CCD_NETWORK_ID) {
         throw new Error(
-            `Unsupported coin info for token holder account: ${json.coinInfo}. Expected ${CCD_NETWORK_ID}.`
+            `Unsupported coin info for account address: ${json.coinInfo}. Expected ${CCD_NETWORK_ID}.`
         );
     }
     return new CborAccountAddress(AccountAddress.fromJSON(json.address), json.coinInfo);
@@ -188,7 +188,7 @@ function fromCBORValueAccount(decoded: unknown): CborAccountAddress {
         !(addressBytes instanceof Uint8Array) ||
         addressBytes.byteLength !== AccountAddress.BYTES_LENGTH
     ) {
-        throw new Error('Invalid CBOR encoded token holder account: missing or invalid address bytes');
+        throw new Error('Invalid CBOR encoded account address: missing or invalid address bytes');
     }
 
     // Optional validation for coin information if present (key 1)

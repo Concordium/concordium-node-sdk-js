@@ -115,7 +115,7 @@ const TAGGED_COININFO = 40305;
 function toCBORValue(value: Account): Tag;
 function toCBORValue(value: Type): unknown;
 function toCBORValue(value: Type): unknown {
-    let mapContents : [number, any][];
+    let mapContents: [number, any][];
     if (value.coinInfo === undefined) {
         mapContents = [[3, value.address.decodedAddress]];
     } else {

@@ -6,6 +6,7 @@ export {
     registerCBOREncoder,
     registerCBORDecoder,
     fromAccountAddress,
+    fromAccountAddressNoCoinInfo,
     Account,
     AccountJSON,
     instanceOf,

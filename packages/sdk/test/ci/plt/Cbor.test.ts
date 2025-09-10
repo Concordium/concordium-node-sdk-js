@@ -1,4 +1,3 @@
-import { cborDecode } from '../../../src/index.ts';
 import * as Cbor from '../../../src/plt/Cbor.js';
 import * as CborMemo from '../../../src/plt/CborMemo.js';
 import * as TokenAmount from '../../../src/plt/TokenAmount.js';

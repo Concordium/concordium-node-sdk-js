@@ -22,6 +22,7 @@
   - `createCredentialTransaction` -> `createCredentialPayload`
   - `createCredentialTransactionNoSeed` -> `createCredentialPayloadNoSeed`
 - `CborAccountAddress` is now used instead of `TokenHolder` for CBOR encoded account addresses in PLT/CIS-7.
+- `Token` functions now take `AccountAddress` anywhere `TokenHolder` was previously used.
 
 #### GRPC API query response types
 

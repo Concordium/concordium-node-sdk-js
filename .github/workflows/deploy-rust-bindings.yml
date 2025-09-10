@@ -32,7 +32,7 @@ jobs:
         with:
           submodules: 'recursive'
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: yarn
@@ -117,7 +117,7 @@ jobs:
           name: Rust-Bindings Release v${{ steps.get_tag.outputs.tag }}
           draft: true
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: yarn

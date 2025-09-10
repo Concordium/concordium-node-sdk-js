@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+### Fixed
+
+- Fix decoding of `TokenAmount`s with 256 decimals.
+- Decoding of `TokenAmount`s with 0 decimals will give `0` decimals instead of `-0` decimals.
+- Decoding a `TokenHolderAccount` distinguishes whether the account includes coin info.
+
+### Breaking changes
+- `coinInfo` is a public field of `TokenHolderAccount`.
+
+### Added
+- `fromAccountAddressNoCoinInfo` to `TokenHolderAccount`.
+
 ## 10.0.2
 
 ### Fixed

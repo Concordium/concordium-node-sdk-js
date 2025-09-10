@@ -320,11 +320,11 @@ export function fromCBORValue(decoded: unknown): TokenAmount {
     if (exponent > 0) {
         throw new Error('Invalid CBOR encoded token amount: exponent cannot have a positive amount');
     }
-    if (exponent <= -MAX_U8) {
+    if (exponent < -MAX_U8) {
         throw new Error(`Invalid CBOR encoded token amount: exponent is too small (minimum value is -${MAX_U8})`);
     }
 
-    const decimals = -exponent;
+    const decimals = Math.abs(exponent);
     return create(typeof mantissa === 'bigint' ? mantissa : BigInt(mantissa), decimals);
 }
 

@@ -10,7 +10,7 @@ on:
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -23,7 +23,6 @@ concurrency:
 env:
   NODE_VERSION: 18.16.0
   RUST_VERSION: 1.73
-  RUST_FMT: nightly-2023-04-01-x86_64-unknown-linux-gnu
 
 jobs:
   build:
@@ -33,7 +32,7 @@ jobs:
         with:
           submodules: 'recursive'
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: yarn
@@ -104,6 +103,7 @@ jobs:
     environment: deploy
     outputs:
       npm_tag: ${{ steps.determine_npm_tag.outputs.npm_tag }}
+      version: ${{ steps.get_tag.outputs.tag }}
     steps:
       - name: Checkout sources
         uses: actions/checkout@v5
@@ -134,7 +134,7 @@ jobs:
           name: build-release
           path: packages/sdk
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: yarn
@@ -157,10 +157,8 @@ jobs:
   deploy-typedoc:
     needs:
       - upload-release
-    if: needs.upload-release.outputs.npm_tag == 'latest'
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
@@ -172,14 +170,52 @@ jobs:
           path: typedoc
           name: typedoc-build
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
+      # Clone old `gh-pages` branch so we can later build a list of
+      # available documentation versions.
+      - name: Clone old gh-pages content
+        run: |
+          # Make a local work folder
+          mkdir -p gh-pages
 
-      - name: Upload GH pages artifact
-        uses: actions/upload-pages-artifact@v3
+          # Copy its content into local `gh-pages` folder
+          git clone --branch gh-pages --depth 1 https://github.com/Concordium/concordium-node-sdk-js old-gh-pages
+          cp -r old-gh-pages/* gh-pages/
+
+      # Put new docs into a versioned subfolder
+      - name: Generate versioned subfolder
+        run: |
+          VERSION=${{ needs.upload-release.outputs.version }}
+          mkdir -p gh-pages/$VERSION
+          cp -r typedoc/* gh-pages/$VERSION
+
+      # Update the "latest" subfolder content with the newest doc version.
+      - name: Update `latest` subfolder content
+        if: needs.upload-release.outputs.npm_tag == 'latest'
+        run: |
+          mkdir -p gh-pages/latest
+          rm -rf gh-pages/latest/*
+          cp -r typedoc/* gh-pages/latest
+
+      # Generate list of available documentation versions.
+      # This needs to be done after the `gh-pages` branch has been fetched with the old docs.
+      - name: Generate docs index
+        run: |
+          echo "<!DOCTYPE html>" > gh-pages/index.html
+          echo "<html lang=\"en\"><head><meta charset=\"utf-8\"><title>Documentation Versions</title></head><body>" >> gh-pages/index.html
+          echo "<h1>Available Documentation Versions</h1><ul>" >> gh-pages/index.html
+
+          # Loop over all directories in gh-pages/
+          for d in gh-pages/*/ ; do
+            version=$(basename "$d")
+            echo "<li><a href=\"./$version/\">$version</a></li>" >> gh-pages/index.html
+          done
+
+          echo "</ul>" >> gh-pages/index.html
+          echo "</body></html>" >> gh-pages/index.html
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          path: './typedoc'
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./gh-pages
+          keep_files: true

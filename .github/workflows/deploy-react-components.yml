@@ -23,7 +23,6 @@ concurrency:
 env:
   NODE_VERSION: 18.16.0
   RUST_VERSION: 1.73
-  RUST_FMT: nightly-2023-04-01-x86_64-unknown-linux-gnu
 
 jobs:
   build:
@@ -33,7 +32,7 @@ jobs:
         with:
           submodules: 'recursive'
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: yarn
@@ -112,7 +111,7 @@ jobs:
           path: packages/react-components
           name: build-release
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: yarn

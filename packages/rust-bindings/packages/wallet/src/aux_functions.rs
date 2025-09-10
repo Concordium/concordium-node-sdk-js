@@ -114,16 +114,16 @@ fn get_net(net: &str) -> Result<Net> {
 #[derive(SerdeSerialize, SerdeDeserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CredentialInput {
-    ip_info:             IpInfo<constants::IpPairing>,
-    global_context:      GlobalContext<constants::ArCurve>,
-    ars_infos:           BTreeMap<ArIdentity, ArInfo<constants::ArCurve>>,
-    id_object:           IdentityObjectV1<constants::IpPairing, constants::ArCurve, AttributeKind>,
+    ip_info: IpInfo<constants::IpPairing>,
+    global_context: GlobalContext<constants::ArCurve>,
+    ars_infos: BTreeMap<ArIdentity, ArInfo<constants::ArCurve>>,
+    id_object: IdentityObjectV1<constants::IpPairing, constants::ArCurve, AttributeKind>,
     revealed_attributes: Vec<AttributeTag>,
-    seed_as_hex:         HexString,
-    net:                 String,
-    identity_index:      u32,
-    cred_number:         u8,
-    expiry:              TransactionTime,
+    seed_as_hex: HexString,
+    net: String,
+    identity_index: u32,
+    cred_number: u8,
+    expiry: TransactionTime,
 }
 
 pub fn create_credential_v1_aux(input: CredentialInput) -> Result<JsonString> {
@@ -227,7 +227,7 @@ pub fn generate_unsigned_credential_aux(input: &str) -> Result<JsonString> {
 
     let public_keys: Vec<VerifyKey> = try_get(&v, "publicKeys")?;
     let cred_key_info = CredentialPublicKeys {
-        keys:      build_key_map(&public_keys),
+        keys: build_key_map(&public_keys),
         threshold: try_get(&v, "threshold")?,
     };
 
@@ -323,7 +323,7 @@ pub fn get_credential_deployment_details_aux(
     let acc_cred = AccountCredential::Normal { cdi };
 
     let credential_message = AccountCredentialMessage {
-        credential:     acc_cred,
+        credential: acc_cred,
         message_expiry: TransactionTime { seconds: expiry },
     };
 
@@ -371,20 +371,20 @@ pub fn get_credential_deployment_info_aux(
 #[serde(rename_all = "camelCase")]
 pub struct IdProofInput {
     id_object: IdentityObjectV1<constants::IpPairing, constants::ArCurve, AttributeKind>,
-    global_context:          GlobalContext<constants::ArCurve>,
-    seed_as_hex:             String,
-    net:                     String,
+    global_context: GlobalContext<constants::ArCurve>,
+    seed_as_hex: String,
+    net: String,
     identity_provider_index: u32,
-    identity_index:          u32,
-    cred_number:             u8,
-    statement:               Statement<constants::ArCurve, AttributeKind>,
-    challenge:               String,
+    identity_index: u32,
+    cred_number: u8,
+    statement: Statement<constants::ArCurve, AttributeKind>,
+    challenge: String,
 }
 
 #[derive(SerdeSerialize, SerdeDeserialize)]
 struct IdProofOutput {
     credential: String,
-    proof:      Versioned<Proof<constants::ArCurve, AttributeKind>>,
+    proof: Versioned<Proof<constants::ArCurve, AttributeKind>>,
 }
 
 pub fn create_id_proof_aux(input: IdProofInput) -> Result<JsonString> {
@@ -438,7 +438,7 @@ pub fn create_id_proof_aux(input: IdProofInput) -> Result<JsonString> {
 
     let out = IdProofOutput {
         credential: base16_encode_string(&credential),
-        proof:      Versioned::new(VERSION_0, proof),
+        proof: Versioned::new(VERSION_0, proof),
     };
 
     Ok(json!(out).to_string())
@@ -450,7 +450,9 @@ struct Web3SecretKey(
 );
 
 impl Web3IdSigner for Web3SecretKey {
-    fn id(&self) -> concordium_base::ed25519::PublicKey { self.0.id() }
+    fn id(&self) -> concordium_base::ed25519::PublicKey {
+        self.0.id()
+    }
 
     fn sign(&self, msg: &impl AsRef<[u8]>) -> concordium_base::ed25519::Signature {
         self.0.sign(msg)
@@ -460,8 +462,8 @@ impl Web3IdSigner for Web3SecretKey {
 #[derive(SerdeDeserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Web3IdProofInput {
-    request:           Request<constants::ArCurve, Web3IdAttribute>,
-    global_context:    GlobalContext<constants::ArCurve>,
+    request: Request<constants::ArCurve, Web3IdAttribute>,
+    global_context: GlobalContext<constants::ArCurve>,
     commitment_inputs:
         Vec<OwnedCommitmentInputs<constants::ArCurve, Web3IdAttribute, Web3SecretKey>>,
 }
@@ -491,28 +493,28 @@ pub fn serialize_credential_deployment_payload_aux(
 #[derive(SerdeSerialize, SerdeDeserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UnsignedCredentialInput {
-    ip_info:                  IpInfo<constants::IpPairing>,
-    global_context:           GlobalContext<constants::ArCurve>,
-    ars_infos:                BTreeMap<ArIdentity, ArInfo<constants::ArCurve>>,
+    ip_info: IpInfo<constants::IpPairing>,
+    global_context: GlobalContext<constants::ArCurve>,
+    ars_infos: BTreeMap<ArIdentity, ArInfo<constants::ArCurve>>,
     id_object: IdentityObjectV1<constants::IpPairing, constants::ArCurve, AttributeKind>,
-    id_cred_sec:              PedersenValue<ArCurve>,
-    prf_key:                  prf::SecretKey<ArCurve>,
+    id_cred_sec: PedersenValue<ArCurve>,
+    prf_key: prf::SecretKey<ArCurve>,
     sig_retrievel_randomness: String,
-    credential_public_keys:   CredentialPublicKeys,
-    attribute_randomness:     BTreeMap<AttributeTag, PedersenRandomness<ArCurve>>,
-    revealed_attributes:      Vec<AttributeTag>,
-    cred_number:              u8,
+    credential_public_keys: CredentialPublicKeys,
+    attribute_randomness: BTreeMap<AttributeTag, PedersenRandomness<ArCurve>>,
+    revealed_attributes: Vec<AttributeTag>,
+    cred_number: u8,
 }
 
 #[derive(SerdeSerialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BakerKeys {
     #[serde(flatten)]
-    keys_payload:         ConfigureBakerKeysPayload,
+    keys_payload: ConfigureBakerKeysPayload,
     #[serde(serialize_with = "base16_encode", rename = "electionPrivateKey")]
     election_private_key: BakerElectionSignKey,
     #[serde(serialize_with = "base16_encode", rename = "signatureSignKey")]
-    signature_sign_key:   BakerSignatureSignKey,
+    signature_sign_key: BakerSignatureSignKey,
     #[serde(serialize_with = "base16_encode", rename = "aggregationSignKey")]
     aggregation_sign_key: BakerAggregationSignKey,
 }
@@ -533,14 +535,14 @@ pub fn generate_baker_keys(sender: AccountAddress) -> Result<JsonString> {
 #[derive(SerdeDeserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct VerifyWeb3IdCredentialSignatureInput {
-    global_context:    GlobalContext<constants::ArCurve>,
-    values:            BTreeMap<String, Web3IdAttribute>,
-    randomness:        BTreeMap<String, PedersenRandomness<constants::ArCurve>>,
+    global_context: GlobalContext<constants::ArCurve>,
+    values: BTreeMap<String, Web3IdAttribute>,
+    randomness: BTreeMap<String, PedersenRandomness<constants::ArCurve>>,
     #[serde(serialize_with = "base16_encode", deserialize_with = "base16_decode")]
-    signature:         concordium_base::ed25519::Signature,
-    holder:            CredentialHolderId,
+    signature: concordium_base::ed25519::Signature,
+    holder: CredentialHolderId,
     issuer_public_key: IssuerKey,
-    issuer_contract:   ContractAddress,
+    issuer_contract: ContractAddress,
 }
 
 pub fn verify_web3_id_credential_signature_aux(

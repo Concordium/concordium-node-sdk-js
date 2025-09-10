@@ -5,7 +5,7 @@ import { MAX_U64 } from '../constants.js';
 import { ContractAddress } from '../types/index.js';
 
 /**
- * Enum representing the types of errors that can occur with token amounts.
+ * Enum representing the types of errors that can occur when creating a contract address.
  */
 export enum ErrorType {
     /** Error type indicating a contract index exceeds the maximum allowed value. */
@@ -19,7 +19,7 @@ export enum ErrorType {
  */
 export class Err extends Error {
     private constructor(
-        /** The {@linkcode ErrorType} of the error. Can be used as to distinguish different types of errors. */
+        /** The {@linkcode ErrorType} of the error. Can be used to distinguish different types of errors. */
         public readonly type: ErrorType,
         message: string
     ) {
@@ -28,14 +28,14 @@ export class Err extends Error {
     }
 
     /**
-     * Creates a CborContractAddress.Err indicating that the token amount exceeds the maximum allowed value.
+     * Creates a CborContractAddress.Err indicating that the contract address index exceeds the maximum allowed value.
      */
     public static exceedsMaxValue(): Err {
         return new Err(ErrorType.EXCEEDS_MAX_VALUE, `Contract indices cannot be larger than ${MAX_U64}`);
     }
 
     /**
-     * Creates a CborContractAddress.Err indicating that the token amount/decimals is negative.
+     * Creates a CborContractAddress.Err indicating that the contract address index is negative.
      */
     public static negative(): Err {
         return new Err(ErrorType.NEGATIVE, 'Contract indices cannot be negative');
@@ -102,7 +102,7 @@ export type Type = CborContractAddress;
 export const instanceOf = (v: unknown): v is CborContractAddress => v instanceof CborContractAddress;
 
 /**
- * The JSON representation of a {@linkcode Type} cbor memo.
+ * The JSON representation of a {@linkcode Type} cbor contract address.
  * It's up to the user to process this, as bigints are not JSON serializable.
  */
 export type JSON = { index: bigint; subindex?: bigint };

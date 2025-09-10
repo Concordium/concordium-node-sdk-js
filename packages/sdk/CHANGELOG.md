@@ -2,8 +2,16 @@
 
 ## Unreleased
 
+### Fixed
+
+- Fix decoding of `TokenAmount`s with 256 decimals.
+- Decoding of `TokenAmount`s with 0 decimals will give `0` decimals instead of `-0` decimals.
+- Decoding a `TokenHolderAccount` distinguishes whether the account includes coin info.
+
 ### Added
 
+- `fromAccountAddressNoCoinInfo` to `TokenHolderAccount`.
+- `coinInfo` is a public field of `TokenHolderAccount`.
 - `Upward<T>` as a means of representing possibly unknown variants of a type encounted when querying the GRPC API
   of *future* Concordium node versions. This is a type alias of `T | null`, i.e. unknown variants will be represented
   as `null`.

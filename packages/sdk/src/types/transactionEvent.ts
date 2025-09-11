@@ -1,8 +1,8 @@
-import * as PLT from '../plt/index.js';
+import type { Upward } from '../grpc/index.js';
+import type * as PLT from '../plt/index.js';
 import type {
     Address,
     BakerId,
-    ContractVersion,
     DelegatorId,
     EventDelegationTarget,
     HexString,
@@ -105,7 +105,7 @@ export interface UpdatedEvent {
     address: ContractAddress.Type;
     instigator: Address;
     amount: CcdAmount.Type;
-    contractVersion: ContractVersion;
+    contractVersion: number;
     message: Parameter.Type;
     receiveName: ReceiveName.Type;
     events: ContractEvent.Type[];
@@ -138,7 +138,7 @@ export interface ContractInitializedEvent {
     amount: CcdAmount.Type;
     initName: InitName.Type;
     events: HexString[];
-    contractVersion: ContractVersion;
+    contractVersion: number;
     ref: ModuleRef;
 }
 
@@ -298,7 +298,13 @@ export interface BakerSetOpenStatusEvent {
     tag: TransactionEventTag.BakerSetOpenStatus;
     bakerId: BakerId;
     account: AccountAddress.Type;
-    openStatus: OpenStatusText;
+    /**
+     * The status of validator pool
+     *
+     * **Please note**, this can possibly be unknown if the SDK is not fully compatible with the Concordium
+     * node queried, in which case `null` is returned.
+     */
+    openStatus: Upward<OpenStatusText>;
 }
 
 export interface BakerSetMetadataURLEvent {
@@ -347,7 +353,13 @@ export interface BakerResumedEvent {
 export interface UpdateEnqueuedEvent {
     tag: TransactionEventTag.UpdateEnqueued;
     effectiveTime: number;
-    payload: UpdateInstructionPayload;
+    /**
+     * The payload of the enqueued update.
+     *
+     * **Please note**, this can possibly be unknown if the SDK is not fully compatible with the Concordium
+     * node queried, in which case `null` is returned.
+     */
+    payload: Upward<UpdateInstructionPayload>;
 }
 
 /**
@@ -372,10 +384,20 @@ export type TokenTransferEvent = {
     tag: TransactionEventTag.TokenTransfer;
     /** The token ID of the token the event originates from */
     tokenId: PLT.TokenId.Type;
-    /** The token holder sending the tokens. */
-    from: PLT.TokenHolder.Type;
-    /** The token holder receiving the tokens. */
-    to: PLT.TokenHolder.Type;
+    /**
+     * The token holder sending the tokens.
+     *
+     * **Please note**, this can possibly be unknown if the SDK is not fully compatible with the Concordium
+     * node queried, in which case `null` is returned.
+     */
+    from: Upward<PLT.TokenHolder.Type>;
+    /**
+     * The token holder receiving the tokens.
+     *
+     * **Please note**, this can possibly be unknown if the SDK is not fully compatible with the Concordium
+     * node queried, in which case `null` is returned.
+     */
+    to: Upward<PLT.TokenHolder.Type>;
     /** The amount of tokens transferred. */
     amount: PLT.TokenAmount.Type;
     /** An optional memo associated with the transfer. */
@@ -390,8 +412,13 @@ export type TokenMintEvent = {
     tag: TransactionEventTag.TokenMint;
     /** The token ID of the token the event originates from */
     tokenId: PLT.TokenId.Type;
-    /** The token holder whose supply is updated. */
-    target: PLT.TokenHolder.Type;
+    /**
+     * The token holder whose supply is updated.
+     *
+     * **Please note**, this can possibly be unknown if the SDK is not fully compatible with the Concordium
+     * node queried, in which case `null` is returned.
+     */
+    target: Upward<PLT.TokenHolder.Type>;
     /** The amount by which the token supply is updated. */
     amount: PLT.TokenAmount.Type;
 };
@@ -404,8 +431,13 @@ export type TokenBurnEvent = {
     tag: TransactionEventTag.TokenBurn;
     /** The token ID of the token the event originates from */
     tokenId: PLT.TokenId.Type;
-    /** The token holder whose supply is updated. */
-    target: PLT.TokenHolder.Type;
+    /**
+     * The token holder whose supply is updated.
+     *
+     * **Please note**, this can possibly be unknown if the SDK is not fully compatible with the Concordium
+     * node queried, in which case `null` is returned.
+     */
+    target: Upward<PLT.TokenHolder.Type>;
     /** The amount by which the token supply is updated. */
     amount: PLT.TokenAmount.Type;
 };

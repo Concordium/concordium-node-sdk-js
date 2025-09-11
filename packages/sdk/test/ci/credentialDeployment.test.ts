@@ -8,16 +8,16 @@ import { getCredentialDeploymentSignDigest } from '../../src/serialization.js';
 import {
     AttributeKey,
     BlockItemKind,
-    CredentialDeploymentTransaction,
+    CredentialDeploymentPayload,
     IdentityInput,
     IdentityObjectV1,
     VerifyKey,
 } from '../../src/types.js';
 import {
     CredentialInput,
-    createCredentialDeploymentTransaction,
-    createCredentialTransaction,
-    createCredentialTransactionNoSeed,
+    createCredentialDeploymentPayload,
+    createCredentialPayload,
+    createCredentialPayloadNoSeed,
 } from '../../src/wasm/credentialDeploymentTransactions.js';
 import { deserializeTransaction } from '../../src/wasm/deserialization.js';
 import { serializeCredentialDeploymentTransactionForSubmission } from '../../src/wasm/serialization.js';
@@ -46,7 +46,7 @@ function createCredentialInput(revealedAttributes: AttributeKey[], idObject: Ide
 
 // This test was generated on an older version of the SDK to verify that the serialization remains the same.
 test('Test serialize v0 credential transaction', async () => {
-    const tx: CredentialDeploymentTransaction = JSON.parse(fs.readFileSync('./test/ci/resources/cdt.json').toString());
+    const tx: CredentialDeploymentPayload = JSON.parse(fs.readFileSync('./test/ci/resources/cdt.json').toString());
     tx.expiry = TransactionExpiry.fromEpochSeconds(tx.expiry as unknown as number); // convert JSON `TransactionExpiry`.
     const hashToSign = getCredentialDeploymentSignDigest(tx);
 
@@ -91,7 +91,7 @@ test('test create + deserialize v0 credentialDeployment', async () => {
     const revealedAttributes: AttributeKey[] = ['firstName', 'nationality'];
 
     const expiry = TransactionExpiry.futureMinutes(60);
-    const credentialDeploymentTransaction: CredentialDeploymentTransaction = createCredentialDeploymentTransaction(
+    const credentialDeploymentTransaction: CredentialDeploymentPayload = createCredentialDeploymentPayload(
         identityInput,
         cryptographicParameters,
         threshold,
@@ -135,7 +135,7 @@ test('Test createCredentialTransaction', () => {
     const revealedAttributes: AttributeKey[] = ['firstName'];
     const idObject = JSON.parse(fs.readFileSync('./test/ci/resources/identity-object.json').toString()).value;
 
-    const output = createCredentialTransaction(
+    const output = createCredentialPayload(
         createCredentialInput(revealedAttributes, idObject),
         TransactionExpiry.fromEpochSeconds(expiry)
     );
@@ -144,7 +144,7 @@ test('Test createCredentialTransaction', () => {
     expect(cdi.credId).toEqual(
         'b317d3fea7de56f8c96f6e72820c5cd502cc0eef8454016ee548913255897c6b52156cc60df965d3efb3f160eff6ced4'
     );
-    expect(cdi.credentialPublicKeys.keys[0].verifyKey).toEqual(
+    expect(cdi.credentialPublicKeys.keys[0]!.verifyKey).toEqual(
         '29723ec9a0b4ca16d5d548b676a1a0adbecdedc5446894151acb7699293d69b1'
     );
     expect(cdi.credentialPublicKeys.threshold).toEqual(1);
@@ -175,13 +175,13 @@ test('Test createCredentialTransactionNoSeed lastname with special characters', 
     const input = JSON.parse(fs.readFileSync('./test/ci/resources/credential-input-no-seed.json').toString());
 
     const expiry = 1722939941n;
-    const output = createCredentialTransactionNoSeed(input, TransactionExpiry.fromEpochSeconds(expiry));
+    const output = createCredentialPayloadNoSeed(input, TransactionExpiry.fromEpochSeconds(expiry));
     const cdi = output.unsignedCdi;
 
     expect(cdi.credId).toEqual(
         '930e1e148d2a08b14ed3b5569d4768c96dbea5f540822ee38a6c52ca6c172be408ca4b78d6e2956cfad157bd02804c2c'
     );
-    expect(cdi.credentialPublicKeys.keys[0].verifyKey).toEqual(
+    expect(cdi.credentialPublicKeys.keys[0]!.verifyKey).toEqual(
         '3522291ef370e89424a2ed8a9e440963a783aec4e34377192360f763e1671d77'
     );
     expect(cdi.credentialPublicKeys.threshold).toEqual(1);

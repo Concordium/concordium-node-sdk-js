@@ -19,6 +19,7 @@ type TokenHolderAccountJSON = TokenHolder<'account'> & {
 
 class TokenHolderAccount implements TokenHolder<'account'> {
     public readonly type = 'account';
+
     constructor(
         /** The address of the account holding the token. */
         public readonly address: AccountAddress.Type

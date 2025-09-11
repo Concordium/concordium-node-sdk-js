@@ -1,7 +1,7 @@
 import { Buffer } from 'buffer/index.js';
 import { decode, encode } from 'cbor2';
 
-import { CborAccountAddress } from '../../../src/pub/plt.ts';
+import { CborAccountAddress } from '../../../src/plt/index.ts';
 import { AccountAddress } from '../../../src/types/index.ts';
 
 describe('PLT CborAccountAddress', () => {
@@ -42,7 +42,7 @@ describe('PLT CborAccountAddress', () => {
 
     test('Account address cbor decoding without tagged-coininfo', () => {
         // Create a test address with known bytes
-        const originalAddress = CborAccountAddress.fromAccountAddress(
+        const originalAddress = CborAccountAddress.fromAccountAddressNoCoinInfo(
             AccountAddress.fromBuffer(new Uint8Array(32).fill(0x15))
         );
 

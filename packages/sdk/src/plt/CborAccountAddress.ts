@@ -58,10 +58,6 @@ export function fromAccountAddress(address: AccountAddress.Type): CborAccountAdd
     return new CborAccountAddress(address, CCD_NETWORK_ID);
 }
 
-export function fromAccountAddressNoCoinInfo(address: AccountAddress.Type): CborAccountAddress {
-    return new CborAccountAddress(address, undefined);
-}
-
 /**
  * Recreate a {@link Type} from its JSON form.
  * @throws {Error} If the supplied coinInfo is present and not the Concordium network id.

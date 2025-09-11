@@ -1,4 +1,5 @@
-import { Cbor, CreatePLTPayload, TokenAmount, TokenHolder, TokenMetadataUrl } from './index.js';
+import { MAX_U8 } from '../constants.js';
+import { Cbor, CborAccountAddress, CreatePLTPayload, TokenAmount, TokenMetadataUrl } from './index.js';
 
 /**
  * The Token Module state represents global state information that is maintained by the Token Module,
@@ -19,7 +20,7 @@ export type TokenModuleState = {
     /** A URL pointing to the metadata of the token. */
     metadata: TokenMetadataUrl.Type;
     /** The governance account for the token. */
-    governanceAccount: TokenHolder.Type;
+    governanceAccount: CborAccountAddress.Type;
     /** Whether the token supports an allow list */
     allowList?: boolean;
     /** Whether the token supports an deny list */
@@ -65,7 +66,7 @@ export type TokenInitializationParameters = {
     /** A URL pointing to the metadata of the token. */
     metadata: TokenMetadataUrl.Type;
     /** The governance account for the token. */
-    governanceAccount: TokenHolder.Type;
+    governanceAccount: CborAccountAddress.Type;
     /** Whether the token supports an allow list */
     allowList?: boolean;
     /** Whether the token supports an deny list */
@@ -89,6 +90,9 @@ export function createPltPayload(
     payload: Omit<CreatePLTPayload, 'initializationParameters'>,
     params: TokenInitializationParameters
 ): CreatePLTPayload {
+    if (payload.decimals < 0 || payload.decimals > MAX_U8) {
+        throw new Error('Token decimals must be in the range 0..255 (inclusive).');
+    }
     return {
         ...payload,
         initializationParameters: Cbor.encode(params),

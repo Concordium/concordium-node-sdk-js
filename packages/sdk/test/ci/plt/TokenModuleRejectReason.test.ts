@@ -2,6 +2,7 @@ import {
     AddressNotFoundDetails,
     AddressNotFoundRejectReason,
     Cbor,
+    CborAccountAddress,
     DeserializationFailureDetails,
     DeserializationFailureRejectReason,
     EncodedTokenModuleRejectReason,
@@ -12,7 +13,6 @@ import {
     TokenAmount,
     TokenBalanceInsufficientDetails,
     TokenBalanceInsufficientRejectReason,
-    TokenHolder,
     TokenId,
     TokenRejectReasonType,
     UnknownTokenRejectReason,
@@ -35,7 +35,7 @@ describe('PLT TokenModuleRejectReason', () => {
         const addrBytes = new Uint8Array(32).fill(0x11);
         const details: AddressNotFoundDetails = {
             index: 2,
-            address: TokenHolder.fromAccountAddress(AccountAddress.fromBuffer(addrBytes)),
+            address: CborAccountAddress.fromAccountAddress(AccountAddress.fromBuffer(addrBytes)),
         };
         const encoded: EncodedTokenModuleRejectReason = {
             tokenId: dummyTokenId(),
@@ -45,7 +45,6 @@ describe('PLT TokenModuleRejectReason', () => {
         const parsed = parseTokenModuleRejectReason(encoded) as AddressNotFoundRejectReason;
         expect(parsed.type).toBe(TokenRejectReasonType.AddressNotFound);
         expect(parsed.details.index).toBe(2);
-        expect(parsed.details.address.type).toBe('account');
     });
 
     it('parses tokenBalanceInsufficient correctly', () => {
@@ -94,7 +93,7 @@ describe('PLT TokenModuleRejectReason', () => {
         const addrBytes = new Uint8Array(32).fill(0x22);
         const details: OperationNotPermittedDetails = {
             index: 5,
-            address: TokenHolder.fromAccountAddress(AccountAddress.fromBuffer(addrBytes)),
+            address: CborAccountAddress.fromAccountAddress(AccountAddress.fromBuffer(addrBytes)),
             reason: 'paused',
         };
         const encoded: EncodedTokenModuleRejectReason = {

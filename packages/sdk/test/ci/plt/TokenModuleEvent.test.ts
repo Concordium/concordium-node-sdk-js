@@ -1,7 +1,7 @@
 import { AccountAddress, EncodedTokenModuleEvent, TransactionEventTag } from '../../../src/index.ts';
 import {
     Cbor,
-    TokenHolder,
+    CborAccountAddress,
     TokenId,
     TokenListUpdateEventDetails,
     TokenPauseEventDetails,
@@ -13,7 +13,7 @@ describe('PLT TokenModuleEvent', () => {
         it(`parses ${type} events correctly`, () => {
             const accountBytes = new Uint8Array(32).fill(targetValue);
             const details: TokenListUpdateEventDetails = {
-                target: TokenHolder.fromAccountAddress(AccountAddress.fromBuffer(accountBytes)),
+                target: CborAccountAddress.fromAccountAddress(AccountAddress.fromBuffer(accountBytes)),
             };
             const validEvent: EncodedTokenModuleEvent = {
                 tag: TransactionEventTag.TokenModuleEvent,
@@ -27,7 +27,6 @@ describe('PLT TokenModuleEvent', () => {
 
             const parsedEvent = parseTokenModuleEvent(validEvent)!;
             expect(parsedEvent.type).toEqual(type);
-            expect((parsedEvent.details as TokenListUpdateEventDetails).target.type).toEqual('account');
             expect((parsedEvent.details as TokenListUpdateEventDetails).target.address.decodedAddress).toEqual(
                 new Uint8Array(32).fill(targetValue)
             );

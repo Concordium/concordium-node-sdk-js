@@ -1,5 +1,5 @@
 import { cborDecode } from '../types/cbor.js';
-import { TokenAmount, TokenHolder } from './index.js';
+import { CborAccountAddress, TokenAmount } from './index.js';
 import { EncodedTokenModuleRejectReason } from './types.js';
 
 export enum TokenRejectReasonType {
@@ -33,7 +33,7 @@ export type AddressNotFoundDetails = {
     /** The index in the list of operations of the failing operation. */
     index: number;
     /** The address that could not be resolved. */
-    address: TokenHolder.Type;
+    address: CborAccountAddress.Type;
 };
 
 /**
@@ -111,7 +111,7 @@ export type OperationNotPermittedDetails = {
     /** The index in the list of operations of the failing operation. */
     index: number;
     /** (Optionally) the address that does not have the necessary permissions to perform the operation. */
-    address?: TokenHolder.Type;
+    address?: CborAccountAddress.Type;
     /** The reason why the operation is not permitted. */
     reason?: string;
 };
@@ -167,8 +167,10 @@ function parseAddressNotFound(decoded: unknown): AddressNotFoundDetails {
         throw new Error(`Invalid reason details: ${JSON.stringify(decoded)}. Expected 'index' to be a number`);
     }
     // required
-    if (!('address' in decoded) || !TokenHolder.instanceOf(decoded.address)) {
-        throw new Error(`Invalid reason details: ${JSON.stringify(decoded)}. Expected 'address' to be a TokenHolder`);
+    if (!('address' in decoded) || !CborAccountAddress.instanceOf(decoded.address)) {
+        throw new Error(
+            `Invalid reason details: ${JSON.stringify(decoded)}. Expected 'address' to be a CborAccountAddress`
+        );
     }
 
     return decoded as AddressNotFoundDetails;
@@ -269,9 +271,9 @@ function parseOperationNotPermitted(decoded: unknown): OperationNotPermittedDeta
         throw new Error(`Invalid reason details: ${JSON.stringify(decoded)}. Expected 'index' to be a number`);
     }
     // optional
-    if ('address' in decoded && !TokenHolder.instanceOf(decoded.address)) {
+    if ('address' in decoded && !CborAccountAddress.instanceOf(decoded.address)) {
         throw new Error(
-            `Invalid reason details: ${JSON.stringify(decoded)}. Expected 'address' to be a TokenHolder if present`
+            `Invalid reason details: ${JSON.stringify(decoded)}. Expected 'address' to be a CborAccountAddress if present`
         );
     }
     // optional

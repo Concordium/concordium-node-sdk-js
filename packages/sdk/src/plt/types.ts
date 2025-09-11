@@ -67,7 +67,8 @@ export type CreatePLTPayload = {
     /**
      * The number of decimal places used in the representation of amounts of this token. This determines the smallest
      * representable fraction of the token.
-     * This can be at most `255`.
+     *
+     * This MUST be an integer in the range `0..255` (inclusive).
      */
     decimals: number;
     /** The module specific initialization parameters. */

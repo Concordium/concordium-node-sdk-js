@@ -1,7 +1,7 @@
 import { EncodedTokenModuleEvent, TransactionEventTag } from '../types.js';
 import { cborDecode } from '../types/cbor.js';
 import { TokenOperationType } from './TokenOperation.js';
-import { TokenHolder, TokenId } from './index.js';
+import { CborAccountAddress, TokenId } from './index.js';
 
 type GenTokenModuleEvent<E extends TokenOperationType, T extends Object> = {
     /** The tag of the event. */
@@ -33,7 +33,7 @@ export type UnknownTokenModuleEvent = {
  */
 export type TokenListUpdateEventDetails = {
     /** The target of the list update. */
-    target: TokenHolder.Type;
+    target: CborAccountAddress.Type;
 };
 
 /**
@@ -93,7 +93,7 @@ function parseTokenListUpdateEventDetails(decoded: unknown): TokenListUpdateEven
     if (typeof decoded !== 'object' || decoded === null) {
         throw new Error(`Invalid event details: ${JSON.stringify(decoded)}. Expected an object.`);
     }
-    if (!('target' in decoded && TokenHolder.instanceOf(decoded.target))) {
+    if (!('target' in decoded && CborAccountAddress.instanceOf(decoded.target))) {
         throw new Error(`Invalid event details: ${JSON.stringify(decoded)}. Expected 'target' to be a TokenHolder`);
     }
 

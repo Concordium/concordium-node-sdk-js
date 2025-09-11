@@ -19,6 +19,7 @@
 - `parseTokenUpdatePayload`, which decodes the CBOR encoded operations and returns a corresponding payload with the
   operations decoded into `(TokenOperation | UnknownTokenOperation)[]`
 - `parseTokenModuleRejectReason`, which decodes `Cbor.Type` into `TokenModuleRejectReason | UnknownTokenModuleRejectReason`.
+- `CborContractAddress` which represents CIS-7 compatible contract addresses.
 
 ### Breaking changes
 
@@ -29,6 +30,8 @@
   - `createCredentialDeploymentTransaction` -> `createCredentialDeploymentPayload`
   - `createCredentialTransaction` -> `createCredentialPayload`
   - `createCredentialTransactionNoSeed` -> `createCredentialPayloadNoSeed`
+- `CborAccountAddress` is now used instead of `TokenHolder` for CBOR encoded account addresses in PLT/CIS-7.
+- `Token` functions now take `AccountAddress` anywhere `TokenHolder` was previously used.
 
 #### GRPC API query response types
 

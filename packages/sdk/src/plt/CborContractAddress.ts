@@ -3,6 +3,7 @@ import { encode, registerEncoder } from 'cbor2/encoder';
 
 import { MAX_U64 } from '../constants.js';
 import { ContractAddress } from '../types/index.js';
+import { isDefined } from '../util.ts';
 
 /**
  * Enum representing the types of errors that can occur when creating a contract address.
@@ -54,11 +55,11 @@ class CborContractAddress {
         /** The subindex of the smart contract address. Interpreted as `0` if not specified. */
         public readonly subindex?: bigint
     ) {
-        const sub = subindex ?? 0n;
-        if (index < 0n || sub < 0n) {
+        const values = [index, subindex].filter(isDefined);
+        if (values.some((v) => v < 0n)) {
             throw Err.negative();
         }
-        if (index > MAX_U64 || sub > MAX_U64) {
+        if (values.some((v) => v > MAX_U64)) {
             throw Err.exceedsMaxValue();
         }
     }
@@ -68,7 +69,7 @@ class CborContractAddress {
      * @returns {string} The string representation.
      */
     public toString(): string {
-        return `<${this.index}, ${this.subindex ?? 0}>`;
+        return toContractAddress(this).toString();
     }
 
     /**
@@ -107,7 +108,7 @@ type NumLike = string | number | bigint;
  * Create a CBOR-compatible contract address from numeric index (and optional subindex).
  *
  * @param index Index of the contract (string | number | bigint accepted, coerced via BigInt()).
- * @param subindex Optional subindex of the contract (same coercion rules). When omitted, defaults to 0.
+ * @param subindex Optional subindex of the contract (same coercion rules). If `0`, the value is omitted.
  *
  * @returns CborContractAddress instance representing the provided (index, subindex).
  * @throws {Err} If index or subindex is negative ({@link Err.negative}).
@@ -117,6 +118,12 @@ export function create(index: NumLike, subindex?: NumLike): CborContractAddress 
     if (subindex === undefined) {
         return new CborContractAddress(BigInt(index));
     }
+
+    const sub = BigInt(subindex);
+    if (sub === 0n) {
+        return new CborContractAddress(BigInt(index));
+    }
+
     return new CborContractAddress(BigInt(index), BigInt(subindex));
 }
 
@@ -147,20 +154,25 @@ export function toContractAddress(address: CborContractAddress): ContractAddress
  * @returns Corresponding CborContractAddress instance.
  */
 export function fromJSON(address: JSON): CborContractAddress {
-    return create(address.index, address.subindex);
+    if (address.subindex === undefined || address.subindex === null) {
+        return new CborContractAddress(BigInt(address.index));
+    }
+    return new CborContractAddress(BigInt(address.index), BigInt(address.subindex));
 }
 
 const TAGGED_CONTRACT_ADDRESS = 40919;
 
 /**
- * Produce the tagged CBOR value representation (tag + contents array) for a contract address.
- * Tag format: 40919([index, subindex]). Subindex defaults to 0 if absent.
+ * Produce the tagged CBOR value representation (tag + contents) for a contract address.
+ * Tag format simple: 40919(index).
+ * Tag format full: 40919([index, subindex]).
  *
  * @param address The CBOR contract address wrapper instance.
  * @returns cbor2.Tag carrying the encoded address.
  */
 export function toCBORValue(address: CborContractAddress): Tag {
-    return new Tag(TAGGED_CONTRACT_ADDRESS, [address.index, address.subindex]);
+    let contents = address.subindex === undefined ? address.index : [address.index, address.subindex];
+    return new Tag(TAGGED_CONTRACT_ADDRESS, contents);
 }
 
 /**
@@ -208,8 +220,9 @@ function fromCBORValue(decoded: unknown): CborContractAddress {
     const validateUint = (val: unknown): val is number | bigint => typeof val === 'number' || typeof val === 'bigint';
 
     const value = decoded.contents;
-    if (Array.isArray(value) && value.length === 2 && value.every(validateUint)) return create(value[0], value[1]);
-    else if (validateUint(value)) return create(value);
+    if (Array.isArray(value) && value.length === 2 && value.every(validateUint))
+        return new CborContractAddress(BigInt(value[0]), BigInt(value[1]));
+    else if (validateUint(value)) return new CborContractAddress(BigInt(value));
     else throw new Error('Invalid CBOR encoded contract address: expected uint value or tuple with 2 uint values.');
 }
 

@@ -11,7 +11,15 @@ describe('PLT CborContractAddress', () => {
     test('create basic (no explicit subindex) and toString/toJSON', () => {
         const addr = CborContractAddress.create(42n);
         expect(addr.index).toBe(42n);
-        expect(addr.subindex).toBe(0n); // default
+        expect(addr.subindex).toBe(undefined);
+        expect(addr.toString()).toBe('<42, 0>');
+        expect(addr.toJSON()).toEqual({ index: 42n });
+    });
+
+    test('create with explicit subindex 0 and toString/toJSON', () => {
+        const addr = CborContractAddress.create(42n, 0n);
+        expect(addr.index).toBe(42n);
+        expect(addr.subindex).toBe(undefined);
         expect(addr.toString()).toBe('<42, 0>');
         expect(addr.toJSON()).toEqual({ index: 42n });
     });
@@ -56,7 +64,7 @@ describe('PLT CborContractAddress', () => {
             const hex = Buffer.from(encoded).toString('hex');
 
             // Tag 40919 containing array with 2 values: uint(5) and uint(9)
-            const expected = `d99fd7 82 0509`.replace(/\s/g, '');
+            const expected = `d99fd7 82 05 09`.replace(/\s/g, '');
             expect(hex).toEqual(expected);
 
             const rt = CborContractAddress.fromCBOR(encoded);
@@ -95,39 +103,62 @@ describe('PLT CborContractAddress', () => {
 
     describe('CBOR tagged value decode simple form (uint value)', () => {
         test('single byte encoding', () => {
-            // Tag 40919 containing uint(5)
-            const hex = `d99fd7 05`.replace(/\s/g, '');
+            const addr = CborContractAddress.create(5n);
+            const encoded = CborContractAddress.toCBOR(addr);
+            const hex = Buffer.from(encoded).toString('hex');
 
-            const decoded = CborContractAddress.fromCBOR(new Uint8Array(Buffer.from(hex, 'hex')));
+            // Tag 40919 containing uint(5)
+            const expected = `d99fd7 05`.replace(/\s/g, '');
+            expect(hex).toEqual(expected);
+
+            const decoded = CborContractAddress.fromCBOR(encoded);
             expect(decoded.index).toEqual(5n);
-            expect(decoded.subindex).toEqual(0n);
+            expect(decoded.subindex).toEqual(undefined);
         });
 
         test('small values', () => {
-            // Tag 40919 containing uint(123)
-            const hex = `d99fd7 187b`.replace(/\s/g, '');
+            const addr = CborContractAddress.create(123n);
+            const encoded = CborContractAddress.toCBOR(addr);
+            const hex = Buffer.from(encoded).toString('hex');
 
-            const decoded = CborContractAddress.fromCBOR(new Uint8Array(Buffer.from(hex, 'hex')));
+            // Tag 40919 containing uint(123)
+            const expected = `d99fd7 187b`.replace(/\s/g, '');
+            expect(hex).toEqual(expected);
+
+            const decoded = CborContractAddress.fromCBOR(encoded);
             expect(decoded.index).toEqual(123n);
-            expect(decoded.subindex).toEqual(0n);
+            expect(decoded.subindex).toEqual(undefined);
         });
 
         test('large values', () => {
-            // Tag 40919 containing uint(uint64_max)
-            const hex = `d99fd7 1bffffffffffffffff`.replace(/\s/g, '');
+            const addr = CborContractAddress.create(MAX_U64);
+            const encoded = CborContractAddress.toCBOR(addr);
+            const hex = Buffer.from(encoded).toString('hex');
 
-            const decoded = CborContractAddress.fromCBOR(new Uint8Array(Buffer.from(hex, 'hex')));
+            // Tag 40919 containing uint(uint64_max)
+            const expected = `d99fd7 1bffffffffffffffff`.replace(/\s/g, '');
+            expect(hex).toEqual(expected);
+
+            const decoded = CborContractAddress.fromCBOR(encoded);
             expect(decoded.index).toEqual(MAX_U64);
-            expect(decoded.subindex).toEqual(0n);
+            expect(decoded.subindex).toEqual(undefined);
         });
     });
 
-    test('CBOR roundtrip without explicit subindex (defaults to 0)', () => {
+    test('CBOR roundtrip without explicit subindex', () => {
         const addr = CborContractAddress.create(77n);
         const encoded = CborContractAddress.toCBOR(addr);
         const rt = CborContractAddress.fromCBOR(encoded);
         expect(rt.index).toBe(77n);
-        expect(rt.subindex).toBe(0n);
+        expect(rt.subindex).toBe(undefined);
+    });
+
+    test('CBOR roundtrip without explicit subindex 0', () => {
+        const addr = CborContractAddress.create(77n, 0n);
+        const encoded = CborContractAddress.toCBOR(addr);
+        const rt = CborContractAddress.fromCBOR(encoded);
+        expect(rt.index).toBe(77n);
+        expect(rt.subindex).toBe(undefined);
     });
 
     test('register encoder & decoder with cbor2', () => {
@@ -142,6 +173,44 @@ describe('PLT CborContractAddress', () => {
         } finally {
             cleanup();
         }
+    });
+
+    describe('fromCBOR preserves original structure', () => {
+        test('no subindex', () => {
+            // Tag 40919 containing uint(5)
+            const hex = `d99fd7 05`.replace(/\s/g, '');
+            const decoded = CborContractAddress.fromCBOR(Buffer.from(hex, 'hex'));
+
+            expect(decoded.index).toBe(5n);
+            expect(decoded.subindex).toBe(undefined);
+        });
+
+        test('explicit 0 subindex', () => {
+            // Tag 40919 containing array with 2 values: uint(5) and uint(0)
+            const hex = `d99fd7 82 05 00`.replace(/\s/g, '');
+            const decoded = CborContractAddress.fromCBOR(Buffer.from(hex, 'hex'));
+
+            expect(decoded.index).toBe(5n);
+            expect(decoded.subindex).toBe(0n);
+        });
+    });
+
+    describe('fromJSON preserves original structure', () => {
+        test('no subindex', () => {
+            const json = { index: '5' } as unknown as CborContractAddress.JSON;
+            const parsed = CborContractAddress.fromJSON(json);
+
+            expect(parsed.index).toBe(5n);
+            expect(parsed.subindex).toBe(undefined);
+        });
+
+        test('explicit 0 subindex', () => {
+            const json = { index: '5', subindex: '0' } as unknown as CborContractAddress.JSON;
+            const parsed = CborContractAddress.fromJSON(json);
+
+            expect(parsed.index).toBe(5n);
+            expect(parsed.subindex).toBe(0n);
+        });
     });
 
     test('decoder rejects wrong tag', () => {

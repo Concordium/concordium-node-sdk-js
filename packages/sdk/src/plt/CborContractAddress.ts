@@ -46,13 +46,13 @@ export class Err extends Error {
  * CIS-7 CBOR representation of a `ContractAddress`.
  */
 class CborContractAddress {
-    #subindex: bigint | undefined;
+    #nominal = true;
 
     constructor(
         /** The index of the smart contract address. */
         public readonly index: bigint,
         /** The subindex of the smart contract address. Interpreted as `0` if not specified. */
-        subindex?: bigint
+        public readonly subindex?: bigint
     ) {
         const sub = subindex ?? 0n;
         if (index < 0n || sub < 0n) {
@@ -61,7 +61,6 @@ class CborContractAddress {
         if (index > MAX_U64 || sub > MAX_U64) {
             throw Err.exceedsMaxValue();
         }
-        this.#subindex = subindex;
     }
 
     /**
@@ -78,13 +77,8 @@ class CborContractAddress {
      * @returns {JSON} The JSON representation.
      */
     public toJSON(): JSON {
-        if (this.#subindex === undefined) return { index: this.index };
-        return { index: this.index, subindex: this.#subindex };
-    }
-
-    /** The subindex of the smart contract address */
-    public get subindex(): bigint {
-        return this.#subindex ?? 0n;
+        if (this.subindex === undefined) return { index: this.index };
+        return { index: this.index, subindex: this.subindex };
     }
 }
 

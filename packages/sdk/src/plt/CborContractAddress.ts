@@ -3,7 +3,7 @@ import { encode, registerEncoder } from 'cbor2/encoder';
 
 import { MAX_U64 } from '../constants.js';
 import { ContractAddress } from '../types/index.js';
-import { isDefined } from '../util.ts';
+import { isDefined } from '../util.js';
 
 /**
  * Enum representing the types of errors that can occur when creating a contract address.

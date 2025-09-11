@@ -518,7 +518,7 @@ describe('PLT Cbor', () => {
             );
             expect(decoded).toEqual([{ [TokenOperationType.AddAllowList]: { target: account } }]);
         });
-        const accountNoCoinInfo = CborAccountAddress.fromAccountAddressNoCoinInfo(account.address);
+        const accountNoCoinInfo = CborAccountAddress.fromJSON({ address: account.address.toString() });
         test('removeAllowList operation encodes correctly', () => {
             const encoded = createTokenUpdatePayload(TokenId.fromString('TEST'), {
                 [TokenOperationType.RemoveAllowList]: { target: accountNoCoinInfo },

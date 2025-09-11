@@ -13,3 +13,4 @@ export * as Cbor from './Cbor.js';
 export * as CborMemo from './CborMemo.js';
 export * as CborAccountAddress from './CborAccountAddress.js';
 export * as TokenHolder from './TokenHolder.js';
+export * as CborContractAddress from './CborContractAddress.js';

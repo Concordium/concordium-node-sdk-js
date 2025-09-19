@@ -3,10 +3,11 @@
     "include": ["./ts-src/**/*", "./scripts/**/*", "./build/**/*", "./webpack.config.ts"],
     "compilerOptions": {
         "composite": false,
-        "lib": ["ES2020", "dom"]
+        "lib": ["ES2020", "dom"],
+        "module": "NodeNext",            // important for ESM
+        "moduleResolution": "NodeNext",  // match Node’s ESM resolution
     },
     "ts-node": {
-        "esm": true,
         "swc": false
     }
 }

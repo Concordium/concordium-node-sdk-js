@@ -6,8 +6,7 @@
         "lib": ["ES2020", "dom"]
     },
     "ts-node": {
-        "compilerOptions": {
-            "module": "CommonJS"
-        }
+        "esm": true,
+        "swc": false
     }
 }

@@ -3,10 +3,11 @@
     "include": ["./ts-src/**/*", "./scripts/**/*", "./build/**/*", "./webpack.config.ts"],
     "compilerOptions": {
         "composite": false,
-        "lib": ["ES2020", "dom"],
-        "module": "Node16"
+        "lib": ["ES2020", "dom"]
     },
     "ts-node": {
-        "swc": false
+        "compilerOptions": {
+            "module": "CommonJS"
+        }
     }
 }

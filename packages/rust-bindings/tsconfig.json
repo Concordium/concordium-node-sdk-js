@@ -4,8 +4,7 @@
     "compilerOptions": {
         "composite": false,
         "lib": ["ES2020", "dom"],
-        "module": "NodeNext",            // important for ESM
-        "moduleResolution": "NodeNext",  // match Node’s ESM resolution
+        "module": "Node16"
     },
     "ts-node": {
         "swc": false

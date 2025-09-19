@@ -1,10 +1,6 @@
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-import { convertWasmToJs, copyToFolder } from './build-scripts.js';
+import { convertWasmToJs, copyToFolder } from './build-scripts';
 
 const dappBundlerPath = path.join(__dirname, '../lib/dapp/bundler');
 const dappOutPath = path.join(__dirname, '../lib/dapp/react-native');

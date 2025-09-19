@@ -91,7 +91,7 @@
         "build-all": "yarn build-web $0 && yarn build-node $0 && yarn build-bundler $0",
         "build": "yarn build-all dapp && ts-node ./scripts/build-react-native-dapp.ts && yarn build-all wallet && ts-node ./scripts/build-react-native-wallet.ts && webpack && yarn sanitize",
         "build:rust-bindings-dapp": "yarn build-all dapp && && ts-node-esm ./webpack.config.ts --env package=dapp && ts-node-esm ./scripts/build-react-native-dapp.ts && yarn sanitize",
-        "build:rust-bindings-wallet": "yarn build-all wallet && ts-node-esm ./webpack.config.ts --env package=dapp && ts-node-esm ./scripts/build-react-native-wallet.ts && yarn sanitize",
+        "build:rust-bindings-wallet": "yarn build-all wallet && ts-node-esm ./webpack.config.ts --env package=wallet && ts-node-esm ./scripts/build-react-native-wallet.ts && yarn sanitize",
         "build:rust-bindings": "yarn build",
         "clean": "rimraf -- target lib .webpack-cache",
         "sanitize": "rimraf --glob -- \"lib/**/.gitignore\" \"lib/**/package.json\"",

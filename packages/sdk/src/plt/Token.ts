@@ -914,7 +914,7 @@ export async function unpause(
 }
 
 /**
- * Executes a batch of governance operations on a token.
+ * Executes a batch of operations on a token.
  *
  * @param {Token} token - The token on which to perform the operations.
  * @param {AccountAddress.Type} sender - The account address of the sender.

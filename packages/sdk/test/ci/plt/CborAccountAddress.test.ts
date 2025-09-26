@@ -108,8 +108,6 @@ describe('PLT CborAccountAddress', () => {
 
             const parsed = CborAccountAddress.fromJSON(expected);
 
-            console.log(parsed);
-
             // Verify the decoded address matches the original
             expect(parsed.address).toEqual(account);
             expect(parsed.coinInfo).toBe(undefined);

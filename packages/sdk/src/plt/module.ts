@@ -16,11 +16,11 @@ import { Cbor, CborAccountAddress, CreatePLTPayload, TokenAmount, TokenMetadataU
  */
 export type TokenModuleState = {
     /** The name of the token. */
-    name: string;
+    name?: string;
     /** A URL pointing to the metadata of the token. */
-    metadata: TokenMetadataUrl.Type;
+    metadata?: TokenMetadataUrl.Type;
     /** The governance account for the token. */
-    governanceAccount: CborAccountAddress.Type;
+    governanceAccount?: CborAccountAddress.Type;
     /** Whether the token supports an allow list */
     allowList?: boolean;
     /** Whether the token supports an deny list */
@@ -62,11 +62,11 @@ export type TokenModuleAccountState = {
  */
 export type TokenInitializationParameters = {
     /** The name of the token. */
-    name: string;
+    name?: string;
     /** A URL pointing to the metadata of the token. */
-    metadata: TokenMetadataUrl.Type;
+    metadata?: TokenMetadataUrl.Type;
     /** The governance account for the token. */
-    governanceAccount: CborAccountAddress.Type;
+    governanceAccount?: CborAccountAddress.Type;
     /** Whether the token supports an allow list */
     allowList?: boolean;
     /** Whether the token supports an deny list */

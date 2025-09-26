@@ -11,6 +11,7 @@ import {
     serializeReceiveHookName,
 } from '../cis2/util.js';
 import { Cursor, makeDeserializeListResponse } from '../deserializationHelpers.js';
+import { isKnown } from '../grpc/index.js';
 import { OptionJson, toOptionJson } from '../schemaTypes.js';
 import {
     encodeBool,
@@ -912,7 +913,7 @@ export function deserializeCIS4Event(event: ContractEvent.Type): CIS4.Event {
  * @returns {CIS4.NonCustomEvent[]} The deserialized events
  */
 export function deserializeCIS4EventsFromInvokationResult(result: InvokeContractSuccessResult): CIS4.NonCustomEvent[] {
-    return deserializeCIS4ContractTraceEvents(result.events);
+    return deserializeCIS4ContractTraceEvents(result.events.filter(isKnown));
 }
 
 /**
@@ -929,7 +930,7 @@ export function deserializeCIS4EventsFromSummary(summary: BlockItemSummary): CIS
 
     switch (summary.transactionType) {
         case TransactionKindString.Update:
-            return deserializeCIS4ContractTraceEvents(summary.events);
+            return deserializeCIS4ContractTraceEvents(summary.events.filter(isKnown));
         case TransactionKindString.InitContract:
             const deserializedEvents = [];
             for (const event of summary.contractInitialized.events) {

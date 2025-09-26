@@ -4,7 +4,8 @@ import { encode, registerEncoder } from 'cbor2/encoder';
 import { Tag } from 'cbor2/tag';
 
 import * as Proto from '../grpc-api/v2/concordium/kernel.js';
-import { HexString, cborDecode } from '../index.js';
+import type { HexString } from '../types.js';
+import { cborDecode } from '../types/cbor.js';
 
 const TAGGED_MEMO = 24;
 

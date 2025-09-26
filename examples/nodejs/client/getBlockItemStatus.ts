@@ -1,4 +1,4 @@
-import { BlockItemStatus, CcdAmount, TransactionHash } from '@concordium/web-sdk';
+import { BlockItemStatus, CcdAmount, TransactionHash, knownOrError } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
@@ -77,8 +77,7 @@ const client = new ConcordiumGRPCNodeClient(
     if (blockItemStatus.status === 'finalized') {
         console.log('blockItemStatus is "finalized" and therefore there is exactly one outcome \n');
 
-        const { summary } = blockItemStatus.outcome;
-
+        const summary = knownOrError(blockItemStatus.outcome.summary, 'unknown outcome encountered');
         if (summary.type === 'accountTransaction') {
             console.log('The block item is an account transaction');
 
@@ -95,7 +94,7 @@ const client = new ConcordiumGRPCNodeClient(
                     const { failedTransactionType, rejectReason } = summary;
                     console.log(
                         'Transaction of type "' + failedTransactionType + '" failed because:',
-                        rejectReason.tag
+                        rejectReason?.tag ?? 'unknown'
                     );
                     break;
                 default:

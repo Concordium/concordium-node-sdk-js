@@ -307,16 +307,17 @@ export async function verifyMessageSignature(
         }
 
         for (const keyIndex of Object.keys(credentialSignature)) {
-            if (!credentialKeys.keys[Number(keyIndex)]) {
-                throw new Error('Signature contains signature for non-existing keyIndex');
+            const key = credentialKeys.keys[Number(keyIndex)];
+            switch (key) {
+                case undefined:
+                    throw new Error('Signature contains signature for non-existing keyIndex');
+                case null:
+                    throw new Error('Found "null" (represents unknown key variants) in credential keys');
+                default:
+                    break;
             }
-            if (
-                !(await ed.verifyAsync(
-                    credentialSignature[Number(keyIndex)],
-                    digest,
-                    credentialKeys.keys[Number(keyIndex)].verifyKey
-                ))
-            ) {
+
+            if (!(await ed.verifyAsync(credentialSignature[Number(keyIndex)], digest, key.verifyKey))) {
                 // Incorrect signature;
                 return false;
             }

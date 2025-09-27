@@ -13,7 +13,7 @@ import { AccountAddress } from '../../../src/types/index.ts';
 
 describe('PLT Cbor', () => {
     describe('TokenModuleState', () => {
-        test('should encode and decode TokenModuleState correctly', () => {
+        test('should encode and decode full TokenModuleState correctly', () => {
             const account = CborAccountAddress.fromBase58('3XSLuJcXg6xEua6iBPnWacc3iWh93yEDMCqX8FbE3RDSbEnT9P');
             const metadataUrl = TokenMetadataUrl.fromString('https://example.com/metadata.json');
 
@@ -41,36 +41,13 @@ describe('PLT Cbor', () => {
             expect(decoded.customField).toBe(state.customField);
         });
 
-        test('should throw error if TokenModuleState is missing required fields', () => {
-            // Missing governanceAccount
-            const invalidState1 = {
-                name: 'Test Token',
-                metadata: TokenMetadataUrl.fromString('https://example.com/metadata.json'),
-                // governanceAccount is missing
-            };
-            const encoded1 = Cbor.encode(invalidState1);
-            expect(() => Cbor.decode(encoded1, 'TokenModuleState')).toThrow(/missing or invalid governanceAccount/);
+        test('should encode and decode minimal TokenModuleState correctly', () => {
+            const state = {};
 
-            // Missing name
-            const governanceAccount = CborAccountAddress.fromBase58(
-                '3XSLuJcXg6xEua6iBPnWacc3iWh93yEDMCqX8FbE3RDSbEnT9P'
-            );
-            const invalidState2 = {
-                // name is missing
-                metadata: TokenMetadataUrl.fromString('https://example.com/metadata.json'),
-                governanceAccount,
-            };
-            const encoded2 = Cbor.encode(invalidState2);
-            expect(() => Cbor.decode(encoded2, 'TokenModuleState')).toThrow(/missing or invalid name/);
+            const encoded = Cbor.encode(state);
+            const decoded = Cbor.decode(encoded, 'TokenModuleState');
 
-            // Missing metadata
-            const invalidState3 = {
-                name: 'Test Token',
-                // metadata is missing
-                governanceAccount,
-            };
-            const encoded3 = Cbor.encode(invalidState3);
-            expect(() => Cbor.decode(encoded3, 'TokenModuleState')).toThrow(/missing metadataUrl/);
+            expect(decoded).toEqual({});
         });
 
         test('should throw error if TokenModuleState has invalid field types', () => {
@@ -90,7 +67,7 @@ describe('PLT Cbor', () => {
     });
 
     describe('TokenInitializationParameters', () => {
-        test('should encode and decode TokenInitializationParameters correctly', () => {
+        test('should encode and decode full TokenInitializationParameters correctly', () => {
             const account = CborAccountAddress.fromBase58('3XSLuJcXg6xEua6iBPnWacc3iWh93yEDMCqX8FbE3RDSbEnT9P');
             const metadataUrl = TokenMetadataUrl.fromString('https://example.com/metadata.json');
             const initialSupply = TokenAmount.fromDecimal('1.002', 3);
@@ -120,38 +97,13 @@ describe('PLT Cbor', () => {
             expect(decoded.burnable).toBe(params.burnable);
         });
 
-        test('should throw error if TokenInitializationParameters is missing required fields', () => {
-            // Missing governanceAccount
-            const invalidParams1 = {
-                name: 'Test Token',
-                metadata: TokenMetadataUrl.fromString('https://example.com/metadata.json'),
-                // governanceAccount is missing
-            };
-            const encoded1 = Cbor.encode(invalidParams1);
-            expect(() => Cbor.decode(encoded1, 'TokenInitializationParameters')).toThrow(
-                /missing or invalid governanceAccount/
-            );
+        test('should encode and decode minimal TokenInitializationParameters correctly', () => {
+            const params = {};
 
-            // Missing name
-            const governanceAccount = CborAccountAddress.fromBase58(
-                '3XSLuJcXg6xEua6iBPnWacc3iWh93yEDMCqX8FbE3RDSbEnT9P'
-            );
-            const invalidParams2 = {
-                // name is missing
-                metadata: TokenMetadataUrl.fromString('https://example.com/metadata.json'),
-                governanceAccount,
-            };
-            const encoded2 = Cbor.encode(invalidParams2);
-            expect(() => Cbor.decode(encoded2, 'TokenInitializationParameters')).toThrow(/missing or invalid name/);
+            const encoded = Cbor.encode(params);
+            const decoded = Cbor.decode(encoded, 'TokenInitializationParameters');
 
-            // Missing metadata
-            const invalidParams3 = {
-                name: 'Test Token',
-                // metadata is missing
-                governanceAccount,
-            };
-            const encoded3 = Cbor.encode(invalidParams3);
-            expect(() => Cbor.decode(encoded3, 'TokenInitializationParameters')).toThrow(/missing metadataUrl/);
+            expect(decoded).toEqual({});
         });
 
         test('should throw error if TokenInitializationParameters has invalid field types', () => {

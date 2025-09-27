@@ -14,38 +14,31 @@ import {
 
 function decodeTokenModuleState(value: Cbor.Type): TokenModuleState {
     const decoded = cborDecode(value.bytes);
-    if (typeof decoded !== 'object' || decoded === null) {
-        throw new Error('Invalid CBOR data for TokenModuleState');
-    }
-
-    // Validate required fields
-    if (!('governanceAccount' in decoded && CborAccountAddress.instanceOf(decoded.governanceAccount))) {
-        throw new Error('Invalid TokenModuleState: missing or invalid governanceAccount');
-    }
-    if (!('metadata' in decoded)) {
-        throw new Error('Invalid TokenModuleState: missing metadataUrl');
-    }
-    let metadata = TokenMetadataUrl.fromCBORValue(decoded.metadata);
-    if (!('name' in decoded && typeof decoded.name === 'string')) {
-        throw new Error('Invalid TokenModuleState: missing or invalid name');
-    }
+    if (typeof decoded !== 'object' || decoded === null) throw new Error('Invalid CBOR data for TokenModuleState');
 
     // Validate optional fields
-    if ('allowList' in decoded && typeof decoded.allowList !== 'boolean') {
+    if ('governanceAccount' in decoded && !CborAccountAddress.instanceOf(decoded.governanceAccount))
+        throw new Error('Invalid TokenModuleState: missing or invalid governanceAccount');
+
+    let metadata: TokenMetadataUrl.Type | undefined;
+    try {
+        if ('metadata' in decoded) metadata = TokenMetadataUrl.fromCBORValue(decoded.metadata);
+    } catch {
+        throw new Error('Invalid TokenModuleState: missing or invalid metadata');
+    }
+
+    if ('name' in decoded && typeof decoded.name !== 'string')
+        throw new Error('Invalid TokenModuleState: missing or invalid name');
+    if ('allowList' in decoded && typeof decoded.allowList !== 'boolean')
         throw new Error('Invalid TokenModuleState: allowList must be a boolean');
-    }
-    if ('denyList' in decoded && typeof decoded.denyList !== 'boolean') {
+    if ('denyList' in decoded && typeof decoded.denyList !== 'boolean')
         throw Error('Invalid TokenModuleState: denyList must be a boolean');
-    }
-    if ('mintable' in decoded && typeof decoded.mintable !== 'boolean') {
+    if ('mintable' in decoded && typeof decoded.mintable !== 'boolean')
         throw new Error('Invalid TokenModuleState: mintable must be a boolean');
-    }
-    if ('burnable' in decoded && typeof decoded.burnable !== 'boolean') {
+    if ('burnable' in decoded && typeof decoded.burnable !== 'boolean')
         throw new Error('Invalid TokenModuleState: burnable must be a boolean');
-    }
-    if ('paused' in decoded && typeof decoded.paused !== 'boolean') {
+    if ('paused' in decoded && typeof decoded.paused !== 'boolean')
         throw new Error('Invalid TokenModuleState: paused must be a boolean');
-    }
 
     return { ...decoded, metadata } as TokenModuleState;
 }
@@ -73,39 +66,31 @@ function decodeTokenInitializationParameters(value: Cbor.Type): TokenInitializat
         throw new Error('Invalid CBOR data for TokenInitializationParameters');
     }
 
-    // Validate required fields
-    if (!('governanceAccount' in decoded && CborAccountAddress.instanceOf(decoded.governanceAccount))) {
-        throw new Error('Invalid TokenInitializationParameters: missing or invalid governanceAccount');
-    }
-    if (!('metadata' in decoded)) {
-        throw new Error('Invalid TokenInitializationParameters: missing metadataUrl');
-    }
-    let metadata = TokenMetadataUrl.fromCBORValue(decoded.metadata);
-    if (!('name' in decoded && typeof decoded.name === 'string')) {
-        throw new Error('Invalid TokenInitializationParameters: missing or invalid name');
+    // Validate optional fields
+    if ('governanceAccount' in decoded && !CborAccountAddress.instanceOf(decoded.governanceAccount))
+        throw new Error('Invalid TokenModuleState: missing or invalid governanceAccount');
+
+    let metadata: TokenMetadataUrl.Type | undefined;
+    try {
+        if ('metadata' in decoded) metadata = TokenMetadataUrl.fromCBORValue(decoded.metadata);
+    } catch {
+        throw new Error('Invalid TokenModuleState: missing or invalid metadata');
     }
 
-    // Validate optional fields
-    if ('allowList' in decoded && typeof decoded.allowList !== 'boolean') {
+    if ('allowList' in decoded && typeof decoded.allowList !== 'boolean')
         throw new Error('Invalid TokenInitializationParameters: allowList must be a boolean');
-    }
-    if ('denyList' in decoded && typeof decoded.denyList !== 'boolean') {
+    if ('denyList' in decoded && typeof decoded.denyList !== 'boolean')
         throw Error('Invalid TokenInitializationParameters: denyList must be a boolean');
-    }
-    if ('mintable' in decoded && typeof decoded.mintable !== 'boolean') {
+    if ('mintable' in decoded && typeof decoded.mintable !== 'boolean')
         throw new Error('Invalid TokenInitializationParameters: mintable must be a boolean');
-    }
-    if ('burnable' in decoded && typeof decoded.burnable !== 'boolean') {
+    if ('burnable' in decoded && typeof decoded.burnable !== 'boolean')
         throw new Error('Invalid TokenInitializationParameters: burnable must be a boolean');
-    }
-    if ('paused' in decoded && typeof decoded.paused !== 'boolean') {
+    if ('paused' in decoded && typeof decoded.paused !== 'boolean')
         throw new Error('Invalid TokenInitializationParameters: paused must be a boolean');
-    }
 
     // Optional initial supply
-    if ('initialSupply' in decoded && !TokenAmount.instanceOf(decoded.initialSupply)) {
+    if ('initialSupply' in decoded && !TokenAmount.instanceOf(decoded.initialSupply))
         throw new Error(`Invalid TokenInitializationParameters: Expected 'initialSupply' to be of type 'TokenAmount'`);
-    }
 
     return { ...decoded, metadata } as TokenInitializationParameters;
 }

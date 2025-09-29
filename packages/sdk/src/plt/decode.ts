@@ -24,11 +24,11 @@ function decodeTokenModuleState(value: Cbor.Type): TokenModuleState {
     try {
         if ('metadata' in decoded) metadata = TokenMetadataUrl.fromCBORValue(decoded.metadata);
     } catch {
-        throw new Error('Invalid TokenModuleState: missing or invalid metadata');
+        throw new Error('Invalid TokenModuleState: invalid metadata');
     }
 
     if ('name' in decoded && typeof decoded.name !== 'string')
-        throw new Error('Invalid TokenModuleState: missing or invalid name');
+        throw new Error('Invalid TokenModuleState: invalid name');
     if ('allowList' in decoded && typeof decoded.allowList !== 'boolean')
         throw new Error('Invalid TokenModuleState: allowList must be a boolean');
     if ('denyList' in decoded && typeof decoded.denyList !== 'boolean')
@@ -68,13 +68,13 @@ function decodeTokenInitializationParameters(value: Cbor.Type): TokenInitializat
 
     // Validate optional fields
     if ('governanceAccount' in decoded && !CborAccountAddress.instanceOf(decoded.governanceAccount))
-        throw new Error('Invalid TokenModuleState: missing or invalid governanceAccount');
+        throw new Error('Invalid TokenModuleState: invalid governanceAccount');
 
     let metadata: TokenMetadataUrl.Type | undefined;
     try {
         if ('metadata' in decoded) metadata = TokenMetadataUrl.fromCBORValue(decoded.metadata);
     } catch {
-        throw new Error('Invalid TokenModuleState: missing or invalid metadata');
+        throw new Error('Invalid TokenModuleState: invalid metadata');
     }
 
     if ('allowList' in decoded && typeof decoded.allowList !== 'boolean')

@@ -1,8 +1,8 @@
-import { CborMemo, TokenHolder } from '../../../src/pub/plt.ts';
+import { CborAccountAddress, CborMemo } from '../../../src/pub/plt.ts';
 import { AccountAddress, cborEncode } from '../../../src/pub/types.ts';
 
 it('should encode types and type compositions correctly', () => {
-    const account = TokenHolder.fromAccountAddress(AccountAddress.fromBuffer(new Uint8Array(32).fill(0x15)));
+    const account = CborAccountAddress.fromAccountAddress(AccountAddress.fromBuffer(new Uint8Array(32).fill(0x15)));
     const accountCbor = cborEncode(account);
     // CBOR byte sequence is as follows:
     // - d99d73 a2: A tagged (40307) item containing a map with 2 key-value pairs
@@ -42,7 +42,7 @@ it('should encode types and type compositions correctly', () => {
 });
 
 it('should lexicographically sort object keys when encoding', () => {
-    const account = TokenHolder.fromAccountAddress(AccountAddress.fromBuffer(new Uint8Array(32).fill(0x15)));
+    const account = CborAccountAddress.fromAccountAddress(AccountAddress.fromBuffer(new Uint8Array(32).fill(0x15)));
     // CBOR byte sequence is as follows:
     // - d99d73 a2: A tagged (40307) item containing a map with 2 key-value pairs
     //  - 01 d99d71 a1: Key 1 => d99d71: A tagged (40305) item containing a map with 1 key-value pair:

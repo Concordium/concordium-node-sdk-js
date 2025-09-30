@@ -8,6 +8,7 @@ import {
 } from '../GenericContract.js';
 import { deserializeUint8 } from '../deserialization.js';
 import { Cursor, deserializeBigUInt64LE, makeDeserializeListResponse } from '../deserializationHelpers.js';
+import { isKnown } from '../grpc/index.js';
 import {
     encodeWord8,
     encodeWord64,
@@ -846,7 +847,7 @@ export function deserializeCIS2Event(event: ContractEvent.Type): CIS2.Event {
  * @returns {CIS2.NonCustomEvent[]} The deserialized events
  */
 export function deserializeCIS2EventsFromInvokationResult(result: InvokeContractSuccessResult): CIS2.NonCustomEvent[] {
-    return deserializeCIS2ContractTraceEvents(result.events);
+    return deserializeCIS2ContractTraceEvents(result.events.filter(isKnown));
 }
 
 /**
@@ -895,7 +896,7 @@ export function deserializeCIS2EventsFromSummary(summary: BlockItemSummary): CIS
 
     switch (summary.transactionType) {
         case TransactionKindString.Update:
-            return deserializeCIS2ContractTraceEvents(summary.events);
+            return deserializeCIS2ContractTraceEvents(summary.events.filter(isKnown));
         case TransactionKindString.InitContract:
             const deserializedEvents = [];
             for (const event of summary.contractInitialized.events) {

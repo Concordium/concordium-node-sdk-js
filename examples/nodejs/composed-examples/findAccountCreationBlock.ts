@@ -1,4 +1,4 @@
-import { AccountAddress, isRpcError } from '@concordium/web-sdk';
+import { AccountAddress, isKnown, isRpcError } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
@@ -75,6 +75,9 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
 
     // If account is not a genesis account print account creation transaction hash
     for await (const summary of summaries) {
+        if (!isKnown(summary)) {
+            continue;
+        }
         if (summary.type === 'accountCreation' && AccountAddress.equals(summary.address, account)) {
             console.log('Hash of transaction that created the account:', summary.hash);
         }

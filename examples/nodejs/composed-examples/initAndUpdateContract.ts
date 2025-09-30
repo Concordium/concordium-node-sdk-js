@@ -17,6 +17,8 @@ import {
     affectedContracts,
     buildAccountSigner,
     deserializeReceiveReturnValue,
+    isKnown,
+    knownOrError,
     parseWallet,
     serializeInitContractParameters,
     serializeUpdateContractParameters,
@@ -118,7 +120,14 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
     const initStatus = await client.waitForTransactionFinalization(initTrxHash);
     console.dir(initStatus, { depth: null, colors: true });
 
-    const contractAddress = affectedContracts(initStatus.summary)[0];
+    if (!isKnown(initStatus.summary)) {
+        throw new Error('Unexpected transaction outcome');
+    }
+
+    const contractAddress = knownOrError(
+        affectedContracts(initStatus.summary)[0],
+        'Expected contract init event to be known'
+    );
 
     // #endregion documentation-snippet-init-contract
 

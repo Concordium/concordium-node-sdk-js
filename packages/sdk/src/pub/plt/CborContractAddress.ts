@@ -1,0 +1,15 @@
+export {
+    Type,
+    Err,
+    ErrorType,
+    JSON,
+    fromJSON,
+    toCBOR,
+    fromCBOR,
+    toContractAddress,
+    fromContractAddress,
+    create,
+    instanceOf,
+    registerCBOREncoder,
+    registerCBORDecoder,
+} from '../../plt/CborContractAddress.js';

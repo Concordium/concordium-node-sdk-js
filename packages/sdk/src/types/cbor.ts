@@ -1,6 +1,6 @@
 import { decode, encode } from 'cbor2';
 
-import { CborMemo, TokenAmount, TokenHolder, TokenMetadataUrl } from '../plt/index.js';
+import { CborAccountAddress, CborMemo, TokenAmount, TokenMetadataUrl } from '../plt/index.js';
 
 /**
  * Register CBOR encoders for all types.
@@ -12,7 +12,7 @@ import { CborMemo, TokenAmount, TokenHolder, TokenMetadataUrl } from '../plt/ind
  * - `CborMemo`: For encoding protocol-level token memos in CBOR format
  */
 export function registerCBOREncoders(): void {
-    TokenHolder.registerCBOREncoder();
+    CborAccountAddress.registerCBOREncoder();
     TokenAmount.registerCBOREncoder();
     CborMemo.registerCBOREncoder();
     TokenMetadataUrl.registerCBOREncoder();
@@ -86,7 +86,11 @@ export function cborEncode(value: unknown): Uint8Array {
 // We do NOT want to register all decoders, as only one decoder for each CBOR tag can exist at a time.
 // As such, it should be up to the end user to decide if they want to register the decoders globally in their application.
 export function registerCBORDecoders(): (() => void)[] {
-    return [TokenHolder.registerCBORDecoder(), TokenAmount.registerCBORDecoder(), CborMemo.registerCBORDecoder()];
+    return [
+        CborAccountAddress.registerCBORDecoder(),
+        TokenAmount.registerCBORDecoder(),
+        CborMemo.registerCBORDecoder(),
+    ];
 }
 
 /**

@@ -4,7 +4,7 @@ import { Tag } from 'cbor2/tag';
 
 import { CborMemo } from '../../../src/plt/index.js';
 
-describe('CborMemo', () => {
+describe('PLT CborMemo', () => {
     it('should throw an error if content exceeds 256 bytes', () => {
         const content = 't'.repeat(257);
         expect(() => CborMemo.fromString(content)).toThrow(

@@ -1,3 +1,4 @@
+import { Upward } from '../index.js';
 import { CreatePLTPayload } from '../plt/types.js';
 import type {
     ArInfo,
@@ -15,8 +16,8 @@ import type {
     MintRate,
     TimeoutParameters,
     TransactionFeeDistribution,
+    UpdatePublicKey,
     ValidatorScoreParameters,
-    VerifyKey,
 } from '../types.js';
 import type * as CcdAmount from './CcdAmount.js';
 import type * as Duration from './Duration.js';
@@ -141,8 +142,13 @@ export type UpdateInstructionPayload = CommonUpdate | RootUpdate | Level1Update;
 export type PendingUpdate = {
     /** The effective time of the update */
     effectiveTime: Timestamp.Type;
-    /** The effect of the update */
-    effect: PendingUpdateEffect;
+    /**
+     * The effect of the update.
+     *
+     * **Please note**, this can possibly be unknown if the SDK is not fully compatible with the Concordium
+     * node queried, in which case `null` is returned.
+     */
+    effect: Upward<PendingUpdateEffect>;
 };
 
 /** A union of possible effects */
@@ -244,7 +250,7 @@ export enum KeyUpdateEntryStatus {
 }
 
 export interface KeyWithStatus {
-    key: VerifyKey;
+    key: UpdatePublicKey;
     status: KeyUpdateEntryStatus;
 }
 
@@ -255,7 +261,13 @@ export enum HigherLevelKeyUpdateType {
 
 export interface HigherLevelKeyUpdate {
     typeOfUpdate: HigherLevelKeyUpdateType;
-    updateKeys: VerifyKey[];
+    /**
+     * The authorization keys included in the update.
+     */
+    updateKeys: UpdatePublicKey[];
+    /**
+     * The key threshold needed to perform the update to higher level keys.
+     */
     threshold: number;
 }
 

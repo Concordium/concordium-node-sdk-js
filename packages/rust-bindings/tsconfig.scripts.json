@@ -1,0 +1,10 @@
+{
+    "compilerOptions": {
+        "outDir": "./dist/scripts", // Separate output directory
+        "rootDir": "./scripts",
+        "module": "NodeNext",
+        "moduleResolution": "NodeNext",
+        "noEmit": false
+    },
+    "include": ["./scripts/build-react-native-dapp.ts", "./scripts/build-react-native-wallet.ts"]
+}

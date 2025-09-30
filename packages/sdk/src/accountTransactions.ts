@@ -108,7 +108,10 @@ export class SimpleTransferHandler
     }
 
     deserialize(serializedPayload: Cursor): SimpleTransferPayload {
-        const toAddress = AccountAddress.fromBuffer(Buffer.from(serializedPayload.read(32)));
+        // 1. Correct the INPUT type conflict using the triple assertion
+        const inputBuffer = Buffer.from(serializedPayload.read(32)).buffer as any as ArrayBuffer;
+
+        const toAddress = AccountAddress.fromBuffer(inputBuffer);
         const amount = CcdAmount.fromMicroCcd(serializedPayload.read(8).readBigUInt64BE(0));
         return {
             toAddress,
@@ -147,9 +150,16 @@ export class SimpleTransferWithMemoHandler
     }
 
     deserialize(serializedPayload: Cursor): SimpleTransferWithMemoPayload {
-        const toAddress = AccountAddress.fromBuffer(Buffer.from(serializedPayload.read(32)));
+        // 1. Correct the INPUT type conflict using the triple assertion
+        const inputBuffer = Buffer.from(serializedPayload.read(32)).buffer as any as ArrayBuffer;
+
+        const toAddress = AccountAddress.fromBuffer(inputBuffer);
         const memoLength = serializedPayload.read(2).readUInt16BE(0);
-        const memo = new DataBlob(Buffer.from(serializedPayload.read(memoLength)));
+
+        // 1. Correct the INPUT type conflict using the triple assertion
+        const memoInputBuffer = Buffer.from(serializedPayload.read(memoLength)).buffer as any as ArrayBuffer;
+
+        const memo = new DataBlob(memoInputBuffer);
         const amount = CcdAmount.fromMicroCcd(serializedPayload.read(8).readBigUInt64BE(0));
         return {
             toAddress,
@@ -401,8 +411,10 @@ export class RegisterDataHandler implements AccountTransactionHandler<RegisterDa
 
     deserialize(serializedPayload: Cursor): RegisterDataPayload {
         const memoLength = serializedPayload.read(2).readUInt16BE(0);
+
+        const inputBuffer = Buffer.from(serializedPayload.read(memoLength)).buffer as any as ArrayBuffer;
         return {
-            data: new DataBlob(Buffer.from(serializedPayload.read(memoLength))),
+            data: new DataBlob(inputBuffer),
         };
     }
 
@@ -531,10 +543,12 @@ export class TokenUpdateHandler implements AccountTransactionHandler<TokenUpdate
     }
     deserialize(serializedPayload: Cursor): TokenUpdatePayload {
         let len = serializedPayload.read(1).readUInt8(0);
-        const tokenId = TokenId.fromBytes(serializedPayload.read(len));
+        const inputBuffer = Buffer.from(serializedPayload.read(len)).buffer as any as ArrayBuffer;
+        const tokenId = TokenId.fromBytes(inputBuffer);
 
         len = serializedPayload.read(4).readUInt32BE(0);
-        const operations = Cbor.fromBuffer(serializedPayload.read(len));
+        const inputOpsBuffer = Buffer.from(serializedPayload.read(len)).buffer as any as ArrayBuffer;
+        const operations = Cbor.fromBuffer(inputOpsBuffer);
         return { tokenId, operations };
     }
     getBaseEnergyCost(payload: TokenUpdatePayload): bigint {

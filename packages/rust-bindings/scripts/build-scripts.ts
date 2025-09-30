@@ -25,6 +25,7 @@ export const copyToFolder = (bundlerPath: string, outPath: string) =>
         () => {} // no-op
     );
 
+/*
 export const convertWasmToJs = async (outPath: string) => {
     // Convert files using `wasm2js`
     await exec(`wasm2js ${path.join(outPath, WASM_FILENAME)} -o ${path.join(outPath, WASM_FILENAME_JS)}`);
@@ -41,3 +42,4 @@ export const convertWasmToJs = async (outPath: string) => {
             fs.writeFileSync(file, content, 'utf-8');
         });
 };
+*/

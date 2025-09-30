@@ -370,8 +370,12 @@ function serializeTokenAmount(amount: CIS2.TokenAmount): Buffer {
     return serialized;
 }
 
-export function serializeAccountAddress(address: AccountAddress.Type): Uint8Array {
-    return AccountAddress.toBuffer(address);
+export function serializeAccountAddress(address: AccountAddress.Type): Buffer {
+    // 1. Get the raw binary data (Uint8Array)
+    const uint8ArrayData = AccountAddress.toBuffer(address);
+    
+    // 2. Explicitly convert the data into a full Node.js Buffer object
+    return Buffer.from(uint8ArrayData);
 }
 
 /**
@@ -719,7 +723,7 @@ function addressDeserializer(cursor: Cursor): CIS2.Address {
     const kind = deserializeUint8(cursor);
     switch (kind) {
         case 0:
-            return AccountAddress.fromBuffer(cursor.read(32));
+            return AccountAddress.fromBuffer((cursor.read(32).buffer) as any as ArrayBuffer);
         case 1:
             const index = deserializeBigUInt64LE(cursor);
             const subindex = deserializeBigUInt64LE(cursor);
@@ -754,7 +758,7 @@ export function deserializeCIS2Event(event: ContractEvent.Type): CIS2.Event {
 
         const [tokenAmount, i] = uleb128DecodeWithIndex(buffer, 2 + n);
 
-        const cursor = Cursor.fromBuffer(buffer.subarray(i));
+        const cursor = Cursor.fromBuffer((buffer.subarray(i).buffer) as any as ArrayBuffer);
         const from = addressDeserializer(cursor);
         const to = addressDeserializer(cursor);
 
@@ -772,7 +776,7 @@ export function deserializeCIS2Event(event: ContractEvent.Type): CIS2.Event {
 
         const [tokenAmount, i] = uleb128DecodeWithIndex(buffer, 2 + n);
 
-        const cursor = Cursor.fromBuffer(buffer.subarray(i));
+        const cursor = Cursor.fromBuffer((buffer.subarray(i).buffer) as any as ArrayBuffer);
         const owner = addressDeserializer(cursor);
 
         return {
@@ -788,7 +792,7 @@ export function deserializeCIS2Event(event: ContractEvent.Type): CIS2.Event {
 
         const [tokenAmount, i] = uleb128DecodeWithIndex(buffer, 2 + n);
 
-        const cursor = Cursor.fromBuffer(buffer.subarray(i));
+        const cursor = Cursor.fromBuffer((buffer.subarray(i).buffer) as any as ArrayBuffer);
         const owner = addressDeserializer(cursor);
 
         return {
@@ -804,7 +808,7 @@ export function deserializeCIS2Event(event: ContractEvent.Type): CIS2.Event {
             updateType = 'remove';
         }
 
-        const cursor = Cursor.fromBuffer(buffer.subarray(2));
+        const cursor = Cursor.fromBuffer((buffer.subarray(2).buffer) as any as ArrayBuffer);
         const owner = addressDeserializer(cursor);
         const operator = addressDeserializer(cursor);
 
@@ -821,7 +825,7 @@ export function deserializeCIS2Event(event: ContractEvent.Type): CIS2.Event {
         const n = buffer[1];
         const tokenId = deserializeCIS2TokenId(buffer.subarray(1, 2 + n));
 
-        const cursor = Cursor.fromBuffer(buffer.subarray(2 + n));
+        const cursor = Cursor.fromBuffer((buffer.subarray(2 + n).buffer) as any as ArrayBuffer);
         const metadataUrl = deserializeCIS2MetadataUrl(cursor);
 
         return {

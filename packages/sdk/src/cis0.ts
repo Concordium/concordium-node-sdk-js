@@ -139,7 +139,9 @@ export async function cis0Supports(
         return undefined;
     }
 
-    const parameter = Parameter.fromBuffer(makeDynamicFunction(serializeSupportIdentifiers)(standardIds));
+    const parameter = Parameter.fromBuffer(
+        (makeDynamicFunction(serializeSupportIdentifiers)(standardIds) as any as Buffer).buffer as ArrayBuffer
+    );
 
     const response = await grpcClient.invokeContract(
         {

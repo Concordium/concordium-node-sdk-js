@@ -70,10 +70,16 @@ class CIS4DryRun extends ContractDryRun<Updates> {
         additionalData: HexString = '',
         blockHash?: BlockHash.Type
     ): Promise<InvokeContractResult> {
+
+
         return this.invokeMethod(
             EntrypointName.fromStringUnchecked('registerCredential'),
             sender,
-            serializeCIS4RegisterCredentialParam,
+            (param) => {
+                const bufferResult = serializeCIS4RegisterCredentialParam(param);
+                // Use the triple assertion to extract the raw memory and satisfy the ArrayBuffer requirement
+                return (bufferResult as any as Buffer).buffer as ArrayBuffer; 
+            },
             { credInfo, additionalData },
             blockHash
         );

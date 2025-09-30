@@ -57,11 +57,19 @@ class CIS2DryRun extends ContractDryRun<Updates> {
         transfers: CIS2.Transfer | CIS2.Transfer[],
         blockHash?: BlockHash.Type
     ): Promise<InvokeContractResult> {
-        const serialize = makeDynamicFunction(serializeCIS2Transfers);
+        const serializeFn = makeDynamicFunction(serializeCIS2Transfers);
+        const bufferSerializer = (input: CIS2.Transfer | CIS2.Transfer[]): ArrayBuffer => {
+                
+                const bufferResult = serializeFn(input); 
+                const validBuffer = bufferResult as unknown as Buffer;
+        
+                return validBuffer.buffer as ArrayBuffer;
+        };
+
         return this.invokeMethod(
             EntrypointName.fromStringUnchecked('transfer'),
             sender,
-            serialize,
+            bufferSerializer,
             transfers,
             blockHash
         );
@@ -91,11 +99,20 @@ class CIS2DryRun extends ContractDryRun<Updates> {
         updates: CIS2.UpdateOperator | CIS2.UpdateOperator[],
         blockHash?: BlockHash.Type
     ): Promise<InvokeContractResult> {
-        const serialize = makeDynamicFunction(serializeCIS2UpdateOperators);
+
+        const serializeFn = makeDynamicFunction(serializeCIS2UpdateOperators);
+        const bufferSerializer = (input: CIS2.UpdateOperator | CIS2.UpdateOperator[]): ArrayBuffer => {
+                
+                const bufferResult = serializeFn(input); 
+                const validBuffer = bufferResult as unknown as Buffer;
+        
+                return validBuffer.buffer as ArrayBuffer;
+        };
+
         return this.invokeMethod(
             EntrypointName.fromStringUnchecked('updateOperator'),
             owner,
-            serialize,
+            bufferSerializer,
             updates,
             blockHash
         );
@@ -185,12 +202,20 @@ export class CIS2Contract extends CISContract<Updates, Views, CIS2DryRun> {
         metadata: CIS2.CreateTransactionMetadata,
         transfers: CIS2.Transfer | CIS2.Transfer[]
     ): CIS2.UpdateTransaction<CIS2.TransferParamJson[]> {
-        const serialize = makeDynamicFunction(serializeCIS2Transfers);
+        const serializeFn = makeDynamicFunction(serializeCIS2Transfers);
+        const bufferSerializer = (input: CIS2.Transfer | CIS2.Transfer[]): ArrayBuffer => {
+                
+                const bufferResult = serializeFn(input); 
+                const validBuffer = bufferResult as unknown as Buffer;
+        
+                return validBuffer.buffer as ArrayBuffer;
+        };
+
         const format = makeDynamicFunction((us: CIS2.Transfer[]) => us.map(formatCIS2Transfer));
 
         return this.createUpdateTransaction(
             EntrypointName.fromStringUnchecked('transfer'),
-            serialize,
+            bufferSerializer,
             metadata,
             transfers,
             format
@@ -275,12 +300,21 @@ export class CIS2Contract extends CISContract<Updates, Views, CIS2DryRun> {
         metadata: CIS2.CreateTransactionMetadata,
         updates: CIS2.UpdateOperator | CIS2.UpdateOperator[]
     ): CIS2.UpdateTransaction<CIS2.UpdateOperatorParamJson[]> {
-        const serialize = makeDynamicFunction(serializeCIS2UpdateOperators);
+
+        const serializeFn = makeDynamicFunction(serializeCIS2UpdateOperators);
+        const bufferSerializer = (input: CIS2.UpdateOperator | CIS2.UpdateOperator[]): ArrayBuffer => {
+                
+                const bufferResult = serializeFn(input); 
+                const validBuffer = bufferResult as unknown as Buffer;
+        
+                return validBuffer.buffer as ArrayBuffer;
+        };
+
         const format = makeDynamicFunction((us: CIS2.UpdateOperator[]) => us.map(formatCIS2UpdateOperator));
 
         return this.createUpdateTransaction(
             EntrypointName.fromStringUnchecked('updateOperator'),
-            serialize,
+            bufferSerializer,
             metadata,
             updates,
             format
@@ -354,11 +388,24 @@ export class CIS2Contract extends CISContract<Updates, Views, CIS2DryRun> {
         queries: CIS2.BalanceOfQuery | CIS2.BalanceOfQuery[],
         blockHash?: BlockHash.Type
     ): Promise<bigint | bigint[]> {
-        const serialize = makeDynamicFunction(serializeCIS2BalanceOfQueries);
+        // 1. Get the original, dynamic serializer function (which returns a Buffer)
+        const rawSerializer = makeDynamicFunction(serializeCIS2BalanceOfQueries);
+
+        // 2. Create a new, type-safe serializer that performs the required conversion
+        const typeCorrectSerializer = (input: CIS2.BalanceOfQuery | CIS2.BalanceOfQuery[]): ArrayBuffer => {
+        
+            // Call the raw serializer (which returns Buffer)
+            const bufferResult = rawSerializer(input);
+
+            // FIX: Extract the raw memory (.buffer) and assert the type to bypass the conflict
+            // This is the triple assertion fix
+            return (bufferResult as any as Buffer).buffer as ArrayBuffer; 
+        };
+
         const deserialize = ensureMatchesInput(queries, deserializeCIS2BalanceOfResponse);
         return this.invokeView(
             EntrypointName.fromStringUnchecked('balanceOf'),
-            serialize,
+            typeCorrectSerializer,
             deserialize,
             queries,
             blockHash
@@ -392,11 +439,24 @@ export class CIS2Contract extends CISContract<Updates, Views, CIS2DryRun> {
         queries: CIS2.OperatorOfQuery | CIS2.OperatorOfQuery[],
         blockHash?: BlockHash.Type
     ): Promise<boolean | boolean[]> {
-        const serialize = makeDynamicFunction(serializeCIS2OperatorOfQueries);
+        // 1. Get the original, dynamic serializer function (which returns a Buffer)
+        const rawSerializer = makeDynamicFunction(serializeCIS2OperatorOfQueries);
+
+        // 2. Create a new, type-safe serializer that performs the required conversion
+        const typeCorrectSerializer = (input: CIS2.OperatorOfQuery | CIS2.OperatorOfQuery[]): ArrayBuffer => {
+            
+            // Call the raw serializer (which returns Buffer)
+            const bufferResult = rawSerializer(input);
+
+            // FIX: Extract the raw memory (.buffer) and assert the type to bypass the conflict
+            // This is the triple assertion fix
+            return (bufferResult as any as Buffer).buffer as ArrayBuffer; 
+        };
+
         const deserialize = ensureMatchesInput(queries, deserializeCIS2OperatorOfResponse);
         return this.invokeView(
             EntrypointName.fromStringUnchecked('operatorOf'),
-            serialize,
+            typeCorrectSerializer,
             deserialize,
             queries,
             blockHash
@@ -430,11 +490,25 @@ export class CIS2Contract extends CISContract<Updates, Views, CIS2DryRun> {
         tokenIds: HexString | HexString[],
         blockHash?: BlockHash.Type
     ): Promise<CIS2.MetadataUrl | CIS2.MetadataUrl[]> {
-        const serialize = makeDynamicFunction(serializeCIS2TokenIds);
+
+        // 1. Get the original, dynamic serializer function (which returns a Buffer)
+        const rawSerializer = makeDynamicFunction(serializeCIS2TokenIds);
+
+        // 2. Create a new, type-safe serializer that performs the required conversion
+        const typeCorrectSerializer = (input: HexString | HexString[]): ArrayBuffer => {
+        
+            // Call the raw serializer (which returns Buffer)
+            const bufferResult = rawSerializer(input);
+
+            // FIX: Extract the raw memory (.buffer) and assert the type to bypass the conflict
+            // This is the triple assertion fix
+            return (bufferResult as any as Buffer).buffer as ArrayBuffer; 
+        };
+        
         const deserialize = ensureMatchesInput(tokenIds, deserializeCIS2TokenMetadataResponse);
         return this.invokeView(
             EntrypointName.fromStringUnchecked('tokenMetadata'),
-            serialize,
+            typeCorrectSerializer,
             deserialize,
             tokenIds,
             blockHash

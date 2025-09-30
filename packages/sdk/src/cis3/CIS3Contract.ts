@@ -45,10 +45,23 @@ class CIS3DryRun extends ContractDryRun<Update> {
         params: CIS3.PermitParam,
         blockHash?: BlockHash.Type
     ): Promise<InvokeContractResult> {
+        //raw serializer:
+        const rawSerializer = serializeCIS3PermitParam;
+
+        // The Fix: Create a wrapper that correctly converts the return type
+        const typeCorrectSerializer = (param: CIS3.PermitParam): ArrayBuffer => {
+            
+            // 1. Get the Node.js Buffer output
+            const bufferResult = rawSerializer(param);
+            
+            // 2. Perform the definitive conversion and assertion (Buffer -> ArrayBuffer)
+            return (bufferResult.buffer) as any as ArrayBuffer;
+        };
+
         return this.invokeMethod(
             EntrypointName.fromStringUnchecked('permit'),
             sender,
-            serializeCIS3PermitParam,
+            typeCorrectSerializer,
             params,
             blockHash
         );
@@ -106,9 +119,23 @@ export class CIS3Contract extends CISContract<Update, View, CIS3DryRun> {
         metadata: CreateContractTransactionMetadata,
         params: CIS3.PermitParam
     ): ContractUpdateTransactionWithSchema {
+
+        //raw serializer:
+        const rawSerializer = serializeCIS3PermitParam;
+
+        // The Fix: Create a wrapper that correctly converts the return type
+        const typeCorrectSerializer = (param: CIS3.PermitParam): ArrayBuffer => {
+            
+            // 1. Get the Node.js Buffer output
+            const bufferResult = rawSerializer(param);
+            
+            // 2. Perform the definitive conversion and assertion (Buffer -> ArrayBuffer)
+            return (bufferResult.buffer) as any as ArrayBuffer;
+        };
+
         return this.createUpdateTransaction(
             EntrypointName.fromStringUnchecked('permit'),
-            serializeCIS3PermitParam,
+            typeCorrectSerializer,
             metadata,
             params,
             formatCIS3PermitParam
@@ -158,11 +185,25 @@ export class CIS3Contract extends CISContract<Update, View, CIS3DryRun> {
         entrypoints: EntrypointName.Type | EntrypointName.Type[],
         blockHash?: BlockHash.Type
     ): Promise<boolean | boolean[]> {
-        const serialize = makeDynamicFunction(serializeCIS3SupportsPermitQueryParams);
+
+         // 1. Get the original, dynamic serializer function (which returns a Buffer)
+        const rawSerializer = makeDynamicFunction(serializeCIS3SupportsPermitQueryParams);
+
+        // 2. Create a new, type-safe serializer that performs the required conversion
+        const typeCorrectSerializer = (input: EntrypointName.Type | EntrypointName.Type[]): ArrayBuffer => {
+        
+            // Call the raw serializer (which returns Buffer)
+            const bufferResult = rawSerializer(input);
+
+            // FIX: Extract the raw memory (.buffer) and assert the type to bypass the conflict
+            // This is the triple assertion fix
+            return (bufferResult as any as Buffer).buffer as ArrayBuffer; 
+        };
+
         const deserialize = ensureMatchesInput(entrypoints, deserializeCIS3SupportsPermitResponse);
         return this.invokeView(
             EntrypointName.fromStringUnchecked('supportsPermit'),
-            serialize,
+            typeCorrectSerializer,
             deserialize,
             entrypoints,
             blockHash

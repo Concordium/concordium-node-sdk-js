@@ -1,6 +1,6 @@
 {
     "extends": "../../tsconfig-base.json",
-    "include": ["./ts-src/**/*", "./scripts/**/*", "./build/**/*", "./webpack.config.ts"],
+    "include": ["./ts-src/**/*", "./scripts/**/*", "./build/**/*", "./webpack.config.ts", "./wasm.d.ts"],
     "compilerOptions": {
         "composite": false,
         "lib": ["ES2020", "dom"]

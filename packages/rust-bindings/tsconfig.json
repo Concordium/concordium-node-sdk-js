@@ -7,9 +7,7 @@
     },
     "ts-node": {
         "compilerOptions": {
-            "module": "nodenext",
-            "allowImportingTsExtensions": true,
-            "noEmit": true
+            "module": "Commonjs"
         }
     }
 }

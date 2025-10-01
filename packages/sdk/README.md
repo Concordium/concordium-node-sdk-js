@@ -41,7 +41,7 @@ return new ConcordiumGRPCWebClient(
 The fourth argument is additional options. In the example
 above we sat the timeout for a call to the node to 15
 seconds. The options allowed here are those allowed by the
-[grpcweb-transport](https://www.npmjs.com/package/@protobuf-ts/grpcweb-transport).
+[grpcweb-transport][Unreliable Link](https://www.npmjs.com/package/@protobuf-ts/grpcweb-transport).
 
 ## ConcordiumGRPCNodeClient
 

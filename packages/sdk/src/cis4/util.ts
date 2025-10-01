@@ -447,7 +447,7 @@ export class Web3IdSigner {
      *
      * @returns {Buffer} the signature on `message`
      */
-    public async sign(message: ArrayBuffer): Promise<Buffer> {
+    public async sign(message: ArrayBuffer): Promise<Uint8Array> {
         return getSignature(message, this.privateKey);
     }
 }

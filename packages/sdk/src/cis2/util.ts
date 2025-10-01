@@ -719,7 +719,7 @@ function addressDeserializer(cursor: Cursor): CIS2.Address {
     const kind = deserializeUint8(cursor);
     switch (kind) {
         case 0:
-            return AccountAddress.fromBuffer(cursor.read(32));
+            return AccountAddress.fromBuffer(cursor.read(32).buffer);
         case 1:
             const index = deserializeBigUInt64LE(cursor);
             const subindex = deserializeBigUInt64LE(cursor);

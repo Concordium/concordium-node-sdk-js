@@ -89,7 +89,7 @@ export function toBuffer(cbor: Cbor): Uint8Array {
  * @returns {Cbor}
  */
 export function fromHexString(hex: HexString): Cbor {
-    return fromBuffer(Buffer.from(hex, 'hex'));
+    return fromBuffer(Buffer.from(hex, 'hex').buffer);
 }
 
 /**

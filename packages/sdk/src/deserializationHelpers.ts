@@ -34,7 +34,7 @@ export class Cursor {
      *
      * @returns {Cursor} a Cursor wrapping the data.
      */
-    public static fromBuffer(buffer: ArrayBuffer): Cursor {
+    public static fromBuffer(buffer: ArrayBuffer | Uint8Array): Cursor {
         return new Cursor(Buffer.from(buffer));
     }
 

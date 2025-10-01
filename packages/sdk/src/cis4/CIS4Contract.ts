@@ -70,10 +70,16 @@ class CIS4DryRun extends ContractDryRun<Updates> {
         additionalData: HexString = '',
         blockHash?: BlockHash.Type
     ): Promise<InvokeContractResult> {
+
+        const serializer = (p: { credInfo: CIS4.CredentialInfo; additionalData: HexString }): ArrayBuffer => {
+            const buf = serializeCIS4RegisterCredentialParam(p);
+            return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+        }        
+
         return this.invokeMethod(
             EntrypointName.fromStringUnchecked('registerCredential'),
             sender,
-            serializeCIS4RegisterCredentialParam,
+            serializer,
             { credInfo, additionalData },
             blockHash
         );
@@ -97,10 +103,16 @@ class CIS4DryRun extends ContractDryRun<Updates> {
         additionalData: HexString = '',
         blockHash?: BlockHash.Type
     ): Promise<InvokeContractResult> {
+
+        const serializer = (p: { credHolderPubKey: HexString; reason?: string; additionalData: HexString }): ArrayBuffer => {
+            const buf = serializeCIS4RevokeCredentialIssuerParam(p);
+            return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+        }
+
         return this.invokeMethod(
             EntrypointName.fromStringUnchecked('revokeCredentialIssuer'),
             sender,
-            serializeCIS4RevokeCredentialIssuerParam,
+            serializer,
             { credHolderPubKey, reason, additionalData },
             blockHash
         );
@@ -140,7 +152,7 @@ class CIS4DryRun extends ContractDryRun<Updates> {
             reason,
         });
         const digest = Buffer.concat([REVOKE_DOMAIN, serializedData]);
-        const signature = await credHolderSigner.sign(digest);
+        const signature = await credHolderSigner.sign(digest.buffer);
 
         return this.invokeMethod(
             entrypoint,

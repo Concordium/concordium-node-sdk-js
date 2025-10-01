@@ -290,7 +290,7 @@ export function deserializeCIS3Event(event: ContractEvent.Type): CIS3.Event {
     if (tag == 250) {
         // Nonce event
         const nonce = cursor.read(8).readBigUInt64LE(0).valueOf();
-        const sponsoree = AccountAddress.fromBuffer(cursor.read(32));
+        const sponsoree = AccountAddress.fromBuffer(cursor.read(32).buffer);
 
         return {
             type: CIS3.EventType.Nonce,

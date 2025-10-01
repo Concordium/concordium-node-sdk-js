@@ -7,7 +7,7 @@
     },
     "ts-node": {
         "compilerOptions": {
-            "module": "Commonjs"
+            "module": "CommonJS"
         }
     }
 }

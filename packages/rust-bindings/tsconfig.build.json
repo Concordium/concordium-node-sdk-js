@@ -1,9 +1,14 @@
 {
     "extends": "./tsconfig.json",
-    "include": ["./ts-src/**/*", "./wasm.d.ts"],
+    "include": [
+        "./ts-src/**/*",
+        "./wasm.d.ts"
+    ],
     "compilerOptions": {
         "rootDir": "./ts-src",
         "declaration": false,
+        "allowImportingTsExtensions": false,
+        "noEmit": false,
         "outDir": "./lib/web"
     }
 }

@@ -5,9 +5,6 @@
         },
         {
             "pattern": "https://grpc.testnet.concordium.com:20000"
-        },
-        {
-            "pattern": "https://www.npmjs.com/package/@protobuf-ts/grpcweb-transport$"
         }
     ]
 }

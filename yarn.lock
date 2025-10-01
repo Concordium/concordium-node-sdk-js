@@ -3832,7 +3832,7 @@ __metadata:
     prettier: ^3.2.5
     rimraf: ^5.0.1
     ts-loader: ^9.4.4
-    ts-node: ^10.9.1
+    tsx: ^4.20.6
     typescript: ^5.2.2
     wasm-pack: ^0.13.1
     webpack: ^5.88.2
@@ -26413,7 +26413,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ts-node@npm:10.9, ts-node@npm:^10.9.1":
+"ts-node@npm:10.9":
   version: 10.9.1
   resolution: "ts-node@npm:10.9.1"
   dependencies:
@@ -26555,6 +26555,22 @@ __metadata:
   bin:
     tsx: dist/cli.mjs
   checksum: 51bd7fb7c234f32bc866208f8ec0eef0208bfb998ba58d68f4ccb6cec49fd34deeee895c16d8ff15c870beda905ca9e4844e6729e22b47e6943f80fe9322f0b8
+  languageName: node
+  linkType: hard
+
+"tsx@npm:^4.20.6":
+  version: 4.20.6
+  resolution: "tsx@npm:4.20.6"
+  dependencies:
+    esbuild: ~0.25.0
+    fsevents: ~2.3.3
+    get-tsconfig: ^4.7.5
+  dependenciesMeta:
+    fsevents:
+      optional: true
+  bin:
+    tsx: dist/cli.mjs
+  checksum: d514bea59ec58fe7746271dd287b52e6e482a2236dd486d2fbf2eab11810ad2bc37e064210580824ce1c91a3e1ddd952499e6f48055e087abff5472468ac0d7b
   languageName: node
   linkType: hard
 

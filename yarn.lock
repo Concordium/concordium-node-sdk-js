@@ -1918,7 +1918,7 @@ __metadata:
   dependencies:
     "@types/copyfiles": ^2.4.1
     "@types/node": ^20.12.13
-    binaryen: ^114.0.0
+    binaryen: ^124.0.0
     buffer: ^6.0.3
     copyfiles: ^2.4.1
     eslint: 8
@@ -8065,13 +8065,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"binaryen@npm:^114.0.0":
-  version: 114.0.0
-  resolution: "binaryen@npm:114.0.0"
+"binaryen@npm:^124.0.0":
+  version: 124.0.0
+  resolution: "binaryen@npm:124.0.0"
   bin:
+    wasm-as: bin/wasm-as
+    wasm-ctor-eval: bin/wasm-ctor-eval
+    wasm-dis: bin/wasm-dis
+    wasm-merge: bin/wasm-merge
+    wasm-metadce: bin/wasm-metadce
     wasm-opt: bin/wasm-opt
+    wasm-reduce: bin/wasm-reduce
+    wasm-shell: bin/wasm-shell
     wasm2js: bin/wasm2js
-  checksum: 8631f639ba0508a9153a0f59cc8c2f0ca6cb737d8088d7ea53148dc89fadcbffd2088aa6b0cad0384e8971b351e6ec6295296a87e43c35ce2beeb30bd29139a2
+  checksum: b2dcc0e1fcccecd426dfe117259c2ed8489776675c6db53f40684707ea5689d9cc2f72c0460adbf1b0b243685db45635d0cc19764e69df58b90f249afaef0116
   languageName: node
   linkType: hard
 

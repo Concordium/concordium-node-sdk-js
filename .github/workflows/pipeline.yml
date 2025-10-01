@@ -14,7 +14,7 @@ on:
 env:
   DUMMY: 3 # For cache busting.
   NODE_VERSION: 18.16.0
-  RUST_VERSION: 1.82
+  RUST_VERSION: 1.85
 
 jobs:
   deps:

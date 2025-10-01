@@ -1925,7 +1925,7 @@ __metadata:
     prettier: ^3.2.5
     rimraf: ^5.0.1
     ts-loader: ^9.4.4
-    ts-node: ^10.9.2
+    tsx: ^4.20.6
     typescript: ^5.2.2
     wasm-pack: ^0.13.1
     webpack: ^5.88.2
@@ -22259,7 +22259,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tsx@npm:^4.19.2, tsx@npm:^4.19.3":
+"tsx@npm:^4.19.2, tsx@npm:^4.19.3, tsx@npm:^4.20.6":
   version: 4.20.6
   resolution: "tsx@npm:4.20.6"
   dependencies:

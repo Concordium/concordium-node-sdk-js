@@ -178,7 +178,7 @@ export function buildSignedCredentialForExistingAccount(
  */
 export function getAccountAddress(credId: string): AccountAddress.Type {
     const hashedCredId = sha256([Buffer.from(credId, 'hex')]);
-    return AccountAddress.fromBuffer(hashedCredId);
+    return AccountAddress.fromBuffer(hashedCredId.buffer);
 }
 
 type CredentialInputCommon = {

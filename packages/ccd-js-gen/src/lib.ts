@@ -60,7 +60,7 @@ export async function generateContractClientsFromFile(
         throw e;
     });
     const outputName = path.basename(modulePath, '.wasm.v1');
-    const moduleSource = SDK.versionedModuleSourceFromBuffer(fileBytes);
+    const moduleSource = SDK.versionedModuleSourceFromBuffer(Buffer.from(fileBytes).buffer);
     return generateContractClients(moduleSource, outputName, outDirPath, options);
 }
 

@@ -235,7 +235,7 @@ function fromCBORValueAccount(decoded: unknown): TokenHolderAccount {
     }
 
     // Create the AccountAddress from the extracted bytes
-    return new TokenHolderAccount(AccountAddress.fromBuffer(addressBytes), coinInfoValue);
+    return new TokenHolderAccount(AccountAddress.fromBuffer(addressBytes.buffer), coinInfoValue);
 }
 
 /**

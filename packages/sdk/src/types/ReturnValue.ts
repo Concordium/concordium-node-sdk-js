@@ -86,7 +86,7 @@ export function empty(): ReturnValue {
  * @param {ArrayBuffer} buffer The buffer of bytes representing the return value.
  * @returns {ReturnValue}
  */
-export function fromBuffer(buffer: ArrayBuffer): ReturnValue {
+export function fromBuffer(buffer: ArrayBuffer | SharedArrayBuffer): ReturnValue {
     return new ReturnValue(new Uint8Array(buffer));
 }
 

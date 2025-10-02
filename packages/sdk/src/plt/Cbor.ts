@@ -70,7 +70,7 @@ export function instanceOf(value: unknown): value is Cbor {
  * @param buffer The byte representation
  * @returns {Cbor} The CBOR data
  */
-export function fromBuffer(buffer: ArrayBuffer): Cbor {
+export function fromBuffer(buffer: ArrayBuffer | SharedArrayBuffer): Cbor {
     return new Cbor(new Uint8Array(buffer));
 }
 
@@ -107,7 +107,7 @@ export function toHexString(cbor: Cbor): HexString {
  * @returns {Cbor}
  */
 export function fromProto(cbor: Proto.CBor): Cbor {
-    return fromBuffer(cbor.value);
+    return fromBuffer(cbor.value.buffer);
 }
 
 /**

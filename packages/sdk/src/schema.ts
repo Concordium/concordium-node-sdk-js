@@ -79,7 +79,7 @@ export function serializeInitContractParameters(
         schemaVersion,
         verboseErrorMessage
     );
-    return Parameter.fromBuffer(Buffer.from(serializedParameters, 'hex'));
+    return Parameter.fromBuffer(Buffer.from(serializedParameters, 'hex').buffer);
 }
 
 /**
@@ -108,7 +108,7 @@ export function serializeUpdateContractParameters(
         schemaVersion,
         verboseErrorMessage
     );
-    return Parameter.fromBuffer(Buffer.from(serializedParameters, 'hex'));
+    return Parameter.fromBuffer(Buffer.from(serializedParameters, 'hex').buffer);
 }
 
 /**
@@ -129,7 +129,7 @@ export function serializeTypeValue(
         Buffer.from(rawSchema).toString('hex'),
         verboseErrorMessage
     );
-    return Parameter.fromBuffer(Buffer.from(serializedValue, 'hex'));
+    return Parameter.fromBuffer(Buffer.from(serializedValue, 'hex').buffer);
 }
 
 /**
@@ -266,13 +266,13 @@ export function deserializeInitError(
  * @returns the deserialized value
  */
 export function deserializeTypeValue(
-    value: ArrayBuffer,
-    rawSchema: ArrayBuffer,
+    value: ArrayBuffer | SharedArrayBuffer,
+    rawSchema: ArrayBuffer | SharedArrayBuffer,
     verboseErrorMessage = false
 ): SmartContractTypeValues {
     const deserializedValue = wasm.deserializeTypeValue(
-        Buffer.from(value).toString('hex'),
-        Buffer.from(rawSchema).toString('hex'),
+        Buffer.from(new Uint8Array(value)).toString('hex'),
+        Buffer.from(new Uint8Array(rawSchema)).toString('hex'),
         verboseErrorMessage
     );
     return JSONbig({

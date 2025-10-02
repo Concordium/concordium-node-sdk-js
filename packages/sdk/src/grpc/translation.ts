@@ -2167,14 +2167,14 @@ export function invokeInstanceResponse(invokeResponse: GRPC.InvokeInstanceRespon
                 returnValue:
                     invokeResponse.result.failure.returnValue === undefined
                         ? undefined
-                        : ReturnValue.fromBuffer(invokeResponse.result.failure.returnValue),
+                        : ReturnValue.fromBuffer(invokeResponse.result.failure.returnValue.buffer),
             };
         case 'success': {
             const result = invokeResponse.result.success;
             return {
                 tag: 'success',
                 usedEnergy: Energy.fromProto(unwrap(result.usedEnergy)),
-                returnValue: result.returnValue === undefined ? undefined : ReturnValue.fromBuffer(result.returnValue),
+                returnValue: result.returnValue === undefined ? undefined : ReturnValue.fromBuffer(result.returnValue.buffer),
                 events: result.effects.map(trContractTraceElement),
             };
         }
@@ -2189,7 +2189,7 @@ function trInstanceInfoCommon(
     return {
         amount: CcdAmount.fromProto(unwrap(info.amount)),
         sourceModule: ModuleReference.fromProto(unwrap(info.sourceModule)),
-        owner: AccountAddress.fromBuffer(unwrap(info.owner?.value)),
+        owner: AccountAddress.fromBuffer(unwrap(info.owner?.value).buffer),
         methods: info.methods.map(ReceiveName.fromProto),
         name: InitName.fromProto(unwrap(info.name)),
     };
@@ -2201,7 +2201,7 @@ export function instanceInfo(instanceInfo: GRPC.InstanceInfo): SDK.InstanceInfo 
             return {
                 ...trInstanceInfoCommon(instanceInfo.version.v0),
                 version: 0,
-                model: Buffer.from(unwrap(instanceInfo.version.v0.model?.value)),
+                model: Buffer.from(unwrap(instanceInfo.version.v0.model?.value)).buffer,
             };
         case 'v1':
             return {

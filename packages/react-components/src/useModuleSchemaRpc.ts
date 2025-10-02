@@ -66,7 +66,7 @@ async function fetchSchema(rpc: ConcordiumGRPCClient, moduleRef: string) {
     // - V0 modules additionally support section 'concordium-schema-v1' which always contain a v0 schema (not a typo).
     // - V1 modules additionally support section 'concordium-schema-v2' which always contain a v1 schema (not a typo).
     // The section 'concordium-schema' is the most common and is what the current tooling produces.
-    const module = await WebAssembly.compile(source);
+    const module = await WebAssembly.compile(Buffer.from(source).buffer);
     return findSchema(module, version);
 }
 

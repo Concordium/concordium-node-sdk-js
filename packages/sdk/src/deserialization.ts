@@ -47,7 +47,7 @@ function deserializeAccountTransactionSignature(signatures: Cursor): AccountTran
 }
 
 function deserializeTransactionHeader(serializedHeader: Cursor): AccountTransactionHeader {
-    const sender = AccountAddress.fromBuffer(serializedHeader.read(32));
+    const sender = AccountAddress.fromBuffer(serializedHeader.read(32).buffer);
     const nonce = AccountSequenceNumber.create(serializedHeader.read(8).readBigUInt64BE(0));
     // TODO: extract payloadSize and energyAmount?
     // energyAmount

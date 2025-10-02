@@ -554,10 +554,10 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
 
         return this.createUpdateTransaction<CIS4.RevokeCredentialHolderParam, CIS4.RevokeCredentialHolderParamJson>(
             entrypoint,
-            () => Buffer.concat([signature, serializedData]), // Reuse existing serialization
+            () => Buffer.concat([signature, serializedData]).buffer, // Reuse existing serialization
             metadata,
             {
-                signature: signature.toString('hex'),
+                signature: Buffer.from(signature).toString('hex'),
                 data: { credentialPubKey, signingData, reason },
             },
             formatCIS4RevokeCredentialHolder
@@ -628,14 +628,14 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
             reason,
         });
         const digest = Buffer.concat([REVOKE_DOMAIN, serializedData]);
-        const signature = await revokerSigner.sign(digest);
+        const signature = await revokerSigner.sign(digest.buffer);
 
         return this.createUpdateTransaction<CIS4.RevokeCredentialOtherParam, CIS4.RevokeCredentialOtherParamJson>(
             entrypoint,
-            () => Buffer.concat([signature, serializedData]), // Reuse existing serialization
+            () => Buffer.concat([signature, serializedData]).buffer, // Reuse existing serialization
             metadata,
             {
-                signature: signature.toString('hex'),
+                signature: Buffer.from(signature).toString('hex'),
                 data: {
                     credentialPubKey,
                     signingData,
@@ -693,10 +693,16 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
         keys: HexString | HexString[],
         additionalData: HexString = ''
     ): ContractUpdateTransactionWithSchema {
+
+        const serializer = (p: { additionalData: HexString; keys: HexString[] }): ArrayBuffer => {
+            const buf = serializeCIS4UpdateRevocationKeysParam(p);
+            return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+        }
+
         const ks = Array.isArray(keys) ? keys : [keys];
         return this.createUpdateTransaction(
             EntrypointName.fromStringUnchecked('registerRevocationKeys'),
-            serializeCIS4UpdateRevocationKeysParam,
+            serializer,
             metadata,
             { additionalData, keys: ks },
             formatCIS4UpdateRevocationKeys
@@ -737,10 +743,16 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
         keys: HexString | HexString[],
         additionalData: HexString = ''
     ): ContractUpdateTransactionWithSchema {
+
+        const serializer = (p: { additionalData: HexString; keys: HexString[] }): ArrayBuffer => {
+            const buf = serializeCIS4UpdateRevocationKeysParam(p);
+            return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+        }
+
         const ks = Array.isArray(keys) ? keys : [keys];
         return this.createUpdateTransaction(
             EntrypointName.fromStringUnchecked('removeRevocationKeys'),
-            serializeCIS4UpdateRevocationKeysParam,
+            serializer,
             metadata,
             { additionalData, keys: ks },
             formatCIS4UpdateRevocationKeys

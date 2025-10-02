@@ -287,10 +287,11 @@ export function deserializeCIS3Event(event: ContractEvent.Type): CIS3.Event {
 
     const cursor = Cursor.fromBuffer(buffer);
     const tag = deserializeUint8(cursor);
+    const chunk = cursor.read(32);
     if (tag == 250) {
         // Nonce event
         const nonce = cursor.read(8).readBigUInt64LE(0).valueOf();
-        const sponsoree = AccountAddress.fromBuffer(cursor.read(32).buffer);
+        const sponsoree = AccountAddress.fromBuffer(chunk.buffer.slice(chunk.byteOffset, chunk.byteOffset + chunk.byteLength));
 
         return {
             type: CIS3.EventType.Nonce,

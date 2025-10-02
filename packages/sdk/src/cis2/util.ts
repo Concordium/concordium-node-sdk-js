@@ -717,9 +717,10 @@ export function formatCIS2Transfer(input: CIS2.Transfer): CIS2.TransferParamJson
 
 function addressDeserializer(cursor: Cursor): CIS2.Address {
     const kind = deserializeUint8(cursor);
+    const chunk = cursor.read(32);
     switch (kind) {
         case 0:
-            return AccountAddress.fromBuffer(cursor.read(32).buffer);
+            return AccountAddress.fromBuffer(chunk.buffer.slice(chunk.byteOffset, chunk.byteOffset + chunk.byteLength));
         case 1:
             const index = deserializeBigUInt64LE(cursor);
             const subindex = deserializeBigUInt64LE(cursor);

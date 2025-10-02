@@ -157,7 +157,10 @@ class CIS4DryRun extends ContractDryRun<Updates> {
         return this.invokeMethod(
             entrypoint,
             sender,
-            () => Buffer.concat([signature, serializedData]).buffer, // Reuse existing serialization
+            () => {
+                const buf = Buffer.concat([signature, serializedData]);
+                return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+            }, // Reuse existing serialization
             undefined,
             blockHash
         );
@@ -200,12 +203,16 @@ class CIS4DryRun extends ContractDryRun<Updates> {
             reason,
         });
         const digest = Buffer.concat([REVOKE_DOMAIN, serializedData]);
-        const signature = await revokerSigner.sign(digest.buffer);
+        const buf = digest;
+        const signature = await revokerSigner.sign(buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength));
 
         return this.invokeMethod(
             entrypoint,
             sender,
-            () => Buffer.concat([signature, serializedData]).buffer, // Reuse existing serialization
+            () => {
+                const buf = Buffer.concat([signature, serializedData]);
+                return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+            }, // Reuse existing serialization
             undefined,
             blockHash
         );
@@ -340,7 +347,10 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
     public credentialEntry(credHolderPubKey: HexString, blockHash?: BlockHash.Type): Promise<CIS4.CredentialEntry> {
         return this.invokeView(
             EntrypointName.fromStringUnchecked('credentialEntry'),
-            (k) => Buffer.from(k, 'hex').buffer,
+            (k) => {
+                const buf = Buffer.from(k, 'hex');
+                return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+            },
             deserializeCIS4CredentialEntry,
             credHolderPubKey,
             blockHash
@@ -358,7 +368,10 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
     public credentialStatus(credHolderPubKey: HexString, blockHash?: BlockHash.Type): Promise<CIS4.CredentialStatus> {
         return this.invokeView(
             EntrypointName.fromStringUnchecked('credentialStatus'),
-            (k) => Buffer.from(k, 'hex').buffer,
+            (k) => { 
+                const buf = Buffer.from(k, 'hex');
+                return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+            },
             deserializeCIS4CredentialStatus,
             credHolderPubKey,
             blockHash
@@ -375,7 +388,10 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
     public revocationKeys(blockHash?: BlockHash.Type): Promise<CIS4.RevocationKeyWithNonce[]> {
         return this.invokeView(
             EntrypointName.fromStringUnchecked('revocationKeys'),
-            () => Buffer.alloc(0).buffer,
+            () => { 
+                const buf = Buffer.alloc(0);
+                return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+            },
             deserializeCIS4RevocationKeys,
             undefined,
             blockHash
@@ -392,7 +408,10 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
     public registryMetadata(blockHash?: BlockHash.Type): Promise<CIS4.MetadataResponse> {
         return this.invokeView(
             EntrypointName.fromStringUnchecked('registryMetadata'),
-            () => Buffer.alloc(0).buffer,
+            () => {
+                const buf = Buffer.alloc(0);
+                return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+            },
             deserializeCIS4MetadataResponse,
             undefined,
             blockHash
@@ -409,7 +428,10 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
     public issuer(blockHash?: BlockHash.Type): Promise<HexString> {
         return this.invokeView(
             EntrypointName.fromStringUnchecked('issuer'),
-            () => Buffer.alloc(0).buffer,
+            () => { 
+                const buf = Buffer.alloc(0);
+                return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+            },
             (value) => value,
             undefined,
             blockHash
@@ -550,7 +572,8 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
             reason,
         });
         const digest = Buffer.concat([REVOKE_DOMAIN, serializedData]);
-        const signature = await credHolderSigner.sign(digest.buffer);
+        const buf = digest;
+        const signature = await credHolderSigner.sign(buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength));
 
         return this.createUpdateTransaction<CIS4.RevokeCredentialHolderParam, CIS4.RevokeCredentialHolderParamJson>(
             entrypoint,
@@ -628,7 +651,8 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
             reason,
         });
         const digest = Buffer.concat([REVOKE_DOMAIN, serializedData]);
-        const signature = await revokerSigner.sign(digest.buffer);
+        const buf = digest;
+        const signature = await revokerSigner.sign(buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength));
 
         return this.createUpdateTransaction<CIS4.RevokeCredentialOtherParam, CIS4.RevokeCredentialOtherParamJson>(
             entrypoint,

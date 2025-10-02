@@ -90,8 +90,8 @@ export function instanceOf(value: unknown): value is ModuleReference {
  * @throws If the provided buffer does not contain exactly 32 bytes.
  * @returns {ModuleReference} A module reference.
  */
-export function fromBuffer(buffer: ArrayBuffer): ModuleReference {
-    const hex = Buffer.from(buffer).toString('hex');
+export function fromBuffer(buffer: ArrayBufferLike): ModuleReference {
+    const hex = Buffer.from(new Uint8Array(buffer)).toString('hex');
     if (buffer.byteLength !== MODULE_REF_BYTE_LENGTH) {
         throw new Error(
             'The provided moduleRef ' + hex + ' is invalid as module reference as it does not contain 32 bytes'
@@ -128,7 +128,7 @@ export function toHexString(moduleReference: ModuleReference): HexString {
  * @returns {ModuleReference} The module reference.
  */
 export function fromProto(moduleReference: Proto.ModuleRef): ModuleReference {
-    return fromBuffer(moduleReference.value);
+    return fromBuffer((moduleReference.value).buffer);
 }
 
 /**

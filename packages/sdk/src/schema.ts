@@ -121,12 +121,12 @@ export function serializeUpdateContractParameters(
 export function serializeTypeValue(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
     value: any,
-    rawSchema: ArrayBuffer,
+    rawSchema: ArrayBuffer | SharedArrayBuffer,
     verboseErrorMessage = false
 ): Parameter.Type {
     const serializedValue = wasm.serializeTypeValue(
         JSONbig.stringify(value),
-        Buffer.from(rawSchema).toString('hex'),
+        Buffer.from(new Uint8Array(rawSchema)).toString('hex'),
         verboseErrorMessage
     );
     return Parameter.fromBuffer(Buffer.from(serializedValue, 'hex').buffer);
@@ -266,8 +266,8 @@ export function deserializeInitError(
  * @returns the deserialized value
  */
 export function deserializeTypeValue(
-    value: ArrayBuffer | SharedArrayBuffer,
-    rawSchema: ArrayBuffer | SharedArrayBuffer,
+    value: ArrayBufferLike,
+    rawSchema: ArrayBufferLike,
     verboseErrorMessage = false
 ): SmartContractTypeValues {
     const deserializedValue = wasm.deserializeTypeValue(

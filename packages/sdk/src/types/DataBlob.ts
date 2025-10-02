@@ -45,7 +45,7 @@ export class DataBlob {
      */
     public static fromJSON(value: HexString): DataBlob {
         // The first 2 bytes are the length of the data buffer, so we need to remove them.
-        return new DataBlob(encodeHexString(value.substring(4)));
+        return new DataBlob(encodeHexString(value.substring(4)).buffer);
     }
 
     /**
@@ -69,6 +69,6 @@ export class DataBlob {
      */
     public static fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(JSON_DISCRIMINATOR, (v: Serializable) => {
         const data = Buffer.from(v, 'hex');
-        return new DataBlob(data);
+        return new DataBlob(data.buffer);
     });
 }

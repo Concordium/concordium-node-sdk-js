@@ -125,7 +125,7 @@ export function toBuffer(parameter: ReturnValue): Uint8Array {
  */
 export function parseWithSchemaType(returnValue: ReturnValue, schemaType: SchemaType): SmartContractTypeValues {
     const schemaBytes = serializeSchemaType(schemaType);
-    return deserializeTypeValue(returnValue.buffer, schemaBytes);
+    return deserializeTypeValue(returnValue.buffer as unknown as ArrayBuffer | SharedArrayBuffer, schemaBytes.buffer as unknown as ArrayBuffer | SharedArrayBuffer);
 }
 
 /**
@@ -139,7 +139,7 @@ export function parseWithSchemaTypeBase64(
     schemaBase64: Base64String
 ): SmartContractTypeValues {
     const schemaBytes = Buffer.from(schemaBase64, 'base64');
-    return deserializeTypeValue(returnValue.buffer, schemaBytes);
+    return deserializeTypeValue(returnValue.buffer as unknown as ArrayBuffer | SharedArrayBuffer, schemaBytes as unknown as ArrayBuffer | SharedArrayBuffer );
 }
 
 /**

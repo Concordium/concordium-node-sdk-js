@@ -247,7 +247,7 @@ export function signTransaction(
     signer: AccountSigner
 ): Promise<AccountTransactionSignature> {
     const digest = getAccountTransactionSignDigest(transaction, signer.getSignatureCount());
-    return signer.sign(digest);
+    return signer.sign(digest.buffer);
 }
 
 /**
@@ -272,7 +272,7 @@ export function signMessage(
     message: string | Uint8Array,
     signer: AccountSigner
 ): Promise<AccountTransactionSignature> {
-    return signer.sign(getMessageDigest(account, message));
+    return signer.sign(getMessageDigest(account, message).buffer);
 }
 
 /**

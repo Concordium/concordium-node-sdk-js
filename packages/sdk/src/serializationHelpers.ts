@@ -49,7 +49,7 @@ export function encodeBool(value: boolean): Buffer {
     const arr = new ArrayBuffer(1);
     const view = new DataView(arr);
     view.setInt8(0, result);
-    return Buffer.from(new Int8Array(arr));
+    return Buffer.from((new Int8Array(arr)).buffer);
 }
 
 /**
@@ -81,7 +81,7 @@ export function encodeInt32(value: number, useLittleEndian = false): Buffer {
     const arr = new ArrayBuffer(4);
     const view = new DataView(arr);
     view.setInt32(0, value, useLittleEndian);
-    return Buffer.from(new Int8Array(arr));
+    return Buffer.from((new Int8Array(arr)).buffer);
 }
 
 /**
@@ -113,7 +113,7 @@ export function encodeInt16(value: number, useLittleEndian = false): Buffer {
     const arr = new ArrayBuffer(2);
     const view = new DataView(arr);
     view.setInt16(0, value, useLittleEndian);
-    return Buffer.from(new Int8Array(arr));
+    return Buffer.from((new Int8Array(arr)).buffer);
 }
 
 /**

@@ -79,7 +79,7 @@ export function serializeInitContractParameters(
         schemaVersion,
         verboseErrorMessage
     );
-    return Parameter.fromBuffer(Buffer.from(serializedParameters, 'hex'));
+    return Parameter.fromBuffer(Buffer.from(serializedParameters, 'hex').buffer);
 }
 
 /**
@@ -108,7 +108,7 @@ export function serializeUpdateContractParameters(
         schemaVersion,
         verboseErrorMessage
     );
-    return Parameter.fromBuffer(Buffer.from(serializedParameters, 'hex'));
+    return Parameter.fromBuffer(Buffer.from(serializedParameters, 'hex').buffer);
 }
 
 /**
@@ -121,15 +121,15 @@ export function serializeUpdateContractParameters(
 export function serializeTypeValue(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
     value: any,
-    rawSchema: ArrayBuffer,
+    rawSchema: ArrayBuffer | SharedArrayBuffer,
     verboseErrorMessage = false
 ): Parameter.Type {
     const serializedValue = wasm.serializeTypeValue(
         JSONbig.stringify(value),
-        Buffer.from(rawSchema).toString('hex'),
+        Buffer.from(new Uint8Array(rawSchema)).toString('hex'),
         verboseErrorMessage
     );
-    return Parameter.fromBuffer(Buffer.from(serializedValue, 'hex'));
+    return Parameter.fromBuffer(Buffer.from(serializedValue, 'hex').buffer);
 }
 
 /**
@@ -266,13 +266,13 @@ export function deserializeInitError(
  * @returns the deserialized value
  */
 export function deserializeTypeValue(
-    value: ArrayBuffer,
-    rawSchema: ArrayBuffer,
+    value: ArrayBufferLike,
+    rawSchema: ArrayBufferLike,
     verboseErrorMessage = false
 ): SmartContractTypeValues {
     const deserializedValue = wasm.deserializeTypeValue(
-        Buffer.from(value).toString('hex'),
-        Buffer.from(rawSchema).toString('hex'),
+        Buffer.from(new Uint8Array(value)).toString('hex'),
+        Buffer.from(new Uint8Array(rawSchema)).toString('hex'),
         verboseErrorMessage
     );
     return JSONbig({

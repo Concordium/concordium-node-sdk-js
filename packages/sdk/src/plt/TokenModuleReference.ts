@@ -102,7 +102,7 @@ export function instanceOf(value: unknown): value is ModuleReference {
  * @returns {ModuleReference} A module reference.
  * @throws {Err} If the value is not exactly 32 bytes.
  */
-export function fromBuffer(buffer: ArrayBuffer): ModuleReference {
+export function fromBuffer(buffer: ArrayBuffer | SharedArrayBuffer): ModuleReference {
     return new ModuleReference(new Uint8Array(buffer));
 }
 
@@ -114,7 +114,7 @@ export function fromBuffer(buffer: ArrayBuffer): ModuleReference {
  * @throws {Err} If the value is not exactly 32 bytes.
  */
 export function fromHexString(moduleRef: HexString): ModuleReference {
-    return fromBuffer(Buffer.from(moduleRef, 'hex'));
+    return fromBuffer(Buffer.from(moduleRef, 'hex').buffer);
 }
 
 /**
@@ -143,7 +143,7 @@ export function fromJSON(json: JSON): ModuleReference {
  * @throws {Err} If the value is not exactly 32 bytes.
  */
 export function fromProto(moduleReference: Proto.TokenModuleRef): ModuleReference {
-    return fromBuffer(moduleReference.value);
+    return fromBuffer(moduleReference.value.buffer);
 }
 
 /**

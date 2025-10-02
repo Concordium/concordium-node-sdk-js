@@ -59,7 +59,7 @@ export function calculateModuleReference(moduleSource: VersionedModuleSource): M
     prefix.writeUInt32BE(moduleSource.version, 0);
     prefix.writeUInt32BE(moduleSource.source.length, 4);
     const hash = sha256([prefix, moduleSource.source]);
-    return ModuleReference.fromBuffer(hash);
+    return ModuleReference.fromBuffer(hash.buffer);
 }
 
 /**
@@ -69,7 +69,9 @@ export function calculateModuleReference(moduleSource: VersionedModuleSource): M
  * @returns The interface of the smart contract module.
  */
 export async function parseModuleInterface(moduleSource: VersionedModuleSource): Promise<ModuleInterface> {
-    const wasmModule = await WebAssembly.compile(moduleSource.source);
+
+    const wasmModule = await WebAssembly.compile(Buffer.from(moduleSource.source));
+
     const map = new Map<string, ContractInterface>();
     const wasmExports = WebAssembly.Module.exports(wasmModule);
 
@@ -105,7 +107,7 @@ export async function getEmbeddedModuleSchema({
     source,
     version,
 }: VersionedModuleSource): Promise<RawModuleSchema | undefined> {
-    const sections = findCustomSections(await WebAssembly.compile(source), version);
+    const sections = findCustomSections(await WebAssembly.compile(Buffer.from(source).buffer), version);
     if (sections === undefined) {
         return undefined;
     }

@@ -83,15 +83,16 @@ export function instanceOf(value: unknown): value is TransactionHash {
  * @throws If the provided buffer does not contain 32 bytes.
  * @returns {TransactionHash}
  */
-export function fromBuffer(buffer: ArrayBuffer): TransactionHash {
+export function fromBuffer(buffer: ArrayBuffer | SharedArrayBuffer): TransactionHash {
+    const res = new Uint8Array(buffer);
     if (buffer.byteLength !== TRANSACTION_HASH_BYTE_LENGTH) {
         throw new Error(
             `Invalid transaction hash provided: Expected a buffer containing 32 bytes, instead got '${Buffer.from(
-                buffer
+                res
             ).toString('hex')}'.`
         );
     }
-    return new TransactionHash(new Uint8Array(buffer));
+    return new TransactionHash(res);
 }
 
 /**
@@ -101,7 +102,7 @@ export function fromBuffer(buffer: ArrayBuffer): TransactionHash {
  * @returns {TransactionHash}
  */
 export function fromHexString(hex: HexString): TransactionHash {
-    return fromBuffer(Buffer.from(hex, 'hex'));
+    return fromBuffer(Buffer.from(hex, 'hex').buffer);
 }
 
 /**
@@ -128,7 +129,7 @@ export function toBuffer(hash: TransactionHash): Uint8Array {
  * @returns {TransactionHash} The transaction hash.
  */
 export function fromProto(transactionHash: Proto.TransactionHash): TransactionHash {
-    return fromBuffer(transactionHash.value);
+    return fromBuffer(transactionHash.value.buffer);
 }
 
 /**

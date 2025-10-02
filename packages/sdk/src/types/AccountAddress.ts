@@ -90,7 +90,7 @@ export function instanceOf(value: unknown): value is AccountAddress {
  * @throws If the provided buffer does not contain exactly 32 bytes.
  * @returns {AccountAddress} The AccountAddress.
  */
-export function fromBuffer(buffer: ArrayBuffer): AccountAddress {
+export function fromBuffer(buffer: ArrayBuffer | SharedArrayBuffer): AccountAddress {
     if (buffer.byteLength !== 32) {
         throw new Error(`The provided buffer '${buffer}' is invalid as its length was not 32`);
     }
@@ -194,7 +194,7 @@ export function getAlias(address: AccountAddress, counter: number): AccountAddre
     const commonBytes = address.decodedAddress.slice(0, COMMON_BYTES_LENGTH);
     const aliasBytes = Buffer.alloc(ALIAS_BYTES_LENGTH);
     aliasBytes.writeUIntBE(counter, 0, ALIAS_BYTES_LENGTH);
-    return fromBuffer(Buffer.concat([commonBytes, aliasBytes]));
+    return fromBuffer(Buffer.concat([commonBytes, aliasBytes]).buffer);
 }
 
 /**
@@ -203,7 +203,7 @@ export function getAlias(address: AccountAddress, counter: number): AccountAddre
  * @returns {AccountAddress} The account address
  */
 export function fromProto(accountAddress: Proto.AccountAddress): AccountAddress {
-    return fromBuffer(accountAddress.value);
+    return fromBuffer(accountAddress.value.buffer);
 }
 
 /**

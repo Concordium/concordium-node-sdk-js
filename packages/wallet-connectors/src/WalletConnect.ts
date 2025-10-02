@@ -183,9 +183,9 @@ function serializeInitContractParam(
     const { parameters, schema } = typedParams;
     switch (schema.type) {
         case 'ModuleSchema':
-            return serializeInitContractParameters(contractName, parameters, schema.value, schema.version);
+            return serializeInitContractParameters(contractName, parameters, schema.value.buffer, schema.version);
         case 'TypeSchema':
-            return serializeTypeValue(parameters, schema.value);
+            return serializeTypeValue(parameters, schema.value.buffer);
         default:
             throw new UnreachableCaseError('schema', schema);
     }
@@ -206,11 +206,11 @@ function serializeUpdateContractMessage(
                 contractName,
                 entrypointName,
                 parameters,
-                schema.value,
+                schema.value.buffer,
                 schema.version
             );
         case 'TypeSchema':
-            return serializeTypeValue(parameters, schema.value);
+            return serializeTypeValue(parameters, schema.value.buffer);
         default:
             throw new UnreachableCaseError('schema', schema);
     }

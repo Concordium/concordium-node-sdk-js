@@ -11,7 +11,7 @@ const CONTRACT_PARAM_MAX_LENGTH = 65535;
  *
  * @throws If buffer exceeds max length allowed for smart contract parameters
  */
-export const checkParameterLength = (buffer: ArrayBuffer): void => {
+export const checkParameterLength = (buffer: ArrayBuffer | SharedArrayBuffer): void => {
     if (buffer.byteLength > CONTRACT_PARAM_MAX_LENGTH) {
         throw new Error(
             `Serialized parameter exceeds max length of smart contract parameter (${CONTRACT_PARAM_MAX_LENGTH} bytes)`

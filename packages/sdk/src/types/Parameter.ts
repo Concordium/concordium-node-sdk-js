@@ -90,7 +90,7 @@ export function empty(): Parameter {
  * @throws If the provided buffer exceed the supported number of bytes for a smart contract.
  * @returns {Parameter}
  */
-export function fromBuffer(buffer: ArrayBuffer): Parameter {
+export function fromBuffer(buffer: ArrayBuffer | SharedArrayBuffer): Parameter {
     checkParameterLength(buffer);
     return fromBufferUnchecked(buffer);
 }
@@ -101,7 +101,7 @@ export function fromBuffer(buffer: ArrayBuffer): Parameter {
  * @param {ArrayBuffer} buffer The buffer of bytes representing the parameter.
  * @returns {Parameter}
  */
-export function fromBufferUnchecked(buffer: ArrayBuffer): Parameter {
+export function fromBufferUnchecked(buffer: ArrayBuffer | SharedArrayBuffer): Parameter {
     return new Parameter(new Uint8Array(buffer));
 }
 
@@ -113,7 +113,7 @@ export function fromBufferUnchecked(buffer: ArrayBuffer): Parameter {
  * @returns {Parameter}
  */
 export function fromHexString(hex: HexString): Parameter {
-    return fromBuffer(Buffer.from(hex, 'hex'));
+    return fromBuffer(Buffer.from(hex, 'hex').buffer);
 }
 
 /**
@@ -142,7 +142,7 @@ export function toBuffer(parameter: Parameter): Uint8Array {
  */
 export function fromSchemaType(schemaType: SchemaType, value: unknown): Parameter {
     const schemaBytes = serializeSchemaType(schemaType);
-    return serializeTypeValue(value, schemaBytes);
+    return serializeTypeValue(value, schemaBytes.buffer);
 }
 
 /**
@@ -153,7 +153,7 @@ export function fromSchemaType(schemaType: SchemaType, value: unknown): Paramete
  */
 export function fromBase64SchemaType(schemaBase64: Base64String, value: unknown): Parameter {
     const schemaBytes = Buffer.from(schemaBase64, 'base64');
-    return serializeTypeValue(value, schemaBytes);
+    return serializeTypeValue(value, schemaBytes.buffer);
 }
 
 /**
@@ -164,7 +164,7 @@ export function fromBase64SchemaType(schemaBase64: Base64String, value: unknown)
  */
 export function parseWithSchemaType(parameter: Parameter, schemaType: SchemaType): SmartContractTypeValues {
     const schemaBytes = serializeSchemaType(schemaType);
-    return deserializeTypeValue(toBuffer(parameter), schemaBytes);
+    return deserializeTypeValue(toBuffer(parameter).buffer, schemaBytes.buffer);
 }
 
 /**
@@ -175,7 +175,7 @@ export function parseWithSchemaType(parameter: Parameter, schemaType: SchemaType
  */
 export function parseWithSchemaTypeBase64(parameter: Parameter, schemaBase64: Base64String): SmartContractTypeValues {
     const schemaBytes = Buffer.from(schemaBase64, 'base64');
-    return deserializeTypeValue(toBuffer(parameter), schemaBytes);
+    return deserializeTypeValue(toBuffer(parameter).buffer, schemaBytes.buffer);
 }
 
 /**
@@ -184,7 +184,7 @@ export function parseWithSchemaTypeBase64(parameter: Parameter, schemaBase64: Ba
  * @returns {Parameter} The parameter.
  */
 export function fromProto(parameter: Proto.Parameter): Parameter {
-    return fromBuffer(parameter.value);
+    return fromBuffer(parameter.value.buffer);
 }
 
 /**

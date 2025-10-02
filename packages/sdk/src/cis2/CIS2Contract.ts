@@ -57,7 +57,12 @@ class CIS2DryRun extends ContractDryRun<Updates> {
         transfers: CIS2.Transfer | CIS2.Transfer[],
         blockHash?: BlockHash.Type
     ): Promise<InvokeContractResult> {
-        const serialize = makeDynamicFunction(serializeCIS2Transfers);
+        // wrap serializeCIS2Transfers but convert Buffer -> ArrayBuffer on the fly
+        const serialize = makeDynamicFunction((input) => {
+            const buf = serializeCIS2Transfers(input as CIS2.Transfer[]);
+            return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+        });
+        
         return this.invokeMethod(
             EntrypointName.fromStringUnchecked('transfer'),
             sender,
@@ -91,7 +96,12 @@ class CIS2DryRun extends ContractDryRun<Updates> {
         updates: CIS2.UpdateOperator | CIS2.UpdateOperator[],
         blockHash?: BlockHash.Type
     ): Promise<InvokeContractResult> {
-        const serialize = makeDynamicFunction(serializeCIS2UpdateOperators);
+        // wrap serializeCIS2UpdateOperators but convert Buffer -> ArrayBuffer on the fly
+        const serialize = makeDynamicFunction((input) => {
+            const buf = serializeCIS2UpdateOperators(input as CIS2.UpdateOperator[]);
+            return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+        });
+
         return this.invokeMethod(
             EntrypointName.fromStringUnchecked('updateOperator'),
             owner,
@@ -185,7 +195,12 @@ export class CIS2Contract extends CISContract<Updates, Views, CIS2DryRun> {
         metadata: CIS2.CreateTransactionMetadata,
         transfers: CIS2.Transfer | CIS2.Transfer[]
     ): CIS2.UpdateTransaction<CIS2.TransferParamJson[]> {
-        const serialize = makeDynamicFunction(serializeCIS2Transfers);
+        // wrap serializeCIS2Transfers but convert Buffer -> ArrayBuffer on the fly
+        const serialize = makeDynamicFunction((input) => {
+            const buf = serializeCIS2Transfers(input as CIS2.Transfer[]);
+            return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+        });
+        
         const format = makeDynamicFunction((us: CIS2.Transfer[]) => us.map(formatCIS2Transfer));
 
         return this.createUpdateTransaction(
@@ -275,7 +290,13 @@ export class CIS2Contract extends CISContract<Updates, Views, CIS2DryRun> {
         metadata: CIS2.CreateTransactionMetadata,
         updates: CIS2.UpdateOperator | CIS2.UpdateOperator[]
     ): CIS2.UpdateTransaction<CIS2.UpdateOperatorParamJson[]> {
-        const serialize = makeDynamicFunction(serializeCIS2UpdateOperators);
+
+        // wrap serializeCIS2UpdateOperators but convert Buffer -> ArrayBuffer on the fly
+        const serialize = makeDynamicFunction((input) => {
+        const buf = serializeCIS2UpdateOperators(input as CIS2.UpdateOperator[]);
+        return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+        });
+
         const format = makeDynamicFunction((us: CIS2.UpdateOperator[]) => us.map(formatCIS2UpdateOperator));
 
         return this.createUpdateTransaction(
@@ -354,7 +375,13 @@ export class CIS2Contract extends CISContract<Updates, Views, CIS2DryRun> {
         queries: CIS2.BalanceOfQuery | CIS2.BalanceOfQuery[],
         blockHash?: BlockHash.Type
     ): Promise<bigint | bigint[]> {
-        const serialize = makeDynamicFunction(serializeCIS2BalanceOfQueries);
+
+        // wrap serializeCIS2BalanceOfQueries but convert Buffer -> ArrayBuffer on the fly
+        const serialize = makeDynamicFunction((input) => {
+        const buf = serializeCIS2BalanceOfQueries(input as CIS2.BalanceOfQuery[]);
+        return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+        });
+
         const deserialize = ensureMatchesInput(queries, deserializeCIS2BalanceOfResponse);
         return this.invokeView(
             EntrypointName.fromStringUnchecked('balanceOf'),
@@ -392,7 +419,13 @@ export class CIS2Contract extends CISContract<Updates, Views, CIS2DryRun> {
         queries: CIS2.OperatorOfQuery | CIS2.OperatorOfQuery[],
         blockHash?: BlockHash.Type
     ): Promise<boolean | boolean[]> {
-        const serialize = makeDynamicFunction(serializeCIS2OperatorOfQueries);
+
+        // wrap serializeCIS2OperatorOfQueries but convert Buffer -> ArrayBuffer on the fly
+        const serialize = makeDynamicFunction((input) => {
+            const buf = serializeCIS2OperatorOfQueries(input as CIS2.OperatorOfQuery[]);
+            return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+        });
+
         const deserialize = ensureMatchesInput(queries, deserializeCIS2OperatorOfResponse);
         return this.invokeView(
             EntrypointName.fromStringUnchecked('operatorOf'),
@@ -430,7 +463,13 @@ export class CIS2Contract extends CISContract<Updates, Views, CIS2DryRun> {
         tokenIds: HexString | HexString[],
         blockHash?: BlockHash.Type
     ): Promise<CIS2.MetadataUrl | CIS2.MetadataUrl[]> {
-        const serialize = makeDynamicFunction(serializeCIS2TokenIds);
+
+        // wrap serializeCIS2TokenIds but convert Buffer -> ArrayBuffer on the fly
+        const serialize = makeDynamicFunction((input) => {
+            const buf = serializeCIS2TokenIds(input as HexString[]);
+            return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+        });
+
         const deserialize = ensureMatchesInput(tokenIds, deserializeCIS2TokenMetadataResponse);
         return this.invokeView(
             EntrypointName.fromStringUnchecked('tokenMetadata'),

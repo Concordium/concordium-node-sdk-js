@@ -108,7 +108,7 @@ export class SimpleTransferHandler
     }
 
     deserialize(serializedPayload: Cursor): SimpleTransferPayload {
-        const toAddress = AccountAddress.fromBuffer(Buffer.from(serializedPayload.read(32)));
+        const toAddress = AccountAddress.fromBuffer(Buffer.from(serializedPayload.read(32)).buffer);
         const amount = CcdAmount.fromMicroCcd(serializedPayload.read(8).readBigUInt64BE(0));
         return {
             toAddress,
@@ -147,9 +147,9 @@ export class SimpleTransferWithMemoHandler
     }
 
     deserialize(serializedPayload: Cursor): SimpleTransferWithMemoPayload {
-        const toAddress = AccountAddress.fromBuffer(Buffer.from(serializedPayload.read(32)));
+        const toAddress = AccountAddress.fromBuffer(Buffer.from(serializedPayload.read(32)).buffer);
         const memoLength = serializedPayload.read(2).readUInt16BE(0);
-        const memo = new DataBlob(Buffer.from(serializedPayload.read(memoLength)));
+        const memo = new DataBlob(Buffer.from(serializedPayload.read(memoLength)).buffer);
         const amount = CcdAmount.fromMicroCcd(serializedPayload.read(8).readBigUInt64BE(0));
         return {
             toAddress,
@@ -402,7 +402,7 @@ export class RegisterDataHandler implements AccountTransactionHandler<RegisterDa
     deserialize(serializedPayload: Cursor): RegisterDataPayload {
         const memoLength = serializedPayload.read(2).readUInt16BE(0);
         return {
-            data: new DataBlob(Buffer.from(serializedPayload.read(memoLength))),
+            data: new DataBlob(Buffer.from(serializedPayload.read(memoLength)).buffer),
         };
     }
 
@@ -531,10 +531,10 @@ export class TokenUpdateHandler implements AccountTransactionHandler<TokenUpdate
     }
     deserialize(serializedPayload: Cursor): TokenUpdatePayload {
         let len = serializedPayload.read(1).readUInt8(0);
-        const tokenId = TokenId.fromBytes(serializedPayload.read(len));
+        const tokenId = TokenId.fromBytes(serializedPayload.read(len).buffer);
 
         len = serializedPayload.read(4).readUInt32BE(0);
-        const operations = Cbor.fromBuffer(serializedPayload.read(len));
+        const operations = Cbor.fromBuffer(serializedPayload.read(len).buffer);
         return { tokenId, operations };
     }
     getBaseEnergyCost(payload: TokenUpdatePayload): bigint {

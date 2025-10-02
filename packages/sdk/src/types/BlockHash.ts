@@ -88,15 +88,17 @@ export function instanceOf(value: unknown): value is BlockHash {
  * @throws If the provided buffer does not contain exactly 32 bytes.
  * @returns {BlockHash}
  */
-export function fromBuffer(buffer: ArrayBuffer): BlockHash {
+export function fromBuffer(buffer: ArrayBufferLike): BlockHash {
+    const view = new Uint8Array(buffer);
+
     if (buffer.byteLength !== BLOCK_HASH_BYTE_LENGTH) {
         throw new Error(
             `Invalid transaction hash provided: Expected a buffer containing 32 bytes, instead got '${Buffer.from(
-                buffer
+                view
             ).toString('hex')}'.`
         );
     }
-    return new BlockHash(new Uint8Array(buffer));
+    return new BlockHash(view);
 }
 
 /**
@@ -106,7 +108,7 @@ export function fromBuffer(buffer: ArrayBuffer): BlockHash {
  * @returns {BlockHash}
  */
 export function fromHexString(hex: HexString): BlockHash {
-    return fromBuffer(Buffer.from(hex, 'hex'));
+    return fromBuffer(Buffer.from(hex, 'hex').buffer);
 }
 
 /**
@@ -133,7 +135,7 @@ export function toBuffer(hash: BlockHash): Uint8Array {
  * @returns {BlockHash}
  */
 export function fromProto(hash: Proto.BlockHash): BlockHash {
-    return fromBuffer(hash.value);
+    return fromBuffer((hash.value.buffer));
 }
 
 /**

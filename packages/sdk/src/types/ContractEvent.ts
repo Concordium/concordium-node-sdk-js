@@ -62,8 +62,14 @@ export function toUnwrappedJSON(value: Type): Serializable {
  */
 export type Type = ContractEvent;
 
-export function fromBuffer(buffer: ArrayBuffer): ContractEvent {
-    return new ContractEvent(new Uint8Array(buffer));
+export function fromBuffer(buffer: ArrayBufferLike): ContractEvent {
+
+    const u8 = new Uint8Array(buffer);
+    if (u8.byteLength !== 32) {
+        throw new Error(`Invalid transaction hash: expected 32 bytes`);
+    }
+
+    return new ContractEvent(u8);
 }
 
 /**
@@ -72,7 +78,7 @@ export function fromBuffer(buffer: ArrayBuffer): ContractEvent {
  * @returns {ContractEvent}
  */
 export function fromHexString(hex: HexString): ContractEvent {
-    return fromBuffer(Buffer.from(hex, 'hex'));
+    return fromBuffer(Buffer.from(hex, 'hex').buffer);
 }
 
 /**
@@ -99,7 +105,7 @@ export function toBuffer(event: ContractEvent): Uint8Array {
  * @returns {ContractEvent}
  */
 export function fromProto(event: Proto.ContractEvent): ContractEvent {
-    return fromBuffer(event.value);
+    return fromBuffer(event.value.buffer);
 }
 
 /**
@@ -121,7 +127,7 @@ export function toProto(event: ContractEvent): Proto.ContractEvent {
  */
 export function parseWithSchemaType(event: ContractEvent, schemaType: SchemaType): SmartContractTypeValues {
     const schemaBytes = serializeSchemaType(schemaType);
-    return deserializeTypeValue(toBuffer(event), schemaBytes);
+    return deserializeTypeValue(toBuffer(event).buffer, schemaBytes.buffer);
 }
 
 /**
@@ -132,5 +138,5 @@ export function parseWithSchemaType(event: ContractEvent, schemaType: SchemaType
  */
 export function parseWithSchemaTypeBase64(event: ContractEvent, schemaBase64: Base64String): SmartContractTypeValues {
     const schemaBytes = Buffer.from(schemaBase64, 'base64');
-    return deserializeTypeValue(toBuffer(event), schemaBytes);
+    return deserializeTypeValue(toBuffer(event).buffer, schemaBytes.buffer);
 }

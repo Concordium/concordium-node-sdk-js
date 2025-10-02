@@ -45,10 +45,16 @@ class CIS3DryRun extends ContractDryRun<Update> {
         params: CIS3.PermitParam,
         blockHash?: BlockHash.Type
     ): Promise<InvokeContractResult> {
+
+        const serializer = (p: CIS3.PermitParam): ArrayBuffer => {
+            const buf = serializeCIS3PermitParam(p);
+            return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+        }
+
         return this.invokeMethod(
             EntrypointName.fromStringUnchecked('permit'),
             sender,
-            serializeCIS3PermitParam,
+            serializer,
             params,
             blockHash
         );
@@ -106,9 +112,15 @@ export class CIS3Contract extends CISContract<Update, View, CIS3DryRun> {
         metadata: CreateContractTransactionMetadata,
         params: CIS3.PermitParam
     ): ContractUpdateTransactionWithSchema {
+
+        const serializer = (p: CIS3.PermitParam): ArrayBuffer => {
+            const buf = serializeCIS3PermitParam(p);
+            return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+        } 
+
         return this.createUpdateTransaction(
             EntrypointName.fromStringUnchecked('permit'),
-            serializeCIS3PermitParam,
+            serializer,
             metadata,
             params,
             formatCIS3PermitParam
@@ -158,7 +170,12 @@ export class CIS3Contract extends CISContract<Update, View, CIS3DryRun> {
         entrypoints: EntrypointName.Type | EntrypointName.Type[],
         blockHash?: BlockHash.Type
     ): Promise<boolean | boolean[]> {
-        const serialize = makeDynamicFunction(serializeCIS3SupportsPermitQueryParams);
+
+        const serialize = makeDynamicFunction((input) => {
+        const buf = serializeCIS3SupportsPermitQueryParams(input as EntrypointName.Type[]);
+        return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+        });
+
         const deserialize = ensureMatchesInput(entrypoints, deserializeCIS3SupportsPermitResponse);
         return this.invokeView(
             EntrypointName.fromStringUnchecked('supportsPermit'),

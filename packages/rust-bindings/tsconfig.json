@@ -1,13 +1,18 @@
 {
     "extends": "../../tsconfig-base.json",
-    "include": ["./ts-src/**/*", "./scripts/**/*", "./build/**/*", "./webpack.config.ts"],
+    "include": [
+        "./ts-src/**/*",
+        "./scripts/**/*",
+        "./build/**/*",
+        "./webpack.config.ts"
+    ],
     "compilerOptions": {
         "composite": false,
-        "lib": ["ES2020", "dom"]
-    },
-    "ts-node": {
-        "compilerOptions": {
-            "module": "CommonJS"
-        }
+        "allowImportingTsExtensions": true,
+        "noEmit": true,
+        "lib": [
+            "ES2020",
+            "dom"
+        ]
     }
 }

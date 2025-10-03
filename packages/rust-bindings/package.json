@@ -2,6 +2,7 @@
     "name": "@concordium/rust-bindings",
     "version": "3.3.0",
     "license": "Apache-2.0",
+    "type": "module",
     "engines": {
         "node": ">=16"
     },
@@ -88,10 +89,11 @@
         "build-node": "wasm-pack build ./packages/$0 --target nodejs --out-dir $INIT_CWD/lib/$0/node/cjs --out-name index",
         "build-bundler": "wasm-pack build ./packages/$0 --target bundler --out-dir $INIT_CWD/lib/$0/bundler --out-name index",
         "build-all": "yarn build-web $0 && yarn build-node $0 && yarn build-bundler $0",
-        "build": "yarn build-all dapp && ts-node ./scripts/build-react-native-dapp.ts && yarn build-all wallet && ts-node ./scripts/build-react-native-wallet.ts && webpack && yarn sanitize",
-        "build:rust-bindings-dapp": "yarn build-all dapp && webpack --env package=dapp && ts-node ./scripts/build-react-native-dapp.ts && yarn sanitize",
-        "build:rust-bindings-wallet": "yarn build-all wallet && webpack --env package=wallet && ts-node ./scripts/build-react-native-wallet.ts && yarn sanitize",
+        "build": "yarn build-all dapp && tsx ./scripts/build-react-native-dapp.ts && yarn build-all wallet && tsx ./scripts/build-react-native-wallet.ts && yarn webpack && yarn sanitize",
+        "build:rust-bindings-dapp": "yarn build-all dapp && yarn webpack --env package=dapp && tsx ./scripts/build-react-native-dapp.ts && yarn sanitize",
+        "build:rust-bindings-wallet": "yarn build-all wallet && yarn webpack --env package=wallet && tsx ./scripts/build-react-native-wallet.ts && yarn sanitize",
         "build:rust-bindings": "yarn build",
+        "webpack": "tsx ../../node_modules/.bin/webpack --config webpack.config.ts",
         "clean": "rimraf -- target lib .webpack-cache",
         "sanitize": "rimraf --glob -- \"lib/**/.gitignore\" \"lib/**/package.json\"",
         "lint": "eslint . --cache --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
@@ -110,9 +112,8 @@
         "prettier": "^3.2.5",
         "rimraf": "^5.0.1",
         "ts-loader": "^9.4.4",
-        "ts-node": "^10.9.1",
+        "tsx": "^4.20.6",
         "typescript": "^5.2.2",
-        "wasm-pack": "^0.12.1",
         "webpack": "^5.88.2",
         "webpack-cli": "^5.1.4"
     }

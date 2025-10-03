@@ -22,7 +22,7 @@ concurrency:
 
 env:
   NODE_VERSION: 18.16.0
-  RUST_VERSION: 1.73
+  RUST_VERSION: 1.85
 
 jobs:
   build:

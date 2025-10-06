@@ -1,18 +1,10 @@
 {
     "extends": "../../tsconfig-base.json",
-    "include": [
-        "./ts-src/**/*",
-        "./scripts/**/*",
-        "./build/**/*",
-        "./webpack.config.ts"
-    ],
+    "include": ["./ts-src/**/*", "./scripts/**/*", "./build/**/*", "./webpack.config.ts"],
     "compilerOptions": {
         "composite": false,
         "allowImportingTsExtensions": true,
         "noEmit": true,
-        "lib": [
-            "ES2020",
-            "dom"
-        ]
+        "lib": ["ES2020", "dom"]
     }
 }

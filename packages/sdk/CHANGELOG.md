@@ -2,10 +2,6 @@
 
 ## Unreleased
 
-### Changed
-
-- Updated `@concordium/rust-bindings`to version 4.0.0
-
 ### Fixed
 
 - Fix decoding of `TokenAmount`s with 256 decimals.

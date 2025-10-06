@@ -9,10 +9,14 @@
 <body>
     <div id="root"></div>
     <script>
+        // Verifies that PLT works in UMD.
         const account = concordiumSDK.AccountAddress.fromBase58('4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd');
         const tokenAmount = concordiumSDK.TokenAmount.create(100, 2);
-
         console.log(account, tokenAmount);
+
+        // Verifies that UMD wasm functions work
+        const schema = concordiumSDK.toBuffer('FAACAAAABAAAAGtleXMQAR4gAAAADgAAAGF1eGlsaWFyeV9kYXRhEAEC', 'base64');
+        console.log(concordiumSDK.displayTypeSchemaTemplate(schema));
     </script>
 </body>
 

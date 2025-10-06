@@ -1,6 +1,6 @@
 {
     "name": "@concordium/rust-bindings",
-    "version": "3.3.0",
+    "version": "4.0.0",
     "license": "Apache-2.0",
     "type": "module",
     "engines": {
@@ -25,11 +25,9 @@
             "types": "./lib/dapp/node/cjs/index.d.ts",
             "react-native": "./lib/dapp/react-native/index.js",
             "node": {
-                "module": "./lib/dapp/node/umd/index.min.js",
                 "default": "./lib/dapp/node/cjs/index.js"
             },
             "browser": {
-                "module": "./lib/dapp/web/umd/index.min.js",
                 "types": "./lib/dapp/web/esm/index.d.ts",
                 "import": "./lib/dapp/web/esm/index.js",
                 "default": "./lib/dapp/web/umd/index.min.js"
@@ -40,11 +38,9 @@
             "types": "./lib/dapp/node/cjs/index.d.ts",
             "react-native": "./lib/dapp/react-native/index.js",
             "node": {
-                "module": "./lib/dapp/node/umd/index.min.js",
                 "default": "./lib/dapp/node/cjs/index.js"
             },
             "browser": {
-                "module": "./lib/dapp/web/umd/index.min.js",
                 "types": "./lib/dapp/web/esm/index.d.ts",
                 "import": "./lib/dapp/web/esm/index.js",
                 "default": "./lib/dapp/web/umd/index.min.js"
@@ -55,11 +51,9 @@
             "types": "./lib/wallet/node/cjs/index.d.ts",
             "react-native": "./lib/wallet/react-native/index.js",
             "node": {
-                "module": "./lib/wallet/node/umd/index.min.js",
                 "default": "./lib/wallet/node/cjs/index.js"
             },
             "browser": {
-                "module": "./lib/wallet/web/umd/index.min.js",
                 "types": "./lib/wallet/web/esm/index.d.ts",
                 "import": "./lib/wallet/web/esm/index.js",
                 "default": "./lib/wallet/web/umd/index.min.js"

@@ -33,7 +33,7 @@
         "fmt": "yarn prettier --write",
         "fmt-check": "yarn prettier --check",
         "start": "react-scripts start",
-        "build": "react-scripts build",
+        "build": "GENERATE_SOURCEMAP=false react-scripts build",
         "test": "react-scripts test",
         "eject": "react-scripts eject"
     },

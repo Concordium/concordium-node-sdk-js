@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Breaking changes
+
+- This package is now an ESM module.
+
 ## 3.3.0
 
 ### Added

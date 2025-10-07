@@ -37,7 +37,8 @@
         "@walletconnect/types": "2.13.0",
         "@protobuf-ts/runtime-rpc": "2.9.1",
         "path-to-regexp": "0.1.12",
-        "body-parser": "1.20.3"
+        "body-parser": "1.20.3",
+        "ws": "8.17.1"
     },
     "scripts": {
         "test-ci": "yarn workspace @concordium/web-sdk run test-ci && yarn workspaces foreach --no-private --exclude @concordium/web-sdk run test",

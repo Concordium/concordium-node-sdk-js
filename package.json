@@ -31,8 +31,7 @@
         "markdown-link-check": "^3.1.4",
         "markdownlint-cli": "^0.34.0",
         "mkdirp": "^3.0.1",
-        "prettier": "^3.2.5",
-        "tar-fs": "3.1.1"
+        "prettier": "^3.2.5"
     },
     "resolutions": {
         "@walletconnect/types": "2.13.0",

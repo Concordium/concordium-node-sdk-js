@@ -20,6 +20,7 @@
     },
     "type": "module",
     "devDependencies": {
+        "@babel/traverse": "7.23.2",
         "@trivago/prettier-plugin-sort-imports": "^4.3.0",
         "@typescript-eslint/eslint-plugin": "^7.11.0",
         "@typescript-eslint/parser": "^7.11.0",

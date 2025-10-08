@@ -62,7 +62,7 @@ handleKnownTransaction(transactionSummary!);
 
 #### Optional + Unknown values
 
-In the SDK, `undefined` is used to represent when an optional value is *not* present and `null` is used to represent
+In the SDK, `undefined` is used to represent when an optional value is _not_ present and `null` is used to represent
 unknown values. If you want to branch on these different cases, it can be handled by targeting thesee specific types:
 
 ```ts
@@ -73,7 +73,6 @@ switch (optionalUnknown) {
     default: ... // at this point, we know the type is `Value`
 }
 ```
-
 
 ## web SDK version 7
 

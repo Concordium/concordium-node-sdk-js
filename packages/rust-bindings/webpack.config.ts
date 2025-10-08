@@ -1,6 +1,9 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import { resolve } from 'path';
-import { Configuration } from 'webpack';
+import url from 'url';
+import type { Configuration } from 'webpack';
+
+const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
 type WebpackEnv = Partial<{
     package: string;

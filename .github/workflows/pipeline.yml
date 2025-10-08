@@ -14,7 +14,8 @@ on:
 env:
   DUMMY: 3 # For cache busting.
   NODE_VERSION: 18.16.0
-  RUST_VERSION: 1.73
+  RUST_VERSION: 1.85
+  WASM_PACK_VERSION: 0.13.1
 
 jobs:
   deps:
@@ -90,7 +91,9 @@ jobs:
           key: ${{ runner.os }}-yarn
 
       - name: Install rust
-        run: rustup default ${{ env.RUST_VERSION }}
+        run: |
+          rustup default ${{ env.RUST_VERSION }}
+          cargo install wasm-pack@${{ env.WASM_PACK_VERSION }}
 
       - uses: Swatinem/rust-cache@v2
         with:

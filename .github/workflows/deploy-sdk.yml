@@ -22,7 +22,8 @@ concurrency:
 
 env:
   NODE_VERSION: 18.16.0
-  RUST_VERSION: 1.73
+  RUST_VERSION: 1.85
+  WASM_PACK_VERSION: 0.13.1
 
 jobs:
   build:
@@ -38,7 +39,9 @@ jobs:
           cache: yarn
 
       - name: Install rust
-        run: rustup default ${{ env.RUST_VERSION }}
+        run: |
+          rustup default ${{ env.RUST_VERSION }}
+          cargo install wasm-pack@${{ env.WASM_PACK_VERSION }}
 
       - uses: Swatinem/rust-cache@v2
         with:
@@ -213,9 +216,19 @@ jobs:
           echo "</ul>" >> gh-pages/index.html
           echo "</body></html>" >> gh-pages/index.html
 
+      # Setup based on:
+      #  - https://github.com/orgs/community/discussions/25305#discussioncomment-8256560
+      #  - https://github.com/actions/create-github-app-token?tab=readme-ov-file#use-app-token-with-actionscheckout
+      - name: Create GitHub App Token
+        uses: actions/create-github-app-token@v2
+        id: app-token
+        with:
+          app-id: ${{ vars.DEPLOYER_APPID }}
+          private-key: ${{ secrets.DEPLOYER_PRIVATE_KEY }}
+
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ steps.app-token.outputs.token }}
           publish_dir: ./gh-pages
           keep_files: true

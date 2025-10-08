@@ -3,6 +3,8 @@
     "include": ["./ts-src/**/*"],
     "compilerOptions": {
         "rootDir": "./ts-src",
+        "allowImportingTsExtensions": false,
+        "noEmit": false,
         "declaration": false,
         "outDir": "./lib/web"
     }

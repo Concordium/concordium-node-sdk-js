@@ -423,7 +423,7 @@
 ### Added
 
 - Support for using the SDK in a react native environment. Requires polyfilling functionality used within the SDK.
-  Please refer to the guide found at [the react native compatibility guide](https://developer.concordium.software/concordium-node-sdk-js/pages/misc-pages/react-native.html)
+  Please refer to the guide found at [the react native compatibility guide](https://docs.concordium.com/concordium-node-sdk-js/latest/pages/misc-pages/react-native.html)
 
 ### Fixed
 

@@ -3,11 +3,8 @@
     "include": ["./ts-src/**/*", "./scripts/**/*", "./build/**/*", "./webpack.config.ts"],
     "compilerOptions": {
         "composite": false,
+        "allowImportingTsExtensions": true,
+        "noEmit": true,
         "lib": ["ES2020", "dom"]
-    },
-    "ts-node": {
-        "compilerOptions": {
-            "module": "CommonJS"
-        }
     }
 }

@@ -4,3 +4,4 @@ export {
     getAccountIdentifierInput,
     getBlockHashInput,
 } from './GRPCClient.js';
+export * from './upward.js';

@@ -1,3 +1,79 @@
+## web SDK version 11
+
+This version of the web SDK focuses on forward compatibility, i.e. making it easier to keep applications and services
+running through updates to the integration point (Concordium nodes).
+
+### Motivation
+
+Up until this release, certain extensions to the Concordium Node API have resulted in the SDK failing to parse query
+responses, resulting in the entire query failing. This is the case even for the larger queries where the unknown/missing
+information is only a small part of the response preventing the application to access the entire response.
+Usually the fix was to update the SDK to a newer version which know how to parse the new information, but this imposes
+work for the ecosystem for every change in the API (usually part of protocol version updates).
+
+This major release introduces `Upward<A>` a type wrapper representing information which might be extended in future version
+of the API, providing a variant representing unknown information such that queries can provide partial information.
+It makes potentially extended information explicit in the types and allows each application to decide how to handle the
+case of new unknown data on a case by case basis.
+
+### Handling `Upward`
+
+Handling upward depends on what you want to achieve. If you're running a service that integrates with a Concordium node,
+you might want to fail safely by handling unknown variants gracefully. If you're writing a script it's probably easier
+to fail fast.
+
+#### Fail safe
+
+```ts
+import { isKnown, type TransactionHash } from '@concordium/web-sdk';
+...
+
+const transactionSummary: Upward<BlockItemSummary> = ...
+
+// branch on unknown
+if (isKnown(transactionSummary)) {
+    // transactionSummary is statically known at this point
+} else {
+    // handle the unknown case
+    console.warn('Encountered unknown transaction type.');
+}
+
+// Handle as optional
+// `Unknown` variant is simply represented as `null` underneath.
+const transactionHash: TransactionHash.Type | undefined = transactionSummary?.hash;
+```
+
+#### Fail fast
+
+```ts
+import { assertError, type TransactionHash } from '@concordium/web-sdk';
+...
+
+const transactionSummary: Upward<BlockItemSummary> = ...
+
+// fail with an error message in case of the unexpected happening.
+assertKnown(transctionSummary, 'Expected transaction type to be known');
+// transactionSummary is known at this point on.
+
+// or handle by simple null assertion, e.g. in the case where you just sent
+// the transaction to a node.
+handleKnownTransaction(transactionSummary!);
+```
+
+#### Optional + Unknown values
+
+In the SDK, `undefined` is used to represent when an optional value is _not_ present and `null` is used to represent
+unknown values. If you want to branch on these different cases, it can be handled by targeting thesee specific types:
+
+```ts
+const optionalUnknown: Upward<Value> | undefined = ...
+switch (optionalUnknown) {
+    case undefined: ... // handle optionality
+    case null: ... // handle unknown variant
+    default: ... // at this point, we know the type is `Value`
+}
+```
+
 ## web SDK version 7
 
 Several types have been replaced with a module containing the type itself together with functions for constructing and

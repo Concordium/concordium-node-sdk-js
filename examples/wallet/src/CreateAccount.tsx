@@ -1,5 +1,5 @@
 import {
-    CredentialDeploymentTransaction,
+    CredentialDeploymentPayload,
     CredentialInputNoSeed,
     IdentityObjectV1,
     getAccountAddress,
@@ -43,7 +43,7 @@ export function CreateAccount({ identity }: { identity: IdentityObjectV1 }) {
             return;
         }
 
-        const listener = (worker.onmessage = async (e: MessageEvent<CredentialDeploymentTransaction>) => {
+        const listener = (worker.onmessage = async (e: MessageEvent<CredentialDeploymentPayload>) => {
             worker.removeEventListener('message', listener);
             const credentialDeploymentTransaction = e.data;
             const signingKey = getAccountSigningKey(seedPhrase, credentialDeploymentTransaction.unsignedCdi.ipIdentity);

@@ -6,7 +6,7 @@ running through updates to the integration point (Concordium nodes).
 ### Motivation
 
 Up until this release, certain extensions to the Concordium Node API have resulted in the SDK failing to parse query
-responses, resulting in the entire query to fail. This is the case even for the larger queries where the unknown/missing
+responses, resulting in the entire query failing. This is the case even for the larger queries where the unknown/missing
 information is only a small part of the response preventing the application to access the entire response.
 Usually the fix was to update the SDK to a newer version which know how to parse the new information, but this imposes
 work for the ecosystem for every change in the API (usually part of protocol version updates).

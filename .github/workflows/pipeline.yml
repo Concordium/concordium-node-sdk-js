@@ -353,7 +353,7 @@ jobs:
     if: ${{ always() }}
     runs-on: ubuntu-latest
     name: Workflow result
-    needs: [tests, typedoc, lint, markdown-lint, markdown-linkcheck, rust_lint_fmt, rust_lint_clippy]
+    needs: [deps, build, tests, typedoc, lint, markdown-lint, markdown-linkcheck, rust_lint_fmt, rust_lint_clippy]
     steps:
       - run: exit 1
         # see https://stackoverflow.com/a/67532120/4907315

@@ -13,7 +13,7 @@ on:
 
 env:
   DUMMY: 3 # For cache busting.
-  NODE_VERSION: 18.16.0
+  NODE_VERSION: 20.19.5
   RUST_VERSION: 1.85
   WASM_PACK_VERSION: 0.13.1
 

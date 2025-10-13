@@ -23,6 +23,7 @@ import * as SequenceNumber from '../types/SequenceNumber.js';
 import * as Timestamp from '../types/Timestamp.js';
 import * as TransactionHash from '../types/TransactionHash.js';
 import { mapRecord, unwrap } from '../util.js';
+import type { Upward } from './upward.js';
 
 function unwrapToHex(bytes: Uint8Array | undefined): SDK.HexString {
     return Buffer.from(unwrap(bytes)).toString('hex');
@@ -69,14 +70,15 @@ function trCommits(cmm: GRPC.CredentialCommitments): SDK.CredentialDeploymentCom
     };
 }
 
-function trVerifyKey(verifyKey: GRPC.AccountVerifyKey): SDK.VerifyKey {
-    if (verifyKey.key.oneofKind === 'ed25519Key') {
-        return {
-            schemeId: 'Ed25519',
-            verifyKey: unwrapToHex(verifyKey.key.ed25519Key),
-        };
-    } else {
-        throw Error('AccountVerifyKey was expected to be of type "ed25519Key", but found' + verifyKey.key.oneofKind);
+function trVerifyKey(verifyKey: GRPC.AccountVerifyKey): Upward<SDK.VerifyKey> {
+    switch (verifyKey.key.oneofKind) {
+        case 'ed25519Key':
+            return {
+                schemeId: 'Ed25519',
+                verifyKey: unwrapToHex(verifyKey.key.ed25519Key),
+            };
+        case undefined:
+            return null;
     }
 }
 
@@ -206,14 +208,16 @@ function trAmountFraction(amount: GRPC.AmountFraction | undefined): number {
     return unwrap(amount?.partsPerHundredThousand) / 100000;
 }
 
-function trOpenStatus(openStatus: GRPC.OpenStatus | undefined): SDK.OpenStatusText {
-    switch (unwrap(openStatus)) {
+function trOpenStatus(openStatus: GRPC.OpenStatus | undefined): Upward<SDK.OpenStatusText> {
+    switch (openStatus) {
         case GRPC.OpenStatus.OPEN_FOR_ALL:
             return SDK.OpenStatusText.OpenForAll;
         case GRPC.OpenStatus.CLOSED_FOR_NEW:
             return SDK.OpenStatusText.ClosedForNew;
         case GRPC.OpenStatus.CLOSED_FOR_ALL:
             return SDK.OpenStatusText.ClosedForAll;
+        case undefined:
+            return null;
     }
 }
 
@@ -240,15 +244,10 @@ function trBaker(baker: GRPC.AccountStakingInfo_Baker): SDK.AccountBakerDetails 
         return v0;
     }
 
-    const bakerPoolInfo: SDK.BakerPoolInfo = {
-        openStatus: trOpenStatus(baker.poolInfo?.openStatus),
-        metadataUrl: unwrap(baker.poolInfo?.url),
-        commissionRates: trCommissionRates(baker.poolInfo?.commissionRates),
-    };
     return {
         ...v0,
         version: 1,
-        bakerPoolInfo: bakerPoolInfo,
+        bakerPoolInfo: transPoolInfo(baker.poolInfo),
     };
 }
 
@@ -418,20 +417,25 @@ export function accountInfo(acc: GRPC.AccountInfo): SDK.AccountInfo {
         accountTokens: acc.tokens.map(trTokenAccountInfo),
     };
 
-    if (acc.stake?.stakingInfo.oneofKind === 'delegator') {
-        return {
-            ...accInfoCommon,
-            type: SDK.AccountInfoType.Delegator,
-            accountDelegation: trDelegator(acc.stake.stakingInfo.delegator),
-        };
-    } else if (acc.stake?.stakingInfo.oneofKind === 'baker') {
-        return {
-            ...accInfoCommon,
-            type: SDK.AccountInfoType.Baker,
-            accountBaker: trBaker(acc.stake.stakingInfo.baker),
-        };
-    } else {
+    if (acc.stake === undefined) {
         return accInfoCommon;
+    }
+
+    switch (acc.stake.stakingInfo.oneofKind) {
+        case 'delegator':
+            return {
+                ...accInfoCommon,
+                type: SDK.AccountInfoType.Delegator,
+                accountDelegation: trDelegator(acc.stake.stakingInfo.delegator),
+            };
+        case 'baker':
+            return {
+                ...accInfoCommon,
+                type: SDK.AccountInfoType.Baker,
+                accountBaker: trBaker(acc.stake.stakingInfo.baker),
+            };
+        case undefined:
+            return { ...accInfoCommon, type: SDK.AccountInfoType.Unknown, accountBaker: null };
     }
 }
 
@@ -632,7 +636,7 @@ function translateProtocolVersion(pv: GRPC.ProtocolVersion): bigint {
     return BigInt(pv + 1); // Protocol version enum indexes from 0, i.e. pv.PROTOCOL_VERSION_1 = 0.
 }
 
-export function tokenomicsInfo(info: GRPC.TokenomicsInfo): SDK.RewardStatus {
+export function tokenomicsInfo(info: GRPC.TokenomicsInfo): Upward<SDK.RewardStatus> {
     switch (info.tokenomics.oneofKind) {
         case 'v0': {
             const v0 = info.tokenomics.v0;
@@ -663,7 +667,7 @@ export function tokenomicsInfo(info: GRPC.TokenomicsInfo): SDK.RewardStatus {
             };
         }
         case undefined:
-            throw new Error('Missing tokenomics info');
+            return null;
     }
 }
 
@@ -759,7 +763,7 @@ function trAddress(address: GRPC.Address): SDK.Address {
     }
 }
 
-function trContractTraceElement(contractTraceElement: GRPC.ContractTraceElement): SDK.ContractTraceEvent {
+function trContractTraceElement(contractTraceElement: GRPC.ContractTraceElement): Upward<SDK.ContractTraceEvent> {
     const element = contractTraceElement.element;
     switch (element.oneofKind) {
         case 'updated':
@@ -799,12 +803,12 @@ function trContractTraceElement(contractTraceElement: GRPC.ContractTraceElement)
                 from: unwrapValToHex(element.upgraded.from),
                 to: unwrapValToHex(element.upgraded.to),
             };
-        default:
-            throw Error('Invalid ContractTraceElement received, not able to translate to Transaction Event!');
+        case undefined:
+            return null;
     }
 }
 
-function trBakerEvent(bakerEvent: GRPC.BakerEvent, account: AccountAddress.Type): SDK.BakerEvent {
+function trBakerEvent(bakerEvent: GRPC.BakerEvent, account: AccountAddress.Type): Upward<SDK.BakerEvent> {
     const event = bakerEvent.event;
     switch (event.oneofKind) {
         case 'bakerAdded': {
@@ -925,7 +929,7 @@ function trBakerEvent(bakerEvent: GRPC.BakerEvent, account: AccountAddress.Type)
             };
         }
         case undefined:
-            throw Error('Unrecognized event type. This should be impossible.');
+            return null;
     }
 }
 
@@ -945,7 +949,10 @@ function trDelegTarget(delegationTarget: GRPC.DelegationTarget | undefined): SDK
     }
 }
 
-function trDelegationEvent(delegationEvent: GRPC.DelegationEvent, account: AccountAddress.Type): SDK.DelegationEvent {
+function trDelegationEvent(
+    delegationEvent: GRPC.DelegationEvent,
+    account: AccountAddress.Type
+): Upward<SDK.DelegationEvent> {
     const event = delegationEvent.event;
     switch (event.oneofKind) {
         case 'delegationStakeIncreased': {
@@ -1002,11 +1009,11 @@ function trDelegationEvent(delegationEvent: GRPC.DelegationEvent, account: Accou
                 bakerId: unwrap(event.bakerRemoved.bakerId?.value),
             };
         case undefined:
-            throw Error('Unrecognized event type. This should be impossible.');
+            return null;
     }
 }
 
-function trRejectReason(rejectReason: GRPC.RejectReason | undefined): SDK.RejectReason {
+function trRejectReason(rejectReason: GRPC.RejectReason | undefined): Upward<SDK.RejectReason> {
     function simpleReason(tag: SDK.SimpleRejectReasonTag): SDK.RejectReason {
         return {
             tag: SDK.RejectReasonTag[tag],
@@ -1205,7 +1212,7 @@ function trRejectReason(rejectReason: GRPC.RejectReason | undefined): SDK.Reject
                 },
             };
         case undefined:
-            throw Error('Failed translating RejectReason, encountered undefined value');
+            return null;
     }
 }
 
@@ -1421,7 +1428,7 @@ export function pendingUpdate(pendingUpdate: GRPC.PendingUpdate): SDK.PendingUpd
     };
 }
 
-export function trPendingUpdateEffect(pendingUpdate: GRPC.PendingUpdate): SDK.PendingUpdateEffect {
+export function trPendingUpdateEffect(pendingUpdate: GRPC.PendingUpdate): Upward<SDK.PendingUpdateEffect> {
     const effect = pendingUpdate.effect;
     switch (effect.oneofKind) {
         case 'protocol':
@@ -1506,13 +1513,17 @@ export function trPendingUpdateEffect(pendingUpdate: GRPC.PendingUpdate): SDK.Pe
                 },
             };
         case undefined:
-            throw Error('Unexpected missing pending update');
+            return null;
     }
 }
 
-function trUpdatePayload(updatePayload: GRPC.UpdatePayload | undefined): SDK.UpdateInstructionPayload {
-    const payload = updatePayload?.payload;
-    switch (payload?.oneofKind) {
+function trUpdatePayload(updatePayload: GRPC.UpdatePayload | undefined): Upward<SDK.UpdateInstructionPayload> {
+    if (updatePayload === undefined) {
+        throw new Error('Unexpected missing update payload');
+    }
+
+    const payload = updatePayload.payload;
+    switch (payload.oneofKind) {
         case 'protocolUpdate':
             return trProtocolUpdate(payload.protocolUpdate);
         case 'electionDifficultyUpdate':
@@ -1590,7 +1601,7 @@ function trUpdatePayload(updatePayload: GRPC.UpdatePayload | undefined): SDK.Upd
                 },
             };
         case undefined:
-            throw new Error('Unexpected missing update payload');
+            return null;
     }
 }
 
@@ -1600,9 +1611,8 @@ function trCommissionRange(range: GRPC.InclusiveRangeAmountFraction | undefined)
         max: trAmountFraction(range?.max),
     };
 }
-function trUpdatePublicKey(key: GRPC.UpdatePublicKey): SDK.VerifyKey {
+function trUpdatePublicKey(key: GRPC.UpdatePublicKey): SDK.UpdatePublicKey {
     return {
-        schemeId: 'Ed25519',
         verifyKey: unwrapValToHex(key),
     };
 }
@@ -2040,7 +2050,7 @@ function trAccountTransactionSummary(
     }
 }
 
-function tokenEvent(event: GRPC_PLT.TokenEvent): TokenEvent {
+function tokenEvent(event: GRPC_PLT.TokenEvent): Upward<TokenEvent> {
     switch (event.event.oneofKind) {
         case 'transferEvent':
             const transferEvent: TokenTransferEvent = {
@@ -2077,7 +2087,7 @@ function tokenEvent(event: GRPC_PLT.TokenEvent): TokenEvent {
                 target: PLT.TokenHolder.fromProto(unwrap(event.event.burnEvent.target)),
             };
         case undefined:
-            throw Error('Failed translating "TokenEvent", encountered undefined value');
+            return null;
     }
 }
 
@@ -2090,7 +2100,7 @@ function trCreatePltPayload(payload: GRPC_PLT.CreatePLT): PLT.CreatePLTPayload {
     };
 }
 
-export function blockItemSummary(summary: GRPC.BlockItemSummary): SDK.BlockItemSummary {
+export function blockItemSummary(summary: GRPC.BlockItemSummary): Upward<SDK.BlockItemSummary> {
     const base = {
         index: unwrap(summary.index?.value),
         energyCost: Energy.fromProto(unwrap(summary.energyCost)),
@@ -2124,8 +2134,8 @@ export function blockItemSummary(summary: GRPC.BlockItemSummary): SDK.BlockItemS
                 payload: trCreatePltPayload(unwrap(summary.details.tokenCreation.createPlt)),
                 events: summary.details.tokenCreation.events.map(tokenEvent),
             };
-        default:
-            throw Error('Invalid BlockItemSummary encountered!');
+        case undefined:
+            return null;
     }
 }
 
@@ -2365,7 +2375,7 @@ export function nextUpdateSequenceNumbers(nextNums: GRPC.NextUpdateSequenceNumbe
 
 function trPassiveCommitteeInfo(
     passiveCommitteeInfo: GRPC.NodeInfo_BakerConsensusInfo_PassiveCommitteeInfo
-): SDK.PassiveCommitteeInfo {
+): Upward<SDK.PassiveCommitteeInfo> {
     const passiveCommitteeInfoV2 = GRPC.NodeInfo_BakerConsensusInfo_PassiveCommitteeInfo;
     switch (passiveCommitteeInfo) {
         case passiveCommitteeInfoV2.NOT_IN_COMMITTEE:
@@ -2374,6 +2384,8 @@ function trPassiveCommitteeInfo(
             return SDK.PassiveCommitteeInfo.AddedButNotActiveInCommittee;
         case passiveCommitteeInfoV2.ADDED_BUT_WRONG_KEYS:
             return SDK.PassiveCommitteeInfo.AddedButWrongKeys;
+        case undefined:
+            return null;
     }
 }
 
@@ -2452,7 +2464,7 @@ export function nodeInfo(nodeInfo: GRPC.NodeInfo): SDK.NodeInfo {
     };
 }
 
-function trCatchupStatus(catchupStatus: GRPC.PeersInfo_Peer_CatchupStatus): SDK.NodeCatchupStatus {
+function trCatchupStatus(catchupStatus: GRPC.PeersInfo_Peer_CatchupStatus): Upward<SDK.NodeCatchupStatus> {
     const CatchupStatus = GRPC.PeersInfo_Peer_CatchupStatus;
     switch (catchupStatus) {
         case CatchupStatus.CATCHINGUP:
@@ -2461,6 +2473,8 @@ function trCatchupStatus(catchupStatus: GRPC.PeersInfo_Peer_CatchupStatus): SDK.
             return SDK.NodeCatchupStatus.Pending;
         case CatchupStatus.UPTODATE:
             return SDK.NodeCatchupStatus.UpToDate;
+        case undefined:
+            return null;
     }
 }
 
@@ -2504,7 +2518,7 @@ function trAccountAmount(
     };
 }
 
-export function blockSpecialEvent(specialEvent: GRPC.BlockSpecialEvent): SDK.BlockSpecialEvent {
+export function blockSpecialEvent(specialEvent: GRPC.BlockSpecialEvent): Upward<SDK.BlockSpecialEvent> {
     const event = specialEvent.event;
     switch (event.oneofKind) {
         case 'bakingRewards': {
@@ -2595,7 +2609,7 @@ export function blockSpecialEvent(specialEvent: GRPC.BlockSpecialEvent): SDK.Blo
             };
         }
         case undefined: {
-            throw Error('Error translating BlockSpecialEvent: unexpected undefined');
+            return null;
         }
     }
 }

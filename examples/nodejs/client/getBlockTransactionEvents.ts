@@ -1,4 +1,4 @@
-import { BlockHash, BlockItemSummary } from '@concordium/web-sdk';
+import { BlockHash, BlockItemSummary, Upward, isKnown } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
@@ -48,10 +48,14 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
 (async () => {
     // #region documentation-snippet
     const blockHash = cli.flags.block === undefined ? undefined : BlockHash.fromHexString(cli.flags.block);
-    const events: AsyncIterable<BlockItemSummary> = client.getBlockTransactionEvents(blockHash);
+    const events: AsyncIterable<Upward<BlockItemSummary>> = client.getBlockTransactionEvents(blockHash);
     // #endregion documentation-snippet
 
     for await (const event of events) {
-        console.dir(event, { depth: null, colors: true });
+        if (isKnown(event)) {
+            console.dir(event, { depth: null, colors: true });
+        } else {
+            console.warn('Encountered unknown event');
+        }
     }
 })();

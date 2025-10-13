@@ -1,5 +1,14 @@
-import { TokenModuleAccountState, TokenModuleState, TokenTransfer } from '../../../src/plt/module.js';
-import { Cbor, Token, TokenAmount, TokenHolder, TokenId, TokenMetadataUrl } from '../../../src/pub/plt.ts';
+import {
+    Cbor,
+    CborAccountAddress,
+    Token,
+    TokenAmount,
+    TokenId,
+    TokenMetadataUrl,
+    TokenModuleAccountState,
+    TokenModuleState,
+    TokenTransfer,
+} from '../../../src/pub/plt.js';
 import { AccountAddress, AccountInfo } from '../../../src/pub/types.js';
 
 const ACCOUNT_1 = AccountAddress.fromBase58('4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd');
@@ -17,7 +26,7 @@ jest.mock('../../../src/grpc/GRPCClient.js', () => {
     };
 });
 
-describe('Token.scaleAmount', () => {
+describe('PLT Token.scaleAmount', () => {
     it('should scale token amount correctly when decimals are compatible', () => {
         let token: Token.Type = {
             info: {
@@ -68,7 +77,7 @@ describe('Token.scaleAmount', () => {
     });
 });
 
-describe('Token.validateAmount', () => {
+describe('PLT Token.validateAmount', () => {
     it('should not throw an error when decimals match', () => {
         const token = createMockToken(8);
         const amount = TokenAmount.create(BigInt(100), 8);
@@ -84,7 +93,7 @@ describe('Token.validateAmount', () => {
     });
 });
 
-describe('Token.validateTransfer', () => {
+describe('PLT Token.validateTransfer', () => {
     beforeEach(() => {
         jest.clearAllMocks();
     });
@@ -100,7 +109,7 @@ describe('Token.validateTransfer', () => {
             name: 'Test Token',
             metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
             paused: false,
-            governanceAccount: TokenHolder.fromAccountAddress(sender),
+            governanceAccount: CborAccountAddress.fromAccountAddress(sender),
             allowList: false,
             denyList: false,
         };
@@ -118,7 +127,7 @@ describe('Token.validateTransfer', () => {
         const transferAmount = TokenAmount.create(BigInt(500), decimals);
         const transfer: TokenTransfer = {
             amount: transferAmount,
-            recipient: TokenHolder.fromAccountAddress(recipient),
+            recipient: CborAccountAddress.fromAccountAddress(recipient),
         };
 
         // Should validate successfully
@@ -138,7 +147,7 @@ describe('Token.validateTransfer', () => {
             name: 'Test Token',
             metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
             paused: false,
-            governanceAccount: TokenHolder.fromAccountAddress(sender),
+            governanceAccount: CborAccountAddress.fromAccountAddress(sender),
         };
 
         const token = createMockToken(decimals, moduleState, tokenId);
@@ -154,7 +163,7 @@ describe('Token.validateTransfer', () => {
         const transferAmount = TokenAmount.create(BigInt(500), decimals);
         const transfer: TokenTransfer = {
             amount: transferAmount,
-            recipient: TokenHolder.fromAccountAddress(recipient),
+            recipient: CborAccountAddress.fromAccountAddress(recipient),
         };
 
         // Should throw InsufficientFundsError
@@ -172,7 +181,7 @@ describe('Token.validateTransfer', () => {
             name: 'Test Token',
             metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
             paused: false,
-            governanceAccount: TokenHolder.fromAccountAddress(sender),
+            governanceAccount: CborAccountAddress.fromAccountAddress(sender),
             denyList: true,
         };
 
@@ -195,7 +204,7 @@ describe('Token.validateTransfer', () => {
         const transferAmount = TokenAmount.create(BigInt(500), decimals);
         const transfer: TokenTransfer = {
             amount: transferAmount,
-            recipient: TokenHolder.fromAccountAddress(recipient),
+            recipient: CborAccountAddress.fromAccountAddress(recipient),
         };
 
         // Should throw NotAllowedError
@@ -212,7 +221,7 @@ describe('Token.validateTransfer', () => {
         const moduleState: TokenModuleState = {
             name: 'Test Token',
             metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
-            governanceAccount: TokenHolder.fromAccountAddress(sender),
+            governanceAccount: CborAccountAddress.fromAccountAddress(sender),
             denyList: true,
             paused: false,
         };
@@ -236,7 +245,7 @@ describe('Token.validateTransfer', () => {
         const transferAmount = TokenAmount.create(BigInt(500), decimals);
         const transfer: TokenTransfer = {
             amount: transferAmount,
-            recipient: TokenHolder.fromAccountAddress(recipient),
+            recipient: CborAccountAddress.fromAccountAddress(recipient),
         };
 
         await expect(Token.validateTransfer(token, sender, transfer)).resolves.toBe(true);
@@ -252,7 +261,7 @@ describe('Token.validateTransfer', () => {
         const moduleState: TokenModuleState = {
             name: 'Test Token',
             metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
-            governanceAccount: TokenHolder.fromAccountAddress(sender),
+            governanceAccount: CborAccountAddress.fromAccountAddress(sender),
             allowList: true,
             paused: false,
         };
@@ -276,7 +285,7 @@ describe('Token.validateTransfer', () => {
         const transferAmount = TokenAmount.create(BigInt(500), decimals);
         const transfer: TokenTransfer = {
             amount: transferAmount,
-            recipient: TokenHolder.fromAccountAddress(recipient),
+            recipient: CborAccountAddress.fromAccountAddress(recipient),
         };
 
         // Should throw NotAllowedError
@@ -294,7 +303,7 @@ describe('Token.validateTransfer', () => {
             name: 'Test Token',
             metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
             paused: false,
-            governanceAccount: TokenHolder.fromAccountAddress(sender),
+            governanceAccount: CborAccountAddress.fromAccountAddress(sender),
             allowList: true,
         };
 
@@ -321,7 +330,7 @@ describe('Token.validateTransfer', () => {
         const transferAmount = TokenAmount.create(BigInt(500), decimals);
         const transfer: TokenTransfer = {
             amount: transferAmount,
-            recipient: TokenHolder.fromAccountAddress(recipient),
+            recipient: CborAccountAddress.fromAccountAddress(recipient),
         };
 
         // Should throw NotAllowedError
@@ -339,7 +348,7 @@ describe('Token.validateTransfer', () => {
             name: 'Test Token',
             metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
             paused: false,
-            governanceAccount: TokenHolder.fromAccountAddress(sender),
+            governanceAccount: CborAccountAddress.fromAccountAddress(sender),
         };
 
         const token = createMockToken(decimals, moduleState, tokenId);
@@ -359,11 +368,11 @@ describe('Token.validateTransfer', () => {
         const transfers: TokenTransfer[] = [
             {
                 amount: TokenAmount.create(BigInt(300), decimals),
-                recipient: TokenHolder.fromAccountAddress(recipient1),
+                recipient: CborAccountAddress.fromAccountAddress(recipient1),
             },
             {
                 amount: TokenAmount.create(BigInt(400), decimals),
-                recipient: TokenHolder.fromAccountAddress(recipient2),
+                recipient: CborAccountAddress.fromAccountAddress(recipient2),
             },
         ];
 
@@ -382,7 +391,7 @@ describe('Token.validateTransfer', () => {
             name: 'Test Token',
             metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
             paused: true,
-            governanceAccount: TokenHolder.fromAccountAddress(sender),
+            governanceAccount: CborAccountAddress.fromAccountAddress(sender),
         };
 
         const token = createMockToken(decimals, moduleState, tokenId);
@@ -402,7 +411,7 @@ describe('Token.validateTransfer', () => {
         const transferAmount = TokenAmount.create(BigInt(500), decimals);
         const transfer: TokenTransfer = {
             amount: transferAmount,
-            recipient: TokenHolder.fromAccountAddress(recipient),
+            recipient: CborAccountAddress.fromAccountAddress(recipient),
         };
 
         // Should throw UnsupportedOperationError
@@ -410,7 +419,7 @@ describe('Token.validateTransfer', () => {
     });
 });
 
-describe('Token.validateMint', () => {
+describe('PLT Token.validateMint', () => {
     it('should throw NotMintableError when the token is not mintable', async () => {
         const sender = ACCOUNT_1;
         const tokenId = TokenId.fromString('3f1bfce9');
@@ -421,7 +430,7 @@ describe('Token.validateMint', () => {
             name: 'Test Token',
             metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
             mintable: false,
-            governanceAccount: TokenHolder.fromAccountAddress(sender),
+            governanceAccount: CborAccountAddress.fromAccountAddress(sender),
         };
 
         const token = createMockToken(decimals, moduleState, tokenId);
@@ -431,7 +440,7 @@ describe('Token.validateMint', () => {
     });
 });
 
-describe('Token.validateBurn', () => {
+describe('PLT Token.validateBurn', () => {
     it('should throw NotBurnableError when the token is not burnable', async () => {
         const sender = ACCOUNT_1;
         const tokenId = TokenId.fromString('3f1bfce9');
@@ -442,7 +451,7 @@ describe('Token.validateBurn', () => {
             name: 'Test Token',
             metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
             burnable: false,
-            governanceAccount: TokenHolder.fromAccountAddress(sender),
+            governanceAccount: CborAccountAddress.fromAccountAddress(sender),
         };
 
         const token = createMockToken(decimals, moduleState, tokenId);
@@ -452,7 +461,7 @@ describe('Token.validateBurn', () => {
     });
 });
 
-describe('Token.validateAllowListUpdate', () => {
+describe('PLT Token.validateAllowListUpdate', () => {
     it('should throw NoAllowListError when the token has no allow list', async () => {
         const sender = ACCOUNT_1;
         const tokenId = TokenId.fromString('3f1bfce9');
@@ -462,7 +471,7 @@ describe('Token.validateAllowListUpdate', () => {
             name: 'Test Token',
             metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
             allowList: false,
-            governanceAccount: TokenHolder.fromAccountAddress(sender),
+            governanceAccount: CborAccountAddress.fromAccountAddress(sender),
         };
 
         const token = createMockToken(decimals, moduleState, tokenId);
@@ -471,7 +480,7 @@ describe('Token.validateAllowListUpdate', () => {
     });
 });
 
-describe('Token.validateDenyListUpdate', () => {
+describe('PLT Token.validateDenyListUpdate', () => {
     it('should throw NoDenyListError when the token has no deny list', async () => {
         const sender = ACCOUNT_1;
         const tokenId = TokenId.fromString('3f1bfce9');
@@ -481,7 +490,7 @@ describe('Token.validateDenyListUpdate', () => {
             name: 'Test Token',
             metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
             denyList: false,
-            governanceAccount: TokenHolder.fromAccountAddress(sender),
+            governanceAccount: CborAccountAddress.fromAccountAddress(sender),
         };
 
         const token = createMockToken(decimals, moduleState, tokenId);
@@ -490,7 +499,7 @@ describe('Token.validateDenyListUpdate', () => {
     });
 });
 
-describe('Token update supply operation', () => {
+describe('PLT Token update supply operation', () => {
     it('should throw PausedError when trying to mint/burn tokens while token is paused', async () => {
         const governanceAddress = ACCOUNT_1;
         const tokenId = TokenId.fromString('3f1bfce9');
@@ -502,7 +511,7 @@ describe('Token update supply operation', () => {
             name: 'Test Token',
             metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
             paused: true,
-            governanceAccount: TokenHolder.fromAccountAddress(governanceAddress),
+            governanceAccount: CborAccountAddress.fromAccountAddress(governanceAddress),
         };
 
         const token = createMockToken(decimals, moduleState, tokenId);
@@ -526,7 +535,7 @@ function createMockToken(
         name: 'Test Token',
         metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
         paused: false,
-        governanceAccount: TokenHolder.fromAccountAddress(ACCOUNT_1),
+        governanceAccount: CborAccountAddress.fromAccountAddress(ACCOUNT_1),
     },
     tokenId: TokenId.Type = TokenId.fromString('3f1bfce9')
 ): Token.Type {

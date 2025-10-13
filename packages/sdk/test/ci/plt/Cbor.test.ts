@@ -1,28 +1,26 @@
-import * as Cbor from '../../../src/plt/Cbor.js';
-import * as CborMemo from '../../../src/plt/CborMemo.js';
-import * as TokenAmount from '../../../src/plt/TokenAmount.js';
-import * as TokenHolder from '../../../src/plt/TokenHolder.js';
-import * as TokenMetadataUrl from '../../../src/plt/TokenMetadataUrl.js';
-import { TokenId } from '../../../src/plt/index.ts';
+import { CborAccountAddress, CborMemo } from '../../../src/plt/index.ts';
 import {
-    TokenListUpdateEventDetails,
+    Cbor,
+    TokenAddDenyListOperation,
+    TokenAmount,
+    TokenId,
+    TokenMetadataUrl,
+    TokenMintOperation,
     TokenOperationType,
-    TokenPauseEventDetails,
     createTokenUpdatePayload,
-} from '../../../src/plt/module.js';
-import { AccountAddress } from '../../../src/types/index.js';
+} from '../../../src/pub/plt.ts';
+import { AccountAddress } from '../../../src/types/index.ts';
 
-describe('Cbor', () => {
+describe('PLT Cbor', () => {
     describe('TokenModuleState', () => {
-        test('should encode and decode TokenModuleState correctly', () => {
-            const accountAddress = AccountAddress.fromBase58('3XSLuJcXg6xEua6iBPnWacc3iWh93yEDMCqX8FbE3RDSbEnT9P');
-            const tokenHolder = TokenHolder.fromAccountAddress(accountAddress);
+        test('should encode and decode full TokenModuleState correctly', () => {
+            const account = CborAccountAddress.fromBase58('3XSLuJcXg6xEua6iBPnWacc3iWh93yEDMCqX8FbE3RDSbEnT9P');
             const metadataUrl = TokenMetadataUrl.fromString('https://example.com/metadata.json');
 
             const state = {
                 name: 'Test Token',
                 metadata: metadataUrl,
-                governanceAccount: tokenHolder,
+                governanceAccount: account,
                 allowList: true,
                 denyList: false,
                 mintable: true,
@@ -43,46 +41,24 @@ describe('Cbor', () => {
             expect(decoded.customField).toBe(state.customField);
         });
 
-        test('should throw error if TokenModuleState is missing required fields', () => {
-            // Missing governanceAccount
-            const invalidState1 = {
-                name: 'Test Token',
-                metadata: TokenMetadataUrl.fromString('https://example.com/metadata.json'),
-                // governanceAccount is missing
-            };
-            const encoded1 = Cbor.encode(invalidState1);
-            expect(() => Cbor.decode(encoded1, 'TokenModuleState')).toThrow(/missing or invalid governanceAccount/);
+        test('should encode and decode minimal TokenModuleState correctly', () => {
+            const state = {};
 
-            // Missing name
-            const accountAddress = AccountAddress.fromBase58('3XSLuJcXg6xEua6iBPnWacc3iWh93yEDMCqX8FbE3RDSbEnT9P');
-            const invalidState2 = {
-                // name is missing
-                metadata: TokenMetadataUrl.fromString('https://example.com/metadata.json'),
-                governanceAccount: TokenHolder.fromAccountAddress(accountAddress),
-            };
-            const encoded2 = Cbor.encode(invalidState2);
-            expect(() => Cbor.decode(encoded2, 'TokenModuleState')).toThrow(/missing or invalid name/);
+            const encoded = Cbor.encode(state);
+            const decoded = Cbor.decode(encoded, 'TokenModuleState');
 
-            // Missing metadata
-            const invalidState3 = {
-                name: 'Test Token',
-                // metadata is missing
-                governanceAccount: TokenHolder.fromAccountAddress(accountAddress),
-            };
-            const encoded3 = Cbor.encode(invalidState3);
-            expect(() => Cbor.decode(encoded3, 'TokenModuleState')).toThrow(/missing metadataUrl/);
+            expect(decoded).toEqual({});
         });
 
         test('should throw error if TokenModuleState has invalid field types', () => {
-            const accountAddress = AccountAddress.fromBase58('3XSLuJcXg6xEua6iBPnWacc3iWh93yEDMCqX8FbE3RDSbEnT9P');
-            const tokenHolder = TokenHolder.fromAccountAddress(accountAddress);
+            const account = CborAccountAddress.fromBase58('3XSLuJcXg6xEua6iBPnWacc3iWh93yEDMCqX8FbE3RDSbEnT9P');
             const metadataUrl = TokenMetadataUrl.fromString('https://example.com/metadata.json');
 
             // Invalid allowList type
             const invalidState = {
                 name: 'Test Token',
                 metadata: metadataUrl,
-                governanceAccount: tokenHolder,
+                governanceAccount: account,
                 allowList: 'yes', // Should be boolean
             };
             const encoded = Cbor.encode(invalidState);
@@ -91,16 +67,15 @@ describe('Cbor', () => {
     });
 
     describe('TokenInitializationParameters', () => {
-        test('should encode and decode TokenInitializationParameters correctly', () => {
-            const accountAddress = AccountAddress.fromBase58('3XSLuJcXg6xEua6iBPnWacc3iWh93yEDMCqX8FbE3RDSbEnT9P');
-            const tokenHolder = TokenHolder.fromAccountAddress(accountAddress);
+        test('should encode and decode full TokenInitializationParameters correctly', () => {
+            const account = CborAccountAddress.fromBase58('3XSLuJcXg6xEua6iBPnWacc3iWh93yEDMCqX8FbE3RDSbEnT9P');
             const metadataUrl = TokenMetadataUrl.fromString('https://example.com/metadata.json');
             const initialSupply = TokenAmount.fromDecimal('1.002', 3);
 
             const params = {
                 name: 'Test Token',
                 metadata: metadataUrl,
-                governanceAccount: tokenHolder,
+                governanceAccount: account,
                 allowList: true,
                 denyList: false,
                 initialSupply,
@@ -122,48 +97,24 @@ describe('Cbor', () => {
             expect(decoded.burnable).toBe(params.burnable);
         });
 
-        test('should throw error if TokenInitializationParameters is missing required fields', () => {
-            // Missing governanceAccount
-            const invalidParams1 = {
-                name: 'Test Token',
-                metadata: TokenMetadataUrl.fromString('https://example.com/metadata.json'),
-                // governanceAccount is missing
-            };
-            const encoded1 = Cbor.encode(invalidParams1);
-            expect(() => Cbor.decode(encoded1, 'TokenInitializationParameters')).toThrow(
-                /missing or invalid governanceAccount/
-            );
+        test('should encode and decode minimal TokenInitializationParameters correctly', () => {
+            const params = {};
 
-            // Missing name
-            const accountAddress = AccountAddress.fromBase58('3XSLuJcXg6xEua6iBPnWacc3iWh93yEDMCqX8FbE3RDSbEnT9P');
-            const invalidParams2 = {
-                // name is missing
-                metadata: TokenMetadataUrl.fromString('https://example.com/metadata.json'),
-                governanceAccount: TokenHolder.fromAccountAddress(accountAddress),
-            };
-            const encoded2 = Cbor.encode(invalidParams2);
-            expect(() => Cbor.decode(encoded2, 'TokenInitializationParameters')).toThrow(/missing or invalid name/);
+            const encoded = Cbor.encode(params);
+            const decoded = Cbor.decode(encoded, 'TokenInitializationParameters');
 
-            // Missing metadata
-            const invalidParams3 = {
-                name: 'Test Token',
-                // metadata is missing
-                governanceAccount: TokenHolder.fromAccountAddress(accountAddress),
-            };
-            const encoded3 = Cbor.encode(invalidParams3);
-            expect(() => Cbor.decode(encoded3, 'TokenInitializationParameters')).toThrow(/missing metadataUrl/);
+            expect(decoded).toEqual({});
         });
 
         test('should throw error if TokenInitializationParameters has invalid field types', () => {
-            const accountAddress = AccountAddress.fromBase58('3XSLuJcXg6xEua6iBPnWacc3iWh93yEDMCqX8FbE3RDSbEnT9P');
-            const tokenHolder = TokenHolder.fromAccountAddress(accountAddress);
+            const account = CborAccountAddress.fromBase58('3XSLuJcXg6xEua6iBPnWacc3iWh93yEDMCqX8FbE3RDSbEnT9P');
             const metadataUrl = TokenMetadataUrl.fromString('https://example.com/metadata.json');
 
             // Invalid allowList type
             const invalidParams = {
                 name: 'Test Token',
                 metadata: metadataUrl,
-                governanceAccount: tokenHolder,
+                governanceAccount: account,
                 allowList: 'yes', // Should be boolean
             };
             const encoded = Cbor.encode(invalidParams);
@@ -206,60 +157,78 @@ describe('Cbor', () => {
         });
     });
 
-    describe('TokenListUpdateEventDetails', () => {
-        test('should encode and decode TokenEventDetails correctly', () => {
-            const accountAddress = AccountAddress.fromBase58('3XSLuJcXg6xEua6iBPnWacc3iWh93yEDMCqX8FbE3RDSbEnT9P');
-            const tokenHolder = TokenHolder.fromAccountAddress(accountAddress);
-
-            const details: TokenListUpdateEventDetails = {
-                target: tokenHolder,
+    describe('TokenOperation[]', () => {
+        test('should (de)serialize multiple governance operations correctly', () => {
+            const account = CborAccountAddress.fromAccountAddress(
+                AccountAddress.fromBuffer(new Uint8Array(32).fill(0x15))
+            );
+            // - d99d73: A tagged (40307) item with a map (a2) containing:
+            // - a2: A map with 2 key-value pairs
+            //   - 01: Key 1.
+            //   - d99d71: A tagged (40305) item containing:
+            //   - a1: A map with 1 key-value pair
+            //     - 01: Key 1.
+            //     - 190397: Uint16(919).
+            //   - 03: Key 3.
+            //   - 5820: A byte string of length 32, representing a 32-byte identifier.
+            //   - 151515151515151515151515151515151515151515151515151515151515151: The account address
+            const accountCbor = `
+              d99d73 a2
+                01 d99d71 a1
+                  01 190397
+                03 5820 ${Buffer.from(account.address.decodedAddress).toString('hex')}
+            `.replace(/\s/g, '');
+            const mint: TokenMintOperation = {
+                [TokenOperationType.Mint]: {
+                    amount: TokenAmount.create(500n, 2),
+                },
             };
 
-            const encoded = Cbor.encode(details);
-            const decoded = Cbor.decode(encoded, 'TokenListUpdateEventDetails');
-            expect(decoded.target).toEqual(details.target);
-        });
-
-        test('should throw error if TokenEventDetails is missing required fields', () => {
-            // Missing target
-            const invalidDetails = {
-                // target is missing
-                additionalInfo: 'Some extra information',
+            const addDenyList: TokenAddDenyListOperation = {
+                [TokenOperationType.AddDenyList]: {
+                    target: account,
+                },
             };
-            const encoded = Cbor.encode(invalidDetails);
-            expect(() => Cbor.decode(encoded, 'TokenListUpdateEventDetails')).toThrow(
-                /Expected 'target' to be a TokenHolder/
-            );
-        });
 
-        test('should throw error if TokenEventDetails has invalid target type', () => {
-            // Invalid target type
-            const invalidDetails = {
-                target: 'not-a-token-holder',
-                additionalInfo: 'Some extra information',
-            };
-            const encoded = Cbor.encode(invalidDetails);
-            expect(() => Cbor.decode(encoded, 'TokenListUpdateEventDetails')).toThrow(
-                /Expected 'target' to be a TokenHolder/
-            );
-        });
-    });
+            const operations = [mint, addDenyList];
+            const encoded = Cbor.encode(operations);
 
-    describe('TokenPauseEventDetails', () => {
-        test('should encode and decode TokenEventDetails correctly', () => {
-            const details: TokenPauseEventDetails = {};
-            const encoded = Cbor.encode(details);
-            const decoded = Cbor.decode(encoded, 'TokenPauseEventDetails');
-            expect(decoded).toEqual(details);
-        });
-
-        test('should throw error if TokenEventDetails has invalid target type', () => {
-            // Invalid target type
-            const invalidDetails = 'invalid';
-            const encoded = Cbor.encode(invalidDetails);
-            expect(() => Cbor.decode(encoded, 'TokenPauseEventDetails')).toThrow(
-                /Invalid event details: "invalid". Expected an object./
+            // This is a CBOR encoded byte sequence representing two operations:
+            // - 82: An array of 2 items
+            // - First item (mint operation):
+            //   - a1: A map with 1 key-value pair
+            //     - 646d696e74: Key "mint" (in UTF-8)
+            //     - a1: A map with 1 key-value pair
+            //       - 66616d6f756e74: Key "amount" (in UTF-8)
+            //       - c4: A decfrac containing:
+            //         - 82: An array of 2 items
+            //           - 21: Integer(-2)
+            //           - 1901f4: Uint16(500)
+            // - Second item (addDenyList operation):
+            //   - a1: A map with 1 key-value pair
+            //     - 6b61646444656e794c697374: Key "addDenyList" (in UTF-8)
+            //     - a1: A map with 1 key-value pair
+            //       - 667461726765744: Key "target" (in UTF-8)
+            //       - The account address cbor
+            const expectedOperations = Buffer.from(
+                `
+                82
+                  a1
+                    646d696e74 a1
+                      66616d6f756e74 c4
+                        82
+                          21
+                          1901f4
+                  a1
+                    6b61646444656e794c697374 a1
+                      66746172676574 ${accountCbor}
+                `.replace(/\s/g, ''),
+                'hex'
             );
+            expect(encoded.toString()).toEqual(expectedOperations.toString('hex'));
+
+            const decoded = Cbor.decode(encoded, 'TokenOperation[]');
+            expect(decoded).toEqual(operations);
         });
     });
 
@@ -336,11 +305,10 @@ describe('Cbor', () => {
             const decoded = Cbor.decode(Cbor.fromHexString('9fa17f6175636e70616063757365ffbfffff'));
             expect(decoded).toEqual([{ [TokenOperationType.Unpause]: {} }]);
         });
-        const accountAddress = AccountAddress.fromBase58('4BH5qnFPDfaD3MxnDzfhnu1jAHoBWXnq2i57T6G1eZn1kC194e');
-        const tokenHolder = TokenHolder.fromAccountAddress(accountAddress);
+        const account = CborAccountAddress.fromBase58('4BH5qnFPDfaD3MxnDzfhnu1jAHoBWXnq2i57T6G1eZn1kC194e');
         test('addAllowList operation encodes correctly', () => {
             const encoded = createTokenUpdatePayload(TokenId.fromString('TEST'), {
-                [TokenOperationType.AddAllowList]: { target: tokenHolder },
+                [TokenOperationType.AddAllowList]: { target: account },
             }).operations;
             expect(encoded.toString()).toBe(
                 '81a16c616464416c6c6f774c697374a166746172676574d99d73a201d99d71a101190397035820a26c957377a2461b6d0b9f63e7c9504136181942145e16c926451bbce5502b15'
@@ -352,7 +320,7 @@ describe('Cbor', () => {
                     '81a16c616464416c6c6f774c697374a166746172676574d99d73a201d99d71a101190397035820a26c957377a2461b6d0b9f63e7c9504136181942145e16c926451bbce5502b15'
                 )
             );
-            expect(decoded).toEqual([{ [TokenOperationType.AddAllowList]: { target: tokenHolder } }]);
+            expect(decoded).toEqual([{ [TokenOperationType.AddAllowList]: { target: account } }]);
         });
         test('addAllowList operation ([reject] indefinite account address) decodes correctly', () => {
             // Note: this is rejected by the Haskell Token Module implementation, due to the
@@ -362,7 +330,7 @@ describe('Cbor', () => {
                     '81a16c616464416c6c6f774c697374a166746172676574d99d73a201d99d71a101190397035f41a24040581f6c957377a2461b6d0b9f63e7c9504136181942145e16c926451bbce5502b15ff'
                 )
             );
-            expect(decoded).toEqual([{ [TokenOperationType.AddAllowList]: { target: tokenHolder } }]);
+            expect(decoded).toEqual([{ [TokenOperationType.AddAllowList]: { target: account } }]);
         });
         test('addAllowList operation (oversize tag) decodes correctly', () => {
             const decoded = Cbor.decode(
@@ -370,7 +338,7 @@ describe('Cbor', () => {
                     '81a16c616464416c6c6f774c697374a166746172676574da00009d73a201d99d71a101190397035820a26c957377a2461b6d0b9f63e7c9504136181942145e16c926451bbce5502b15'
                 )
             );
-            expect(decoded).toEqual([{ [TokenOperationType.AddAllowList]: { target: tokenHolder } }]);
+            expect(decoded).toEqual([{ [TokenOperationType.AddAllowList]: { target: account } }]);
         });
         test('addAllowList operation (more oversize tags) decodes correctly', () => {
             const decoded = Cbor.decode(
@@ -378,7 +346,7 @@ describe('Cbor', () => {
                     '81a16c616464416c6c6f774c697374a166746172676574db0000000000009d73a201db0000000000009d71a101190397035820a26c957377a2461b6d0b9f63e7c9504136181942145e16c926451bbce5502b15'
                 )
             );
-            expect(decoded).toEqual([{ [TokenOperationType.AddAllowList]: { target: tokenHolder } }]);
+            expect(decoded).toEqual([{ [TokenOperationType.AddAllowList]: { target: account } }]);
         });
         test('addAllowList operation (oversize int) decodes correctly', () => {
             const decoded = Cbor.decode(
@@ -386,7 +354,7 @@ describe('Cbor', () => {
                     '81a16c616464416c6c6f774c697374a166746172676574d99d73a201d99d71a1011a00000397035820a26c957377a2461b6d0b9f63e7c9504136181942145e16c926451bbce5502b15'
                 )
             );
-            expect(decoded).toEqual([{ [TokenOperationType.AddAllowList]: { target: tokenHolder } }]);
+            expect(decoded).toEqual([{ [TokenOperationType.AddAllowList]: { target: account } }]);
         });
         test('addAllowList operation (more oversize int) decodes correctly', () => {
             const decoded = Cbor.decode(
@@ -394,7 +362,7 @@ describe('Cbor', () => {
                     '81a16c616464416c6c6f774c697374a166746172676574d99d73a201d99d71a1011b0000000000000397035820a26c957377a2461b6d0b9f63e7c9504136181942145e16c926451bbce5502b15'
                 )
             );
-            expect(decoded).toEqual([{ [TokenOperationType.AddAllowList]: { target: tokenHolder } }]);
+            expect(decoded).toEqual([{ [TokenOperationType.AddAllowList]: { target: account } }]);
         });
         test('addAllowList operation (oversize int key) decodes correctly', () => {
             const decoded = Cbor.decode(
@@ -402,7 +370,7 @@ describe('Cbor', () => {
                     '81a16c616464416c6c6f774c697374a166746172676574d99d73a21801d99d71a101190397035820a26c957377a2461b6d0b9f63e7c9504136181942145e16c926451bbce5502b15'
                 )
             );
-            expect(decoded).toEqual([{ [TokenOperationType.AddAllowList]: { target: tokenHolder } }]);
+            expect(decoded).toEqual([{ [TokenOperationType.AddAllowList]: { target: account } }]);
         });
         test('addAllowList operation (oversize int keys) decodes correctly', () => {
             const decoded = Cbor.decode(
@@ -410,7 +378,7 @@ describe('Cbor', () => {
                     '81a16c616464416c6c6f774c697374a166746172676574d99d73a21b0000000000000001d99d71a11a000000011903971900035820a26c957377a2461b6d0b9f63e7c9504136181942145e16c926451bbce5502b15'
                 )
             );
-            expect(decoded).toEqual([{ [TokenOperationType.AddAllowList]: { target: tokenHolder } }]);
+            expect(decoded).toEqual([{ [TokenOperationType.AddAllowList]: { target: account } }]);
         });
         test('addAllowList operation (reordered keys) decodes correctly', () => {
             const decoded = Cbor.decode(
@@ -418,7 +386,7 @@ describe('Cbor', () => {
                     '81a16c616464416c6c6f774c697374a166746172676574d99d73a2035820a26c957377a2461b6d0b9f63e7c9504136181942145e16c926451bbce5502b1501d99d71a101190397'
                 )
             );
-            expect(decoded).toEqual([{ [TokenOperationType.AddAllowList]: { target: tokenHolder } }]);
+            expect(decoded).toEqual([{ [TokenOperationType.AddAllowList]: { target: account } }]);
         });
         test('addAllowList operation ([reject] big int for int) fails decoding', () => {
             // Note: this is rejected by the Haskell Token Module implementation, due to the
@@ -450,7 +418,7 @@ describe('Cbor', () => {
                     '81a16c616464416c6c6f774c697374a166746172676574d99d73a201d99d71a101f9632e035820a26c957377a2461b6d0b9f63e7c9504136181942145e16c926451bbce5502b15'
                 )
             );
-            expect(decoded).toEqual([{ [TokenOperationType.AddAllowList]: { target: tokenHolder } }]);
+            expect(decoded).toEqual([{ [TokenOperationType.AddAllowList]: { target: account } }]);
         });
         test('addAllowList operation ([reject] single-precision float for int) decodes correctly', () => {
             // Note: this is rejected by the Haskell Token Module implementation, due to the
@@ -460,7 +428,7 @@ describe('Cbor', () => {
                     '81a16c616464416c6c6f774c697374a166746172676574d99d73a201d99d71a101fa4465c000035820a26c957377a2461b6d0b9f63e7c9504136181942145e16c926451bbce5502b15'
                 )
             );
-            expect(decoded).toEqual([{ [TokenOperationType.AddAllowList]: { target: tokenHolder } }]);
+            expect(decoded).toEqual([{ [TokenOperationType.AddAllowList]: { target: account } }]);
         });
         test('addAllowList operation ([reject] double-precision float for int) decodes correctly', () => {
             // Note: this is rejected by the Haskell Token Module implementation, due to the
@@ -470,7 +438,7 @@ describe('Cbor', () => {
                     '81a16c616464416c6c6f774c697374a166746172676574d99d73a201d99d71a101fb408cb80000000000035820a26c957377a2461b6d0b9f63e7c9504136181942145e16c926451bbce5502b15'
                 )
             );
-            expect(decoded).toEqual([{ [TokenOperationType.AddAllowList]: { target: tokenHolder } }]);
+            expect(decoded).toEqual([{ [TokenOperationType.AddAllowList]: { target: account } }]);
         });
         test('addAllowList operation ([reject] half-precision float for int tags) decodes correctly', () => {
             // Note: this is rejected by the Haskell Token Module implementation, due to the
@@ -480,7 +448,7 @@ describe('Cbor', () => {
                     '81a16c616464416c6c6f774c697374a166746172676574d99d73a201d99d71a1f93c00190397f942005820a26c957377a2461b6d0b9f63e7c9504136181942145e16c926451bbce5502b15'
                 )
             );
-            expect(decoded).toEqual([{ [TokenOperationType.AddAllowList]: { target: tokenHolder } }]);
+            expect(decoded).toEqual([{ [TokenOperationType.AddAllowList]: { target: account } }]);
         });
         test('addAllowList operation ([reject] single-precision float for int tags) decodes correctly', () => {
             // Note: this is rejected by the Haskell Token Module implementation, due to the
@@ -490,7 +458,7 @@ describe('Cbor', () => {
                     '81a16c616464416c6c6f774c697374a166746172676574d99d73a2fa3f800000d99d71a1fa3f800000190397fa404000005820a26c957377a2461b6d0b9f63e7c9504136181942145e16c926451bbce5502b15'
                 )
             );
-            expect(decoded).toEqual([{ [TokenOperationType.AddAllowList]: { target: tokenHolder } }]);
+            expect(decoded).toEqual([{ [TokenOperationType.AddAllowList]: { target: account } }]);
         });
         test('addAllowList operation ([reject] double-precision float for int tags) decodes correctly', () => {
             // Note: this is rejected by the Haskell Token Module implementation, due to the
@@ -500,12 +468,12 @@ describe('Cbor', () => {
                     '81a16c616464416c6c6f774c697374a166746172676574d99d73a2fb3ff0000000000000d99d71a1fb3ff0000000000000190397fb40080000000000005820a26c957377a2461b6d0b9f63e7c9504136181942145e16c926451bbce5502b15'
                 )
             );
-            expect(decoded).toEqual([{ [TokenOperationType.AddAllowList]: { target: tokenHolder } }]);
+            expect(decoded).toEqual([{ [TokenOperationType.AddAllowList]: { target: account } }]);
         });
-        const tokenHolderNoCoinInfo = TokenHolder.fromAccountAddressNoCoinInfo(accountAddress);
+        const accountNoCoinInfo = CborAccountAddress.fromJSON({ address: account.address.toString() });
         test('removeAllowList operation encodes correctly', () => {
             const encoded = createTokenUpdatePayload(TokenId.fromString('TEST'), {
-                [TokenOperationType.RemoveAllowList]: { target: tokenHolderNoCoinInfo },
+                [TokenOperationType.RemoveAllowList]: { target: accountNoCoinInfo },
             }).operations;
             expect(encoded.toString()).toBe(
                 '81a16f72656d6f7665416c6c6f774c697374a166746172676574d99d73a1035820a26c957377a2461b6d0b9f63e7c9504136181942145e16c926451bbce5502b15'
@@ -517,7 +485,7 @@ describe('Cbor', () => {
                     '81a16f72656d6f7665416c6c6f774c697374a166746172676574d99d73a1035820a26c957377a2461b6d0b9f63e7c9504136181942145e16c926451bbce5502b15'
                 )
             );
-            expect(decoded).toEqual([{ [TokenOperationType.RemoveAllowList]: { target: tokenHolderNoCoinInfo } }]);
+            expect(decoded).toEqual([{ [TokenOperationType.RemoveAllowList]: { target: accountNoCoinInfo } }]);
         });
         test('removeAllowList operation (indefinite lengths and oversized ints) decodes correctly', () => {
             const decoded = Cbor.decode(
@@ -525,11 +493,11 @@ describe('Cbor', () => {
                     '81a16f72656d6f7665416c6c6f774c697374a166746172676574d99d73a1035820a26c957377a2461b6d0b9f63e7c9504136181942145e16c926451bbce5502b15'
                 )
             );
-            expect(decoded).toEqual([{ [TokenOperationType.RemoveAllowList]: { target: tokenHolderNoCoinInfo } }]);
+            expect(decoded).toEqual([{ [TokenOperationType.RemoveAllowList]: { target: accountNoCoinInfo } }]);
         });
         test('addDenyList operation encodes correctly', () => {
             const encoded = createTokenUpdatePayload(TokenId.fromString('TEST'), {
-                [TokenOperationType.AddDenyList]: { target: tokenHolder },
+                [TokenOperationType.AddDenyList]: { target: account },
             }).operations;
             expect(encoded.toString()).toBe(
                 '81a16b61646444656e794c697374a166746172676574d99d73a201d99d71a101190397035820a26c957377a2461b6d0b9f63e7c9504136181942145e16c926451bbce5502b15'
@@ -541,7 +509,7 @@ describe('Cbor', () => {
                     '81a16b61646444656e794c697374a166746172676574d99d73a201d99d71a101190397035820a26c957377a2461b6d0b9f63e7c9504136181942145e16c926451bbce5502b15'
                 )
             );
-            expect(decoded).toEqual([{ [TokenOperationType.AddDenyList]: { target: tokenHolder } }]);
+            expect(decoded).toEqual([{ [TokenOperationType.AddDenyList]: { target: account } }]);
         });
         test('addDenyList operation ([reject] coininfo includes network) decodes correctly', () => {
             // Note: this is rejected by the Haskell Token Module implementation, due to the
@@ -551,7 +519,7 @@ describe('Cbor', () => {
                     '81a16b61646444656e794c697374a166746172676574d99d73a201d99d71a2011903970200035820a26c957377a2461b6d0b9f63e7c9504136181942145e16c926451bbce5502b15'
                 )
             );
-            expect(decoded).toEqual([{ [TokenOperationType.AddDenyList]: { target: tokenHolder } }]);
+            expect(decoded).toEqual([{ [TokenOperationType.AddDenyList]: { target: account } }]);
         });
         test('addDenyList operation ([reject] coininfo with bad coin type) fails decoding', () => {
             // Note: this is rejected by the Haskell Token Module implementation, due to the
@@ -566,7 +534,7 @@ describe('Cbor', () => {
         });
         test('removeDenyList operation encodes correctly', () => {
             const encoded = createTokenUpdatePayload(TokenId.fromString('TEST'), {
-                [TokenOperationType.RemoveDenyList]: { target: tokenHolder },
+                [TokenOperationType.RemoveDenyList]: { target: account },
             }).operations;
             expect(encoded.toString()).toBe(
                 '81a16e72656d6f766544656e794c697374a166746172676574d99d73a201d99d71a101190397035820a26c957377a2461b6d0b9f63e7c9504136181942145e16c926451bbce5502b15'
@@ -578,7 +546,7 @@ describe('Cbor', () => {
                     '81a16e72656d6f766544656e794c697374a166746172676574d99d73a201d99d71a101190397035820a26c957377a2461b6d0b9f63e7c9504136181942145e16c926451bbce5502b15'
                 )
             );
-            expect(decoded).toEqual([{ [TokenOperationType.RemoveDenyList]: { target: tokenHolder } }]);
+            expect(decoded).toEqual([{ [TokenOperationType.RemoveDenyList]: { target: account } }]);
         });
         test('removeDenyList operation ([reject] RemoveDenyList) decodes correctly', () => {
             // Note: this is rejected by the Haskell token module implementation, due to
@@ -589,7 +557,7 @@ describe('Cbor', () => {
                     '81a16e52656d6f766544656e794c697374a166746172676574d99d73a201d99d71a101190397035820a26c957377a2461b6d0b9f63e7c9504136181942145e16c926451bbce5502b15'
                 )
             );
-            expect(decoded).toEqual([{ RemoveDenyList: { target: tokenHolder } }]);
+            expect(decoded).toEqual([{ RemoveDenyList: { target: account } }]);
         });
         test('removeDenyList operation ([reject] remove-deny-list) decodes correctly', () => {
             // Note: this is rejected by the Haskell token module implementation, due to
@@ -600,7 +568,7 @@ describe('Cbor', () => {
                     '81a17072656d6f76652d64656e792d6c697374a166746172676574d99d73a201d99d71a101190397035820a26c957377a2461b6d0b9f63e7c9504136181942145e16c926451bbce5502b15'
                 )
             );
-            expect(decoded).toEqual([{ 'remove-deny-list': { target: tokenHolder } }]);
+            expect(decoded).toEqual([{ 'remove-deny-list': { target: account } }]);
         });
         test('removeDenyList operation ([reject] Target) decodes correctly', () => {
             // Note: this is rejected by the Haskell token module implementation, due to
@@ -611,7 +579,7 @@ describe('Cbor', () => {
                     '81a16e72656d6f766544656e794c697374a166546172676574d99d73a201d99d71a101190397035820a26c957377a2461b6d0b9f63e7c9504136181942145e16c926451bbce5502b15'
                 )
             );
-            expect(decoded).toEqual([{ [TokenOperationType.RemoveDenyList]: { Target: tokenHolder } }]);
+            expect(decoded).toEqual([{ [TokenOperationType.RemoveDenyList]: { Target: account } }]);
         });
         test('removeDenyList operation ([reject] no target) decodes correctly', () => {
             // Note: this is rejected by the Haskell token module implementation, due to
@@ -627,7 +595,7 @@ describe('Cbor', () => {
                     '81a16e72656d6f766544656e794c697374a2646c6973740066746172676574d99d73a201d99d71a101190397035820a26c957377a2461b6d0b9f63e7c9504136181942145e16c926451bbce5502b15'
                 )
             );
-            expect(decoded).toEqual([{ [TokenOperationType.RemoveDenyList]: { list: 0, target: tokenHolder } }]);
+            expect(decoded).toEqual([{ [TokenOperationType.RemoveDenyList]: { list: 0, target: account } }]);
         });
         test('removeDenyList operation ([reject] duplicate target) decodes', () => {
             // Note: this is rejected by the Haskell Token Module implementation, due to
@@ -637,11 +605,11 @@ describe('Cbor', () => {
                     '81a16e72656d6f766544656e794c697374a266746172676574d99d73a201d99d71a101190397035820a26c957377a2461b6d0b9f63e7c9504136181942145e16c926451bbce5502b1566746172676574d99d73a201d99d71a101190397035820a26c957377a2461b6d0b9f63e7c9504136181942145e16c926451bbce5502b15'
                 )
             );
-            expect(decoded).toEqual([{ [TokenOperationType.RemoveDenyList]: { target: tokenHolder } }]);
+            expect(decoded).toEqual([{ [TokenOperationType.RemoveDenyList]: { target: account } }]);
         });
         test('transfer operation encodes correctly', () => {
             const encoded = createTokenUpdatePayload(TokenId.fromString('TEST'), {
-                [TokenOperationType.Transfer]: { recipient: tokenHolder, amount: TokenAmount.fromDecimal('1.00', 2) },
+                [TokenOperationType.Transfer]: { recipient: account, amount: TokenAmount.fromDecimal('1.00', 2) },
             }).operations;
             expect(encoded.toString()).toBe(
                 '81a1687472616e73666572a266616d6f756e74c48221186469726563697069656e74d99d73a201d99d71a101190397035820a26c957377a2461b6d0b9f63e7c9504136181942145e16c926451bbce5502b15'
@@ -656,7 +624,7 @@ describe('Cbor', () => {
             expect(decoded).toEqual([
                 {
                     [TokenOperationType.Transfer]: {
-                        recipient: tokenHolder,
+                        recipient: account,
                         amount: TokenAmount.fromDecimal('1.00', 2),
                     },
                 },
@@ -665,7 +633,7 @@ describe('Cbor', () => {
         test('transfer operation (max amount) encodes correctly', () => {
             const encoded = createTokenUpdatePayload(TokenId.fromString('TEST'), {
                 [TokenOperationType.Transfer]: {
-                    recipient: tokenHolder,
+                    recipient: account,
                     amount: TokenAmount.create(BigInt('18446744073709551615'), 0),
                 },
             }).operations;
@@ -682,7 +650,7 @@ describe('Cbor', () => {
             expect(decoded).toEqual([
                 {
                     [TokenOperationType.Transfer]: {
-                        recipient: tokenHolder,
+                        recipient: account,
                         amount: TokenAmount.create(BigInt('18446744073709551615'), 0),
                     },
                 },
@@ -691,7 +659,7 @@ describe('Cbor', () => {
         test('transfer operation (max decimals) encodes correctly', () => {
             const encoded = createTokenUpdatePayload(TokenId.fromString('TEST'), {
                 [TokenOperationType.Transfer]: {
-                    recipient: tokenHolder,
+                    recipient: account,
                     amount: TokenAmount.create(BigInt('18446744073709551615'), 255),
                 },
             }).operations;
@@ -708,7 +676,7 @@ describe('Cbor', () => {
             expect(decoded).toEqual([
                 {
                     [TokenOperationType.Transfer]: {
-                        recipient: tokenHolder,
+                        recipient: account,
                         amount: TokenAmount.create(BigInt('18446744073709551615'), 255),
                     },
                 },
@@ -743,7 +711,7 @@ describe('Cbor', () => {
             expect(decoded).toEqual([
                 {
                     [TokenOperationType.Transfer]: {
-                        recipient: tokenHolder,
+                        recipient: account,
                         amount: TokenAmount.create(BigInt(100), 2),
                     },
                 },
@@ -756,7 +724,7 @@ describe('Cbor', () => {
             expect(decoded).toEqual([
                 {
                     [TokenOperationType.Transfer]: {
-                        recipient: tokenHolder,
+                        recipient: account,
                         amount: TokenAmount.create(BigInt(100), 2),
                     },
                 },
@@ -769,7 +737,7 @@ describe('Cbor', () => {
             expect(decoded).toEqual([
                 {
                     [TokenOperationType.Transfer]: {
-                        recipient: tokenHolder,
+                        recipient: account,
                         amount: TokenAmount.create(BigInt(100), 2),
                     },
                 },
@@ -782,7 +750,7 @@ describe('Cbor', () => {
             expect(decoded).toEqual([
                 {
                     [TokenOperationType.Transfer]: {
-                        recipient: tokenHolder,
+                        recipient: account,
                         amount: TokenAmount.create(BigInt(100), 2),
                     },
                 },
@@ -795,7 +763,7 @@ describe('Cbor', () => {
             expect(decoded).toEqual([
                 {
                     [TokenOperationType.Transfer]: {
-                        recipient: tokenHolder,
+                        recipient: account,
                         amount: TokenAmount.create(BigInt(100), 2),
                     },
                 },
@@ -808,7 +776,7 @@ describe('Cbor', () => {
             expect(decoded).toEqual([
                 {
                     [TokenOperationType.Transfer]: {
-                        recipient: tokenHolder,
+                        recipient: account,
                         amount: TokenAmount.create(BigInt(100), 2),
                     },
                 },
@@ -821,7 +789,7 @@ describe('Cbor', () => {
             expect(decoded).toEqual([
                 {
                     [TokenOperationType.Transfer]: {
-                        recipient: tokenHolder,
+                        recipient: account,
                         amount: TokenAmount.create(BigInt(100), 2),
                     },
                 },
@@ -846,7 +814,7 @@ describe('Cbor', () => {
             expect(decoded).toEqual([
                 {
                     [TokenOperationType.Transfer]: {
-                        recipient: tokenHolder,
+                        recipient: account,
                         amount: TokenAmount.create(BigInt(100), 2),
                     },
                 },
@@ -861,7 +829,7 @@ describe('Cbor', () => {
             expect(decoded).toEqual([
                 {
                     [TokenOperationType.Transfer]: {
-                        recipient: tokenHolder,
+                        recipient: account,
                         amount: TokenAmount.create(BigInt(100), 2),
                     },
                 },
@@ -876,7 +844,7 @@ describe('Cbor', () => {
             expect(decoded).toEqual([
                 {
                     [TokenOperationType.Transfer]: {
-                        recipient: tokenHolder,
+                        recipient: account,
                         amount: TokenAmount.create(BigInt(100), 2),
                     },
                 },
@@ -891,7 +859,7 @@ describe('Cbor', () => {
             expect(decoded).toEqual([
                 {
                     [TokenOperationType.Transfer]: {
-                        recipient: tokenHolder,
+                        recipient: account,
                         amount: TokenAmount.create(BigInt(100), 2),
                     },
                 },
@@ -907,7 +875,7 @@ describe('Cbor', () => {
             expect(decoded).toEqual([
                 {
                     [TokenOperationType.Transfer]: {
-                        recipient: tokenHolder,
+                        recipient: account,
                         amount: TokenAmount.create(BigInt(100), 2),
                     },
                 },
@@ -922,7 +890,7 @@ describe('Cbor', () => {
             expect(decoded).toEqual([
                 {
                     [TokenOperationType.Transfer]: {
-                        recipient: tokenHolder,
+                        recipient: account,
                         amount: TokenAmount.create(BigInt(100), 2),
                     },
                 },
@@ -956,7 +924,7 @@ describe('Cbor', () => {
                             0xf0, 0xf1, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8, 0xf9, 0xfa, 0xfb, 0xfc, 0xfd, 0xfe,
                             0xff,
                         ]),
-                        recipient: tokenHolder,
+                        recipient: account,
                         amount: TokenAmount.create(BigInt(100), 2),
                     },
                 },
@@ -993,7 +961,7 @@ describe('Cbor', () => {
                                 0xfc, 0xfd, 0xfe, 0xff,
                             ]),
                         }),
-                        recipient: tokenHolder,
+                        recipient: account,
                         amount: TokenAmount.create(BigInt(100), 2),
                     },
                 },
@@ -1028,7 +996,7 @@ describe('Cbor', () => {
                             0xf0, 0xf1, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8, 0xf9, 0xfa, 0xfb, 0xfc, 0xfd, 0xfe,
                             0xff, 0x00,
                         ]),
-                        recipient: tokenHolder,
+                        recipient: account,
                         amount: TokenAmount.create(BigInt(100), 2),
                     },
                 },
@@ -1049,7 +1017,7 @@ describe('Cbor', () => {
                 {
                     [TokenOperationType.Transfer]: {
                         memo: Uint8Array.from([]),
-                        recipient: tokenHolder,
+                        recipient: account,
                         amount: TokenAmount.create(BigInt(100), 2),
                     },
                 },
@@ -1064,7 +1032,7 @@ describe('Cbor', () => {
             expect(decoded).toEqual([
                 {
                     [TokenOperationType.Transfer]: {
-                        recipient: tokenHolder,
+                        recipient: account,
                         amount: TokenAmount.create(BigInt(100), 2),
                         blahasdfasdf: 2,
                     },
@@ -1080,7 +1048,7 @@ describe('Cbor', () => {
             expect(decoded).toEqual([
                 {
                     [TokenOperationType.Transfer]: {
-                        recipient: tokenHolder,
+                        recipient: account,
                     },
                 },
             ]);
@@ -1094,7 +1062,7 @@ describe('Cbor', () => {
             expect(decoded).toEqual([
                 {
                     [TokenOperationType.Transfer]: {
-                        recipient: tokenHolder,
+                        recipient: account,
                         amount: TokenAmount.create(BigInt(100), 2),
                         memo: Uint8Array.from([0x01]),
                     },
@@ -1110,7 +1078,7 @@ describe('Cbor', () => {
             expect(decoded).toEqual([
                 {
                     [TokenOperationType.Transfer]: {
-                        recipient: tokenHolder,
+                        recipient: account,
                         amount: TokenAmount.create(BigInt(200), 2),
                     },
                 },
@@ -1123,13 +1091,13 @@ describe('Cbor', () => {
             expect(decoded).toEqual([
                 {
                     [TokenOperationType.Transfer]: {
-                        recipient: tokenHolder,
+                        recipient: account,
                         amount: TokenAmount.create(BigInt(100), 2),
                     },
                 },
                 {
                     [TokenOperationType.Transfer]: {
-                        recipient: tokenHolder,
+                        recipient: account,
                         amount: TokenAmount.create(BigInt(500), 2),
                     },
                 },

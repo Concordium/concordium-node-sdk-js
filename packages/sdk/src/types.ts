@@ -1,28 +1,29 @@
 /**
  * @module Common GRPC-Client
  */
-import { Cbor, TokenId } from './plt/index.js';
-import { TokenAccountInfo } from './plt/types.js';
-import * as AccountAddress from './types/AccountAddress.js';
+import type { Known, Upward } from './grpc/index.js';
+import type { Cbor, TokenId } from './plt/index.js';
+import type { TokenAccountInfo } from './plt/types.js';
+import type * as AccountAddress from './types/AccountAddress.js';
 import type * as BlockHash from './types/BlockHash.js';
 import type * as CcdAmount from './types/CcdAmount.js';
-import * as ContractAddress from './types/ContractAddress.js';
+import type * as ContractAddress from './types/ContractAddress.js';
 import type * as ContractName from './types/ContractName.js';
-import * as CredentialRegistrationId from './types/CredentialRegistrationId.js';
-import { DataBlob } from './types/DataBlob.js';
-import * as Duration from './types/Duration.js';
-import * as Energy from './types/Energy.js';
+import type * as CredentialRegistrationId from './types/CredentialRegistrationId.js';
+import type { DataBlob } from './types/DataBlob.js';
+import type * as Duration from './types/Duration.js';
+import type * as Energy from './types/Energy.js';
 import type * as InitName from './types/InitName.js';
 import type * as ModuleReference from './types/ModuleReference.js';
-import * as Parameter from './types/Parameter.js';
+import type * as Parameter from './types/Parameter.js';
 import type * as ReceiveName from './types/ReceiveName.js';
 import type * as ReturnValue from './types/ReturnValue.js';
 import type * as SequenceNumber from './types/SequenceNumber.js';
-import * as Timestamp from './types/Timestamp.js';
+import type * as Timestamp from './types/Timestamp.js';
 import type * as TransactionExpiry from './types/TransactionExpiry.js';
 import type * as TransactionHash from './types/TransactionHash.js';
-import { RejectReason } from './types/rejectReason.js';
-import { ContractTraceEvent } from './types/transactionEvent.js';
+import type { RejectReason } from './types/rejectReason.js';
+import type { ContractTraceEvent } from './types/transactionEvent.js';
 
 export * from './types/NodeInfo.js';
 export * from './types/PeerInfo.js';
@@ -514,7 +515,8 @@ interface AuthorizationsCommon {
     electionDifficulty: Authorization;
     addAnonymityRevoker: Authorization;
     addIdentityProvider: Authorization;
-    keys: VerifyKey[];
+    /** The authorization keys. */
+    keys: UpdatePublicKey[];
 }
 
 /**
@@ -538,7 +540,8 @@ export interface AuthorizationsV1 extends AuthorizationsCommon {
 export type Authorizations = AuthorizationsV0 | AuthorizationsV1;
 
 export interface KeysWithThreshold {
-    keys: VerifyKey[];
+    /** The authorization keys. */
+    keys: UpdatePublicKey[];
     threshold: number;
 }
 
@@ -796,8 +799,25 @@ export interface VerifyKey {
     verifyKey: HexString;
 }
 
+/**
+ * Represents a public key used for chain updates.
+ */
+export type UpdatePublicKey = {
+    /** The key in hex format */
+    verifyKey: HexString;
+};
+
 export interface CredentialPublicKeys {
-    keys: Record<number, VerifyKey>;
+    /**
+     * keys for the credential
+     *
+     * **Please note**, these can possibly be unknown if the SDK is not fully compatible with the Concordium
+     * node queried, in which case `null` is returned.
+     *
+     * In case this is used as part of a transaction sent to the node, none of the values contained can be `null`,
+     * as this will cause the transation to fail.
+     */
+    keys: Record<number, Upward<VerifyKey>>;
     threshold: number;
 }
 
@@ -885,7 +905,13 @@ export type BakerId = bigint;
 export type DelegatorId = bigint;
 
 export interface BakerPoolInfo {
-    openStatus: OpenStatusText;
+    /**
+     * The status of validator pool
+     *
+     * **Please note**, this can possibly be unknown if the SDK is not fully compatible with the Concordium
+     * node queried, in which case `null` is returned.
+     */
+    openStatus: Upward<OpenStatusText>;
     metadataUrl: UrlString;
     commissionRates: CommissionRates;
 }
@@ -1102,6 +1128,7 @@ export enum AccountInfoType {
     Simple = 'simple',
     Baker = 'baker',
     Delegator = 'delegator',
+    Unknown = 'unknown',
 }
 
 interface AccountInfoCommon {
@@ -1170,7 +1197,20 @@ export interface AccountInfoDelegator extends AccountInfoCommon {
     accountDelegation: AccountDelegationDetails;
 }
 
-export type AccountInfo = AccountInfoSimple | AccountInfoBaker | AccountInfoDelegator;
+export interface AccountInfoUnknown extends AccountInfoCommon {
+    type: AccountInfoType.Unknown;
+    /**
+     * This will only ever be `null`, which represents a variant of staking info for the account which is
+     * unknown to the SDK, for known staking variants this is represented by either {@linkcode AccountInfoBaker}
+     * or {@linkcode AccountInfoDelegator}.
+     *
+     * **Note**: This field is named `accountBaker` to align with the JSON representation produced by the
+     * corresponding rust SDK.
+     */
+    accountBaker: Upward<never>;
+}
+
+export type AccountInfo = AccountInfoSimple | AccountInfoBaker | AccountInfoDelegator | AccountInfoUnknown;
 
 export interface Description {
     name: string;
@@ -1583,14 +1623,26 @@ export interface ContractContext {
 export interface InvokeContractSuccessResult {
     tag: 'success';
     usedEnergy: Energy.Type;
-    events: ContractTraceEvent[];
+    /**
+     * The events related to the contract invocation.
+     *
+     * **Please note**, these can possibly be unknown if the SDK is not fully compatible with the Concordium
+     * node queried, in which case `null` is returned.
+     */
+    events: Upward<ContractTraceEvent>[];
     returnValue?: ReturnValue.Type;
 }
 
 export interface InvokeContractFailedResult {
     tag: 'failure';
     usedEnergy: Energy.Type;
-    reason: RejectReason;
+    /**
+     * The reject reason for the failed contract invocation.
+     *
+     * **Please note**, this can possibly be unknown if the SDK is not fully compatible with the Concordium
+     * node queried, in which case `null` is returned.
+     */
+    reason: Upward<RejectReason>;
     /**
      * Return value from smart contract call, used to provide error messages.
      * Is only defined when smart contract instance is a V1 smart contract and
@@ -1634,11 +1686,10 @@ interface CdiRandomness {
     randomness: CommitmentsRandomness;
 }
 
-// TODO Should we rename this, As it is not actually the transaction that is sent to the node. (Note that this would be a breaking change)
-export type CredentialDeploymentTransaction = CredentialDeploymentDetails & CdiRandomness;
+export type CredentialDeploymentPayload = CredentialDeploymentDetails & CdiRandomness;
 /** Internal type used when building credentials */
 export type UnsignedCdiWithRandomness = {
-    unsignedCdi: UnsignedCredentialDeploymentInformation;
+    unsignedCdi: Known<UnsignedCredentialDeploymentInformation>;
 } & CdiRandomness;
 
 export interface CredentialDeploymentInfo extends CredentialDeploymentValues {
@@ -1671,11 +1722,6 @@ export interface IdentityInput {
     prfKey: string;
     idCredSecret: string;
     randomness: string;
-}
-
-export enum ContractVersion {
-    V0 = 0,
-    V1 = 1,
 }
 
 export enum SchemaVersion {
@@ -2014,6 +2060,11 @@ export type Cooldown = {
     timestamp: Timestamp.Type;
     /** The amount that is in cooldown and set to be released at the end of the cooldown period */
     amount: CcdAmount.Type;
-    /** The status of the cooldown */
-    status: CooldownStatus;
+    /**
+     * The status of the cooldown
+     *
+     * **Please note**, this can possibly be unknown if the SDK is not fully compatible with the Concordium
+     * node queried, in which case `null` is returned.
+     */
+    status: Upward<CooldownStatus>;
 };

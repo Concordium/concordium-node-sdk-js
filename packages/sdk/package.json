@@ -1,6 +1,6 @@
 {
     "name": "@concordium/web-sdk",
-    "version": "10.0.2",
+    "version": "11.0.0",
     "license": "Apache-2.0",
     "engines": {
         "node": ">=16"
@@ -99,6 +99,7 @@
         "build": "yarn clean && yarn mkdirp src/grpc-api && yarn generate && yarn build-dev",
         "build-dev": "tsc -p tsconfig.build.json && yarn webpack",
         "webpack": "tsx ../../node_modules/webpack-cli/bin/cli.js --config webpack.config.ts",
+        "typecheck": "tsc -p tsconfig.json",
         "clean": "rimraf -- lib src/grpc-api",
         "size": "yarn build && size-limit",
         "size:no-build": "size-limit"

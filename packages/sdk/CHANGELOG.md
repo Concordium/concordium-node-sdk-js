@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 11.0.0
+
 ### Fixed
 
 - Fix decoding of `TokenAmount`s with 256 decimals.

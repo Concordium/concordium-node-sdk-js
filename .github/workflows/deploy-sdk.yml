@@ -33,7 +33,7 @@ jobs:
         with:
           submodules: 'recursive'
 
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: yarn
@@ -137,7 +137,7 @@ jobs:
           name: build-release
           path: packages/sdk
 
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: yarn

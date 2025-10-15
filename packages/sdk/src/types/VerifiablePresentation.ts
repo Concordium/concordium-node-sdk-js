@@ -7,7 +7,7 @@ import { AttributeType } from '../web3-id/types.js';
 /**
  * The "Distributed Identifier" string.
  */
-type DIDString = string;
+export type DIDString = string;
 
 export type ConcordiumWeakLinkingProofV1 = {
     /** When the statement was created, serialized as an ISO string */
@@ -20,7 +20,7 @@ export type ConcordiumWeakLinkingProofV1 = {
 
 export type AtomicProofV2 = AtomicProof<AttributeType>;
 
-export type StatementProofAccount = {
+type ZKProofV3Base = {
     /** When the statement was created, serialized as an ISO string */
     created: string;
     /** The proof value */
@@ -28,6 +28,8 @@ export type StatementProofAccount = {
     /** The proof type */
     type: 'ConcordiumZKProofV3';
 };
+
+export type StatementProofAccount = ZKProofV3Base;
 
 /** The signed commitments of a Web3 ID credential proof */
 export type SignedCommitments = {
@@ -37,12 +39,19 @@ export type SignedCommitments = {
     commitments: Record<string, HexString>;
 };
 
-export type StatementProofWeb3Id = StatementProofAccount & {
+export type StatementProofWeb3Id = ZKProofV3Base & {
     /** The signed commitments of the proof needed to verify the proof */
     commitments: SignedCommitments;
 };
 
-export type CredentialSubjectProof<P extends StatementProofAccount> = {
+export type StatementProofIdentity = ZKProofV3Base & {
+    /** Commitments to attribute values and their proofs */
+    // TODO: need to model this after
+    // https://github.com/Concordium/concordium-base/blob/c4a5917309b168e4d69f883bc23f92ea62ec97df/rust-src/concordium_base/src/id/types.rs#L2812
+    identityAttributesInfo: unknown;
+};
+
+export type CredentialSubjectProof<P extends ZKProofV3Base> = {
     /** The credential proof ID */
     id: DIDString;
     /** The credential proof data */
@@ -73,6 +82,16 @@ export type VerifiableCredentialProofWeb3Id = {
     issuer: DIDString;
     /** The credential type */
     type: ['VerifiableCredential', 'ConcordiumVerifiableCredential', ...string[]];
+};
+
+// TODO: not implemented in base yet... might need to revise
+export type VerifiableCredentialProofIdentity = {
+    /** The credential proof */
+    credentialSubject: CredentialSubjectProof<StatementProofIdentity>;
+    /** The issuer DID */
+    issuer: DIDString;
+    /** The credential type */
+    type: ['VerifiableCredential', 'ConcordiumVerifiableCredential'];
 };
 
 /**

@@ -3,7 +3,17 @@ import { Buffer } from 'buffer/index.js';
 import { EU_MEMBERS, MAX_DATE, MIN_DATE, StatementBuilder, StatementTypes } from '../commonProofTypes.js';
 import { MAX_U64 } from '../constants.js';
 import { getPastDate } from '../id/idProofs.js';
-import { AttributeKey, AttributeKeyString, AttributeList, AttributesKeys, HexString, Network } from '../types.js';
+import {
+    AttributeKey,
+    AttributeKeyString,
+    AttributeList,
+    AttributesKeys,
+    HexString,
+    IdentityObjectV1,
+    IdentityProvider,
+    Network,
+    Policy,
+} from '../types.js';
 import type * as ContractAddress from '../types/ContractAddress.js';
 import { ConcordiumHdWallet } from '../wasm/HdWallet.js';
 import {
@@ -14,6 +24,7 @@ import {
 } from './helpers.js';
 import {
     AccountCommitmentInput,
+    AccountCredentialQualifier,
     AtomicStatementV2,
     AttributeType,
     CredentialSchemaProperty,
@@ -22,13 +33,15 @@ import {
     CredentialStatements,
     CredentialSubject,
     IDENTITY_SUBJECT_SCHEMA,
-    IdentityQualifier,
+    IdObjectUseData,
+    IdentityCommitmentInput,
+    IdentityCredentialQualifier,
     MembershipStatementV2,
     NonMembershipStatementV2,
     RangeStatementV2,
     StatementAttributeType,
     StatementProverQualifier,
-    VerifiableCredentialQualifier,
+    Web3IdCredentialQualifier,
     Web3IssuerCommitmentInput,
     isTimestampAttribute,
 } from './types.js';
@@ -237,16 +250,23 @@ export function verifyAtomicStatements(statements: AtomicStatementV2[], schema?:
     return true;
 }
 
-function getWeb3IdCredentialQualifier(validContractAddresses: ContractAddress.Type[]): VerifiableCredentialQualifier {
+function getWeb3IdCredentialQualifier(validContractAddresses: ContractAddress.Type[]): Web3IdCredentialQualifier {
     return {
         type: 'sci',
         issuers: validContractAddresses,
     };
 }
 
-function getAccountCredentialQualifier(validIdentityProviders: number[]): IdentityQualifier {
+function getAccountCredentialQualifier(validIdentityProviders: number[]): AccountCredentialQualifier {
     return {
         type: 'cred',
+        issuers: validIdentityProviders,
+    };
+}
+
+function getIdentityCredentialQualifier(validIdentityProviders: number[]): IdentityCredentialQualifier {
+    return {
+        type: 'id',
         issuers: validIdentityProviders,
     };
 }
@@ -407,37 +427,48 @@ export class AccountStatementBuild extends AtomicStatementBuilder {
 }
 
 type InternalBuilder = StatementBuilder<StatementAttributeType, string>;
-export class Web3StatementBuilder {
+export class CredentialStatementBuilder {
     private statements: CredentialStatements = [];
 
     private add(
         idQualifier: StatementProverQualifier,
         builderCallback: (builder: InternalBuilder) => void,
         schema?: CredentialSchemaSubject
-    ): this {
+    ): CredentialStatementBuilder {
         const builder = new AtomicStatementBuilder(schema);
         builderCallback(builder);
         this.statements.push({
             idQualifier,
             statement: builder.getStatement(),
-        });
+        } as CredentialStatement);
         return this;
     }
 
-    addForVerifiableCredentials(
+    addForWeb3IdCredentials(
         validContractAddresses: ContractAddress.Type[],
         builderCallback: (builder: InternalBuilder) => void,
         schema?: CredentialSchemaSubject
-    ): this {
+    ): CredentialStatementBuilder {
         return this.add(getWeb3IdCredentialQualifier(validContractAddresses), builderCallback, schema);
+    }
+
+    addForAccountCredentials(
+        validIdentityProviders: number[],
+        builderCallback: (builder: InternalBuilder) => void
+    ): CredentialStatementBuilder {
+        return this.add(
+            getAccountCredentialQualifier(validIdentityProviders),
+            builderCallback,
+            IDENTITY_SUBJECT_SCHEMA
+        );
     }
 
     addForIdentityCredentials(
         validIdentityProviders: number[],
         builderCallback: (builder: InternalBuilder) => void
-    ): this {
+    ): CredentialStatementBuilder {
         return this.add(
-            getAccountCredentialQualifier(validIdentityProviders),
+            getIdentityCredentialQualifier(validIdentityProviders),
             builderCallback,
             IDENTITY_SUBJECT_SCHEMA
         );
@@ -557,6 +588,45 @@ export function createWeb3CommitmentInputWithHdWallet(
         randomness,
         signature
     );
+}
+
+/**
+ * Create the commitment input required to create a proof for the given statements, using an identity credential.
+ */
+export function createIdentityCommitmentInput(
+    context: IdentityProvider,
+    idObject: IdentityObjectV1,
+    idObjectUseData: IdObjectUseData,
+    policy: Policy
+): IdentityCommitmentInput {
+    return {
+        type: 'identityCredentials',
+        context,
+        idObject,
+        idObjectUseData,
+        policy,
+    };
+}
+
+/**
+ * Create the commitment input required to create a proof for the given statements, using an identity credential.
+ * Uses a ConcordiumHdWallet to get values for the {@linkcode IdObjectUseData}.
+ */
+export function createIdentityCommitmentInputWithHdWallet(
+    idObject: IdentityObjectV1,
+    policy: Policy,
+    context: IdentityProvider,
+    identityIndex: number,
+    wallet: ConcordiumHdWallet
+): IdentityCommitmentInput {
+    const prfKey = wallet.getPrfKey(context.ipInfo.ipIdentity, identityIndex);
+    const idCredSecret = wallet.getIdCredSec(context.ipInfo.ipIdentity, identityIndex);
+    const randomness = wallet.getSignatureBlindingRandomness(context.ipInfo.ipIdentity, identityIndex);
+    const idObjectUseData: IdObjectUseData = {
+        randomness,
+        aci: { prfKey, credentialHolderInformation: { idCredSecret } },
+    };
+    return createIdentityCommitmentInput(context, idObject, idObjectUseData, policy);
 }
 
 /**

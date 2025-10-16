@@ -1,5 +1,16 @@
 import { sha256 } from '../../hash.js';
-import { TransactionHash } from '../../types/index.js';
+import {
+    AccountAddress,
+    AccountSigner,
+    AccountTransaction,
+    AccountTransactionHeader,
+    AccountTransactionType,
+    ConcordiumGRPCClient,
+    NextAccountNonce,
+    RegisterDataPayload,
+    signTransaction,
+} from '../../index.js';
+import { DataBlob, TransactionExpiry, TransactionHash } from '../../types/index.js';
 import { CredentialStatement } from '../../web3-id/types.js';
 import { CredentialContextLabel, GivenContext } from './types.js';
 
@@ -12,6 +23,17 @@ export type Context = {
 
 export function createContext(context: Omit<Context, 'type'>): Context {
     return { type: 'ConcordiumContextInformationV1', ...context };
+}
+
+export function createSimpleContext(nonce: Uint8Array, connectionId: string, contextString: string): Context {
+    return createContext({
+        given: [
+            { label: 'Nonce', context: nonce },
+            { label: 'ConnectionID', context: connectionId },
+            { label: 'ContextString', context: contextString },
+        ],
+        requested: ['BlockHash', 'ResourceID'],
+    });
 }
 
 export function computeAnchor(context: Context, credentialStatements: CredentialStatement[]): Uint8Array {
@@ -46,6 +68,34 @@ export type Type = VerifiablePresentationRequestV1;
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function fromJSON(json: JSON): VerifiablePresentationRequestV1 {
     throw new Error('not implemented');
+}
+
+export async function createAndAchor(
+    grpc: ConcordiumGRPCClient,
+    sender: AccountAddress.Type,
+    signer: AccountSigner,
+    context: Omit<Context, 'type'>,
+    credentialStatements: CredentialStatement[]
+): Promise<VerifiablePresentationRequestV1> {
+    const requestContext = createContext(context);
+    const anchor = computeAnchor(requestContext, credentialStatements);
+
+    const nextNonce: NextAccountNonce = await grpc.getNextAccountNonce(sender);
+    const header: AccountTransactionHeader = {
+        expiry: TransactionExpiry.futureMinutes(60),
+        nonce: nextNonce.nonce,
+        sender,
+    };
+    const payload: RegisterDataPayload = { data: new DataBlob(anchor) };
+    const accountTransaction: AccountTransaction = {
+        header: header,
+        payload,
+        type: AccountTransactionType.RegisterData,
+    };
+    const signature = await signTransaction(accountTransaction, signer);
+    const transactionHash = await grpc.sendAccountTransaction(accountTransaction, signature);
+
+    return create(requestContext, credentialStatements, transactionHash);
 }
 
 export function create(

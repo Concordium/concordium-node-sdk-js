@@ -1,7 +1,21 @@
 // TODO: remove any eslint disable once fully implemented
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { AttributeKey, CryptographicParameters, HexString, Network, sha256 } from '../../index.js';
+import {
+    AttributeKey,
+    ConcordiumGRPCClient,
+    CryptographicParameters,
+    DataBlob,
+    HexString,
+    Network,
+    TransactionHash,
+    TransactionKindString,
+    TransactionStatusEnum,
+    TransactionSummaryType,
+    VerifiablePresentationRequestV1,
+    isKnown,
+    sha256,
+} from '../../index.js';
 import { ConcordiumWeakLinkingProofV1 } from '../../types/VerifiablePresentation.js';
 import { bail } from '../../util.js';
 import {
@@ -29,14 +43,16 @@ export type Context = {
 };
 
 // Fails if not given the full amount of requested context.
-export function createContext(context: Request.Context, filledRequestedContext: GivenContext[]): Context {
+export function createContext(requestContext: Request.Context, filledRequestedContext: GivenContext[]): Context {
     // First we validate that the requested context is filled in `filledRequestedContext`.
-    context.requested.forEach(
+    if (requestContext.requested.length !== filledRequestedContext.length)
+        throw new Error('Mismatch between amount of requested context and filled context');
+    requestContext.requested.every(
         (requestedLabel) =>
-            filledRequestedContext.some((requestedData) => requestedData.label === requestedLabel) ??
+            filledRequestedContext.some((requestedData) => requestedData.label === requestedLabel) ||
             bail(`No data for requested context ${requestedLabel} found`)
     );
-    return { type: 'ConcordiumContextInformationV1', given: context.given, requested: filledRequestedContext };
+    return { type: 'ConcordiumContextInformationV1', given: requestContext.given, requested: filledRequestedContext };
 }
 
 export type IdentityBasedCredential = {
@@ -122,6 +138,39 @@ class VerifiablePresentationV1 {
 }
 
 export type Type = VerifiablePresentationV1;
+
+export async function createFromAnchor(
+    grpc: ConcordiumGRPCClient,
+    presentationRequest: VerifiablePresentationRequestV1.Type,
+    requestStatements: CredentialRequestStatement[],
+    inputs: CommitmentInput[],
+    additionalContext: GivenContext[],
+    globalContext: CryptographicParameters
+): Promise<VerifiablePresentationV1> {
+    const transaction = await grpc.getBlockItemStatus(presentationRequest.transactionRef);
+    if (transaction.status !== TransactionStatusEnum.Finalized) {
+        throw new Error('anchor reference not finalized');
+    }
+    const { summary, blockHash } = transaction.outcome;
+    if (
+        !isKnown(summary) ||
+        summary.type !== TransactionSummaryType.AccountTransaction ||
+        summary.transactionType !== TransactionKindString.RegisterData
+    ) {
+        throw new Error('Unexpected transaction type found for anchor reference');
+    }
+    const expectedAnchor = VerifiablePresentationRequestV1.computeAnchor(
+        presentationRequest.context,
+        presentationRequest.credentialStatements
+    );
+    if ((new DataBlob(expectedAnchor).toJSON(), summary.dataRegistered.data)) {
+        throw new Error('presentation anchor verification failed.');
+    }
+
+    const blockContext: GivenContext = { label: 'BlockHash', context: blockHash };
+    const proofContext = createContext(presentationRequest.context, [...additionalContext, blockContext]);
+    return create(requestStatements, inputs, proofContext, globalContext);
+}
 
 // TODO: this entire function should call a function in @concordium/rust-bindings to create the verifiable
 // presentation from the function arguments. For now, we hack something together from the old protocol which

@@ -1,7 +1,7 @@
 // TODO: remove any eslint disable once fully implemented
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { AttributeKey, CryptographicParameters, HexString, sha256 } from '../../index.js';
+import { AttributeKey, CryptographicParameters, HexString, Network, sha256 } from '../../index.js';
 import { ConcordiumWeakLinkingProofV1 } from '../../types/VerifiablePresentation.js';
 import { bail } from '../../util.js';
 import {
@@ -10,7 +10,10 @@ import {
     CredentialRequestStatement,
     CredentialsInputs,
     DIDString,
+    IdentityCommitmentInput,
     IdentityCredentialRequestStatement,
+    createAccountDID,
+    isAccountCredentialRequestStatement,
     isIdentityCredentialRequestStatement,
 } from '../../web3-id/index.js';
 import { Web3IdProofRequest, getVerifiablePresentation } from '../web3Id.js';
@@ -50,6 +53,28 @@ export type IdentityBasedCredential = {
     // Issuer of the orignal ID credential
     issuer: DIDString;
 };
+
+function createIdentityCredentialStub(
+    { id, statement }: IdentityCredentialRequestStatement,
+    ipIndex: number
+): IdentityBasedCredential {
+    const network = id.split(':')[1] as Network;
+    const proof: ZKProofV4 = {
+        type: 'ConcordiumZKProofV4',
+        createdAt: new Date().toISOString(),
+        proofValue: '0102'.repeat(32),
+    };
+    const credentialSubject: IdentityBasedCredential['credentialSubject'] = {
+        statement: statement,
+        id: '123456'.repeat(8),
+    };
+    return {
+        type: ['VerifiableCredential', 'ConcordiumVerifiableCredentialV1', 'ConcordiumIDBasedCredential'],
+        proof,
+        issuer: `ccd:${network.toLowerCase()}:idp:${ipIndex}`,
+        credentialSubject,
+    };
+}
 
 export type AccountBasedCredential = {
     type: ['VerifiableCredential', 'ConcordiumVerifiableCredentialV1', 'ConcordiumAccountBasedCredential'];
@@ -109,36 +134,64 @@ export function create(
 ): VerifiablePresentationV1 {
     // first we filter out the id statements, as they're not compatible with the current implementation
     // in concordium-base
-    const idStatements: IdentityCredentialRequestStatement[] = [];
+    const idStatements: [number, IdentityCredentialRequestStatement][] = [];
     const compatibleStatements: Exclude<CredentialRequestStatement, IdentityCredentialRequestStatement>[] = [];
-    requestStatements.forEach((s) => {
-        if (isIdentityCredentialRequestStatement(s)) idStatements.push(s);
+    requestStatements.forEach((s, i) => {
+        if (isIdentityCredentialRequestStatement(s)) idStatements.push([i, s]);
         else compatibleStatements.push(s);
     });
 
     // correspondingly, filter out the the inputs for identity credentials
-    const commitmentInputs = inputs.filter((ci) => ci.type !== 'identityCredentials');
+    const idInputs = inputs.filter((ci) => ci.type === 'identityCredentials') as IdentityCommitmentInput[];
+    const compatibleInputs = inputs.filter((ci) => ci.type !== 'identityCredentials');
+
+    if (idStatements.length !== idInputs.length) throw new Error('Mismatch between provided statements and inputs');
+
     const challenge = sha256([Buffer.from(JSON.stringify([compatibleStatements, proofContext]))]).toString('hex');
     const request: Web3IdProofRequest = { challenge, credentialStatements: compatibleStatements };
 
     const { verifiableCredential, proof } = getVerifiablePresentation({
-        commitmentInputs,
+        commitmentInputs: compatibleInputs,
         globalContext,
         request,
     });
     // Map the output to match the format of the V1 protocol.
-    const credentials: Credential[] = verifiableCredential.map<Credential>((c) => {
+    const compatibleCredentials: Credential[] = verifiableCredential.map<Credential>((c, i) => {
         const { proof, ...credentialSubject } = c.credentialSubject;
         const { created, type: _type, ...proofValues } = proof;
+        const type = isAccountCredentialRequestStatement(compatibleStatements[i])
+            ? 'ConcordiumAccountBasedCredential'
+            : 'ConcordiumWeb3BasedCredential';
         return {
             proof: { createdAt: created, type: 'ConcordiumZKProofV4', proofValue: JSON.stringify(proofValues) },
             issuer: c.issuer,
-            // NOTE: obviously, this is not the correct type def., but it's a hack anyway so we don't care.
-            type: ['VerifiableCredential', 'ConcordiumVerifiableCredentialV1', '...'] as any,
+            type: ['VerifiableCredential', 'ConcordiumVerifiableCredentialV1', type] as any,
             credentialSubject,
         };
     });
+    // and add stubbed ID credentials in
+    const idCredentials: [number, IdentityBasedCredential][] = idStatements.map(([originalIndex, statement], i) => [
+        originalIndex,
+        createIdentityCredentialStub(statement, idInputs[i].context.ipInfo.ipIdentity),
+    ]);
+
+    const credentials: Credential[] = [];
+    let compatibleCounter = 0;
+    for (let i = 0; i < requestStatements.length; i += 1) {
+        const idCred = idCredentials.find((entry) => entry[0] === i);
+        if (idCred !== undefined) {
+            credentials.push(idCred[1]);
+        } else {
+            credentials.push(compatibleCredentials[compatibleCounter]);
+            compatibleCounter += 1;
+        }
+    }
+
     return new VerifiablePresentationV1(proofContext, credentials, proof);
+}
+
+export function fromJSON(json: VerifiablePresentationV1): VerifiablePresentationV1 {
+    return new VerifiablePresentationV1(json.presentationContext, json.verifiableCredential, json.proof);
 }
 
 // TODO: for now this just returns true, but this should be replaced with call to the coresponding function in

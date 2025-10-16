@@ -10,6 +10,10 @@ export type Context = {
     requested: CredentialContextLabel[];
 };
 
+export function createContext(context: Omit<Context, 'type'>): Context {
+    return { type: 'ConcordiumContextInformationV1', ...context };
+}
+
 export function computeAnchor(context: Context, credentialStatements: CredentialStatement[]): Uint8Array {
     // TODO: this is a quick and dirty anchor implementation that needs to be replaced with
     // the one from concordium-base when available.

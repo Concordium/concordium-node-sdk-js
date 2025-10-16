@@ -97,7 +97,10 @@ export type VerifiableCredentialProofIdentity = {
 /**
  * Matches the serialization of `CredentialProof` enum from concordium-base.
  */
-export type VerifiableCredentialProof = VerifiableCredentialProofAccount | VerifiableCredentialProofWeb3Id;
+export type VerifiableCredentialProof =
+    | VerifiableCredentialProofAccount
+    | VerifiableCredentialProofWeb3Id
+    | VerifiableCredentialProofIdentity;
 
 /**
  * Type predicate to check if the proof is a {@linkcode VerifiableCredentialProofWeb3Id}, or consequently a {@linkcode VerifiableCredentialProofAccount}

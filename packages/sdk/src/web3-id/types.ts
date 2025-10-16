@@ -75,7 +75,7 @@ export type CommitmentInput = AccountCommitmentInput | Web3IssuerCommitmentInput
 
 export type Web3IdProofRequest = {
     challenge: string;
-    credentialStatements: RequestStatement[];
+    credentialStatements: CredentialRequestStatement[];
 };
 
 export type Web3IdProofInput = {
@@ -272,7 +272,7 @@ export type AccountCredentialStatement = {
 
 export type Web3IdCredentialStatement = {
     idQualifier: Web3IdCredentialQualifier;
-    statement: AtomicStatementV2[];
+    statement: AtomicStatementV2<string>[];
 };
 
 export type IdentityCredentialStatement = {
@@ -282,16 +282,29 @@ export type IdentityCredentialStatement = {
 
 export type CredentialStatement = AccountCredentialStatement | Web3IdCredentialStatement | IdentityCredentialStatement;
 
-export type RequestStatement = {
+export type AccountCredentialRequestStatement = {
+    tag: 'account';
     id: string;
-    statement: AtomicStatementV2[];
-    /** The type field is present if the request is for a verifiable credential */
-    type?: string[];
+    statement: AtomicStatementV2<AttributeKey>[];
 };
 
-export function isVerifiableCredentialRequestStatement(statement: RequestStatement): boolean {
-    return Boolean(statement.type);
-}
+export type Web3IdCredentialRequestStatement = {
+    tag: 'web3';
+    id: string;
+    statement: AtomicStatementV2<string>[];
+    type: string[];
+};
+
+export type IdentityCredentialRequestStatement = {
+    tag: 'id';
+    id: number;
+    statement: AtomicStatementV2<AttributeKey>[];
+};
+
+export type CredentialRequestStatement =
+    | AccountCredentialRequestStatement
+    | Web3IdCredentialRequestStatement
+    | IdentityCredentialRequestStatement;
 
 export type CredentialStatements = CredentialStatement[];
 

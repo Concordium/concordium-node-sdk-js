@@ -1,3 +1,4 @@
+import { sha256 } from '../../hash.ts';
 import { TransactionHash } from '../../types/index.js';
 import { CredentialStatement } from '../../web3-id/types.js';
 import { CredentialContextLabel, GivenContext } from './types.ts';
@@ -10,8 +11,11 @@ export type Context = {
 };
 
 export function computeAnchor(context: Context, credentialStatements: CredentialStatement[]): Uint8Array {
-    // NOTE: this calls into concordium-base bindings to compute the presentation anchor.
-    throw new Error('not implemented');
+    // TODO: this is a quick and dirty anchor implementation that needs to be replaced with
+    // the one from concordium-base when available.
+    const contextDigest = Buffer.from(JSON.stringify(context));
+    const statementsDigest = Buffer.from(JSON.stringify(credentialStatements));
+    return sha256([contextDigest, statementsDigest]);
 }
 
 // TODO: Should match the w3c spec for a verifiable presentation request and the corresponding
@@ -19,7 +23,7 @@ export function computeAnchor(context: Context, credentialStatements: Credential
 export type JSON = void;
 
 class VerifiablePresentationRequestV1 {
-    type = 'ConcordiumVPRequestV1';
+    private readonly type = 'ConcordiumVPRequestV1';
 
     constructor(
         public readonly context: Context,

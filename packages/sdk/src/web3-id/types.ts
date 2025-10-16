@@ -6,17 +6,13 @@ import {
     GenericRangeStatement,
     GenericRevealStatement,
 } from '../commonProofTypes.js';
-import type {
-    ArInfo,
-    AttributeKey,
-    CryptographicParameters,
-    HexString,
-    IdentityObjectV1,
-    IdentityProvider,
-    IpInfo,
-    Policy,
-} from '../types.js';
+import type { ArInfo, AttributeKey, HexString, IdentityObjectV1, IdentityProvider, IpInfo, Policy } from '../types.js';
 import type * as ContractAddress from '../types/ContractAddress.js';
+
+/**
+ * The "Distributed Identifier" string.
+ */
+export type DIDString = string;
 
 export type TimestampAttribute = {
     type: 'date-time';
@@ -72,17 +68,6 @@ export type IdentityCommitmentInput = {
 };
 
 export type CommitmentInput = AccountCommitmentInput | Web3IssuerCommitmentInput | IdentityCommitmentInput;
-
-export type Web3IdProofRequest = {
-    challenge: string;
-    credentialStatements: CredentialRequestStatement[];
-};
-
-export type Web3IdProofInput = {
-    request: Web3IdProofRequest;
-    globalContext: CryptographicParameters;
-    commitmentInputs: CommitmentInput[];
-};
 
 export type TimestampProperty = {
     title: string;
@@ -283,21 +268,18 @@ export type IdentityCredentialStatement = {
 export type CredentialStatement = AccountCredentialStatement | Web3IdCredentialStatement | IdentityCredentialStatement;
 
 export type AccountCredentialRequestStatement = {
-    tag: 'account';
-    id: string;
+    id: DIDString;
     statement: AtomicStatementV2<AttributeKey>[];
 };
 
 export type Web3IdCredentialRequestStatement = {
-    tag: 'web3';
-    id: string;
+    id: DIDString;
     statement: AtomicStatementV2<string>[];
     type: string[];
 };
 
 export type IdentityCredentialRequestStatement = {
-    tag: 'id';
-    id: number;
+    id: DIDString;
     statement: AtomicStatementV2<AttributeKey>[];
 };
 
@@ -305,6 +287,24 @@ export type CredentialRequestStatement =
     | AccountCredentialRequestStatement
     | Web3IdCredentialRequestStatement
     | IdentityCredentialRequestStatement;
+
+export function isAccountCredentialRequestStatement(
+    statement: CredentialRequestStatement
+): statement is AccountCredentialRequestStatement {
+    return statement.id.includes(':cred:');
+}
+
+export function isWeb3IdCredentialRequestStatement(
+    statement: CredentialRequestStatement
+): statement is AccountCredentialRequestStatement {
+    return statement.id.includes(':sci:');
+}
+
+export function isIdentityCredentialRequestStatement(
+    statement: CredentialRequestStatement
+): statement is AccountCredentialRequestStatement {
+    return statement.id.includes(':id:'); // TODO: figure out if this matches the identifier.
+}
 
 export type CredentialStatements = CredentialStatement[];
 

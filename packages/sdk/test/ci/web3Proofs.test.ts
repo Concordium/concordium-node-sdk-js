@@ -11,12 +11,13 @@ import {
     CIS4,
     ConcordiumHdWallet,
     ContractAddress,
+    CredentialRequestStatement,
+    CredentialStatementBuilder,
     MAX_DATE_TIMESTAMP,
     MIN_DATE_TIMESTAMP,
-    RequestStatement,
     StatementTypes,
     VerifiablePresentation,
-    Web3StatementBuilder,
+    Web3IdProofRequest,
     createAccountDID,
     createWeb3IdDID,
     dateToTimestampAttribute,
@@ -29,7 +30,6 @@ import {
     CredentialSchemaSubject,
     CredentialWithMetadata,
     TimestampAttribute,
-    Web3IdProofRequest,
 } from '../../src/web3-id/types.js';
 import { TEST_SEED_1 } from './HdWallet.test.js';
 import {
@@ -41,7 +41,7 @@ import { expectedStatementMixed } from './resources/expectedStatements.js';
 const GLOBAL_CONTEXT = JSON.parse(fs.readFileSync('./test/ci/resources/global.json').toString()).value;
 
 test('Generate V2 statement', () => {
-    const builder = new Web3StatementBuilder();
+    const builder = new CredentialStatementBuilder();
     const statement = builder
         .addForWeb3IdCredentials([ContractAddress.create(2101), ContractAddress.create(1337, 42)], (b) =>
             b.addRange('b', 80n, 1237n).addMembership('c', ['aa', 'ff', 'zz'])
@@ -59,7 +59,7 @@ test('create Web3Id proof with account credentials', () => {
     values.dob = '0';
     values.firstName = 'a';
 
-    const credentialStatements: RequestStatement[] = [
+    const credentialStatements: CredentialRequestStatement[] = [
         {
             id: createAccountDID(
                 'Testnet',
@@ -138,7 +138,7 @@ test('create Web3Id proof with Web3Id Credentials', () => {
         graduationDate: '2010-06-01T00:00:00Z',
     };
 
-    const credentialStatements: RequestStatement[] = [
+    const credentialStatements: CredentialRequestStatement[] = [
         {
             id: createWeb3IdDID('Testnet', publicKey, 1n, 0n),
             statement: [
@@ -245,7 +245,7 @@ const schemaWithTimeStamp: CredentialSchemaSubject = {
 };
 
 test('Generate statement with timestamp', () => {
-    const builder = new Web3StatementBuilder();
+    const builder = new CredentialStatementBuilder();
 
     const lower = new Date();
     const upper = new Date(new Date().getTime() + 24 * 60 * 60 * 10000);
@@ -266,7 +266,7 @@ test('Generate statement with timestamp', () => {
 });
 
 test('Generate statement with timestamp fails if not timestamp attribute', () => {
-    const builder = new Web3StatementBuilder();
+    const builder = new CredentialStatementBuilder();
 
     const lower = new Date();
     const upper = new Date(new Date().getTime() + 24 * 60 * 60 * 10000);

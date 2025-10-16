@@ -1,9 +1,9 @@
-import { sha256 } from '../../hash.ts';
+import { sha256 } from '../../hash.js';
 import { TransactionHash } from '../../types/index.js';
 import { CredentialStatement } from '../../web3-id/types.js';
-import { CredentialContextLabel, GivenContext } from './types.ts';
+import { CredentialContextLabel, GivenContext } from './types.js';
 
-// NOTE: renamed from ContextInformation
+// NOTE: renamed from ContextInformation in ADR
 export type Context = {
     type: 'ConcordiumContextInformationV1';
     given: GivenContext[];
@@ -28,7 +28,7 @@ class VerifiablePresentationRequestV1 {
     constructor(
         public readonly context: Context,
         public readonly credentialStatements: CredentialStatement[],
-        public readonly transactionRef: TransactionHash.Type // renamed from requestTX
+        public readonly transactionRef: TransactionHash.Type // NOTE: renamed from requestTX in ADR
     ) {}
 
     public toJSON(): JSON {
@@ -38,6 +38,8 @@ class VerifiablePresentationRequestV1 {
 
 export type Type = VerifiablePresentationRequestV1;
 
+// TODO: remove when arg is actually used
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function fromJSON(json: JSON): VerifiablePresentationRequestV1 {
     throw new Error('not implemented');
 }

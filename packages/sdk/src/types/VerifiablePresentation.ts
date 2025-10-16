@@ -2,12 +2,7 @@ import JSONBigInt from 'json-bigint';
 
 import { AtomicProof, GenericAtomicStatement } from '../commonProofTypes.js';
 import { HexString } from '../types.js';
-import { AttributeType } from '../web3-id/types.js';
-
-/**
- * The "Distributed Identifier" string.
- */
-export type DIDString = string;
+import { AttributeType, DIDString } from '../web3-id/types.js';
 
 export type ConcordiumWeakLinkingProofV1 = {
     /** When the statement was created, serialized as an ISO string */

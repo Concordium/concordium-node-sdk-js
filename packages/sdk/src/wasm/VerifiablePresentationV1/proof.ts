@@ -2,17 +2,18 @@
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { AttributeKey, CryptographicParameters, HexString, sha256 } from '../../index.js';
-import { ConcordiumWeakLinkingProofV1, DIDString } from '../../types/VerifiablePresentation.js';
+import { ConcordiumWeakLinkingProofV1 } from '../../types/VerifiablePresentation.js';
 import { bail } from '../../util.js';
 import {
     AtomicStatementV2,
     CommitmentInput,
     CredentialRequestStatement,
     CredentialsInputs,
+    DIDString,
     IdentityCredentialRequestStatement,
-    Web3IdProofRequest,
+    isIdentityCredentialRequestStatement,
 } from '../../web3-id/index.js';
-import { getVerifiablePresentation } from '../web3Id.js';
+import { Web3IdProofRequest, getVerifiablePresentation } from '../web3Id.js';
 import * as Request from './request.js';
 import { GivenContext, ZKProofV4 } from './types.js';
 
@@ -111,7 +112,7 @@ export function create(
     const idStatements: IdentityCredentialRequestStatement[] = [];
     const compatibleStatements: Exclude<CredentialRequestStatement, IdentityCredentialRequestStatement>[] = [];
     requestStatements.forEach((s) => {
-        if (s.tag === 'id') idStatements.push(s);
+        if (isIdentityCredentialRequestStatement(s)) idStatements.push(s);
         else compatibleStatements.push(s);
     });
 

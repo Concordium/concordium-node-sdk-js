@@ -4,7 +4,12 @@ import { stringify } from 'json-bigint';
 import { CryptographicParameters } from '../types.js';
 import { VerifiablePresentation } from '../types/VerifiablePresentation.js';
 import { VerifyWeb3IdCredentialSignatureInput } from '../web3-id/helpers.js';
-import { CredentialsInputs, Web3IdProofInput, Web3IdProofRequest } from '../web3-id/types.js';
+import {
+    CommitmentInput,
+    CredentialRequestStatement,
+    CredentialsInputs,
+    isIdentityCredentialRequestStatement,
+} from '../web3-id/types.js';
 
 /**
  * Verifies that the given signature is correct for the given values/randomness/holder/issuerPublicKey/issuerContract
@@ -14,12 +19,23 @@ export function verifyWeb3IdCredentialSignature(input: VerifyWeb3IdCredentialSig
     return wasm.verifyWeb3IdCredentialSignature(stringify(input));
 }
 
+export type Web3IdProofRequest = {
+    challenge: string;
+    credentialStatements: CredentialRequestStatement[];
+};
+
+export type Web3IdProofInput = {
+    request: Web3IdProofRequest;
+    globalContext: CryptographicParameters;
+    commitmentInputs: CommitmentInput[];
+};
+
 /**
  * Given a statement about an identity and the inputs necessary to prove the statement, produces a proof that the associated identity fulfills the statement.
  */
 export function getVerifiablePresentation(input: Web3IdProofInput): VerifiablePresentation {
     // validate that we don't pass any unsupported credentials in
-    if (input.request.credentialStatements.some((statement) => statement.tag === 'id'))
+    if (input.request.credentialStatements.some((statement) => isIdentityCredentialRequestStatement(statement)))
         throw new Error('Identity proofs are not supported for this verifiable presentation protocol');
 
     try {

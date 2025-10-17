@@ -1,4 +1,7 @@
-import { HexString, cborEncode } from '../../../index.js';
+import { Buffer } from 'buffer/index.js';
+
+import { HexString } from '../../../types.js';
+import { cborDecode, cborEncode } from '../../../types/cbor.js';
 
 class VerificationAuditRecord {
     constructor(
@@ -11,10 +14,6 @@ class VerificationAuditRecord {
         if (this.info !== undefined) json.info = this.info;
         return json;
     }
-
-    public toBytes(): Uint8Array {
-        return cborEncode(this.toJSON());
-    }
 }
 
 export type Type = VerificationAuditRecord;
@@ -25,9 +24,40 @@ export type JSON = {
 };
 
 export function fromJSON(json: JSON): VerificationAuditRecord {
-    return new VerificationAuditRecord(Buffer.from(json.hash, 'hex'), json.info);
+    return new VerificationAuditRecord(Uint8Array.from(Buffer.from(json.hash, 'hex')), json.info);
 }
 
 export function create(hash: Uint8Array, info?: string): VerificationAuditRecord {
     return new VerificationAuditRecord(hash, info);
+}
+
+export type AnchorData = {
+    type: 'CCDVAA';
+    version: number;
+    hash: Uint8Array;
+    public?: string;
+};
+
+export function createAnchor(value: VerificationAuditRecord, publicInfo?: string): Uint8Array {
+    const data: AnchorData = {
+        type: 'CCDVAA',
+        version: 1,
+        hash: value.hash,
+        public: publicInfo,
+    };
+    return cborEncode(data);
+}
+
+export function decodeAnchor(cbor: Uint8Array): AnchorData {
+    const value = cborDecode(cbor);
+    if (typeof value !== 'object' || value === null) throw new Error('Expected a cbor encoded object');
+    // required fields
+    if (!('type' in value) || value.type !== 'CCDVAA') throw new Error('Expected "type" to be "CCDVAA"');
+    if (!('version' in value) || typeof value.version !== 'number')
+        throw new Error('Expected "version" to be a number');
+    if (!('hash' in value) || !(value.hash instanceof Uint8Array))
+        throw new Error('Expected "hash" to be a Uint8Array');
+    // optional fields
+    if ('public' in value && typeof value.public !== 'string') throw new Error('Expected "public" to be a string');
+    return value as AnchorData;
 }

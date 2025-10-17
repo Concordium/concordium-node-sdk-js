@@ -1,4 +1,5 @@
 import { Buffer } from 'buffer/index.js';
+import _JB from 'json-bigint';
 
 import { ConcordiumGRPCClient } from '../../../grpc/index.js';
 import { sha256 } from '../../../hash.js';
@@ -12,6 +13,8 @@ import {
 } from '../../../types.js';
 import { AccountAddress, DataBlob, TransactionExpiry, TransactionHash } from '../../../types/index.js';
 import { VerifiablePresentationRequestV1, VerifiablePresentationV1, VerificationAuditRecord } from '../index.js';
+
+const JSONBig = _JB({ alwaysParseAsBig: true, useNativeBigInt: true });
 
 class PrivateVerificationAuditRecord {
     public readonly type = 'ConcordiumVerificationAuditRecord';
@@ -52,8 +55,8 @@ export function fromJSON(json: JSON): PrivateVerificationAuditRecord {
 }
 
 export function toPublic(record: PrivateVerificationAuditRecord, info?: string): VerificationAuditRecord.Type {
-    const message = Buffer.from(JSON.stringify(record)); // TODO: replace this with proper hashing.. properly from @concordium/rust-bindings
-    const hash = sha256([message]);
+    const message = Buffer.from(JSONBig.stringify(record)); // TODO: replace this with proper hashing.. properly from @concordium/rust-bindings
+    const hash = Uint8Array.from(sha256([message]));
     return VerificationAuditRecord.create(hash, info);
 }
 
@@ -72,8 +75,7 @@ export async function registerPublicRecord(
     };
 
     const publicRecord = toPublic(privateRecord, info);
-    const data = new DataBlob(publicRecord.toBytes());
-    const payload: RegisterDataPayload = { data };
+    const payload: RegisterDataPayload = { data: new DataBlob(VerificationAuditRecord.createAnchor(publicRecord)) };
     const accountTransaction: AccountTransaction = {
         header: header,
         payload,

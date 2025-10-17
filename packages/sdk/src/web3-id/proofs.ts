@@ -444,7 +444,7 @@ export class CredentialStatementBuilder {
         return this;
     }
 
-    addForWeb3IdCredentials(
+    forWeb3IdCredentials(
         validContractAddresses: ContractAddress.Type[],
         builderCallback: (builder: InternalBuilder) => void,
         schema?: CredentialSchemaSubject
@@ -452,7 +452,7 @@ export class CredentialStatementBuilder {
         return this.add(getWeb3IdCredentialQualifier(validContractAddresses), builderCallback, schema);
     }
 
-    addForAccountCredentials(
+    forAccountCredentials(
         validIdentityProviders: number[],
         builderCallback: (builder: InternalBuilder) => void
     ): CredentialStatementBuilder {
@@ -463,7 +463,7 @@ export class CredentialStatementBuilder {
         );
     }
 
-    addForIdentityCredentials(
+    forIdentityCredentials(
         validIdentityProviders: number[],
         builderCallback: (builder: InternalBuilder) => void
     ): CredentialStatementBuilder {

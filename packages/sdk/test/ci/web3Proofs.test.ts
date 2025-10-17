@@ -36,13 +36,13 @@ const GLOBAL_CONTEXT = JSON.parse(fs.readFileSync('./test/ci/resources/global.js
 test('Generate V2 statement', () => {
     const builder = new CredentialStatementBuilder();
     const statement = builder
-        .addForWeb3IdCredentials([ContractAddress.create(2101), ContractAddress.create(1337, 42)], (b) =>
+        .forWeb3IdCredentials([ContractAddress.create(2101), ContractAddress.create(1337, 42)], (b) =>
             b.addRange('b', 80n, 1237n).addMembership('c', ['aa', 'ff', 'zz'])
         )
-        .addForWeb3IdCredentials([ContractAddress.create(1338)], (b) =>
+        .forWeb3IdCredentials([ContractAddress.create(1338)], (b) =>
             b.addRange('a', 80n, 1237n).addNonMembership('d', ['aa', 'ff', 'zz'])
         )
-        .addForAccountCredentials([0, 1, 2], (b) => b.revealAttribute(AttributeKeyString.firstName))
+        .forAccountCredentials([0, 1, 2], (b) => b.revealAttribute(AttributeKeyString.firstName))
         .getStatements();
     expect(statement).toStrictEqual(expectedStatementMixed);
 });
@@ -244,7 +244,7 @@ test('Generate statement with timestamp', () => {
     const upper = new Date(new Date().getTime() + 24 * 60 * 60 * 10000);
 
     const statement = builder
-        .addForWeb3IdCredentials(
+        .forWeb3IdCredentials(
             [ContractAddress.create(0)],
             (b) => b.addRange('graduationDate', lower, upper),
             schemaWithTimeStamp
@@ -265,7 +265,7 @@ test('Generate statement with timestamp fails if not timestamp attribute', () =>
     const upper = new Date(new Date().getTime() + 24 * 60 * 60 * 10000);
 
     expect(() =>
-        builder.addForWeb3IdCredentials(
+        builder.forWeb3IdCredentials(
             [ContractAddress.create(0)],
             (b) =>
                 b

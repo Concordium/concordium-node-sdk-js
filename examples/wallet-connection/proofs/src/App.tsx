@@ -41,7 +41,7 @@ function Main(props: WalletConnectionProps) {
         setError('');
         setIsWaiting(true);
 
-        const statementBuilder = new CredentialStatementBuilder().addForIdentityCredentials([0, 1, 2, 3, 4, 5], (b) =>
+        const statementBuilder = new CredentialStatementBuilder().forAccountCredentials([0, 1, 2, 3, 4, 5], (b) =>
             b.addRange(AttributeKeyString.dob, MIN_DATE, getPastDate(18, 1))
         );
         const statement = statementBuilder.getStatements();

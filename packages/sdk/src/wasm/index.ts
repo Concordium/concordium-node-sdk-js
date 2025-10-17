@@ -9,3 +9,4 @@ export * from './HdWallet.js';
 export * from './identity.js';
 export * from './credentialDeploymentTransactions.js';
 export * from './web3Id.js';
+export * from './VerifiablePresentationV1/index.js';

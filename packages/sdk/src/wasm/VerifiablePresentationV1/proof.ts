@@ -7,7 +7,6 @@ import {
     AttributeKey,
     ConcordiumGRPCClient,
     CryptographicParameters,
-    DataBlob,
     HexString,
     Network,
     TransactionKindString,

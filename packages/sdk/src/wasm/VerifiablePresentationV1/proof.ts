@@ -1,6 +1,8 @@
 // TODO: remove any eslint disable once fully implemented
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import { Buffer } from 'buffer/index.js';
+
 import {
     AttributeKey,
     ConcordiumGRPCClient,
@@ -8,7 +10,6 @@ import {
     DataBlob,
     HexString,
     Network,
-    TransactionHash,
     TransactionKindString,
     TransactionStatusEnum,
     TransactionSummaryType,
@@ -26,11 +27,11 @@ import {
     DIDString,
     IdentityCommitmentInput,
     IdentityCredentialRequestStatement,
-    createAccountDID,
     isAccountCredentialRequestStatement,
     isIdentityCredentialRequestStatement,
 } from '../../web3-id/index.js';
 import { Web3IdProofRequest, getVerifiablePresentation } from '../web3Id.js';
+import { GivenContextJSON, givenContextFromJSON, givenContextToJSON } from './internal.js';
 import * as Request from './request.js';
 import { GivenContext, ZKProofV4 } from './types.js';
 
@@ -124,8 +125,6 @@ export type Web3BasedCredential = {
 
 export type Credential = IdentityBasedCredential | AccountBasedCredential | Web3BasedCredential;
 
-// In essence, this is more or less an opaque type and should never be handled directly. As such
-// this should match the serialization of the corresponding type in concordium-base
 class VerifiablePresentationV1 {
     private readonly type = ['VerifiablePresentation', 'ConcordiumVerifiablePresentationV1'];
 
@@ -135,13 +134,42 @@ class VerifiablePresentationV1 {
         // only present if the verifiable credential includes an account based credential
         public readonly proof?: ConcordiumWeakLinkingProofV1
     ) {}
+
+    public toJSON(): JSON {
+        let json: JSON = {
+            presentationContext: {
+                type: this.presentationContext.type,
+                given: this.presentationContext.given.map(givenContextToJSON),
+                requested: this.presentationContext.requested.map(givenContextToJSON),
+            },
+            verifiableCredential: this.verifiableCredential,
+        };
+
+        if (this.proof !== undefined) json.proof = this.proof;
+        return json;
+    }
 }
 
 export type Type = VerifiablePresentationV1;
 
+export type JSON = {
+    presentationContext: Pick<Context, 'type'> & { given: GivenContextJSON[]; requested: GivenContextJSON[] };
+    verifiableCredential: Credential[];
+    proof?: ConcordiumWeakLinkingProofV1;
+};
+
+export function fromJSON(value: JSON): VerifiablePresentationV1 {
+    const presentationContext: Context = {
+        type: value.presentationContext.type,
+        given: value.presentationContext.given.map(givenContextFromJSON),
+        requested: value.presentationContext.requested.map(givenContextFromJSON),
+    };
+    return new VerifiablePresentationV1(presentationContext, value.verifiableCredential, value.proof);
+}
+
 export async function createFromAnchor(
     grpc: ConcordiumGRPCClient,
-    presentationRequest: VerifiablePresentationRequestV1.Type,
+    presentationRequest: Request.Type,
     requestStatements: CredentialRequestStatement[],
     inputs: CommitmentInput[],
     additionalContext: GivenContext[],
@@ -160,7 +188,7 @@ export async function createFromAnchor(
         throw new Error('Unexpected transaction type found for anchor reference');
     }
     const expectedAnchor = VerifiablePresentationRequestV1.computeAnchor(
-        presentationRequest.context,
+        presentationRequest.requestContext,
         presentationRequest.credentialStatements
     );
     if ((new DataBlob(expectedAnchor).toJSON(), summary.dataRegistered.data)) {
@@ -168,7 +196,7 @@ export async function createFromAnchor(
     }
 
     const blockContext: GivenContext = { label: 'BlockHash', context: blockHash };
-    const proofContext = createContext(presentationRequest.context, [...additionalContext, blockContext]);
+    const proofContext = createContext(presentationRequest.requestContext, [...additionalContext, blockContext]);
     return create(requestStatements, inputs, proofContext, globalContext);
 }
 
@@ -237,10 +265,6 @@ export function create(
     }
 
     return new VerifiablePresentationV1(proofContext, credentials, proof);
-}
-
-export function fromJSON(json: VerifiablePresentationV1): VerifiablePresentationV1 {
-    return new VerifiablePresentationV1(json.presentationContext, json.verifiableCredential, json.proof);
 }
 
 // TODO: for now this just returns true, but this should be replaced with call to the coresponding function in

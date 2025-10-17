@@ -1,3 +1,5 @@
+import { Buffer } from 'buffer/index.js';
+
 import { sha256 } from '../../hash.js';
 import {
     AccountAddress,
@@ -12,6 +14,7 @@ import {
 } from '../../index.js';
 import { DataBlob, TransactionExpiry, TransactionHash } from '../../types/index.js';
 import { CredentialStatement } from '../../web3-id/types.js';
+import { GivenContextJSON, givenContextFromJSON, givenContextToJSON } from './internal.js';
 import { CredentialContextLabel, GivenContext } from './types.js';
 
 // NOTE: renamed from ContextInformation in ADR
@@ -46,28 +49,39 @@ export function computeAnchor(context: Context, credentialStatements: Credential
 
 // TODO: Should match the w3c spec for a verifiable presentation request and the corresponding
 // serde impmlementation in concordium-base
-export type JSON = void;
+export type JSON = {
+    requestContext: Pick<Context, 'type' | 'requested'> & { given: GivenContextJSON[] };
+    credentialStatements: CredentialStatement[];
+    transactionRef: TransactionHash.JSON;
+};
 
 class VerifiablePresentationRequestV1 {
     private readonly type = 'ConcordiumVPRequestV1';
 
     constructor(
-        public readonly context: Context,
+        public readonly requestContext: Context,
         public readonly credentialStatements: CredentialStatement[],
         public readonly transactionRef: TransactionHash.Type // NOTE: renamed from requestTX in ADR
     ) {}
 
     public toJSON(): JSON {
-        throw new Error('not implemented');
+        return {
+            requestContext: { ...this.requestContext, given: this.requestContext.given.map(givenContextToJSON) },
+            credentialStatements: this.credentialStatements,
+            transactionRef: this.transactionRef.toJSON(),
+        };
     }
 }
 
 export type Type = VerifiablePresentationRequestV1;
 
-// TODO: remove when arg is actually used
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function fromJSON(json: JSON): VerifiablePresentationRequestV1 {
-    throw new Error('not implemented');
+    const requestContext = { ...json.requestContext, given: json.requestContext.given.map(givenContextFromJSON) };
+    return new VerifiablePresentationRequestV1(
+        requestContext,
+        json.credentialStatements,
+        TransactionHash.fromJSON(json.transactionRef)
+    );
 }
 
 export async function createAndAchor(

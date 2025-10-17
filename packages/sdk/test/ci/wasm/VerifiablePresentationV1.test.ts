@@ -22,7 +22,9 @@ import {
     createWeb3IdDID,
 } from '../../../src/pub/web3-id.ts';
 import { BlockHash } from '../../../src/types/index.ts';
-import { TEST_SEED_1 } from '../HdWallet.test.ts';
+
+export const TEST_SEED_1 =
+    'efa5e27326f8fa0902e647b52449bf335b7b605adc387015ec903f41d95080eb71361cbc7fb78721dcd4f3926a337340aa1406df83332c44c1cdcfe100603860';
 
 const TESTNET_GLOBAL_CONTEXT = {
     onChainCommitmentKey:
@@ -78,7 +80,10 @@ test('create testnet account-based presentation v1', () => {
     ];
 
     const presentation = VerifiablePresentationV1.create(statements, inputs, context, TESTNET_GLOBAL_CONTEXT);
-    console.log(JSON.stringify(presentation, null, 2));
+
+    const json = JSON.stringify(presentation);
+    const roundtrip = VerifiablePresentationV1.fromJSON(JSON.parse(json));
+    expect(presentation).toEqual(roundtrip);
     // TODO: for now we just check that it does not fail - later we need to check the actual values
 });
 
@@ -133,7 +138,10 @@ test('create testnet web3Id-based presentation v1', () => {
     ];
 
     const presentation = VerifiablePresentationV1.create(statements, inputs, context, TESTNET_GLOBAL_CONTEXT);
-    console.log(JSON.stringify(presentation, null, 2));
+
+    const json = JSON.stringify(presentation);
+    const roundtrip = VerifiablePresentationV1.fromJSON(JSON.parse(json));
+    expect(presentation).toEqual(roundtrip);
     // TODO: for now we just check that it does not fail - later we need to check the actual values
 });
 
@@ -184,6 +192,9 @@ test('create testnet id-based presentation v1', () => {
     ];
 
     const presentation = VerifiablePresentationV1.create(statements, [input], context, TESTNET_GLOBAL_CONTEXT);
-    console.log(JSON.stringify(presentation, null, 2));
+
+    const json = JSON.stringify(presentation);
+    const roundtrip = VerifiablePresentationV1.fromJSON(JSON.parse(json));
+    expect(presentation).toEqual(roundtrip);
     // TODO: for now we just check that it does not fail - later we need to check the actual values
 });

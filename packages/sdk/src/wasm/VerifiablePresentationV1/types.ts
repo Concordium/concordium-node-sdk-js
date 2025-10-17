@@ -1,5 +1,5 @@
 import { HexString } from '../../types.js';
-import { BlockHash } from '../../types/index.js';
+import { BlockHash, TransactionHash } from '../../types/index.js';
 
 export type CredentialContextLabel =
     | 'ContextString'
@@ -9,10 +9,25 @@ export type CredentialContextLabel =
     | 'ConnectionID'
     | 'Nonce';
 
-export type GivenContext = {
-    label: CredentialContextLabel;
-    context: Uint8Array | string | BlockHash.Type; // TODO: make explicit variants with unknown represented as hex string.
+type GivenContextGen<L extends string, C> = {
+    label: L;
+    context: C; // TODO: make explicit variants with unknown represented as hex string.
 };
+
+type GivenContextContextString = GivenContextGen<'ContextString', string>;
+type GivenContextResourceID = GivenContextGen<'ResourceID', string>;
+type GivenContextBlockHash = GivenContextGen<'BlockHash', BlockHash.Type>;
+type GivenContextPaymentHash = GivenContextGen<'PaymentHash', TransactionHash.Type>;
+type GivenContextConnectionID = GivenContextGen<'ConnectionID', string>;
+type GivenContextNonce = GivenContextGen<'Nonce', Uint8Array>;
+
+export type GivenContext =
+    | GivenContextContextString
+    | GivenContextResourceID
+    | GivenContextBlockHash
+    | GivenContextPaymentHash
+    | GivenContextConnectionID
+    | GivenContextNonce;
 
 export type ZKProofV4 = {
     type: 'ConcordiumZKProofV4';

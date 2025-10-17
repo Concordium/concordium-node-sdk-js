@@ -2,6 +2,39 @@
 
 ## Unreleased
 
+### Breaking changes
+
+- `Web3StatementBuilder` has been renamed to `CredentialStatementBuilder` with the following method renames
+  - `addForWeb3IdCredentials` -> `forWeb3IdCredentials`, used for statements for web3 ID credentials
+  - `addForIdentityCredentials` -> `forAccountCredentials`, used for statements for the identity credentials tied to an account
+
+- Type renames to align with the target credentials
+  - renamed `VerifiableCredentialQualifier` to `Web3IdCredentialQualifier`
+  - renamed `VerifiableCredentialStatement` to `Web3IdCredentialStatement`
+  - renamed `IdentityQualifier` to `AccountCredentialQualifier`
+  - renamed `RequestStatement` to `CredentialRequestStatement`, which is now a union of
+  `AccountCredentialStatement | Web3IdCredentialStatement | IdentityCredentialStatement` instead of the corresponding
+  old dynamic version.
+
+### Added
+
+- `Web3StatementBuilder.forIdentityCredentials`, used for statements for identity credentials without tying it to an account
+- types `IdentityCredentialQualifier`, `IdentityCommitmentInput`, and `CredentialsInputsIdentity` which have been added
+  to the respective union types that reflect the possible variants.
+- helper functions `createIdentityCommitmentInput` and `createIdentityCommitmentInputWithHdWallet`
+
+- types `VerifiablePresentationV1` and `VerifiablePresentationRequestV1` to be used with the new zero-knowledge proof
+  protocol
+  - `VerifiablePresentationRequestV1.createContext` and `VerifiablePresentationRequestV1.createSimpleContext` for
+    creating the presentation request context.
+  - `VerifiablePresentationRequestV1.createAndAchor` which is a GRPC helper function for creating a verifiable presentation
+    request from a minimal set of values.
+  - `VerifiablePresentationV1.createFromAnchor` which is a GRPC helper function for creating a verifiable presentation
+  from a minimal set of values. This also creates the `VerifiablePresentation.Context` from the corresponding
+  `VerifiablePresentationRequestV1.Context`.
+  - **Please note**: some functionality related to this is currently either stubbed or routed into the old verifiable
+  presentation computation functions for now.
+
 ## 11.0.0
 
 ### Fixed

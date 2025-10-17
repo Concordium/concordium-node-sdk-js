@@ -1,4 +1,5 @@
 import { Buffer } from 'buffer/index.js';
+import _JB from 'json-bigint';
 
 import { sha256 } from '../../hash.js';
 import {
@@ -10,12 +11,16 @@ import {
     ConcordiumGRPCClient,
     NextAccountNonce,
     RegisterDataPayload,
+    cborDecode,
+    cborEncode,
     signTransaction,
 } from '../../index.js';
-import { DataBlob, TransactionExpiry, TransactionHash } from '../../types/index.js';
-import { CredentialStatement } from '../../web3-id/types.js';
+import { ContractAddress, DataBlob, TransactionExpiry, TransactionHash } from '../../types/index.js';
+import { CredentialStatement, StatementProverQualifier } from '../../web3-id/types.js';
 import { GivenContextJSON, givenContextFromJSON, givenContextToJSON } from './internal.js';
 import { CredentialContextLabel, GivenContext } from './types.js';
+
+const JSONBig = _JB({ useNativeBigInt: true, alwaysParseAsBig: true });
 
 // NOTE: renamed from ContextInformation in ADR
 export type Context = {
@@ -39,12 +44,43 @@ export function createSimpleContext(nonce: Uint8Array, connectionId: string, con
     });
 }
 
-export function computeAnchor(context: Context, credentialStatements: CredentialStatement[]): Uint8Array {
+export type AnchorData = {
+    type: 'CCDVRA';
+    version: number;
+    hash: Uint8Array;
+    public?: string;
+};
+
+export function createAnchor(
+    context: Context,
+    credentialStatements: CredentialStatement[],
+    publicInfo?: string
+): Uint8Array {
+    const hash = computeAnchorHash(context, credentialStatements);
+    const data: AnchorData = { type: 'CCDVRA', version: 1, hash, public: publicInfo };
+    return cborEncode(data);
+}
+
+export function computeAnchorHash(context: Context, credentialStatements: CredentialStatement[]): Uint8Array {
     // TODO: this is a quick and dirty anchor implementation that needs to be replaced with
     // the one from concordium-base when available.
     const contextDigest = Buffer.from(JSON.stringify(context));
-    const statementsDigest = Buffer.from(JSON.stringify(credentialStatements));
-    return sha256([contextDigest, statementsDigest]);
+    const statementsDigest = Buffer.from(JSONBig.stringify(credentialStatements));
+    return Uint8Array.from(sha256([contextDigest, statementsDigest]));
+}
+
+export function decodeAnchor(cbor: Uint8Array): AnchorData {
+    const value = cborDecode(cbor);
+    if (typeof value !== 'object' || value === null) throw new Error('Expected a cbor encoded object');
+    // required fields
+    if (!('type' in value) || value.type !== 'CCDVRA') throw new Error('Expected "type" to be "CCDVRA"');
+    if (!('version' in value) || typeof value.version !== 'number')
+        throw new Error('Expected "version" to be a number');
+    if (!('hash' in value) || !(value.hash instanceof Uint8Array))
+        throw new Error('Expected "hash" to be a Uint8Array');
+    // optional fields
+    if ('public' in value && typeof value.public !== 'string') throw new Error('Expected "public" to be a string');
+    return value as AnchorData;
 }
 
 // TODO: Should match the w3c spec for a verifiable presentation request and the corresponding
@@ -77,9 +113,30 @@ export type Type = VerifiablePresentationRequestV1;
 
 export function fromJSON(json: JSON): VerifiablePresentationRequestV1 {
     const requestContext = { ...json.requestContext, given: json.requestContext.given.map(givenContextFromJSON) };
+    const statements: CredentialStatement[] = json.credentialStatements.map(({ statement, idQualifier }) => {
+        let mappedQualifier: StatementProverQualifier;
+        switch (idQualifier.type) {
+            case 'id':
+                mappedQualifier = { type: 'id', issuers: idQualifier.issuers.map(Number) };
+                break;
+            case 'cred':
+                mappedQualifier = { type: 'cred', issuers: idQualifier.issuers.map(Number) };
+                break;
+            case 'sci':
+                mappedQualifier = {
+                    type: 'sci',
+                    issuers: idQualifier.issuers.map((c) => ContractAddress.create(c.index, c.subindex)),
+                };
+                break;
+            default:
+                mappedQualifier = idQualifier;
+        }
+        return { statement, idQualifier: mappedQualifier } as CredentialStatement;
+    });
+
     return new VerifiablePresentationRequestV1(
         requestContext,
-        json.credentialStatements,
+        statements,
         TransactionHash.fromJSON(json.transactionRef)
     );
 }
@@ -89,10 +146,11 @@ export async function createAndAchor(
     sender: AccountAddress.Type,
     signer: AccountSigner,
     context: Omit<Context, 'type'>,
-    credentialStatements: CredentialStatement[]
+    credentialStatements: CredentialStatement[],
+    anchorPublicInfo?: string
 ): Promise<VerifiablePresentationRequestV1> {
     const requestContext = createContext(context);
-    const anchor = computeAnchor(requestContext, credentialStatements);
+    const anchor = createAnchor(requestContext, credentialStatements, anchorPublicInfo);
 
     const nextNonce: NextAccountNonce = await grpc.getNextAccountNonce(sender);
     const header: AccountTransactionHeader = {

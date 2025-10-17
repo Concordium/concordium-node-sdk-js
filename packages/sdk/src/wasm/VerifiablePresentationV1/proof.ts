@@ -187,11 +187,15 @@ export async function createFromAnchor(
     ) {
         throw new Error('Unexpected transaction type found for anchor reference');
     }
-    const expectedAnchor = VerifiablePresentationRequestV1.computeAnchor(
+
+    const expectedAnchor = VerifiablePresentationRequestV1.computeAnchorHash(
         presentationRequest.requestContext,
         presentationRequest.credentialStatements
     );
-    if ((new DataBlob(expectedAnchor).toString(), summary.dataRegistered.data)) {
+    const transactionAnchor = VerifiablePresentationRequestV1.decodeAnchor(
+        Buffer.from(summary.dataRegistered.data, 'hex')
+    );
+    if (Buffer.from(expectedAnchor).toString('hex') !== Buffer.from(transactionAnchor.hash).toString('hex')) {
         throw new Error('presentation anchor verification failed.');
     }
 

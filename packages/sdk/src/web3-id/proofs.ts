@@ -594,14 +594,18 @@ export function createWeb3CommitmentInputWithHdWallet(
  * Create the commitment input required to create a proof for the given statements, using an identity credential.
  */
 export function createIdentityCommitmentInput(
-    context: IdentityProvider,
+    identityProvider: IdentityProvider,
     idObject: IdentityObjectV1,
-    idObjectUseData: IdObjectUseData,
-    policy: Policy
+    idObjectUseData: IdObjectUseData
 ): IdentityCommitmentInput {
+    const policy: Policy = {
+        createdAt: idObject.attributeList.createdAt,
+        validTo: idObject.attributeList.validTo,
+        revealedAttributes: {}, // TODO: this is temporary until we figure out if it's needed or not
+    };
     return {
         type: 'identityCredentials',
-        context,
+        context: identityProvider,
         idObject,
         idObjectUseData,
         policy,
@@ -614,19 +618,18 @@ export function createIdentityCommitmentInput(
  */
 export function createIdentityCommitmentInputWithHdWallet(
     idObject: IdentityObjectV1,
-    policy: Policy,
-    context: IdentityProvider,
+    identityProvider: IdentityProvider,
     identityIndex: number,
     wallet: ConcordiumHdWallet
 ): IdentityCommitmentInput {
-    const prfKey = wallet.getPrfKey(context.ipInfo.ipIdentity, identityIndex);
-    const idCredSecret = wallet.getIdCredSec(context.ipInfo.ipIdentity, identityIndex);
-    const randomness = wallet.getSignatureBlindingRandomness(context.ipInfo.ipIdentity, identityIndex);
+    const prfKey = wallet.getPrfKey(identityProvider.ipInfo.ipIdentity, identityIndex);
+    const idCredSecret = wallet.getIdCredSec(identityProvider.ipInfo.ipIdentity, identityIndex);
+    const randomness = wallet.getSignatureBlindingRandomness(identityProvider.ipInfo.ipIdentity, identityIndex);
     const idObjectUseData: IdObjectUseData = {
         randomness,
         aci: { prfKey, credentialHolderInformation: { idCredSecret } },
     };
-    return createIdentityCommitmentInput(context, idObject, idObjectUseData, policy);
+    return createIdentityCommitmentInput(identityProvider, idObject, idObjectUseData);
 }
 
 /**

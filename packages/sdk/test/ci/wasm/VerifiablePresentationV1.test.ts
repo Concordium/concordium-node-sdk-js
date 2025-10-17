@@ -6,7 +6,6 @@ import {
     IdentityObjectV1,
     IdentityProvider,
     IpInfo,
-    Policy,
 } from '../../../src/pub/types.ts';
 import {
     ConcordiumHdWallet,
@@ -159,7 +158,6 @@ test('create testnet id-based presentation v1', () => {
         fs.readFileSync('./test/ci/resources/identity-object.json').toString()
     ).value;
     const ipInfo: IpInfo = JSON.parse(fs.readFileSync('./test/ci/resources/ip_info.json').toString()).value;
-    const policy: Policy = JSON.parse(fs.readFileSync('./test/ci/resources/cdi.json').toString()).policy;
 
     const inputContext: IdentityProvider = {
         ipInfo,
@@ -171,7 +169,7 @@ test('create testnet id-based presentation v1', () => {
             },
         },
     };
-    const input = createIdentityCommitmentInputWithHdWallet(idObject, policy, inputContext, 0, wallet);
+    const input = createIdentityCommitmentInputWithHdWallet(idObject, inputContext, 0, wallet);
 
     const statements: IdentityCredentialRequestStatement[] = [
         {

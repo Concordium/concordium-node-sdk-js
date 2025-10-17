@@ -191,7 +191,7 @@ export async function createFromAnchor(
         presentationRequest.requestContext,
         presentationRequest.credentialStatements
     );
-    if ((new DataBlob(expectedAnchor).toJSON(), summary.dataRegistered.data)) {
+    if ((new DataBlob(expectedAnchor).toString(), summary.dataRegistered.data)) {
         throw new Error('presentation anchor verification failed.');
     }
 

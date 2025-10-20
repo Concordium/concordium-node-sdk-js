@@ -3,7 +3,17 @@ import { Buffer } from 'buffer/index.js';
 import { EU_MEMBERS, MAX_DATE, MIN_DATE, StatementBuilder, StatementTypes } from '../commonProofTypes.js';
 import { MAX_U64 } from '../constants.js';
 import { getPastDate } from '../id/idProofs.js';
-import { AttributeKey, AttributeKeyString, AttributeList, AttributesKeys, HexString, Network } from '../types.js';
+import {
+    AttributeKey,
+    AttributeKeyString,
+    AttributeList,
+    AttributesKeys,
+    HexString,
+    IdentityObjectV1,
+    IdentityProvider,
+    Network,
+    Policy,
+} from '../types.js';
 import type * as ContractAddress from '../types/ContractAddress.js';
 import { ConcordiumHdWallet } from '../wasm/HdWallet.js';
 import {
@@ -14,6 +24,8 @@ import {
 } from './helpers.js';
 import {
     AccountCommitmentInput,
+    AccountCredentialQualifier,
+    AccountCredentialStatement,
     AtomicStatementV2,
     AttributeType,
     CredentialSchemaProperty,
@@ -21,14 +33,17 @@ import {
     CredentialStatement,
     CredentialStatements,
     CredentialSubject,
+    DIDString,
     IDENTITY_SUBJECT_SCHEMA,
-    IdentityQualifier,
+    IdObjectUseData,
+    IdentityCommitmentInput,
+    IdentityCredentialQualifier,
+    IdentityCredentialStatement,
     MembershipStatementV2,
     NonMembershipStatementV2,
     RangeStatementV2,
     StatementAttributeType,
-    StatementProverQualifier,
-    VerifiableCredentialQualifier,
+    Web3IdCredentialQualifier,
     Web3IssuerCommitmentInput,
     isTimestampAttribute,
 } from './types.js';
@@ -96,7 +111,10 @@ function validateIntegerAttribute(value: AttributeType) {
     return typeof value === 'bigint' && isValidIntegerAttribute(value);
 }
 
-function verifyRangeStatement(statement: RangeStatementV2, properties?: CredentialSchemaProperty) {
+function verifyRangeStatement<AttributeKey>(
+    statement: RangeStatementV2<AttributeKey>,
+    properties?: CredentialSchemaProperty
+) {
     if (statement.lower === undefined) {
         throw new Error('Range statements must contain a lower field');
     }
@@ -142,8 +160,8 @@ function verifyRangeStatement(statement: RangeStatementV2, properties?: Credenti
     }
 }
 
-function verifySetStatement(
-    statement: MembershipStatementV2 | NonMembershipStatementV2,
+function verifySetStatement<AttributeKey>(
+    statement: MembershipStatementV2<AttributeKey> | NonMembershipStatementV2<AttributeKey>,
     statementTypeName: string,
     properties?: CredentialSchemaProperty
 ) {
@@ -176,7 +194,10 @@ function verifySetStatement(
     }
 }
 
-function verifyAtomicStatement(statement: AtomicStatementV2, schema?: CredentialSchemaSubject) {
+function verifyAtomicStatement<AttributeKey>(
+    statement: AtomicStatementV2<AttributeKey>,
+    schema?: CredentialSchemaSubject
+) {
     if (statement.type === undefined) {
         throw new Error('Statements must contain a type field');
     }
@@ -184,11 +205,11 @@ function verifyAtomicStatement(statement: AtomicStatementV2, schema?: Credential
         throw new Error('Statements must contain an attributeTag field');
     }
 
-    if (schema && !Object.keys(schema.properties.attributes.properties).includes(statement.attributeTag)) {
+    if (schema && !Object.keys(schema.properties.attributes.properties).includes(statement.attributeTag as string)) {
         throw new Error('Unknown attributeTag: ' + statement.attributeTag);
     }
 
-    const property = schema && schema.properties.attributes.properties[statement.attributeTag];
+    const property = schema && schema.properties.attributes.properties[statement.attributeTag as string];
 
     switch (statement.type) {
         case StatementTypes.AttributeInRange:
@@ -210,9 +231,9 @@ function verifyAtomicStatement(statement: AtomicStatementV2, schema?: Credential
 /**
  * Verify that the atomicStatement is valid, and check it doesn't break any "composite" rules in the context of the existing statements.
  */
-function verifyAtomicStatementInContext(
-    statement: AtomicStatementV2,
-    existingStatements: AtomicStatementV2[],
+function verifyAtomicStatementInContext<AttributeKey>(
+    statement: AtomicStatementV2<AttributeKey>,
+    existingStatements: AtomicStatementV2<AttributeKey>[],
     schema?: CredentialSchemaSubject
 ) {
     verifyAtomicStatement(statement, schema);
@@ -237,22 +258,29 @@ export function verifyAtomicStatements(statements: AtomicStatementV2[], schema?:
     return true;
 }
 
-function getWeb3IdCredentialQualifier(validContractAddresses: ContractAddress.Type[]): VerifiableCredentialQualifier {
+function getWeb3IdCredentialQualifier(validContractAddresses: ContractAddress.Type[]): Web3IdCredentialQualifier {
     return {
         type: 'sci',
         issuers: validContractAddresses,
     };
 }
 
-function getAccountCredentialQualifier(validIdentityProviders: number[]): IdentityQualifier {
+function getAccountCredentialQualifier(validIdentityProviders: number[]): AccountCredentialQualifier {
     return {
         type: 'cred',
         issuers: validIdentityProviders,
     };
 }
 
-export class AtomicStatementBuilder implements InternalBuilder {
-    statements: AtomicStatementV2[];
+function getIdentityCredentialQualifier(validIdentityProviders: number[]): IdentityCredentialQualifier {
+    return {
+        type: 'id',
+        issuers: validIdentityProviders,
+    };
+}
+
+export class AtomicStatementBuilder<AttributeKey> implements InternalBuilder<AttributeKey> {
+    statements: AtomicStatementV2<AttributeKey>[];
     schema: CredentialSchemaSubject | undefined;
 
     constructor(schema?: CredentialSchemaSubject) {
@@ -263,7 +291,7 @@ export class AtomicStatementBuilder implements InternalBuilder {
     /**
      * Outputs the built statement.
      */
-    getStatement(): AtomicStatementV2[] {
+    getStatement(): AtomicStatementV2<AttributeKey>[] {
         return this.statements;
     }
 
@@ -271,7 +299,7 @@ export class AtomicStatementBuilder implements InternalBuilder {
      * This checks whether the given statement may be added to the statement being built.
      * If the statement breaks any rules, this will throw an error.
      */
-    private check(statement: AtomicStatementV2) {
+    private check(statement: AtomicStatementV2<AttributeKey>) {
         if (this.schema) {
             verifyAtomicStatementInContext(statement, this.statements, this.schema);
         }
@@ -284,8 +312,8 @@ export class AtomicStatementBuilder implements InternalBuilder {
      * @param upper: the upper end of the range, exclusive.
      * @returns the updated builder
      */
-    addRange(attribute: string, lower: StatementAttributeType, upper: StatementAttributeType): this {
-        const statement: AtomicStatementV2 = {
+    addRange(attribute: AttributeKey, lower: StatementAttributeType, upper: StatementAttributeType): this {
+        const statement: AtomicStatementV2<AttributeKey> = {
             type: StatementTypes.AttributeInRange,
             attributeTag: attribute,
             lower: statementAttributeTypeToAttributeType(lower),
@@ -302,8 +330,8 @@ export class AtomicStatementBuilder implements InternalBuilder {
      * @param set: the set of values that the attribute must be included in.
      * @returns the updated builder
      */
-    addMembership(attribute: string, set: StatementAttributeType[]): this {
-        const statement: AtomicStatementV2 = {
+    addMembership(attribute: AttributeKey, set: StatementAttributeType[]): this {
+        const statement: AtomicStatementV2<AttributeKey> = {
             type: StatementTypes.AttributeInSet,
             attributeTag: attribute,
             set: set.map(statementAttributeTypeToAttributeType),
@@ -319,8 +347,8 @@ export class AtomicStatementBuilder implements InternalBuilder {
      * @param set: the set of values that the attribute must be included in.
      * @returns the updated builder
      */
-    addNonMembership(attribute: string, set: StatementAttributeType[]): this {
-        const statement: AtomicStatementV2 = {
+    addNonMembership(attribute: AttributeKey, set: StatementAttributeType[]): this {
+        const statement: AtomicStatementV2<AttributeKey> = {
             type: StatementTypes.AttributeNotInSet,
             attributeTag: attribute,
             set: set.map(statementAttributeTypeToAttributeType),
@@ -336,8 +364,8 @@ export class AtomicStatementBuilder implements InternalBuilder {
      * @param attribute the attribute that should be revealed
      * @returns the updated builder
      */
-    revealAttribute(attribute: string): this {
-        const statement: AtomicStatementV2 = {
+    revealAttribute(attribute: AttributeKey): this {
+        const statement: AtomicStatementV2<AttributeKey> = {
             type: StatementTypes.RevealAttribute,
             attributeTag: attribute,
         };
@@ -347,14 +375,14 @@ export class AtomicStatementBuilder implements InternalBuilder {
     }
 }
 
-export class AccountStatementBuild extends AtomicStatementBuilder {
+export class IdentityStatementBuilder extends AtomicStatementBuilder<AttributeKey> {
     /**
      * Add to the statement that the age is at minimum the given value.
      * This adds a range statement that the date of birth is between 1st of january 1800 and <age> years ago.
      * @param age: the minimum age allowed.
      * @returns the updated builder
      */
-    addMinimumAge(age: number): AtomicStatementBuilder {
+    addMinimumAge(age: number): IdentityStatementBuilder {
         return this.addRange(AttributeKeyString.dob, MIN_DATE, getPastDate(age, 1));
     }
 
@@ -364,7 +392,7 @@ export class AccountStatementBuild extends AtomicStatementBuilder {
      * @param age: the maximum age allowed.
      * @returns the updated builder
      */
-    addMaximumAge(age: number): AtomicStatementBuilder {
+    addMaximumAge(age: number): IdentityStatementBuilder {
         return this.addRange(AttributeKeyString.dob, getPastDate(age + 1, 1), MAX_DATE);
     }
 
@@ -375,7 +403,7 @@ export class AccountStatementBuild extends AtomicStatementBuilder {
      * @param maxAge: the maximum age allowed.
      * @returns the updated builder
      */
-    addAgeInRange(minAge: number, maxAge: number): AtomicStatementBuilder {
+    addAgeInRange(minAge: number, maxAge: number): IdentityStatementBuilder {
         return this.addRange(AttributeKeyString.dob, getPastDate(maxAge + 1, 1), getPastDate(minAge));
     }
 
@@ -385,7 +413,7 @@ export class AccountStatementBuild extends AtomicStatementBuilder {
      * @param earliestDate: the earliest the document is allow to be expired at, should be a string in YYYYMMDD format.
      * @returns the updated builder
      */
-    documentExpiryNoEarlierThan(earliestDate: string): AtomicStatementBuilder {
+    documentExpiryNoEarlierThan(earliestDate: string): IdentityStatementBuilder {
         return this.addRange(AttributeKeyString.idDocExpiresAt, earliestDate, MAX_DATE);
     }
 
@@ -393,7 +421,7 @@ export class AccountStatementBuild extends AtomicStatementBuilder {
      * Add to the statement that the country of residence is one of the EU countries
      * @returns the updated builder
      */
-    addEUResidency(): AtomicStatementBuilder {
+    addEUResidency(): IdentityStatementBuilder {
         return this.addMembership(AttributeKeyString.countryOfResidence, EU_MEMBERS);
     }
 
@@ -401,46 +429,55 @@ export class AccountStatementBuild extends AtomicStatementBuilder {
      * Add to the statement that the nationality is one of the EU countries
      * @returns the updated builder
      */
-    addEUNationality(): AtomicStatementBuilder {
+    addEUNationality(): IdentityStatementBuilder {
         return this.addMembership(AttributeKeyString.nationality, EU_MEMBERS);
     }
 }
 
-type InternalBuilder = StatementBuilder<StatementAttributeType, string>;
-export class Web3StatementBuilder {
+type InternalBuilder<AttributeKey> = StatementBuilder<AttributeKey, StatementAttributeType>;
+export class CredentialStatementBuilder {
     private statements: CredentialStatements = [];
 
-    private add(
-        idQualifier: StatementProverQualifier,
-        builderCallback: (builder: InternalBuilder) => void,
+    forWeb3IdCredentials(
+        validContractAddresses: ContractAddress.Type[],
+        builderCallback: (builder: InternalBuilder<string>) => void,
         schema?: CredentialSchemaSubject
-    ): this {
-        const builder = new AtomicStatementBuilder(schema);
+    ): CredentialStatementBuilder {
+        const builder = new AtomicStatementBuilder<string>(schema);
         builderCallback(builder);
         this.statements.push({
-            idQualifier,
+            idQualifier: getWeb3IdCredentialQualifier(validContractAddresses),
             statement: builder.getStatement(),
         });
         return this;
     }
 
-    addForVerifiableCredentials(
-        validContractAddresses: ContractAddress.Type[],
-        builderCallback: (builder: InternalBuilder) => void,
-        schema?: CredentialSchemaSubject
-    ): this {
-        return this.add(getWeb3IdCredentialQualifier(validContractAddresses), builderCallback, schema);
+    forAccountCredentials(
+        validIdentityProviders: number[],
+        builderCallback: (builder: IdentityStatementBuilder) => void
+    ): CredentialStatementBuilder {
+        const builder = new IdentityStatementBuilder(IDENTITY_SUBJECT_SCHEMA);
+        builderCallback(builder);
+        const statement: AccountCredentialStatement = {
+            idQualifier: getAccountCredentialQualifier(validIdentityProviders),
+            statement: builder.getStatement(),
+        };
+        this.statements.push(statement);
+        return this;
     }
 
-    addForIdentityCredentials(
+    forIdentityCredentials(
         validIdentityProviders: number[],
-        builderCallback: (builder: InternalBuilder) => void
-    ): this {
-        return this.add(
-            getAccountCredentialQualifier(validIdentityProviders),
-            builderCallback,
-            IDENTITY_SUBJECT_SCHEMA
-        );
+        builderCallback: (builder: IdentityStatementBuilder) => void
+    ): CredentialStatementBuilder {
+        const builder = new IdentityStatementBuilder(IDENTITY_SUBJECT_SCHEMA);
+        builderCallback(builder);
+        const statement: IdentityCredentialStatement = {
+            idQualifier: getIdentityCredentialQualifier(validIdentityProviders),
+            statement: builder.getStatement(),
+        };
+        this.statements.push(statement);
+        return this;
     }
 
     getStatements(): CredentialStatements {
@@ -469,6 +506,10 @@ export function createWeb3IdDID(network: Network, publicKey: string, index: bigi
  */
 export function createAccountDID(network: Network, credId: string): string {
     return 'did:ccd:' + network.toLowerCase() + ':cred:' + credId;
+}
+
+export function createIdentityDID(network: Network, identityProviderIndex: number, identityIndex: number): DIDString {
+    return 'did:ccd:' + network.toLowerCase() + ':id:' + identityProviderIndex + ':' + identityIndex;
 }
 
 /**
@@ -557,6 +598,48 @@ export function createWeb3CommitmentInputWithHdWallet(
         randomness,
         signature
     );
+}
+
+/**
+ * Create the commitment input required to create a proof for the given statements, using an identity credential.
+ */
+export function createIdentityCommitmentInput(
+    identityProvider: IdentityProvider,
+    idObject: IdentityObjectV1,
+    idObjectUseData: IdObjectUseData
+): IdentityCommitmentInput {
+    const policy: Policy = {
+        createdAt: idObject.attributeList.createdAt,
+        validTo: idObject.attributeList.validTo,
+        revealedAttributes: {}, // TODO: this is temporary until we figure out if it's needed or not
+    };
+    return {
+        type: 'identityCredentials',
+        context: identityProvider,
+        idObject,
+        idObjectUseData,
+        policy,
+    };
+}
+
+/**
+ * Create the commitment input required to create a proof for the given statements, using an identity credential.
+ * Uses a ConcordiumHdWallet to get values for the {@linkcode IdObjectUseData}.
+ */
+export function createIdentityCommitmentInputWithHdWallet(
+    idObject: IdentityObjectV1,
+    identityProvider: IdentityProvider,
+    identityIndex: number,
+    wallet: ConcordiumHdWallet
+): IdentityCommitmentInput {
+    const prfKey = wallet.getPrfKey(identityProvider.ipInfo.ipIdentity, identityIndex);
+    const idCredSecret = wallet.getIdCredSec(identityProvider.ipInfo.ipIdentity, identityIndex);
+    const randomness = wallet.getSignatureBlindingRandomness(identityProvider.ipInfo.ipIdentity, identityIndex);
+    const idObjectUseData: IdObjectUseData = {
+        randomness,
+        aci: { prfKey, credentialHolderInformation: { idCredSecret } },
+    };
+    return createIdentityCommitmentInput(identityProvider, idObject, idObjectUseData);
 }
 
 /**

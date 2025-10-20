@@ -6,8 +6,13 @@ import {
     GenericRangeStatement,
     GenericRevealStatement,
 } from '../commonProofTypes.js';
-import type { AttributeKey, CryptographicParameters, HexString } from '../types.js';
+import type { ArInfo, AttributeKey, HexString, IdentityObjectV1, IdentityProvider, IpInfo, Policy } from '../types.js';
 import type * as ContractAddress from '../types/ContractAddress.js';
+
+/**
+ * The "Distributed Identifier" string.
+ */
+export type DIDString = string;
 
 export type TimestampAttribute = {
     type: 'date-time';
@@ -38,18 +43,32 @@ export type Web3IssuerCommitmentInput = {
     randomness: Record<string, string>;
 };
 
-export type CommitmentInput = AccountCommitmentInput | Web3IssuerCommitmentInput;
-
-export type Web3IdProofRequest = {
-    challenge: string;
-    credentialStatements: RequestStatement[];
+/**
+ * Can be computed with a seed phrase through the use of {@linkcode createIdentityCommitmentInputWithHdWallet}.
+ * The seed phrase must be the once used during the identity issuance process with the identity provider.
+ */
+export type IdObjectUseData = {
+    aci: {
+        credentialHolderInformation: {
+            idCredSecret: Uint8Array;
+        };
+        prfKey: Uint8Array;
+    };
+    randomness: Uint8Array;
 };
 
-export type Web3IdProofInput = {
-    request: Web3IdProofRequest;
-    globalContext: CryptographicParameters;
-    commitmentInputs: CommitmentInput[];
+// similar info as for account opening proofs - check `CredentialInputCommon`
+// matches CommitmentInputs::IdentityCredentials in concordium-base
+// TODO: verify that this is correct...
+export type IdentityCommitmentInput = {
+    type: 'identityCredentials'; // TODO: can we just use 'id' instead?
+    context: IdentityProvider;
+    idObject: IdentityObjectV1;
+    idObjectUseData: IdObjectUseData;
+    policy: Policy;
 };
+
+export type CommitmentInput = AccountCommitmentInput | Web3IssuerCommitmentInput | IdentityCommitmentInput;
 
 export type TimestampProperty = {
     title: string;
@@ -190,61 +209,106 @@ export const IDENTITY_SUBJECT_SCHEMA: CredentialSchemaSubject = {
     required: [],
 };
 
-export type RangeStatementV2 = GenericRangeStatement<string, AttributeType>;
-export type NonMembershipStatementV2 = GenericNonMembershipStatement<string, AttributeType>;
-export type MembershipStatementV2 = GenericMembershipStatement<string, AttributeType>;
-export type RevealStatementV2 = GenericRevealStatement<string>;
+export type RangeStatementV2<AttributeKey = string> = GenericRangeStatement<AttributeKey, AttributeType>;
+export type NonMembershipStatementV2<AttributeKey = string> = GenericNonMembershipStatement<
+    AttributeKey,
+    AttributeType
+>;
+export type MembershipStatementV2<AttributeKey = string> = GenericMembershipStatement<AttributeKey, AttributeType>;
+export type RevealStatementV2<AttributeKey = string> = GenericRevealStatement<AttributeKey>;
 
-export type AtomicStatementV2 = GenericAtomicStatement<string, AttributeType>;
+export type AtomicStatementV2<AttributeKey = string> = GenericAtomicStatement<AttributeKey, AttributeType>;
 
-export type VerifiableCredentialQualifier = {
+export type Web3IdCredentialQualifier = {
     type: 'sci';
     issuers: ContractAddress.Type[];
 };
 
 type IdentityProviderIndex = number;
 
-export type IdentityQualifier = {
+export type AccountCredentialQualifier = {
     type: 'cred';
     issuers: IdentityProviderIndex[];
 };
 
-export type StatementProverQualifier = VerifiableCredentialQualifier | IdentityQualifier;
+export type IdentityCredentialQualifier = {
+    type: 'id'; // TODO: align with the corresponding DID defined in concordium-base
+    issuers: IdentityProviderIndex[];
+};
+
+export type StatementProverQualifier =
+    | Web3IdCredentialQualifier
+    | AccountCredentialQualifier
+    | IdentityCredentialQualifier;
 
 export function isAccountCredentialStatement(statement: CredentialStatement): statement is AccountCredentialStatement {
     return statement.idQualifier.type === 'cred';
 }
 
-export function isVerifiableCredentialStatement(
-    statement: CredentialStatement
-): statement is VerifiableCredentialStatement {
+export function isWeb3IdCredentialStatement(statement: CredentialStatement): statement is Web3IdCredentialStatement {
     return statement.idQualifier.type === 'sci';
 }
 
-export interface AccountCredentialStatement extends CredentialStatement {
-    idQualifier: IdentityQualifier;
-    statement: AtomicStatementV2[];
+export function isIdentityCredentialStatement(
+    statement: CredentialStatement
+): statement is IdentityCredentialStatement {
+    return statement.idQualifier.type === 'id';
 }
 
-export interface VerifiableCredentialStatement extends CredentialStatement {
-    idQualifier: VerifiableCredentialQualifier;
-    statement: AtomicStatementV2[];
+export type AccountCredentialStatement = {
+    idQualifier: AccountCredentialQualifier;
+    statement: AtomicStatementV2<AttributeKey>[];
+};
+
+export type Web3IdCredentialStatement = {
+    idQualifier: Web3IdCredentialQualifier;
+    statement: AtomicStatementV2<string>[];
+};
+
+export type IdentityCredentialStatement = {
+    idQualifier: IdentityCredentialQualifier;
+    statement: AtomicStatementV2<AttributeKey>[];
+};
+
+export type CredentialStatement = AccountCredentialStatement | Web3IdCredentialStatement | IdentityCredentialStatement;
+
+export type SpecifiedAccountCredentialStatement = {
+    id: DIDString;
+    statement: AtomicStatementV2<AttributeKey>[];
+};
+
+export type SpecifiedWeb3IdCredentialStatement = {
+    id: DIDString;
+    statement: AtomicStatementV2<string>[];
+    type: string[];
+};
+
+export type SpecifiedIdentityCredentialStatement = {
+    id: DIDString;
+    statement: AtomicStatementV2<AttributeKey>[];
+};
+
+export type SpecifiedCredentialStatement =
+    | SpecifiedAccountCredentialStatement
+    | SpecifiedWeb3IdCredentialStatement
+    | SpecifiedIdentityCredentialStatement;
+
+export function isSpecifiedAccountCredentialStatement(
+    statement: SpecifiedCredentialStatement
+): statement is SpecifiedAccountCredentialStatement {
+    return statement.id.includes(':cred:');
 }
 
-export type CredentialStatement = {
-    idQualifier: StatementProverQualifier;
-    statement: AtomicStatementV2[];
-};
+export function isSpecifiedWeb3IdCredentialStatement(
+    statement: SpecifiedCredentialStatement
+): statement is SpecifiedWeb3IdCredentialStatement {
+    return statement.id.includes(':sci:');
+}
 
-export type RequestStatement = {
-    id: string;
-    statement: AtomicStatementV2[];
-    /** The type field is present iff the request is for a verifiable credential */
-    type?: string[];
-};
-
-export function isVerifiableCredentialRequestStatement(statement: RequestStatement): boolean {
-    return Boolean(statement.type);
+export function isSpecifiedIdentityCredentialStatement(
+    statement: SpecifiedCredentialStatement
+): statement is SpecifiedIdentityCredentialStatement {
+    return statement.id.includes(':id:'); // TODO: figure out if this matches the identifier.
 }
 
 export type CredentialStatements = CredentialStatement[];
@@ -270,8 +334,14 @@ export type CredentialsInputsWeb3 = {
     issuerPk: HexString;
 };
 
+export type CredentialsInputsIdentity = {
+    type: 'identityCredentials'; // TODO: or maybe just 'id'?
+    ipInfo: IpInfo;
+    knownArs: Record<number, ArInfo>;
+};
+
 /** Union of the different inputs required to verify corresponding proofs */
-export type CredentialsInputs = CredentialsInputsAccount | CredentialsInputsWeb3;
+export type CredentialsInputs = CredentialsInputsAccount | CredentialsInputsWeb3 | CredentialsInputsIdentity;
 
 /** Contains the credential status and inputs required to verify a corresponding credential proof */
 export type CredentialWithMetadata = {

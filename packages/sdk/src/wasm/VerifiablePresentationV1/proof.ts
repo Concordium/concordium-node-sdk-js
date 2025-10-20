@@ -22,13 +22,13 @@ import { bail } from '../../util.js';
 import {
     AtomicStatementV2,
     CommitmentInput,
-    CredentialRequestStatement,
     CredentialsInputs,
     DIDString,
     IdentityCommitmentInput,
-    IdentityCredentialRequestStatement,
-    isAccountCredentialRequestStatement,
-    isIdentityCredentialRequestStatement,
+    SpecifiedCredentialStatement,
+    SpecifiedIdentityCredentialStatement,
+    isSpecifiedAccountCredentialStatement,
+    isSpecifiedIdentityCredentialStatement,
 } from '../../web3-id/index.js';
 import { Web3IdProofRequest, getVerifiablePresentation } from '../web3Id.js';
 import { GivenContextJSON, givenContextFromJSON, givenContextToJSON } from './internal.js';
@@ -72,7 +72,7 @@ export type IdentityBasedCredential = {
 };
 
 function createIdentityCredentialStub(
-    { id, statement }: IdentityCredentialRequestStatement,
+    { id, statement }: SpecifiedIdentityCredentialStatement,
     ipIndex: number
 ): IdentityBasedCredential {
     const network = id.split(':')[1] as Network;
@@ -170,11 +170,11 @@ export function fromJSON(value: JSON): VerifiablePresentationV1 {
 export async function createFromAnchor(
     grpc: ConcordiumGRPCClient,
     presentationRequest: Request.Type,
-    requestStatements: CredentialRequestStatement[],
+    statements: SpecifiedCredentialStatement[],
     inputs: CommitmentInput[],
-    additionalContext: GivenContext[],
-    globalContext: CryptographicParameters
+    additionalContext: GivenContext[]
 ): Promise<VerifiablePresentationV1> {
+    const globalContext = await grpc.getCryptographicParameters();
     const transaction = await grpc.getBlockItemStatus(presentationRequest.transactionRef);
     if (transaction.status !== TransactionStatusEnum.Finalized) {
         throw new Error('anchor reference not finalized');
@@ -201,24 +201,24 @@ export async function createFromAnchor(
 
     const blockContext: GivenContext = { label: 'BlockHash', context: blockHash };
     const proofContext = createContext(presentationRequest.requestContext, [...additionalContext, blockContext]);
-    return create(requestStatements, inputs, proofContext, globalContext);
+    return create(statements, inputs, proofContext, globalContext);
 }
 
 // TODO: this entire function should call a function in @concordium/rust-bindings to create the verifiable
 // presentation from the function arguments. For now, we hack something together from the old protocol which
 // means filtering and mapping the input/output.
 export function create(
-    requestStatements: CredentialRequestStatement[],
+    requestStatements: SpecifiedCredentialStatement[],
     inputs: CommitmentInput[],
     proofContext: Context,
     globalContext: CryptographicParameters
 ): VerifiablePresentationV1 {
     // first we filter out the id statements, as they're not compatible with the current implementation
     // in concordium-base
-    const idStatements: [number, IdentityCredentialRequestStatement][] = [];
-    const compatibleStatements: Exclude<CredentialRequestStatement, IdentityCredentialRequestStatement>[] = [];
+    const idStatements: [number, SpecifiedIdentityCredentialStatement][] = [];
+    const compatibleStatements: Exclude<SpecifiedCredentialStatement, SpecifiedIdentityCredentialStatement>[] = [];
     requestStatements.forEach((s, i) => {
-        if (isIdentityCredentialRequestStatement(s)) idStatements.push([i, s]);
+        if (isSpecifiedIdentityCredentialStatement(s)) idStatements.push([i, s]);
         else compatibleStatements.push(s);
     });
 
@@ -240,7 +240,7 @@ export function create(
     const compatibleCredentials: Credential[] = verifiableCredential.map<Credential>((c, i) => {
         const { proof, ...credentialSubject } = c.credentialSubject;
         const { created, type: _type, ...proofValues } = proof;
-        const type = isAccountCredentialRequestStatement(compatibleStatements[i])
+        const type = isSpecifiedAccountCredentialStatement(compatibleStatements[i])
             ? 'ConcordiumAccountBasedCredential'
             : 'ConcordiumWeb3BasedCredential';
         return {
@@ -279,5 +279,14 @@ export function verify(
     cryptographicParameters: CryptographicParameters,
     publicData: CredentialsInputs[]
 ): true | Error {
+    return true;
+}
+
+export async function verifyWithNode(
+    presentation: VerifiablePresentationV1,
+    request: Request.Type,
+    grpc: ConcordiumGRPCClient,
+    network: Network
+): Promise<true | Error> {
     return true;
 }

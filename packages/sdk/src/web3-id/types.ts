@@ -267,42 +267,42 @@ export type IdentityCredentialStatement = {
 
 export type CredentialStatement = AccountCredentialStatement | Web3IdCredentialStatement | IdentityCredentialStatement;
 
-export type AccountCredentialRequestStatement = {
+export type SpecifiedAccountCredentialStatement = {
     id: DIDString;
     statement: AtomicStatementV2<AttributeKey>[];
 };
 
-export type Web3IdCredentialRequestStatement = {
+export type SpecifiedWeb3IdCredentialStatement = {
     id: DIDString;
     statement: AtomicStatementV2<string>[];
     type: string[];
 };
 
-export type IdentityCredentialRequestStatement = {
+export type SpecifiedIdentityCredentialStatement = {
     id: DIDString;
     statement: AtomicStatementV2<AttributeKey>[];
 };
 
-export type CredentialRequestStatement =
-    | AccountCredentialRequestStatement
-    | Web3IdCredentialRequestStatement
-    | IdentityCredentialRequestStatement;
+export type SpecifiedCredentialStatement =
+    | SpecifiedAccountCredentialStatement
+    | SpecifiedWeb3IdCredentialStatement
+    | SpecifiedIdentityCredentialStatement;
 
-export function isAccountCredentialRequestStatement(
-    statement: CredentialRequestStatement
-): statement is AccountCredentialRequestStatement {
+export function isSpecifiedAccountCredentialStatement(
+    statement: SpecifiedCredentialStatement
+): statement is SpecifiedAccountCredentialStatement {
     return statement.id.includes(':cred:');
 }
 
-export function isWeb3IdCredentialRequestStatement(
-    statement: CredentialRequestStatement
-): statement is AccountCredentialRequestStatement {
+export function isSpecifiedWeb3IdCredentialStatement(
+    statement: SpecifiedCredentialStatement
+): statement is SpecifiedAccountCredentialStatement {
     return statement.id.includes(':sci:');
 }
 
-export function isIdentityCredentialRequestStatement(
-    statement: CredentialRequestStatement
-): statement is AccountCredentialRequestStatement {
+export function isSpecifiedIdentityCredentialStatement(
+    statement: SpecifiedCredentialStatement
+): statement is SpecifiedAccountCredentialStatement {
     return statement.id.includes(':id:'); // TODO: figure out if this matches the identifier.
 }
 

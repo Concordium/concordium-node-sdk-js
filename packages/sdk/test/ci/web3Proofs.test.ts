@@ -10,10 +10,10 @@ import {
     AttributeKeyString,
     ConcordiumHdWallet,
     ContractAddress,
-    CredentialRequestStatement,
     CredentialStatementBuilder,
     MAX_DATE_TIMESTAMP,
     MIN_DATE_TIMESTAMP,
+    SpecifiedCredentialStatement,
     StatementTypes,
     VerifiablePresentation,
     createAccountDID,
@@ -52,7 +52,7 @@ test('create Web3Id proof with account credentials', () => {
     values.dob = '0';
     values.firstName = 'a';
 
-    const credentialStatements: CredentialRequestStatement[] = [
+    const credentialStatements: SpecifiedCredentialStatement[] = [
         {
             id: createAccountDID(
                 'Testnet',
@@ -131,7 +131,7 @@ test('create Web3Id proof with Web3Id Credentials', () => {
         graduationDate: '2010-06-01T00:00:00Z',
     };
 
-    const credentialStatements: CredentialRequestStatement[] = [
+    const credentialStatements: SpecifiedCredentialStatement[] = [
         {
             id: createWeb3IdDID('Testnet', publicKey, 1n, 0n),
             statement: [

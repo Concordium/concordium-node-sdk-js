@@ -38,6 +38,10 @@
   - **Please note**: some functionality related to this is currently either stubbed or routed into the old verifiable
   presentation computation functions for now.
 
+- types `PrivateVerificationAuditRecord` and `VerificationAuditRecord` for creating audit records.
+  - `PrivateVerificationAuditRecord.registerPublicRecord` is a GRPC helper function for registering a creating a public
+    record and registering it on chain.
+
 ## 11.0.0
 
 ### Fixed

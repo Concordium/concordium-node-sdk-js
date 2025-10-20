@@ -12,9 +12,9 @@
   - renamed `VerifiableCredentialQualifier` to `Web3IdCredentialQualifier`
   - renamed `VerifiableCredentialStatement` to `Web3IdCredentialStatement`
   - renamed `IdentityQualifier` to `AccountCredentialQualifier`
-  - renamed `RequestStatement` to `CredentialRequestStatement`, which is now a union of
-  `AccountCredentialStatement | Web3IdCredentialStatement | IdentityCredentialStatement` instead of the corresponding
-  old dynamic version.
+  - renamed `RequestStatement` to `SpecifiedCredentialStatement`, which is now a union of
+  `SpecifiedAccountCredentialStatement | SpecifiedWeb3IdCredentialStatement | SpecifiedIdentityCredentialStatement`
+  instead of the corresponding old dynamic version.
 
 ### Added
 
@@ -22,6 +22,7 @@
 - types `IdentityCredentialQualifier`, `IdentityCommitmentInput`, and `CredentialsInputsIdentity` which have been added
   to the respective union types that reflect the possible variants.
 - helper functions `createIdentityCommitmentInput` and `createIdentityCommitmentInputWithHdWallet`
+- helper function `createIdentityDID`
 
 - types `VerifiablePresentationV1` and `VerifiablePresentationRequestV1` to be used with the new zero-knowledge proof
   protocol
@@ -32,6 +33,8 @@
   - `VerifiablePresentationV1.createFromAnchor` which is a GRPC helper function for creating a verifiable presentation
   from a minimal set of values. This also creates the `VerifiablePresentation.Context` from the corresponding
   `VerifiablePresentationRequestV1.Context`.
+  - `VerifiablePresentationV1.verify`, and the corresponding GRPC helper `VerifiablePresentationV1.verifyWithNode` for
+  verification of the proof.
   - **Please note**: some functionality related to this is currently either stubbed or routed into the old verifiable
   presentation computation functions for now.
 

@@ -14,8 +14,8 @@ import {
 } from '../../../src/pub/wasm.ts';
 import {
     CommitmentInput,
-    CredentialRequestStatement,
-    IdentityCredentialRequestStatement,
+    SpecifiedCredentialStatement,
+    SpecifiedIdentityCredentialStatement,
     createAccountDID,
     createIdentityCommitmentInputWithHdWallet,
     createWeb3IdDID,
@@ -36,7 +36,7 @@ test('create testnet account-based presentation v1', () => {
     values.dob = '0';
     values.firstName = 'a';
 
-    const statements: CredentialRequestStatement[] = [
+    const statements: SpecifiedCredentialStatement[] = [
         {
             id: createAccountDID(
                 'Testnet',
@@ -98,7 +98,7 @@ test('create testnet web3Id-based presentation v1', () => {
         degreeType: 'BachelorDegree',
         graduationDate: '2010-06-01T00:00:00Z',
     };
-    const statements: CredentialRequestStatement[] = [
+    const statements: SpecifiedCredentialStatement[] = [
         {
             id: createWeb3IdDID('Testnet', publicKey, 1n, 0n),
             statement: [
@@ -161,7 +161,7 @@ test('create testnet id-based presentation v1', () => {
     };
     const input = createIdentityCommitmentInputWithHdWallet(idObject, inputContext, 0, wallet);
 
-    const statements: IdentityCredentialRequestStatement[] = [
+    const statements: SpecifiedIdentityCredentialStatement[] = [
         {
             id: 'ccd:testnet:id:0:0',
             statement: [

@@ -6,9 +6,10 @@ import { VerifiablePresentation } from '../types/VerifiablePresentation.js';
 import { VerifyWeb3IdCredentialSignatureInput } from '../web3-id/helpers.js';
 import {
     CommitmentInput,
-    CredentialRequestStatement,
     CredentialsInputs,
-    isIdentityCredentialRequestStatement,
+    SpecifiedCredentialStatement,
+    isSpecifiedAccountCredentialStatement,
+    isSpecifiedWeb3IdCredentialStatement,
 } from '../web3-id/types.js';
 
 /**
@@ -21,7 +22,7 @@ export function verifyWeb3IdCredentialSignature(input: VerifyWeb3IdCredentialSig
 
 export type Web3IdProofRequest = {
     challenge: string;
-    credentialStatements: CredentialRequestStatement[];
+    credentialStatements: SpecifiedCredentialStatement[];
 };
 
 export type Web3IdProofInput = {
@@ -35,7 +36,12 @@ export type Web3IdProofInput = {
  */
 export function getVerifiablePresentation(input: Web3IdProofInput): VerifiablePresentation {
     // validate that we don't pass any unsupported credentials in
-    if (input.request.credentialStatements.some((statement) => isIdentityCredentialRequestStatement(statement)))
+    if (
+        input.request.credentialStatements.some(
+            (statement) =>
+                !isSpecifiedWeb3IdCredentialStatement(statement) && !isSpecifiedAccountCredentialStatement(statement)
+        )
+    )
         throw new Error('Identity proofs are not supported for this verifiable presentation protocol');
 
     try {

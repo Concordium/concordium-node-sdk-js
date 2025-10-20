@@ -1,4 +1,4 @@
-export interface StatementBuilder<ValueType, AttributeType> {
+export interface StatementBuilder<AttributeType, ValueType> {
     addRange(attribute: AttributeType, lower: ValueType, upper: ValueType): this;
 
     addMembership(attribute: AttributeType, set: ValueType[]): this;

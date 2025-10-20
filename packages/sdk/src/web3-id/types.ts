@@ -44,7 +44,8 @@ export type Web3IssuerCommitmentInput = {
 };
 
 /**
- * Can be computed with a seed phrase through the use of {@linkcode createIdentityCommitmentInputWithHdWallet}
+ * Can be computed with a seed phrase through the use of {@linkcode createIdentityCommitmentInputWithHdWallet}.
+ * The seed phrase must be the once used during the identity issuance process with the identity provider.
  */
 export type IdObjectUseData = {
     aci: {
@@ -244,10 +245,14 @@ export function isAccountCredentialStatement(statement: CredentialStatement): st
     return statement.idQualifier.type === 'cred';
 }
 
-export function isVerifiableCredentialStatement(
-    statement: CredentialStatement
-): statement is Web3IdCredentialStatement {
+export function isWeb3IdCredentialStatement(statement: CredentialStatement): statement is Web3IdCredentialStatement {
     return statement.idQualifier.type === 'sci';
+}
+
+export function isIdentityCredentialStatement(
+    statement: CredentialStatement
+): statement is IdentityCredentialStatement {
+    return statement.idQualifier.type === 'id';
 }
 
 export type AccountCredentialStatement = {
@@ -267,42 +272,42 @@ export type IdentityCredentialStatement = {
 
 export type CredentialStatement = AccountCredentialStatement | Web3IdCredentialStatement | IdentityCredentialStatement;
 
-export type AccountCredentialRequestStatement = {
+export type SpecifiedAccountCredentialStatement = {
     id: DIDString;
     statement: AtomicStatementV2<AttributeKey>[];
 };
 
-export type Web3IdCredentialRequestStatement = {
+export type SpecifiedWeb3IdCredentialStatement = {
     id: DIDString;
     statement: AtomicStatementV2<string>[];
     type: string[];
 };
 
-export type IdentityCredentialRequestStatement = {
+export type SpecifiedIdentityCredentialStatement = {
     id: DIDString;
     statement: AtomicStatementV2<AttributeKey>[];
 };
 
-export type CredentialRequestStatement =
-    | AccountCredentialRequestStatement
-    | Web3IdCredentialRequestStatement
-    | IdentityCredentialRequestStatement;
+export type SpecifiedCredentialStatement =
+    | SpecifiedAccountCredentialStatement
+    | SpecifiedWeb3IdCredentialStatement
+    | SpecifiedIdentityCredentialStatement;
 
-export function isAccountCredentialRequestStatement(
-    statement: CredentialRequestStatement
-): statement is AccountCredentialRequestStatement {
+export function isSpecifiedAccountCredentialStatement(
+    statement: SpecifiedCredentialStatement
+): statement is SpecifiedAccountCredentialStatement {
     return statement.id.includes(':cred:');
 }
 
-export function isWeb3IdCredentialRequestStatement(
-    statement: CredentialRequestStatement
-): statement is AccountCredentialRequestStatement {
+export function isSpecifiedWeb3IdCredentialStatement(
+    statement: SpecifiedCredentialStatement
+): statement is SpecifiedWeb3IdCredentialStatement {
     return statement.id.includes(':sci:');
 }
 
-export function isIdentityCredentialRequestStatement(
-    statement: CredentialRequestStatement
-): statement is AccountCredentialRequestStatement {
+export function isSpecifiedIdentityCredentialStatement(
+    statement: SpecifiedCredentialStatement
+): statement is SpecifiedIdentityCredentialStatement {
     return statement.id.includes(':id:'); // TODO: figure out if this matches the identifier.
 }
 

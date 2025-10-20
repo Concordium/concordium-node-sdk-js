@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 12.0.0-alpha.0
+
 ### Breaking changes
 
 - `Web3StatementBuilder` has been renamed to `CredentialStatementBuilder` with the following method renames

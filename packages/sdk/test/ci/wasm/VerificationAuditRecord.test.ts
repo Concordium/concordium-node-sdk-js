@@ -104,13 +104,13 @@ describe('VerificationAuditRecord', () => {
     });
 
     it('computes the anchor as expected', () => {
-        const anchor = VerificationAuditRecord.createAnchor(PUBLIC_RECORD, 'anchor info');
+        const anchor = VerificationAuditRecord.createAnchor(PUBLIC_RECORD, { pub: 'anchor info' });
         const decoded = VerificationAuditRecord.decodeAnchor(anchor);
         const expected: VerificationAuditRecord.AnchorData = {
             type: 'CCDVAA',
             version: 1,
             hash: PUBLIC_RECORD.hash,
-            public: 'anchor info',
+            public: { pub: 'anchor info' },
         };
         expect(decoded).toEqual(expected);
     });

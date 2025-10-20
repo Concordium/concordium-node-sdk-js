@@ -5,6 +5,7 @@ import { cborDecode, cborEncode } from '../../../types/cbor.js';
 
 class VerificationAuditRecord {
     constructor(
+        // TODO: possibly add a specialized type for sha256 hashes
         public readonly hash: Uint8Array,
         public readonly info?: string
     ) {}
@@ -34,11 +35,11 @@ export function create(hash: Uint8Array, info?: string): VerificationAuditRecord
 export type AnchorData = {
     type: 'CCDVAA';
     version: number;
-    hash: Uint8Array;
-    public?: string;
+    hash: Uint8Array; // TODO: possibly add a specialized type for sha256 hashes
+    public?: Record<string, any>;
 };
 
-export function createAnchor(value: VerificationAuditRecord, publicInfo?: string): Uint8Array {
+export function createAnchor(value: VerificationAuditRecord, publicInfo?: Record<string, any>): Uint8Array {
     const data: AnchorData = {
         type: 'CCDVAA',
         version: 1,
@@ -58,6 +59,6 @@ export function decodeAnchor(cbor: Uint8Array): AnchorData {
     if (!('hash' in value) || !(value.hash instanceof Uint8Array))
         throw new Error('Expected "hash" to be a Uint8Array');
     // optional fields
-    if ('public' in value && typeof value.public !== 'string') throw new Error('Expected "public" to be a string');
+    if ('public' in value && typeof value.public !== 'object') throw new Error('Expected "public" to be an object');
     return value as AnchorData;
 }

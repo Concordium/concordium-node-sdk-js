@@ -7,8 +7,10 @@ This document describes how to create v1 verifiable presentations and how to ver
 - [Build Statement](#build-statement)
   - [Identity/account credential statements](#identityaccount-credential-statements)
   - [Web3 ID credential statements](#web3-id-credential-statements)
+- [JSON representation](#json-representation)
 - [Verifiable Presentation Request (proof request)](#verifiable-presentation-request-proof-request)
 - [Verifiable Presentation (proof)](#verifiable-presentation-proof)
+- [Verifiable Audit Record](#verifiable-audit-record)
 <!--toc:end-->
 
 ## Build Statement
@@ -159,6 +161,22 @@ Example: add the statement that the prover's position in a company is _not_ "man
     build.addNonMembership('position', ['manager']);
 ```
 
+## JSON representation
+
+The `VerifiablePresentationRequestV1`, `VerifiablePresentationV1`, and `VerifiableAuditRecord` can be represented as
+JSON by calling the associated `.toJSON` method (will also be called implicitly with `JSON.stringify`). Correspondingly,
+parsing the JSON values can be done with the `.fromJSON` function exposed for each type.
+
+> bigints are used internally in the types described above and need to be handled with something like `json-bigint`
+
+Example: service serializes presentation request in response to frontend; frontend deserializes and parses the JSON.
+
+```ts
+const json = JSON.stringify(presentationRequest); // service sends back presentation request to frontend
+...
+const presentationRequest = VerifiablePresentationRequestV1.fromJSON(JSON.parse(json)); // frontend parses the JSON.
+```
+
 ## Verifiable Presentation Request (proof request)
 
 To get a _verifiable presentation_ of one or more _verifiable credentials_ owned by a user, the entity requesting
@@ -244,4 +262,19 @@ const presentation = await VerifiablePresentationV1.createFromAnchor(
 
 // verify the presentation elsewhere
 const result = VerifiablePresentationV1.verifyWithNode(presentation, presentationRequest, grpcClient, network);
+```
+
+## Verifiable Audit Record
+
+Services can opt in to create a _verifiable audit record_ from the _verifiable presentation request_ and corresponding
+_verifiable presentation_. This exists in a private and public pair. The private should be stored by the application,
+and the public should be registered on chain.
+
+```ts
+const uuid: string = ...;
+const private = PrivateVerificationAuditRecord.create(uuid, presentationRequest, presentation);
+const {
+    publicRecord,
+    transactionHash
+} = await PrivateVerificationAuditRecord.registerPublicRecord(private, grpcClient, sender, signer);
 ```

@@ -1,5 +1,5 @@
 import { HexString } from '../../types.js';
-import { BlockHash, TransactionHash } from '../../types/index.js';
+import { BlockHash } from '../../types/index.js';
 
 export type CredentialContextLabel =
     | 'ContextString'
@@ -17,9 +17,9 @@ type GivenContextGen<L extends string, C> = {
 type GivenContextContextString = GivenContextGen<'ContextString', string>;
 type GivenContextResourceID = GivenContextGen<'ResourceID', string>;
 type GivenContextBlockHash = GivenContextGen<'BlockHash', BlockHash.Type>;
-type GivenContextPaymentHash = GivenContextGen<'PaymentHash', TransactionHash.Type>;
+type GivenContextPaymentHash = GivenContextGen<'PaymentHash', Uint8Array>; // TODO: what's this hash?
 type GivenContextConnectionID = GivenContextGen<'ConnectionID', string>;
-type GivenContextNonce = GivenContextGen<'Nonce', Uint8Array>;
+type GivenContextNonce = GivenContextGen<'Nonce', Uint8Array>; // TODO: we should probably enforce some specific length here, e.g. sha256.
 
 export type GivenContext =
     | GivenContextContextString

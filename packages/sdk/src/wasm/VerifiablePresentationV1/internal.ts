@@ -11,8 +11,8 @@ export type GivenContextJSON = {
 export function givenContextToJSON(context: GivenContext): GivenContextJSON {
     switch (context.label) {
         case 'Nonce':
-            return { ...context, context: new Buffer(context.context as Uint8Array).toString('hex') };
         case 'PaymentHash':
+            return { ...context, context: new Buffer(context.context as Uint8Array).toString('hex') };
         case 'BlockHash':
             return { ...context, context: context.context.toJSON() };
         case 'ConnectionID':
@@ -26,9 +26,8 @@ export function givenContextToJSON(context: GivenContext): GivenContextJSON {
 export function givenContextFromJSON(context: GivenContextJSON): GivenContext {
     switch (context.label) {
         case 'Nonce':
-            return { label: 'Nonce', context: new Uint8Array(Buffer.from(context.context, 'hex')) };
         case 'PaymentHash':
-            return { label: 'PaymentHash', context: TransactionHash.fromJSON(context.context) };
+            return { label: 'Nonce', context: new Uint8Array(Buffer.from(context.context, 'hex')) };
         case 'BlockHash':
             return { label: 'BlockHash', context: BlockHash.fromJSON(context.context) };
         case 'ConnectionID':

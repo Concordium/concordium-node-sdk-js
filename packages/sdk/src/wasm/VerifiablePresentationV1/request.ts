@@ -48,13 +48,13 @@ export type AnchorData = {
     type: 'CCDVRA';
     version: number;
     hash: Uint8Array;
-    public?: string;
+    public?: Record<string, any>;
 };
 
 export function createAnchor(
     context: Context,
     credentialStatements: CredentialStatement[],
-    publicInfo?: string
+    publicInfo?: Record<string, any>
 ): Uint8Array {
     const hash = computeAnchorHash(context, credentialStatements);
     const data: AnchorData = { type: 'CCDVRA', version: 1, hash, public: publicInfo };
@@ -63,7 +63,7 @@ export function createAnchor(
 
 export function computeAnchorHash(context: Context, credentialStatements: CredentialStatement[]): Uint8Array {
     // TODO: this is a quick and dirty anchor implementation that needs to be replaced with
-    // the one from concordium-base when available.
+    // proper serialization, which is TBD.
     const contextDigest = Buffer.from(JSON.stringify(context));
     const statementsDigest = Buffer.from(JSONBig.stringify(credentialStatements));
     return Uint8Array.from(sha256([contextDigest, statementsDigest]));
@@ -79,7 +79,7 @@ export function decodeAnchor(cbor: Uint8Array): AnchorData {
     if (!('hash' in value) || !(value.hash instanceof Uint8Array))
         throw new Error('Expected "hash" to be a Uint8Array');
     // optional fields
-    if ('public' in value && typeof value.public !== 'string') throw new Error('Expected "public" to be a string');
+    if ('public' in value && typeof value.public !== 'object') throw new Error('Expected "public" to be an object');
     return value as AnchorData;
 }
 
@@ -147,7 +147,7 @@ export async function createAndAchor(
     signer: AccountSigner,
     context: Omit<Context, 'type'>,
     credentialStatements: CredentialStatement[],
-    anchorPublicInfo?: string
+    anchorPublicInfo?: Record<string, any>
 ): Promise<VerifiablePresentationRequestV1> {
     const requestContext = createContext(context);
     const anchor = createAnchor(requestContext, credentialStatements, anchorPublicInfo);

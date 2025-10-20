@@ -44,7 +44,8 @@ export type Web3IssuerCommitmentInput = {
 };
 
 /**
- * Can be computed with a seed phrase through the use of {@linkcode createIdentityCommitmentInputWithHdWallet}
+ * Can be computed with a seed phrase through the use of {@linkcode createIdentityCommitmentInputWithHdWallet}.
+ * The seed phrase must be the once used during the identity issuance process with the identity provider.
  */
 export type IdObjectUseData = {
     aci: {
@@ -244,10 +245,14 @@ export function isAccountCredentialStatement(statement: CredentialStatement): st
     return statement.idQualifier.type === 'cred';
 }
 
-export function isVerifiableCredentialStatement(
-    statement: CredentialStatement
-): statement is Web3IdCredentialStatement {
+export function isWeb3IdCredentialStatement(statement: CredentialStatement): statement is Web3IdCredentialStatement {
     return statement.idQualifier.type === 'sci';
+}
+
+export function isIdentityCredentialStatement(
+    statement: CredentialStatement
+): statement is IdentityCredentialStatement {
+    return statement.idQualifier.type === 'id';
 }
 
 export type AccountCredentialStatement = {
@@ -296,13 +301,13 @@ export function isSpecifiedAccountCredentialStatement(
 
 export function isSpecifiedWeb3IdCredentialStatement(
     statement: SpecifiedCredentialStatement
-): statement is SpecifiedAccountCredentialStatement {
+): statement is SpecifiedWeb3IdCredentialStatement {
     return statement.id.includes(':sci:');
 }
 
 export function isSpecifiedIdentityCredentialStatement(
     statement: SpecifiedCredentialStatement
-): statement is SpecifiedAccountCredentialStatement {
+): statement is SpecifiedIdentityCredentialStatement {
     return statement.id.includes(':id:'); // TODO: figure out if this matches the identifier.
 }
 

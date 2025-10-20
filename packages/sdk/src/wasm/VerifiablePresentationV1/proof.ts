@@ -7,7 +7,6 @@ import {
     AttributeKey,
     ConcordiumGRPCClient,
     CryptographicParameters,
-    DataBlob,
     HexString,
     Network,
     TransactionKindString,
@@ -177,7 +176,7 @@ export async function createFromAnchor(
     const globalContext = await grpc.getCryptographicParameters();
     const transaction = await grpc.getBlockItemStatus(presentationRequest.transactionRef);
     if (transaction.status !== TransactionStatusEnum.Finalized) {
-        throw new Error('anchor reference not finalized');
+        throw new Error('presentation request anchor transaction not finalized');
     }
     const { summary, blockHash } = transaction.outcome;
     if (
@@ -185,7 +184,7 @@ export async function createFromAnchor(
         summary.type !== TransactionSummaryType.AccountTransaction ||
         summary.transactionType !== TransactionKindString.RegisterData
     ) {
-        throw new Error('Unexpected transaction type found for anchor reference');
+        throw new Error('Unexpected transaction type found for presentation request anchor transaction');
     }
 
     const expectedAnchor = VerifiablePresentationRequestV1.computeAnchorHash(

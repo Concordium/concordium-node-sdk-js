@@ -8,7 +8,9 @@ import {
     CommitmentInput,
     CredentialsInputs,
     SpecifiedCredentialStatement,
+    isSpecifiedAccountCredentialStatement,
     isSpecifiedIdentityCredentialStatement,
+    isSpecifiedWeb3IdCredentialStatement,
 } from '../web3-id/types.js';
 
 /**
@@ -35,7 +37,12 @@ export type Web3IdProofInput = {
  */
 export function getVerifiablePresentation(input: Web3IdProofInput): VerifiablePresentation {
     // validate that we don't pass any unsupported credentials in
-    if (input.request.credentialStatements.some((statement) => isSpecifiedIdentityCredentialStatement(statement)))
+    if (
+        input.request.credentialStatements.some(
+            (statement) =>
+                !isSpecifiedWeb3IdCredentialStatement(statement) || !isSpecifiedAccountCredentialStatement(statement)
+        )
+    )
         throw new Error('Identity proofs are not supported for this verifiable presentation protocol');
 
     try {

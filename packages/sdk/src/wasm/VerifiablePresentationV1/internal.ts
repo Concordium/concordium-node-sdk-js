@@ -1,6 +1,6 @@
 import { Buffer } from 'buffer/index.js';
 
-import { BlockHash, TransactionHash } from '../../types/index.js';
+import { BlockHash } from '../../types/index.js';
 import { CredentialContextLabel, GivenContext } from './types.js';
 
 export type GivenContextJSON = {

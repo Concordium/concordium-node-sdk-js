@@ -9,7 +9,6 @@ import {
     CredentialsInputs,
     SpecifiedCredentialStatement,
     isSpecifiedAccountCredentialStatement,
-    isSpecifiedIdentityCredentialStatement,
     isSpecifiedWeb3IdCredentialStatement,
 } from '../web3-id/types.js';
 
@@ -40,7 +39,7 @@ export function getVerifiablePresentation(input: Web3IdProofInput): VerifiablePr
     if (
         input.request.credentialStatements.some(
             (statement) =>
-                !isSpecifiedWeb3IdCredentialStatement(statement) || !isSpecifiedAccountCredentialStatement(statement)
+                !isSpecifiedWeb3IdCredentialStatement(statement) && !isSpecifiedAccountCredentialStatement(statement)
         )
     )
         throw new Error('Identity proofs are not supported for this verifiable presentation protocol');

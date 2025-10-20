@@ -166,10 +166,10 @@ the information must first build a _verifiable presentation request_. In the V1 
 sequence:
 
 1. Make the _request context_, consisting of
-  1. a unique 32-byte "nonce"
-  2. a "connection ID" which identifies the connection between prover and requester
-  3. a "context string" which describes the context of the proof request, e.g. which store is being accessed
-  4. a set of requested context values, identified by their labels. For now the defaults here are: the block hash of the
+  a. a unique 32-byte "nonce"
+  b. a "connection ID" which identifies the connection between prover and requester
+  c. a "context string" which describes the context of the proof request, e.g. which store is being accessed
+  d. a set of requested context values, identified by their labels. For now the defaults here are: the block hash of the
      anchor transaction and the resource ID (i.e. an identifier of the requester, e.g. a url of the website)
 2. [Build the statement](#build-statement) to be proven by the user
 
@@ -211,7 +211,7 @@ for each credential statement in the request:
    `CredentialStatement` we built for the `VerfiablePresentationRequest` previously; here we're working with
    a specific credential, e.g. from the users wallet.
 
-When this is done for all credential statements in the request, we construct the _proof context_ corresponding to the 
+When this is done for all credential statements in the request, we construct the _proof context_ corresponding to the
 _request context_ of the request, specifying values for each requested context value in
 `VerifiablePresentationRequestV1.Context.requested`.
 

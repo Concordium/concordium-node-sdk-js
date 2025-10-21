@@ -237,13 +237,22 @@ _request context_ of the request, specifying values for each requested context v
 // specify the resource ID from the connection to the requester of the proof
 // the block hash is automatically derived from the request
 const contextValues: GivenContext[] = [{label: 'ResourceID', context: ...}];
-// The credentials selected to prove the statement, which is will be a combination of the below 
-// (i.e. probably not all at once) and the statements (from the verifiable presentation request) in pairs.
-const statements: SpecifiedCredentialStatement[] = [
-    {id: createIdentityDID(...), statement: ...},
-    {id: createAccountDID(...), statement: ...},
-    {id: createWeb3IdDID(...), statement: ...},
+
+// The application holding the credentials selects the credentials to use and creates a DIDString from them.
+// This will be a combination of the below, i.e. probably not all at once
+const selectedCredentialIds: DIDString[] = [
+    createIdentityDID(...),
+    createAccountDID(...),
+    createWeb3IdDID(...),
 ];
+
+// These are then paired with the statements from the verifiable presentation request to form the statements
+// required for the verifiable presentation input:
+const statements: SpecifiedCredentialStatement[] = selectedCredentialIds.map((id, i) => ({
+    id,
+    statement: presentationRequest.credentialStatements[i].statement
+}));
+
 // the inputs for the credential owned by the user, i.e. credential attribute values. For each
 // `SpecifiedCredentialStatement`, there should be a corresponding input
 const inputs: CommitmentInput[] = [

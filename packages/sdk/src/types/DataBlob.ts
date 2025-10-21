@@ -36,6 +36,10 @@ export class DataBlob {
         return packBufferWithWord16Length(this.data).toString('hex');
     }
 
+    /**
+     * Get a string representation of the data blob in hex format.
+     * @returns {string} The string representation.
+     */
     public toString(): HexString {
         return this.data.toString('hex');
     }

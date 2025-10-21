@@ -679,7 +679,7 @@ export function createIdentityCommitmentInput(
         revealedAttributes: {}, // TODO: this is temporary until we figure out if it's needed or not
     };
     return {
-        type: 'identityCredentials',
+        type: 'identity',
         context: identityProvider,
         idObject,
         idObjectUseData,

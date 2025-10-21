@@ -332,8 +332,8 @@ export function create(
     });
 
     // correspondingly, filter out the the inputs for identity credentials
-    const idInputs = inputs.filter((ci) => ci.type === 'identityCredentials') as IdentityCommitmentInput[];
-    const compatibleInputs = inputs.filter((ci) => ci.type !== 'identityCredentials');
+    const idInputs = inputs.filter((ci) => ci.type === 'identity') as IdentityCommitmentInput[];
+    const compatibleInputs = inputs.filter((ci) => ci.type !== 'identity');
 
     if (idStatements.length !== idInputs.length) throw new Error('Mismatch between provided statements and inputs');
 

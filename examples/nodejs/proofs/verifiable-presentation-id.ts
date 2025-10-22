@@ -31,14 +31,17 @@ const cli = meow(
     $ yarn run-example <path-to-this-file> <list-name> <action> [options]
 
   Required
-    --token-id,     -t  The unique id of the token to transfer
-    --address,      -a  The account address to add to the allow list (in base58 format)
+    --wallet-file,              -w      A path to a wallet export file from a Concordium wallet, used to register anchor and audit report.
+    --seed-phrase-hex,          -p      Hex representation of a seed phrase to use to retrieve identity secrets.
+    --id-object,                -o      A path to a JSON file holding an identity object. Defaults to './proofs/resources/id-object.json'.
+    --identity-provider-index,  -idp    The index of the identity provider used for the id-object. Defaults to 0.
+    --identity-index,           -id     The index of the identity. Defaults to 0.
 
   Options
-    --help,         -h  Displays this message
-    --endpoint,     -e  Specify endpoint of a grpc2 interface of a Concordium node in the format "address:port". Defaults to 'localhost:20000'
-    --secure,       -s  Whether to use tls or not. Defaults to false.
-    --wallet-file,  -w  A path to a wallet export file from a Concordium wallet. This is required for governance operations.
+    --help,                     -h  Displays this message
+    --endpoint,                 -e  Specify endpoint of a grpc2 interface of a Concordium node in the format "address:port". Defaults to 'localhost:20000'
+    --network,                  -n  The network corresponding to the node ('Testnet' or 'Mainnet'). Defaults to 'Testnet'.
+    --secure,                   -s  Whether to use tls or not. Defaults to false.
 `,
     {
         importMeta: import.meta,

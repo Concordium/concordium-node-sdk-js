@@ -45,7 +45,7 @@ describe('VerifiablePresentationRequestV1', () => {
             somePulicInfo: 'public info',
         });
         const expectedAnchor =
-            'a4646861736858206a6f644b6d22e1647196c4fae44ffef5be554dc0edcac30518ef9624ab44de4f647479706566434344565241667075626c6963a16d736f6d6550756c6963496e666f6b7075626c696320696e666f6776657273696f6e01';
+            'a4646861736858203e594af5733889ea6433d851f167f28ac41a12ef5236bd977bdf83815bf0d5d7647479706566434344565241667075626c6963a16d736f6d6550756c6963496e666f6b7075626c696320696e666f6776657273696f6e01';
         expect(Buffer.from(anchor).toString('hex')).toEqual(expectedAnchor);
 
         const roundtrip = VerifiablePresentationRequestV1.decodeAnchor(anchor);

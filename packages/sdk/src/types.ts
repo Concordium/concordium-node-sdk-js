@@ -1521,11 +1521,15 @@ export interface ConfigureDelegationPayload {
 }
 
 /**
- * The payload for a token update transaction. The contents of the byte array is a CBOR encoding of the update type and
+ * The payload for a token update transaction.
+ * Token ID and contents of the "operations" byte array is a CBOR encoding of the update type.
  * (e.g. "mint") and the associated update details.
  *
  * @example
- * const payload = Cbor.encode(['mint', {amount}]); // plt v1 mint payload
+ * const payload = {
+ *     tokenId: TokenId.fromString('PLT'),
+ *     operations: Cbor.encode([{mint: { amount } }]),
+ * };
  */
 export type TokenUpdatePayload = {
     /** The token id identifying the token to perform the list of operations on */

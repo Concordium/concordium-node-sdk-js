@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Changes
+
+  - `VerifiablePresentationV1.verify`, and the corresponding GRPC helper `VerifiablePresentationV1.verifyWithNode` now
+  return a `VerifiablePresentationV1.VerificationResult` instead of `true | Error`.
+
 ## 12.0.0-alpha.0
 
 ### Breaking changes

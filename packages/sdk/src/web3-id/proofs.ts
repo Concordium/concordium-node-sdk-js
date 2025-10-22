@@ -48,16 +48,25 @@ import {
     isTimestampAttribute,
 } from './types.js';
 
+/** Maximum byte length allowed for string attributes. */
 export const MAX_STRING_BYTE_LENGTH = 31;
+/** Minimum date in ISO format supported by the system. */
 export const MIN_DATE_ISO = '-262144-01-01T00:00:00Z';
+/** Maximum date in ISO format supported by the system. */
 export const MAX_DATE_ISO = '+262143-12-31T23:59:59.999999999Z';
+/** Minimum date timestamp value supported by the system. */
 export const MIN_DATE_TIMESTAMP = Date.parse(MIN_DATE_ISO);
+/** Maximum date timestamp value supported by the system. */
 export const MAX_DATE_TIMESTAMP = Date.parse(MAX_DATE_ISO);
 
+/** Valid timestamp range string for error messages. */
 const TIMESTAMP_VALID_VALUES = MIN_DATE_ISO + 'to ' + MAX_DATE_ISO;
+/** Valid string range description for error messages. */
 const STRING_VALID_VALUES = '0 to ' + MAX_STRING_BYTE_LENGTH + ' bytes as UTF-8';
+/** Valid integer range description for error messages. */
 const INTEGER_VALID_VALUES = '0 to ' + MAX_U64;
 
+/** Throws a standardized range error for statement validation. */
 const throwRangeError = (title: string, property: string, end: string, mustBe: string, validRange: string) => {
     throw new Error(
         title +
@@ -71,6 +80,7 @@ const throwRangeError = (title: string, property: string, end: string, mustBe: s
             validRange
     );
 };
+/** Throws a standardized set error for statement validation. */
 const throwSetError = (title: string, property: string, mustBe: string, validRange: string) => {
     throw new Error(
         title +
@@ -83,34 +93,42 @@ const throwSetError = (title: string, property: string, mustBe: string, validRan
     );
 };
 
+/** Checks if a credential schema property represents a timestamp attribute. */
 function isTimestampAttributeSchemaProperty(properties?: CredentialSchemaProperty) {
     return properties && properties.type === 'object' && properties.properties.type.const === 'date-time';
 }
 
+/** Validates that a string attribute value is within allowed byte length. */
 function isValidStringAttribute(attributeValue: string): boolean {
     return Buffer.from(attributeValue, 'utf-8').length <= MAX_STRING_BYTE_LENGTH;
 }
 
+/** Validates that an integer attribute value is within allowed range. */
 function isValidIntegerAttribute(attributeValue: bigint) {
     return attributeValue >= 0 && attributeValue <= MAX_U64;
 }
 
+/** Validates that a timestamp attribute value is within allowed date range. */
 function isValidTimestampAttribute(attributeValue: Date) {
     return attributeValue.getTime() >= MIN_DATE_TIMESTAMP && attributeValue.getTime() <= MAX_DATE_TIMESTAMP;
 }
 
+/** Validates a timestamp attribute type and value. */
 function validateTimestampAttribute(value: AttributeType) {
     return isTimestampAttribute(value) && isValidTimestampAttribute(timestampToDate(value));
 }
 
+/** Validates a string attribute type and value. */
 function validateStringAttribute(value: AttributeType) {
     return typeof value === 'string' && isValidStringAttribute(value);
 }
 
+/** Validates an integer attribute type and value. */
 function validateIntegerAttribute(value: AttributeType) {
     return typeof value === 'bigint' && isValidIntegerAttribute(value);
 }
 
+/** Verifies that a range statement is valid according to schema constraints. */
 function verifyRangeStatement<AttributeKey>(
     statement: RangeStatementV2<AttributeKey>,
     properties?: CredentialSchemaProperty
@@ -160,6 +178,7 @@ function verifyRangeStatement<AttributeKey>(
     }
 }
 
+/** Verifies that a set statement (membership or non-membership) is valid according to schema constraints. */
 function verifySetStatement<AttributeKey>(
     statement: MembershipStatementV2<AttributeKey> | NonMembershipStatementV2<AttributeKey>,
     statementTypeName: string,
@@ -194,6 +213,7 @@ function verifySetStatement<AttributeKey>(
     }
 }
 
+/** Verifies that an atomic statement is valid according to schema constraints. */
 function verifyAtomicStatement<AttributeKey>(
     statement: AtomicStatementV2<AttributeKey>,
     schema?: CredentialSchemaSubject
@@ -258,6 +278,7 @@ export function verifyAtomicStatements(statements: AtomicStatementV2[], schema?:
     return true;
 }
 
+/** Creates a Web3 ID credential qualifier with valid contract addresses. */
 function getWeb3IdCredentialQualifier(validContractAddresses: ContractAddress.Type[]): Web3IdCredentialQualifier {
     return {
         type: 'sci',
@@ -265,6 +286,7 @@ function getWeb3IdCredentialQualifier(validContractAddresses: ContractAddress.Ty
     };
 }
 
+/** Creates an account credential qualifier with valid identity providers. */
 function getAccountCredentialQualifier(validIdentityProviders: number[]): AccountCredentialQualifier {
     return {
         type: 'cred',
@@ -272,6 +294,7 @@ function getAccountCredentialQualifier(validIdentityProviders: number[]): Accoun
     };
 }
 
+/** Creates an identity credential qualifier with valid identity providers. */
 function getIdentityCredentialQualifier(validIdentityProviders: number[]): IdentityCredentialQualifier {
     return {
         type: 'id',
@@ -280,9 +303,15 @@ function getIdentityCredentialQualifier(validIdentityProviders: number[]): Ident
 }
 
 export class AtomicStatementBuilder<AttributeKey> implements InternalBuilder<AttributeKey> {
+    /** Array of atomic statements being built. */
     statements: AtomicStatementV2<AttributeKey>[];
+    /** Optional schema for validating statements against credential schema. */
     schema: CredentialSchemaSubject | undefined;
 
+    /**
+     * Creates a new AtomicStatementBuilder.
+     * @param schema Optional credential schema for validation
+     */
     constructor(schema?: CredentialSchemaSubject) {
         this.statements = [];
         this.schema = schema;
@@ -298,6 +327,7 @@ export class AtomicStatementBuilder<AttributeKey> implements InternalBuilder<Att
     /**
      * This checks whether the given statement may be added to the statement being built.
      * If the statement breaks any rules, this will throw an error.
+     * @param statement The atomic statement to validate
      */
     private check(statement: AtomicStatementV2<AttributeKey>) {
         if (this.schema) {
@@ -434,10 +464,22 @@ export class IdentityStatementBuilder extends AtomicStatementBuilder<AttributeKe
     }
 }
 
+/** Internal type alias for statement builders. */
 type InternalBuilder<AttributeKey> = StatementBuilder<AttributeKey, StatementAttributeType>;
+/** Builder class for constructing credential statements with different credential types. */
 export class CredentialStatementBuilder {
+    /** Array of credential statements being built. */
     private statements: CredentialStatements = [];
 
+    /**
+     * Add statements for Web3 ID credentials.
+     *
+     * @param validContractAddresses Array of contract addresses that are valid issuers
+     * @param builderCallback Callback function to build the statements using the provided builder
+     * @param schema Optional credential schema for validation
+     *
+     * @returns The updated builder instance
+     */
     forWeb3IdCredentials(
         validContractAddresses: ContractAddress.Type[],
         builderCallback: (builder: InternalBuilder<string>) => void,
@@ -452,6 +494,14 @@ export class CredentialStatementBuilder {
         return this;
     }
 
+    /**
+     * Add statements for account credentials.
+     *
+     * @param validIdentityProviders Array of identity provider indices that are valid issuers
+     * @param builderCallback Callback function to build the statements using the provided identity builder
+     *
+     * @returns The updated builder instance
+     */
     forAccountCredentials(
         validIdentityProviders: number[],
         builderCallback: (builder: IdentityStatementBuilder) => void
@@ -466,6 +516,14 @@ export class CredentialStatementBuilder {
         return this;
     }
 
+    /**
+     * Add statements for identity credentials.
+     *
+     * @param validIdentityProviders Array of identity provider indices that are valid issuers
+     * @param builderCallback Callback function to build the statements using the provided identity builder
+     *
+     * @returns The updated builder instance
+     */
     forIdentityCredentials(
         validIdentityProviders: number[],
         builderCallback: (builder: IdentityStatementBuilder) => void
@@ -480,6 +538,10 @@ export class CredentialStatementBuilder {
         return this;
     }
 
+    /**
+     * Get the built credential statements.
+     * @returns Array of credential statements
+     */
     getStatements(): CredentialStatements {
         return this.statements;
     }
@@ -508,6 +570,9 @@ export function createAccountDID(network: Network, credId: string): string {
     return 'did:ccd:' + network.toLowerCase() + ':cred:' + credId;
 }
 
+/**
+ * Create a DID string for an identity credential. Used to build a request for a verifiable credential.
+ */
 export function createIdentityDID(network: Network, identityProviderIndex: number, identityIndex: number): DIDString {
     return 'did:ccd:' + network.toLowerCase() + ':id:' + identityProviderIndex + ':' + identityIndex;
 }
@@ -614,7 +679,7 @@ export function createIdentityCommitmentInput(
         revealedAttributes: {}, // TODO: this is temporary until we figure out if it's needed or not
     };
     return {
-        type: 'identityCredentials',
+        type: 'identity',
         context: identityProvider,
         idObject,
         idObjectUseData,

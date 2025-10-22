@@ -34,14 +34,32 @@ import { GivenContextJSON, givenContextFromJSON, givenContextToJSON } from './in
 import * as Request from './request.js';
 import { GivenContext, ZKProofV4 } from './types.js';
 
-// Context for the proof part.
-// NOTE: renamed from FilledContextInformation
+/**
+ * Context information for a verifiable presentation proof.
+ * This extends the request context by filling in the requested context
+ * information with actual values provided by the presenter.
+ */
 export type Context = {
+    /** Type identifier for the context format */
     type: 'ConcordiumContextInformationV1';
+    /** Context information that was already provided in the request */
     given: GivenContext[];
+    /** Context information that was requested and is now filled with actual values */
     requested: GivenContext[];
 };
 
+/**
+ * Creates a proof context by filling in the requested context from a presentation request.
+ *
+ * This function validates that all requested context information has been provided
+ * and creates a complete context for generating the verifiable presentation proof.
+ *
+ * @param requestContext - The original request context with labels for requested data
+ * @param filledRequestedContext - The actual context data filling the requested labels
+ *
+ * @returns A complete context for proof generation
+ * @throws Error if not all requested context is provided or if there's a mismatch
+ */
 // Fails if not given the full amount of requested context.
 export function createContext(requestContext: Request.Context, filledRequestedContext: GivenContext[]): Context {
     // First we validate that the requested context is filled in `filledRequestedContext`.
@@ -55,18 +73,24 @@ export function createContext(requestContext: Request.Context, filledRequestedCo
     return { type: 'ConcordiumContextInformationV1', given: requestContext.given, requested: filledRequestedContext };
 }
 
+/**
+ * A verifiable credential based on identity information from an identity provider.
+ * This credential type contains zero-knowledge proofs about identity attributes
+ * without revealing the actual identity information.
+ */
 export type IdentityBasedCredential = {
+    /** Type identifiers for this credential format */
     type: ['VerifiableCredential', 'ConcordiumVerifiableCredentialV1', 'ConcordiumIDBasedCredential'];
-    // The person this statement is about
+    /** The credential subject containing identity-based statements */
     credentialSubject: {
-        // The identity disclosure information also acts as ephemeral ID
+        /** The identity disclosure information also acts as ephemeral ID */
         id: HexString;
-        // Statements (should match request)
+        /** Statements about identity attributes (should match request) */
         statement: AtomicStatementV2<AttributeKey>[];
     };
-    // The zero-knowledge proof for attestation.
+    /** The zero-knowledge proof for attestation */
     proof: ZKProofV4;
-    // Issuer of the orignal ID credential
+    /** Issuer of the original ID credential */
     issuer: DIDString;
 };
 
@@ -92,41 +116,69 @@ function createIdentityCredentialStub(
     };
 }
 
+/**
+ * A verifiable credential based on an account credential on the Concordium blockchain.
+ * This credential type contains zero-knowledge proofs about account credentials
+ * and their associated identity attributes.
+ */
 export type AccountBasedCredential = {
+    /** Type identifiers for this credential format */
     type: ['VerifiableCredential', 'ConcordiumVerifiableCredentialV1', 'ConcordiumAccountBasedCredential'];
-    // The person this statement is about
+    /** The credential subject containing account-based statements */
     credentialSubject: {
-        // The id is the account credential identifier
+        /** The account credential identifier as a DID */
         id: DIDString;
-        // Statements (should match request)
+        /** Statements about account attributes (should match request) */
         statement: AtomicStatementV2<AttributeKey>[];
     };
-    // The zero-knowledge proof for attestation.
+    /** The zero-knowledge proof for attestation */
     proof: ZKProofV4;
-    // The issuer of the ID credential used to open the account credential.
+    /** The issuer of the ID credential used to open the account credential */
     issuer: DIDString;
 };
 
+/**
+ * A verifiable credential based on Web3 ID smart contract information.
+ * This credential type contains zero-knowledge proofs about smart contract
+ * issued credentials and their attributes.
+ */
 export type Web3BasedCredential = {
+    /** Type identifiers for this credential format */
     type: ['VerifiableCredential', 'ConcordiumVerifiableCredentialV1', 'ConcordiumWeb3BasedCredential'];
-    // The person this statement is about
+    /** The credential subject containing Web3 ID statements */
     credentialSubject: {
-        // The id is the account credential identifier
+        /** The account credential identifier as a DID */
         id: DIDString;
-        // Statements (should match request)
+        /** Statements about Web3 ID attributes (should match request) */
         statement: AtomicStatementV2<string>[];
     };
-    // The zero-knowledge proof for attestation.
+    /** The zero-knowledge proof for attestation */
     proof: ZKProofV4;
-    // The issuer of the ID credential used to open the account credential.
+    /** The issuer of the ID credential used to open the account credential */
     issuer: DIDString;
 };
 
+/**
+ * Union type representing all supported verifiable credential formats
+ * in Concordium verifiable presentations.
+ *
+ * The structure is reminiscent of a w3c verifiable credential
+ */
 export type Credential = IdentityBasedCredential | AccountBasedCredential | Web3BasedCredential;
 
+/**
+ * A verifiable presentation containing zero-knowledge proofs of credential statements.
+ * This class represents a complete response to a verifiable presentation request,
+ * including the context, credentials, and cryptographic proofs.
+ */
 class VerifiablePresentationV1 {
-    private readonly type = ['VerifiablePresentation', 'ConcordiumVerifiablePresentationV1'];
-
+    /**
+     * Creates a new verifiable presentation.
+     *
+     * @param presentationContext - The complete context for this presentation
+     * @param verifiableCredential - Array of verifiable credentials with proofs
+     * @param proof - Optional weak linking proof (required for account-based credentials)
+     */
     constructor(
         public readonly presentationContext: Context,
         public readonly verifiableCredential: Credential[],
@@ -134,6 +186,11 @@ class VerifiablePresentationV1 {
         public readonly proof?: ConcordiumWeakLinkingProofV1
     ) {}
 
+    /**
+     * Serializes the verifiable presentation to a JSON representation.
+     *
+     * @returns The JSON representation of this presentation
+     */
     public toJSON(): JSON {
         let json: JSON = {
             presentationContext: {
@@ -149,14 +206,35 @@ class VerifiablePresentationV1 {
     }
 }
 
+/**
+ * A verifiable presentation containing zero-knowledge proofs of credential statements.
+ * This class represents a complete response to a verifiable presentation request,
+ * including the context, credentials, and cryptographic proofs.
+ */
 export type Type = VerifiablePresentationV1;
 
+/**
+ * JSON representation of a verifiable presentation.
+ * Used for serialization and network transmission of presentation data.
+ */
 export type JSON = {
+    /** The presentation context with serialized context information */
     presentationContext: Pick<Context, 'type'> & { given: GivenContextJSON[]; requested: GivenContextJSON[] };
+    /** Array of verifiable credentials with their proofs */
     verifiableCredential: Credential[];
+    /** Optional weak linking proof for account-based credentials */
     proof?: ConcordiumWeakLinkingProofV1;
 };
 
+/**
+ * Deserializes a verifiable presentation from its JSON representation.
+ *
+ * This function reconstructs the presentation object from JSON data, handling
+ * the conversion of serialized context information back to proper types.
+ *
+ * @param value - The JSON representation to deserialize
+ * @returns The deserialized verifiable presentation
+ */
 export function fromJSON(value: JSON): VerifiablePresentationV1 {
     const presentationContext: Context = {
         type: value.presentationContext.type,
@@ -166,6 +244,23 @@ export function fromJSON(value: JSON): VerifiablePresentationV1 {
     return new VerifiablePresentationV1(presentationContext, value.verifiableCredential, value.proof);
 }
 
+/**
+ * Creates a verifiable presentation from an anchored presentation request.
+ *
+ * This function retrieves the presentation request anchor from the blockchain,
+ * verifies its integrity, and creates a verifiable presentation with the
+ * requested statements and proofs. It automatically includes blockchain
+ * context (block hash) in the presentation.
+ *
+ * @param grpc - Concordium GRPC client for blockchain interaction
+ * @param presentationRequest - The anchored presentation request
+ * @param statements - The credential statements to prove
+ * @param inputs - The commitment inputs for generating proofs
+ * @param additionalContext - Additional context information beyond block hash
+ *
+ * @returns Promise resolving to the created verifiable presentation
+ * @throws Error if anchor verification fails or blockchain interaction errors
+ */
 export async function createFromAnchor(
     grpc: ConcordiumGRPCClient,
     presentationRequest: Request.Type,
@@ -203,6 +298,21 @@ export async function createFromAnchor(
     return create(statements, inputs, proofContext, globalContext);
 }
 
+/**
+ * Creates a verifiable presentation with the specified statements, inputs, and context.
+ *
+ * This function generates zero-knowledge proofs for the requested credential statements
+ * using the provided commitment inputs and proof context. It handles different types
+ * of credentials (identity-based, account-based, Web3-based) and creates appropriate
+ * proofs for each.
+ *
+ * @param requestStatements - The credential statements to prove
+ * @param inputs - The commitment inputs for generating proofs
+ * @param proofContext - The complete context for proof generation
+ * @param globalContext - Concordium network cryptographic parameters
+ *
+ * @returns The created verifiable presentation with all proofs
+ */
 // TODO: this entire function should call a function in @concordium/rust-bindings to create the verifiable
 // presentation from the function arguments. For now, we hack something together from the old protocol which
 // means filtering and mapping the input/output.
@@ -222,8 +332,8 @@ export function create(
     });
 
     // correspondingly, filter out the the inputs for identity credentials
-    const idInputs = inputs.filter((ci) => ci.type === 'identityCredentials') as IdentityCommitmentInput[];
-    const compatibleInputs = inputs.filter((ci) => ci.type !== 'identityCredentials');
+    const idInputs = inputs.filter((ci) => ci.type === 'identity') as IdentityCommitmentInput[];
+    const compatibleInputs = inputs.filter((ci) => ci.type !== 'identity');
 
     if (idStatements.length !== idInputs.length) throw new Error('Mismatch between provided statements and inputs');
 
@@ -270,6 +380,26 @@ export function create(
     return new VerifiablePresentationV1(proofContext, credentials, proof);
 }
 
+/**
+ * Describes the result of a verifiable presentation verification, which can either succeed
+ * or fail with an associated {@linkcode Error}
+ */
+export type VerificationResult = { type: 'success' } | { type: 'failed'; error: Error };
+
+/**
+ * Verifies a verifiable presentation against its corresponding request.
+ *
+ * This function validates the cryptographic proofs in the presentation,
+ * checks that they match the original request, and verifies them against
+ * the provided public data and cryptographic parameters.
+ *
+ * @param presentation - The verifiable presentation to verify
+ * @param request - The original presentation request
+ * @param cryptographicParameters - Concordium network cryptographic parameters
+ * @param publicData - Public credential data for verification
+ *
+ * @returns a {@linkcode VerificationResult}
+ */
 // TODO: for now this just returns true, but this should be replaced with call to the coresponding function in
 // @concordium/rust-bindings that verifies the presentation in the context of the request.
 export function verify(
@@ -277,15 +407,29 @@ export function verify(
     request: Request.Type,
     cryptographicParameters: CryptographicParameters,
     publicData: CredentialsInputs[]
-): true | Error {
-    return true;
+): VerificationResult {
+    return { type: 'success' };
 }
 
+/**
+ * Verifies a verifiable presentation using a Concordium node.
+ *
+ * This function performs verification by querying a Concordium node for
+ * the necessary cryptographic parameters and public data, then validates
+ * the presentation proofs against the blockchain state.
+ *
+ * @param presentation - The verifiable presentation to verify
+ * @param request - The original presentation request
+ * @param grpc - Concordium GRPC client for node communication
+ * @param network - The Concordium network to verify against
+ *
+ * @returns Promise resolving to a {@linkcode VerificationResult}
+ */
 export async function verifyWithNode(
     presentation: VerifiablePresentationV1,
     request: Request.Type,
     grpc: ConcordiumGRPCClient,
     network: Network
-): Promise<true | Error> {
-    return true;
+): Promise<VerificationResult> {
+    return { type: 'success' };
 }

@@ -4,6 +4,10 @@ import { AtomicProof, GenericAtomicStatement } from '../commonProofTypes.js';
 import { HexString } from '../types.js';
 import { AttributeType, DIDString } from '../web3-id/types.js';
 
+/**
+ * A proof that establishes that the owner of the credential has indeed created
+ * the presentation. At present this is a list of signatures.
+ */
 export type ConcordiumWeakLinkingProofV1 = {
     /** When the statement was created, serialized as an ISO string */
     created: string;
@@ -13,6 +17,9 @@ export type ConcordiumWeakLinkingProofV1 = {
     type: 'ConcordiumWeakLinkingProofV1';
 };
 
+/**
+ * A proof corresponding to a {@linkcode GenericAtomicStatement}
+ */
 export type AtomicProofV2 = AtomicProof<AttributeType>;
 
 type ZKProofV3Base = {
@@ -24,6 +31,9 @@ type ZKProofV3Base = {
     type: 'ConcordiumZKProofV3';
 };
 
+/**
+ * A zero-knowledge proof for an account credential
+ */
 export type StatementProofAccount = ZKProofV3Base;
 
 /** The signed commitments of a Web3 ID credential proof */
@@ -34,11 +44,17 @@ export type SignedCommitments = {
     commitments: Record<string, HexString>;
 };
 
+/**
+ * A zero-knowledge proof for a Web3 ID credential
+ */
 export type StatementProofWeb3Id = ZKProofV3Base & {
     /** The signed commitments of the proof needed to verify the proof */
     commitments: SignedCommitments;
 };
 
+/**
+ * A zero-knowledge proof for an identity credential
+ */
 export type StatementProofIdentity = ZKProofV3Base & {
     /** Commitments to attribute values and their proofs */
     // TODO: need to model this after
@@ -46,6 +62,9 @@ export type StatementProofIdentity = ZKProofV3Base & {
     identityAttributesInfo: unknown;
 };
 
+/**
+ * Describes a credential subject of verifiable credential
+ */
 export type CredentialSubjectProof<P extends ZKProofV3Base> = {
     /** The credential proof ID */
     id: DIDString;
@@ -56,6 +75,9 @@ export type CredentialSubjectProof<P extends ZKProofV3Base> = {
 };
 
 /**
+ * A proof corresponding to one account credential statement. This contains almost
+ * all the information needed to verify it, except the public commitments.
+ *
  * Matches the serialization of `CredentialProof::Account` from concordium-base
  */
 export type VerifiableCredentialProofAccount = {
@@ -68,6 +90,9 @@ export type VerifiableCredentialProofAccount = {
 };
 
 /**
+ * A proof corresponding to one Web3 ID credential statement. This contains almost
+ * all the information needed to verify it, except the issuer's public key.
+ *
  * Matches the serialization of `CredentialProof::Web3Id` from concordium-base
  */
 export type VerifiableCredentialProofWeb3Id = {
@@ -80,6 +105,12 @@ export type VerifiableCredentialProofWeb3Id = {
 };
 
 // TODO: not implemented in base yet... might need to revise
+/**
+ * A proof corresponding to one identity credential statement. This contains almost
+ * all the information needed to verify it, except TODO: ...
+ *
+ * Matches the serialization of `CredentialProof::Identity`from concordium-base
+ */
 export type VerifiableCredentialProofIdentity = {
     /** The credential proof */
     credentialSubject: CredentialSubjectProof<StatementProofIdentity>;
@@ -90,6 +121,11 @@ export type VerifiableCredentialProofIdentity = {
 };
 
 /**
+ * A proof corresponding to one credential statement. This contains almost
+ * all the information needed to verify it, except the issuer's public key in
+ * case of the `Web3Id` proof, and the public commitments in case of the
+ * `Account` proof.
+ *
  * Matches the serialization of `CredentialProof` enum from concordium-base.
  */
 export type VerifiableCredentialProof =
@@ -127,6 +163,11 @@ export function reviveDateFromTimeStampAttribute(this: any, _key: string, value:
     return value;
 }
 
+/**
+ * A presentation is the response to a corresponding request containing a set of statements about an identity.
+ * It contains proofs for statements, ownership proof for all credentials, and a context. The
+ * only missing part to verify the proof are the public commitments.
+ */
 export class VerifiablePresentation {
     presentationContext: string;
     proof: ConcordiumWeakLinkingProofV1;

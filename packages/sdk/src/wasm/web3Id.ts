@@ -20,11 +20,19 @@ export function verifyWeb3IdCredentialSignature(input: VerifyWeb3IdCredentialSig
     return wasm.verifyWeb3IdCredentialSignature(stringify(input));
 }
 
+/**
+ * Describes a proof request which is at the core of computing the corresponding proof.
+ */
 export type Web3IdProofRequest = {
+    /** The challenge of the proof */
     challenge: string;
+    /** The statements paired with the credential IDs to prove them for */
     credentialStatements: SpecifiedCredentialStatement[];
 };
 
+/**
+ * The input to {@linkcode getVerifiablePresentation}
+ */
 export type Web3IdProofInput = {
     request: Web3IdProofRequest;
     globalContext: CryptographicParameters;

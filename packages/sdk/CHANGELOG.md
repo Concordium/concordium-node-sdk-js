@@ -18,6 +18,7 @@ request
 
 ### Breaking changes
 
+- `AccountStatementBuild` has been renamed to `IdentityStatementBuilder`
 - `Web3StatementBuilder` has been renamed to `CredentialStatementBuilder` with the following method renames
   - `addForWeb3IdCredentials` -> `forWeb3IdCredentials`, used for statements for web3 ID credentials
   - `addForIdentityCredentials` -> `forAccountCredentials`, used for statements for the identity credentials tied to an account

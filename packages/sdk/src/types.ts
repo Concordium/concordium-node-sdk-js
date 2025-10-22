@@ -1522,7 +1522,7 @@ export interface ConfigureDelegationPayload {
 
 /**
  * The payload for a token update transaction.
- * Token ID and contents of the "operations" byte array is a CBOR encoding of the update type and
+ * Token ID and contents of the "operations" byte array is a CBOR encoding of the update type.
  * (e.g. "mint") and the associated update details.
  *
  * @example

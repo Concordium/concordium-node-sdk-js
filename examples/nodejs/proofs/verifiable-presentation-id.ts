@@ -15,12 +15,15 @@ import {
     streamToList,
 } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient, credentials } from '@concordium/web-sdk/nodejs';
+import _JB from 'json-bigint';
 import meow from 'meow';
 import { randomUUID } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
 import { parseEndpoint, parseKeysFile, validateNetwork } from '../shared/util.js';
+
+const JSONBig = _JB({ alwaysParseAsBig: true, useNativeBigInt: true });
 
 const cli = meow(
     `
@@ -114,7 +117,9 @@ const grpc = new ConcordiumGRPCNodeClient(
 
 const [sender, signer] = parseKeysFile(walletFile);
 
-// First we generate the presentation request
+// First we generate the presentation request.
+//
+// This will normally happen server-side.
 const context = VerifiablePresentationRequestV1.createSimpleContext(
     sha256([Buffer.from(Date.now().toString())]),
     randomUUID(),
@@ -135,7 +140,10 @@ const presentationRequest = await VerifiablePresentationRequestV1.createAndAchor
     { info: 'Example VP anchor' }
 );
 
-console.log('PRESENTATION REQUEST: \n', JSON.stringify(presentationRequest, null, 2), '\n');
+console.log('PRESENTATION REQUEST: \n', JSONBig.stringify(presentationRequest, null, 2), '\n');
+
+// simulate sending a response to the client requesting the presentation request
+const requestJson = JSONBig.stringify(presentationRequest);
 
 // Then we create the presentation.
 //
@@ -171,22 +179,31 @@ const specifiedStatement: SpecifiedIdentityCredentialStatement = {
     statement: idStatement.statement,
 };
 
-console.log('Waiting for anchor transaction to finalize:', presentationRequest.transactionRef.toString());
+// simulate receiving presentation request
+const requestParsed = VerifiablePresentationRequestV1.fromJSON(JSONBig.parse(requestJson));
+
+console.log('Waiting for anchor transaction to finalize:', requestParsed.transactionRef.toString());
 
 // wait for the anchor transaction to finalize
-await grpc.waitForTransactionFinalization(presentationRequest.transactionRef);
+await grpc.waitForTransactionFinalization(requestParsed.transactionRef);
 
 const presentation = await VerifiablePresentationV1.createFromAnchor(
     grpc,
-    presentationRequest,
+    requestParsed,
     [specifiedStatement],
     [credentialInput],
     [{ label: 'ResourceID', context: 'Example VP use-case' }]
 );
 
-console.log('PRESENTATION:\n', JSON.stringify(presentation, null, 2), '\n');
+// simulate sending a response from the application to the client requesting the presentation
+const presentationJson = JSONBig.stringify(presentation);
 
-if (!(await VerifiablePresentationV1.verifyWithNode(presentation, presentationRequest, grpc, network)))
+console.log('PRESENTATION:\n', JSONBig.stringify(presentation, null, 2), '\n');
+
+// simulate receiving presentation to be verified
+const presentationParsed = VerifiablePresentationV1.fromJSON(JSONBig.parse(presentationJson));
+
+if (!(await VerifiablePresentationV1.verifyWithNode(presentationParsed, presentationRequest, grpc, network)))
     throw new Error('Failed to verify the presentation');
 
 // Finally, the entity requesting the proof stores the audit report and registers a pulic version on chain

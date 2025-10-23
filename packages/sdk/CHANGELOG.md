@@ -2,15 +2,23 @@
 
 ## Unreleased
 
+## 12.0.0-alpha.1
+
+### Fixes
+
+- An issue where anchor computation would sometimes be different when serializing and deserializing a presentation
+request
+
 ### Changes
 
-  - `VerifiablePresentationV1.verify`, and the corresponding GRPC helper `VerifiablePresentationV1.verifyWithNode` now
+- `VerifiablePresentationV1.verify`, and the corresponding GRPC helper `VerifiablePresentationV1.verifyWithNode` now
   return a `VerifiablePresentationV1.VerificationResult` instead of `true | Error`.
 
 ## 12.0.0-alpha.0
 
 ### Breaking changes
 
+- `AccountStatementBuild` has been renamed to `IdentityStatementBuilder`
 - `Web3StatementBuilder` has been renamed to `CredentialStatementBuilder` with the following method renames
   - `addForWeb3IdCredentials` -> `forWeb3IdCredentials`, used for statements for web3 ID credentials
   - `addForIdentityCredentials` -> `forAccountCredentials`, used for statements for the identity credentials tied to an account

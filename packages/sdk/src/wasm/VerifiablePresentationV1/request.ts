@@ -1,6 +1,3 @@
-import { Buffer } from 'buffer/index.js';
-import _JB from 'json-bigint';
-
 import { sha256 } from '../../hash.js';
 import {
     AccountAddress,
@@ -19,8 +16,6 @@ import { ContractAddress, DataBlob, TransactionExpiry, TransactionHash } from '.
 import { CredentialStatement, StatementProverQualifier } from '../../web3-id/types.js';
 import { GivenContextJSON, givenContextFromJSON, givenContextToJSON } from './internal.js';
 import { CredentialContextLabel, GivenContext } from './types.js';
-
-const JSONBig = _JB({ useNativeBigInt: true, alwaysParseAsBig: true });
 
 /**
  * Context information for a verifiable presentation request.
@@ -125,8 +120,19 @@ export function createAnchor(
 export function computeAnchorHash(context: Context, credentialStatements: CredentialStatement[]): Uint8Array {
     // TODO: this is a quick and dirty anchor implementation that needs to be replaced with
     // proper serialization, which is TBD.
-    const contextDigest = Buffer.from(JSON.stringify(context));
-    const statementsDigest = Buffer.from(JSONBig.stringify(credentialStatements));
+    const sanitizedContext: Context = {
+        ...context,
+        given: context.given.map(
+            (c) =>
+                ({
+                    ...c,
+                    // convert any potential `Buffer` instances to raw Uint8Array to avoid discrepancies when decoding
+                    context: c.context instanceof Uint8Array ? Uint8Array.from(c.context) : c.context,
+                }) as GivenContext
+        ),
+    };
+    const contextDigest = cborEncode(sanitizedContext);
+    const statementsDigest = cborEncode(credentialStatements);
     return Uint8Array.from(sha256([contextDigest, statementsDigest]));
 }
 

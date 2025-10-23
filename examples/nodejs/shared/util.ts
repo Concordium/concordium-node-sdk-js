@@ -2,6 +2,7 @@ import {
     AccountAddress,
     AccountSigner,
     ContractAddress,
+    Network,
     buildAccountSigner,
     parseSimpleWallet,
     parseWallet,
@@ -62,4 +63,8 @@ export const parseKeysFile = (path: string): [AccountAddress.Type, AccountSigner
     }
 
     return [sender, signer];
+};
+
+export const validateNetwork = (value: string): value is Network => {
+    return ['Testnet', 'Mainnet'].includes(value);
 };

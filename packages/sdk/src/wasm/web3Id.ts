@@ -4,7 +4,13 @@ import { stringify } from 'json-bigint';
 import { CryptographicParameters } from '../types.js';
 import { VerifiablePresentation } from '../types/VerifiablePresentation.js';
 import { VerifyWeb3IdCredentialSignatureInput } from '../web3-id/helpers.js';
-import { CredentialsInputs, Web3IdProofInput, Web3IdProofRequest } from '../web3-id/types.js';
+import {
+    CommitmentInput,
+    CredentialsInputs,
+    SpecifiedCredentialStatement,
+    isSpecifiedAccountCredentialStatement,
+    isSpecifiedWeb3IdCredentialStatement,
+} from '../web3-id/types.js';
 
 /**
  * Verifies that the given signature is correct for the given values/randomness/holder/issuerPublicKey/issuerContract
@@ -15,9 +21,37 @@ export function verifyWeb3IdCredentialSignature(input: VerifyWeb3IdCredentialSig
 }
 
 /**
+ * Describes a proof request which is at the core of computing the corresponding proof.
+ */
+export type Web3IdProofRequest = {
+    /** The challenge of the proof */
+    challenge: string;
+    /** The statements paired with the credential IDs to prove them for */
+    credentialStatements: SpecifiedCredentialStatement[];
+};
+
+/**
+ * The input to {@linkcode getVerifiablePresentation}
+ */
+export type Web3IdProofInput = {
+    request: Web3IdProofRequest;
+    globalContext: CryptographicParameters;
+    commitmentInputs: CommitmentInput[];
+};
+
+/**
  * Given a statement about an identity and the inputs necessary to prove the statement, produces a proof that the associated identity fulfills the statement.
  */
 export function getVerifiablePresentation(input: Web3IdProofInput): VerifiablePresentation {
+    // validate that we don't pass any unsupported credentials in
+    if (
+        input.request.credentialStatements.some(
+            (statement) =>
+                !isSpecifiedWeb3IdCredentialStatement(statement) && !isSpecifiedAccountCredentialStatement(statement)
+        )
+    )
+        throw new Error('Identity proofs are not supported for this verifiable presentation protocol');
+
     try {
         const s: VerifiablePresentation = VerifiablePresentation.fromString(
             // Use json-bigint stringify to ensure we can handle bigints

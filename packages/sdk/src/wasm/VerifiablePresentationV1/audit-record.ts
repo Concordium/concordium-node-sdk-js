@@ -124,7 +124,7 @@ export type AnchorData = {
 };
 
 /**
- * Converts a verification audit record to an audit anchor.
+ * Converts a verification audit record to its corresopnding anchor representation encoding.
  *
  * This function creates a privacy-preserving public record that contains only
  * a hash of the record data, suitable for publishing on-chain while
@@ -183,7 +183,7 @@ export function decodeAnchor(cbor: Uint8Array): AnchorData {
  * @returns Promise resolving to the transaction hash
  * @throws Error if the transaction fails or network issues occur
  */
-export async function registerPublicRecord(
+export async function registerAnchor(
     record: VerificationAuditRecord,
     grpc: ConcordiumGRPCClient,
     sender: AccountAddress.Type,

@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Breaking changes
+
+- Removed `PrivateVerificationAuditRecord` and `VerificationAuditRecord`. There is now `VerificationAuditRecord`, which
+  contains data to be kept privately and its subtype `VerificationAuditRecord.AnchorData` which is the corresponding
+  anchor registered on chain for audit purposes.
+  - `VerificationAuditRecord.create` is used to create an audit record
+  - `VerificationAuditRecord.registerAnchor` is a grpc helper used to register the anchor representation of the record
+    on chain.
+
 ## 12.0.0-alpha.1
 
 ### Fixes

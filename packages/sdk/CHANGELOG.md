@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 12.0.0-alpha.2
+
 ### Breaking changes
 
 - Removed `PrivateVerificationAuditRecord` and `VerificationAuditRecord`. There is now `VerificationAuditRecord`, which

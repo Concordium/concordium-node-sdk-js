@@ -275,15 +275,12 @@ const result = VerifiablePresentationV1.verifyWithNode(presentation, presentatio
 
 ## Verifiable Audit Record
 
-Services can opt in to create a _verifiable audit record_ from the _verifiable presentation request_ and corresponding
-_verifiable presentation_. This exists in a private and public pair. The private should be stored by the application,
-and the public should be registered on chain.
+Services can opt in to create a _verification audit record_ from the _verifiable presentation request_ and corresponding
+_verifiable presentation_. This exists as a record and a corresponding anchor. The record should be stored by the application,
+and the anchor should be registered on chain.
 
 ```ts
 const uuid: string = ...;
-const private = PrivateVerificationAuditRecord.create(uuid, presentationRequest, presentation);
-const {
-    publicRecord,
-    transactionHash
-} = await PrivateVerificationAuditRecord.registerPublicRecord(private, grpcClient, sender, signer);
+const record = VerificationAuditRecord.create(uuid, presentationRequest, presentation);
+const anchorTransactionHash = await PrivateVerificationAuditRecord.registerAnchor(record, grpcClient, sender, signer);
 ```

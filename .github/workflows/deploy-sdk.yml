@@ -83,7 +83,7 @@ jobs:
         run: yarn build:docs
 
       - name: Store build-release
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: build-release
           path: |
@@ -93,7 +93,7 @@ jobs:
             packages/sdk/README.md
 
       - name: Store typedoc
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: typedoc-build
           path: typedoc

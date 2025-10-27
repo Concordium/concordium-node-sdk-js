@@ -1,7 +1,6 @@
 import _JB from 'json-bigint';
 
 import {
-    PrivateVerificationAuditRecord,
     VerifiablePresentationRequestV1,
     VerifiablePresentationV1,
     VerificationAuditRecord,
@@ -76,42 +75,19 @@ const PRESENTATION = VerifiablePresentationV1.fromJSON({
     proof: { created: '2025-10-17T13:14:14.290Z', proofValue: [], type: 'ConcordiumWeakLinkingProofV1' },
 });
 
-const PRIVATE_RECORD = PrivateVerificationAuditRecord.create('VERY unique ID', PRESENTATION_REQUEST, PRESENTATION);
-const PUBLIC_RECORD = PrivateVerificationAuditRecord.toPublic(PRIVATE_RECORD, 'some public info?');
-
-describe('PrivateVerificationAuditRecord', () => {
-    it('completes JSON roundtrip', () => {
-        const json = JSONBig.stringify(PRIVATE_RECORD);
-        const roundtrip = PrivateVerificationAuditRecord.fromJSON(JSONBig.parse(json));
-        expect(roundtrip).toEqual(PRIVATE_RECORD);
-    });
-
-    it('creates expected public record', () => {
-        const publicAuditRecord = PrivateVerificationAuditRecord.toPublic(PRIVATE_RECORD, 'some public info?');
-        const expected: VerificationAuditRecord.Type = VerificationAuditRecord.fromJSON({
-            hash: 'fcce3a7222e09bc86f0b4e0186501ff360c5a0abce88b8d1df2aaf7aa3ef8d78',
-            info: 'some public info?',
-        });
-        expect(publicAuditRecord).toEqual(expected);
-    });
-});
+const PRIVATE_RECORD = VerificationAuditRecord.create('VERY unique ID', PRESENTATION_REQUEST, PRESENTATION);
 
 describe('VerificationAuditRecord', () => {
     it('completes JSON roundtrip', () => {
-        const json = JSONBig.stringify(PUBLIC_RECORD);
+        const json = JSONBig.stringify(PRIVATE_RECORD);
         const roundtrip = VerificationAuditRecord.fromJSON(JSONBig.parse(json));
-        expect(roundtrip).toEqual(PUBLIC_RECORD);
+        expect(roundtrip).toEqual(PRIVATE_RECORD);
     });
 
-    it('computes the anchor as expected', () => {
-        const anchor = VerificationAuditRecord.createAnchor(PUBLIC_RECORD, { pub: 'anchor info' });
-        const decoded = VerificationAuditRecord.decodeAnchor(anchor);
-        const expected: VerificationAuditRecord.AnchorData = {
-            type: 'CCDVAA',
-            version: 1,
-            hash: PUBLIC_RECORD.hash,
-            public: { pub: 'anchor info' },
-        };
-        expect(decoded).toEqual(expected);
+    it('creates expected anchor', () => {
+        const anchor = VerificationAuditRecord.createAnchor(PRIVATE_RECORD, { info: 'some public info?' });
+        const expected =
+            'a464686173685820df6c87461f549ac8d734c42f65b5355e745aa8444ce83907ba1a3ab9f5a0898f647479706566434344564141667075626c6963a164696e666f71736f6d65207075626c696320696e666f3f6776657273696f6e01';
+        expect(Buffer.from(anchor).toString('hex')).toEqual(expected);
     });
 });

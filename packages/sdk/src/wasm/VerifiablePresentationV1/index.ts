@@ -11,8 +11,7 @@
  * - VerificationAuditRecord: For public audit trails of verification events
  * - PrivateVerificationAuditRecord: For private audit records with full data
  */
-import * as PrivateVerificationAuditRecord from './audit/private.js';
-import * as VerificationAuditRecord from './audit/public.js';
+import * as VerificationAuditRecord from './audit-record.js';
 import * as VerifiablePresentationV1 from './proof.js';
 import * as VerifiablePresentationRequestV1 from './request.js';
 
@@ -21,9 +20,7 @@ export {
     VerifiablePresentationRequestV1,
     /** Namespace for verifiable presentation proof operations */
     VerifiablePresentationV1,
-    /** Namespace for private verification audit record operations */
-    PrivateVerificationAuditRecord,
-    /** Namespace for public verification audit record operations */
+    /** Namespace for verification audit record operations */
     VerificationAuditRecord,
 };
 

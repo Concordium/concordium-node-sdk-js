@@ -106,7 +106,7 @@ jobs:
         run: yarn build-ci
 
       - name: Store build-debug
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: build-debug
           # sdk/src is needed here because of sdk/src/grpc-api

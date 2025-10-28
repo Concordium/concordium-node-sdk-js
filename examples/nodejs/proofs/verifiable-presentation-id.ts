@@ -4,10 +4,10 @@ import {
     CredentialStatementBuilder,
     IdentityObjectV1,
     IdentityProvider,
-    PrivateVerificationAuditRecord,
     SpecifiedIdentityCredentialStatement,
     VerifiablePresentationRequestV1,
     VerifiablePresentationV1,
+    VerificationAuditRecord,
     createIdentityCommitmentInputWithHdWallet,
     createIdentityDID,
     isIdentityCredentialStatement,
@@ -210,16 +210,10 @@ if (!(await VerifiablePresentationV1.verifyWithNode(presentationParsed, presenta
     throw new Error('Failed to verify the presentation');
 
 // Finally, the entity requesting the proof stores the audit report and registers a pulic version on chain
-const report = PrivateVerificationAuditRecord.create(randomUUID(), presentationRequest, presentation);
-const { publicRecord, transactionHash: auditTransaction } = await PrivateVerificationAuditRecord.registerPublicRecord(
-    report,
-    grpc,
-    sender,
-    signer,
-    'Some public info'
-);
-
-console.log('AUDIT REPORT:\n', JSON.stringify(publicRecord, null, 2), '\n');
+const report = VerificationAuditRecord.create(randomUUID(), presentationRequest, presentation);
+const auditTransaction = await VerificationAuditRecord.registerAnchor(report, grpc, sender, signer, {
+    info: 'Some public info',
+});
 
 console.log('Waiting for audit report registration to finalize:', auditTransaction.toString());
 await grpc.waitForTransactionFinalization(auditTransaction);

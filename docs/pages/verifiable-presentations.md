@@ -282,5 +282,5 @@ and the anchor should be registered on chain.
 ```ts
 const uuid: string = ...;
 const record = VerificationAuditRecord.create(uuid, presentationRequest, presentation);
-const anchorTransactionHash = await PrivateVerificationAuditRecord.registerAnchor(record, grpcClient, sender, signer);
+const anchorTransactionHash = await VerificationAuditRecord.registerAnchor(record, grpcClient, sender, signer);
 ```

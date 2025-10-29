@@ -400,7 +400,7 @@ export class IdentityProviderDID {
         if (parts.length !== 4 || parts[0] !== 'ccd' || parts[2] !== 'idp') {
             throw new Error(`Invalid IdentityQualifierDID format: ${did}`);
         }
-        const network = parts[1].toUpperCase() as Network;
+        const network = (parts[1].charAt(0).toUpperCase() + parts[1].slice(1)) as Network;
         const index = parseInt(parts[3], 10);
         if (isNaN(index)) {
             throw new Error(`Invalid index in IdentityProviderDID: ${parts[3]}`);
@@ -423,7 +423,7 @@ export class ContractInstanceDID {
         if (parts.length !== 5 || parts[0] !== 'ccd' || parts[2] !== 'sci') {
             throw new Error(`Invalid ContractInstanceDID format: ${did}`);
         }
-        const network = parts[1].toUpperCase() as Network;
+        const network = (parts[1].charAt(0).toUpperCase() + parts[1].slice(1)) as Network;
         const index = BigInt(parts[3]);
         const subindex = BigInt(parts[4]);
         return new ContractInstanceDID(network, ContractAddress.create(index, subindex));

@@ -94,7 +94,7 @@ describe('VerificationAuditRecord', () => {
     it('creates expected anchor', () => {
         const anchor = VerificationAuditRecordV1.createAnchor(PRIVATE_RECORD, { info: 'some public info?' });
         const expected =
-            'a464686173685820df6c87461f549ac8d734c42f65b5355e745aa8444ce83907ba1a3ab9f5a0898f647479706566434344564141667075626c6963a164696e666f71736f6d65207075626c696320696e666f3f6776657273696f6e01';
+            'a46468617368582011a3c189645df0a5f603436975f0765b319e5f2750c8b0744419319cef5cf665647479706566434344564141667075626c6963a164696e666f71736f6d65207075626c696320696e666f3f6776657273696f6e01';
         expect(Buffer.from(anchor).toString('hex')).toEqual(expected);
     });
 });

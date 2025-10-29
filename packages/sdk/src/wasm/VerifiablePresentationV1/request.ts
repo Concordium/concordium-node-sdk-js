@@ -14,7 +14,15 @@ import {
     signTransaction,
 } from '../../index.js';
 import { DataBlob, TransactionExpiry, TransactionHash } from '../../types/index.js';
-import { AtomicStatementV2, ContractInstanceDID, DIDString, IdentityProviderDID } from '../../web3-id/types.js';
+import { AccountStatementBuild, AtomicStatementBuilder } from '../../web3-id/proofs.js';
+import {
+    AtomicStatementV2,
+    ContractInstanceDID,
+    CredentialSchemaSubject,
+    DIDString,
+    IDENTITY_SUBJECT_SCHEMA,
+    IdentityProviderDID,
+} from '../../web3-id/types.js';
 import { GivenContextJSON, givenContextFromJSON, givenContextToJSON } from './internal.js';
 import { CredentialContextLabel, GivenContext } from './types.js';
 
@@ -196,6 +204,116 @@ export type Statement = IdentityStatement | Web3IdStatement;
 type StatementJSON = (Omit<IdentityStatement, 'issuers'> | Omit<Web3IdStatement, 'issuers'>) & {
     issuers: DIDString[];
 };
+
+class StatementBuilder {
+    /** Array of credential statements being built. */
+    private statements: Statement[] = [];
+
+    /**
+     * Add statements for Web3 ID credentials.
+     *
+     * @param validContracts Array of smart contract identifiers that are valid issuers
+     * @param builderCallback Callback function to build the statements using the provided builder
+     * @param schema Optional credential schema for validation
+     *
+     * @returns The updated builder instance
+     */
+    addWeb3IdStatement(
+        validContracts: ContractInstanceDID[],
+        builderCallback: (builder: AtomicStatementBuilder<string>) => void,
+        schema?: CredentialSchemaSubject
+    ): StatementBuilder {
+        const builder = new AtomicStatementBuilder<string>(schema);
+        builderCallback(builder);
+        this.statements.push({
+            type: 'web3Id',
+            issuers: validContracts,
+            statement: builder.getStatement(),
+        });
+        return this;
+    }
+
+    /**
+     * Add statements for identity credentials.
+     *
+     * @param validIdentityProviders Array of identity provider identifyers that are valid issuers
+     * @param builderCallback Callback function to build the statements using the provided identity builder
+     *
+     * @returns The updated builder instance
+     */
+    addIdentityStatement(
+        validIdentityProviders: IdentityProviderDID[],
+        builderCallback: (builder: AccountStatementBuild) => void
+    ): StatementBuilder {
+        const builder = new AccountStatementBuild(IDENTITY_SUBJECT_SCHEMA);
+        builderCallback(builder);
+        this.statements.push({
+            type: 'identity',
+            source: ['identity'],
+            statement: builder.getStatement(),
+            issuers: validIdentityProviders,
+        });
+        return this;
+    }
+
+    /**
+     * Add statements for account credentials.
+     *
+     * @param validIdentityProviders Array of identity provider identifyers that are valid issuers
+     * @param builderCallback Callback function to build the statements using the provided identity builder
+     *
+     * @returns The updated builder instance
+     */
+    addAccountStatement(
+        validIdentityProviders: IdentityProviderDID[],
+        builderCallback: (builder: AccountStatementBuild) => void
+    ): StatementBuilder {
+        const builder = new AccountStatementBuild(IDENTITY_SUBJECT_SCHEMA);
+        builderCallback(builder);
+        this.statements.push({
+            type: 'identity',
+            source: ['account'],
+            statement: builder.getStatement(),
+            issuers: validIdentityProviders,
+        });
+        return this;
+    }
+
+    /**
+     * Add statements for identity/account credentials. Here the wallet decides which type of proof is generated.
+     *
+     * @param validIdentityProviders Array of identity provider identifyers that are valid issuers
+     * @param builderCallback Callback function to build the statements using the provided identity builder
+     *
+     * @returns The updated builder instance
+     */
+    addAccountOrIdentityStatement(
+        validIdentityProviders: IdentityProviderDID[],
+        builderCallback: (builder: AccountStatementBuild) => void
+    ): StatementBuilder {
+        const builder = new AccountStatementBuild(IDENTITY_SUBJECT_SCHEMA);
+        builderCallback(builder);
+        this.statements.push({
+            type: 'identity',
+            source: ['account', 'identity'],
+            statement: builder.getStatement(),
+            issuers: validIdentityProviders,
+        });
+        return this;
+    }
+
+    /**
+     * Get the built credential statements.
+     * @returns Array of credential statements
+     */
+    getStatements(): Statement[] {
+        return this.statements;
+    }
+}
+
+export function statementBuilder(): StatementBuilder {
+    return new StatementBuilder();
+}
 
 /**
  * A verifiable presentation request that specifies what credentials and proofs

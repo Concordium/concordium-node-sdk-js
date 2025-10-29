@@ -285,7 +285,8 @@ export type RevealStatementV2<AttributeKey = string> = GenericRevealStatement<At
 export type AtomicStatementV2<AttributeKey = string> = GenericAtomicStatement<AttributeKey, AttributeType>;
 
 /** Qualifier for Web3 ID credentials issued by smart contracts. */
-export type Web3IdCredentialQualifier = {
+// TODO: (breaking) rename to Web3IdQualifier.
+export type VerifiableCredentialQualifier = {
     /** Identifies this as a smart contract issuer qualifier. */
     type: 'sci';
     /** Array of valid contract addresses that can issue these credentials. */
@@ -296,27 +297,15 @@ export type Web3IdCredentialQualifier = {
 type IdentityProviderIndex = number;
 
 /** Qualifier for account credentials issued by identity providers. */
-export type AccountCredentialQualifier = {
+export type IdentityQualifier = {
     /** Identifies this as an account credential issuer qualifier. */
     type: 'cred';
     /** Array of valid identity provider indices that can issue these credentials. */
     issuers: IdentityProviderIndex[];
 };
 
-/** Qualifier for identity credentials issued by identity providers. */
-export type IdentityCredentialQualifier = {
-    /** Identifies this as an identity issuer qualifier. */
-    // TODO: align with the corresponding DID defined in concordium-base
-    type: 'id';
-    /** Array of valid identity provider indices that can issue these credentials. */
-    issuers: IdentityProviderIndex[];
-};
-
 /** Union type for all statement prover qualifiers. */
-export type StatementProverQualifier =
-    | Web3IdCredentialQualifier
-    | AccountCredentialQualifier
-    | IdentityCredentialQualifier;
+export type StatementProverQualifier = VerifiableCredentialQualifier | IdentityQualifier;
 
 /**
  * Type predicate to identifying {@linkcode AccountCredentialStatement}s from a {@linkcode CredentialStatement}
@@ -328,23 +317,17 @@ export function isAccountCredentialStatement(statement: CredentialStatement): st
 /**
  * Type predicate to identifying {@linkcode Web3IdCredentialStatement}s from a {@linkcode CredentialStatement}
  */
-export function isWeb3IdCredentialStatement(statement: CredentialStatement): statement is Web3IdCredentialStatement {
-    return statement.idQualifier.type === 'sci';
-}
-
-/**
- * Type predicate to identifying {@linkcode IdentityCredentialStatement}s from a {@linkcode CredentialStatement}
- */
-export function isIdentityCredentialStatement(
+// TODO: (breaking) rename to isWeb3IdQualifier.
+export function isVerifiableCredentialStatement(
     statement: CredentialStatement
-): statement is IdentityCredentialStatement {
-    return statement.idQualifier.type === 'id';
+): statement is Web3IdCredentialStatement {
+    return statement.idQualifier.type === 'sci';
 }
 
 /** Statement type for account credentials with attribute key constraints. */
 export type AccountCredentialStatement = {
     /** Qualifier specifying which account credential issuers are valid. */
-    idQualifier: AccountCredentialQualifier;
+    idQualifier: IdentityQualifier;
     /** Array of atomic statements to prove about the account credential. */
     statement: AtomicStatementV2<AttributeKey>[];
 };
@@ -352,72 +335,20 @@ export type AccountCredentialStatement = {
 /** Statement type for Web3 ID credentials with string attribute keys. */
 export type Web3IdCredentialStatement = {
     /** Qualifier specifying which Web3 ID credential issuers are valid. */
-    idQualifier: Web3IdCredentialQualifier;
+    idQualifier: VerifiableCredentialQualifier;
     /** Array of atomic statements to prove about the Web3 ID credential. */
     statement: AtomicStatementV2<string>[];
-};
-
-/** Statement type for identity credentials with attribute key constraints. */
-export type IdentityCredentialStatement = {
-    /** Qualifier specifying which identity credential issuers are valid. */
-    idQualifier: IdentityCredentialQualifier;
-    /** Array of atomic statements to prove about the identity credential. */
-    statement: AtomicStatementV2<AttributeKey>[];
 };
 
 /** Union type for all credential statement types. */
-export type CredentialStatement = AccountCredentialStatement | Web3IdCredentialStatement | IdentityCredentialStatement;
+export type CredentialStatement = AccountCredentialStatement | Web3IdCredentialStatement;
 
-/** Specified account credential statement with explicit DID. */
-export type SpecifiedAccountCredentialStatement = {
-    /** The distributed identifier for the account credential. */
-    id: DIDString;
-    /** Array of atomic statements to prove about the account credential. */
+export type RequestStatement<AttributeKey = string> = {
+    id: string;
     statement: AtomicStatementV2<AttributeKey>[];
+    /** The type field is present iff the request is for a verifiable credential */
+    type?: string[];
 };
-
-/** Specified Web3 ID credential statement with explicit DID and type information. */
-export type SpecifiedWeb3IdCredentialStatement = {
-    /** The distributed identifier for the Web3 ID credential. */
-    id: DIDString;
-    /** Array of atomic statements to prove about the Web3 ID credential. */
-    statement: AtomicStatementV2<string>[];
-    /** Array of type strings associated with the credential. */
-    type: string[];
-};
-
-/** Specified identity credential statement with explicit DID. */
-export type SpecifiedIdentityCredentialStatement = {
-    /** The distributed identifier for the identity credential. */
-    id: DIDString;
-    /** Array of atomic statements to prove about the identity credential. */
-    statement: AtomicStatementV2<AttributeKey>[];
-};
-
-/** Union type for all specified credential statement types. */
-export type SpecifiedCredentialStatement =
-    | SpecifiedAccountCredentialStatement
-    | SpecifiedWeb3IdCredentialStatement
-    | SpecifiedIdentityCredentialStatement;
-
-export function isSpecifiedAccountCredentialStatement(
-    statement: SpecifiedCredentialStatement
-): statement is SpecifiedAccountCredentialStatement {
-    return statement.id.includes(':cred:');
-}
-
-export function isSpecifiedWeb3IdCredentialStatement(
-    statement: SpecifiedCredentialStatement
-): statement is SpecifiedWeb3IdCredentialStatement {
-    return statement.id.includes(':sci:');
-}
-
-export function isSpecifiedIdentityCredentialStatement(
-    statement: SpecifiedCredentialStatement
-): statement is SpecifiedIdentityCredentialStatement {
-    return statement.id.includes(':id:'); // TODO: figure out if this matches the identifier.
-}
-
 /** Array type for credential statements. */
 export type CredentialStatements = CredentialStatement[];
 

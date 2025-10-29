@@ -2,7 +2,7 @@ import _JB from 'json-bigint';
 
 import { AttributeKeyString, ContractAddress, TransactionHash } from '../../../src/pub/types.ts';
 import { VerifiablePresentationRequestV1 } from '../../../src/pub/wasm.ts';
-import { CredentialStatementBuilder } from '../../../src/pub/web3-id.ts';
+import { Web3StatementBuilder } from '../../../src/pub/web3-id.ts';
 
 const JSONBig = _JB({ alwaysParseAsBig: true, useNativeBigInt: true });
 
@@ -13,12 +13,12 @@ describe('VerifiablePresentationRequestV1', () => {
             '0102'.repeat(16),
             'Wine payment'
         );
-        const builder = new CredentialStatementBuilder();
+        const builder = new Web3StatementBuilder();
         const statement = builder
-            .forWeb3IdCredentials([ContractAddress.create(2101), ContractAddress.create(1337, 42)], (b) =>
+            .addForVerifiableCredentials([ContractAddress.create(2101), ContractAddress.create(1337, 42)], (b) =>
                 b.addRange('b', 80n, 1237n).addMembership('c', ['aa', 'ff', 'zz'])
             )
-            .forIdentityCredentials([0, 1, 2], (b) => b.revealAttribute(AttributeKeyString.firstName))
+            .addForIdentityCredentials([0, 1, 2], (b) => b.revealAttribute(AttributeKeyString.firstName))
             .getStatements();
         const transactionRef = TransactionHash.fromHexString('01020304'.repeat(8));
         const presentationRequest = VerifiablePresentationRequestV1.create(context, statement, transactionRef);
@@ -34,12 +34,12 @@ describe('VerifiablePresentationRequestV1', () => {
             '0102'.repeat(16),
             'Wine payment'
         );
-        const builder = new CredentialStatementBuilder();
+        const builder = new Web3StatementBuilder();
         const statement = builder
-            .forWeb3IdCredentials([ContractAddress.create(2101), ContractAddress.create(1337, 42)], (b) =>
+            .addForVerifiableCredentials([ContractAddress.create(2101), ContractAddress.create(1337, 42)], (b) =>
                 b.addRange('b', 80n, 1237n).addMembership('c', ['aa', 'ff', 'zz'])
             )
-            .forIdentityCredentials([0, 1, 2], (b) => b.revealAttribute(AttributeKeyString.firstName))
+            .addForIdentityCredentials([0, 1, 2], (b) => b.revealAttribute(AttributeKeyString.firstName))
             .getStatements();
         const anchor = VerifiablePresentationRequestV1.createAnchor(context, statement, {
             somePulicInfo: 'public info',

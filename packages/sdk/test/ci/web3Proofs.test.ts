@@ -10,19 +10,23 @@ import {
     AttributeKeyString,
     ConcordiumHdWallet,
     ContractAddress,
-    CredentialStatementBuilder,
     MAX_DATE_TIMESTAMP,
     MIN_DATE_TIMESTAMP,
-    SpecifiedCredentialStatement,
     StatementTypes,
     VerifiablePresentation,
+    Web3StatementBuilder,
     createAccountDID,
     createWeb3IdDID,
     dateToTimestampAttribute,
     getVerifiablePresentation,
     verifyAtomicStatements,
 } from '../../src/index.js';
-import { CommitmentInput, CredentialSchemaSubject, TimestampAttribute } from '../../src/web3-id/types.js';
+import {
+    CommitmentInput,
+    CredentialSchemaSubject,
+    RequestStatement,
+    TimestampAttribute,
+} from '../../src/web3-id/types.js';
 import {
     expectedAccountCredentialPresentation,
     expectedWeb3IdCredentialPresentation,
@@ -34,15 +38,15 @@ const TEST_SEED_1 =
 const GLOBAL_CONTEXT = JSON.parse(fs.readFileSync('./test/ci/resources/global.json').toString()).value;
 
 test('Generate V2 statement', () => {
-    const builder = new CredentialStatementBuilder();
+    const builder = new Web3StatementBuilder();
     const statement = builder
-        .forWeb3IdCredentials([ContractAddress.create(2101), ContractAddress.create(1337, 42)], (b) =>
+        .addForVerifiableCredentials([ContractAddress.create(2101), ContractAddress.create(1337, 42)], (b) =>
             b.addRange('b', 80n, 1237n).addMembership('c', ['aa', 'ff', 'zz'])
         )
-        .forWeb3IdCredentials([ContractAddress.create(1338)], (b) =>
+        .addForVerifiableCredentials([ContractAddress.create(1338)], (b) =>
             b.addRange('a', 80n, 1237n).addNonMembership('d', ['aa', 'ff', 'zz'])
         )
-        .forAccountCredentials([0, 1, 2], (b) => b.revealAttribute(AttributeKeyString.firstName))
+        .addForIdentityCredentials([0, 1, 2], (b) => b.revealAttribute(AttributeKeyString.firstName))
         .getStatements();
     expect(statement).toStrictEqual(expectedStatementMixed);
 });
@@ -52,7 +56,7 @@ test('create Web3Id proof with account credentials', () => {
     values.dob = '0';
     values.firstName = 'a';
 
-    const credentialStatements: SpecifiedCredentialStatement[] = [
+    const credentialStatements: RequestStatement[] = [
         {
             id: createAccountDID(
                 'Testnet',
@@ -131,7 +135,7 @@ test('create Web3Id proof with Web3Id Credentials', () => {
         graduationDate: '2010-06-01T00:00:00Z',
     };
 
-    const credentialStatements: SpecifiedCredentialStatement[] = [
+    const credentialStatements: RequestStatement[] = [
         {
             id: createWeb3IdDID('Testnet', publicKey, 1n, 0n),
             statement: [
@@ -238,13 +242,13 @@ const schemaWithTimeStamp: CredentialSchemaSubject = {
 };
 
 test('Generate statement with timestamp', () => {
-    const builder = new CredentialStatementBuilder();
+    const builder = new Web3StatementBuilder();
 
     const lower = new Date();
     const upper = new Date(new Date().getTime() + 24 * 60 * 60 * 10000);
 
     const statement = builder
-        .forWeb3IdCredentials(
+        .addForVerifiableCredentials(
             [ContractAddress.create(0)],
             (b) => b.addRange('graduationDate', lower, upper),
             schemaWithTimeStamp
@@ -259,13 +263,13 @@ test('Generate statement with timestamp', () => {
 });
 
 test('Generate statement with timestamp fails if not timestamp attribute', () => {
-    const builder = new CredentialStatementBuilder();
+    const builder = new Web3StatementBuilder();
 
     const lower = new Date();
     const upper = new Date(new Date().getTime() + 24 * 60 * 60 * 10000);
 
     expect(() =>
-        builder.forWeb3IdCredentials(
+        builder.addForVerifiableCredentials(
             [ContractAddress.create(0)],
             (b) =>
                 b

@@ -24,7 +24,6 @@ import {
 } from './helpers.js';
 import {
     AccountCommitmentInput,
-    AccountCredentialQualifier,
     AccountCredentialStatement,
     AtomicStatementV2,
     AttributeType,
@@ -33,17 +32,15 @@ import {
     CredentialStatement,
     CredentialStatements,
     CredentialSubject,
-    DIDString,
     IDENTITY_SUBJECT_SCHEMA,
     IdObjectUseData,
     IdentityCommitmentInput,
-    IdentityCredentialQualifier,
-    IdentityCredentialStatement,
+    IdentityQualifier,
     MembershipStatementV2,
     NonMembershipStatementV2,
     RangeStatementV2,
     StatementAttributeType,
-    Web3IdCredentialQualifier,
+    VerifiableCredentialQualifier,
     Web3IssuerCommitmentInput,
     isTimestampAttribute,
 } from './types.js';
@@ -279,7 +276,7 @@ export function verifyAtomicStatements(statements: AtomicStatementV2[], schema?:
 }
 
 /** Creates a Web3 ID credential qualifier with valid contract addresses. */
-function getWeb3IdCredentialQualifier(validContractAddresses: ContractAddress.Type[]): Web3IdCredentialQualifier {
+function getWeb3IdCredentialQualifier(validContractAddresses: ContractAddress.Type[]): VerifiableCredentialQualifier {
     return {
         type: 'sci',
         issuers: validContractAddresses,
@@ -287,22 +284,14 @@ function getWeb3IdCredentialQualifier(validContractAddresses: ContractAddress.Ty
 }
 
 /** Creates an account credential qualifier with valid identity providers. */
-function getAccountCredentialQualifier(validIdentityProviders: number[]): AccountCredentialQualifier {
+function getAccountCredentialQualifier(validIdentityProviders: number[]): IdentityQualifier {
     return {
         type: 'cred',
         issuers: validIdentityProviders,
     };
 }
 
-/** Creates an identity credential qualifier with valid identity providers. */
-function getIdentityCredentialQualifier(validIdentityProviders: number[]): IdentityCredentialQualifier {
-    return {
-        type: 'id',
-        issuers: validIdentityProviders,
-    };
-}
-
-export class AtomicStatementBuilder<AttributeKey> implements InternalBuilder<AttributeKey> {
+export class AtomicStatementBuilder<AttributeKey = string> implements InternalBuilder<AttributeKey> {
     /** Array of atomic statements being built. */
     statements: AtomicStatementV2<AttributeKey>[];
     /** Optional schema for validating statements against credential schema. */
@@ -405,14 +394,14 @@ export class AtomicStatementBuilder<AttributeKey> implements InternalBuilder<Att
     }
 }
 
-export class IdentityStatementBuilder extends AtomicStatementBuilder<AttributeKey> {
+export class AccountStatementBuild extends AtomicStatementBuilder<AttributeKey> {
     /**
      * Add to the statement that the age is at minimum the given value.
      * This adds a range statement that the date of birth is between 1st of january 1800 and <age> years ago.
      * @param age: the minimum age allowed.
      * @returns the updated builder
      */
-    addMinimumAge(age: number): IdentityStatementBuilder {
+    addMinimumAge(age: number): AccountStatementBuild {
         return this.addRange(AttributeKeyString.dob, MIN_DATE, getPastDate(age, 1));
     }
 
@@ -422,7 +411,7 @@ export class IdentityStatementBuilder extends AtomicStatementBuilder<AttributeKe
      * @param age: the maximum age allowed.
      * @returns the updated builder
      */
-    addMaximumAge(age: number): IdentityStatementBuilder {
+    addMaximumAge(age: number): AccountStatementBuild {
         return this.addRange(AttributeKeyString.dob, getPastDate(age + 1, 1), MAX_DATE);
     }
 
@@ -433,7 +422,7 @@ export class IdentityStatementBuilder extends AtomicStatementBuilder<AttributeKe
      * @param maxAge: the maximum age allowed.
      * @returns the updated builder
      */
-    addAgeInRange(minAge: number, maxAge: number): IdentityStatementBuilder {
+    addAgeInRange(minAge: number, maxAge: number): AccountStatementBuild {
         return this.addRange(AttributeKeyString.dob, getPastDate(maxAge + 1, 1), getPastDate(minAge));
     }
 
@@ -443,7 +432,7 @@ export class IdentityStatementBuilder extends AtomicStatementBuilder<AttributeKe
      * @param earliestDate: the earliest the document is allow to be expired at, should be a string in YYYYMMDD format.
      * @returns the updated builder
      */
-    documentExpiryNoEarlierThan(earliestDate: string): IdentityStatementBuilder {
+    documentExpiryNoEarlierThan(earliestDate: string): AccountStatementBuild {
         return this.addRange(AttributeKeyString.idDocExpiresAt, earliestDate, MAX_DATE);
     }
 
@@ -451,7 +440,7 @@ export class IdentityStatementBuilder extends AtomicStatementBuilder<AttributeKe
      * Add to the statement that the country of residence is one of the EU countries
      * @returns the updated builder
      */
-    addEUResidency(): IdentityStatementBuilder {
+    addEUResidency(): AccountStatementBuild {
         return this.addMembership(AttributeKeyString.countryOfResidence, EU_MEMBERS);
     }
 
@@ -459,15 +448,15 @@ export class IdentityStatementBuilder extends AtomicStatementBuilder<AttributeKe
      * Add to the statement that the nationality is one of the EU countries
      * @returns the updated builder
      */
-    addEUNationality(): IdentityStatementBuilder {
+    addEUNationality(): AccountStatementBuild {
         return this.addMembership(AttributeKeyString.nationality, EU_MEMBERS);
     }
 }
 
 /** Internal type alias for statement builders. */
-type InternalBuilder<AttributeKey> = StatementBuilder<AttributeKey, StatementAttributeType>;
+type InternalBuilder<AttributeKey> = StatementBuilder<StatementAttributeType, AttributeKey>;
 /** Builder class for constructing credential statements with different credential types. */
-export class CredentialStatementBuilder {
+export class Web3StatementBuilder {
     /** Array of credential statements being built. */
     private statements: CredentialStatements = [];
 
@@ -480,11 +469,11 @@ export class CredentialStatementBuilder {
      *
      * @returns The updated builder instance
      */
-    forWeb3IdCredentials(
+    addForVerifiableCredentials(
         validContractAddresses: ContractAddress.Type[],
         builderCallback: (builder: InternalBuilder<string>) => void,
         schema?: CredentialSchemaSubject
-    ): CredentialStatementBuilder {
+    ): Web3StatementBuilder {
         const builder = new AtomicStatementBuilder<string>(schema);
         builderCallback(builder);
         this.statements.push({
@@ -502,36 +491,14 @@ export class CredentialStatementBuilder {
      *
      * @returns The updated builder instance
      */
-    forAccountCredentials(
+    addForIdentityCredentials(
         validIdentityProviders: number[],
-        builderCallback: (builder: IdentityStatementBuilder) => void
-    ): CredentialStatementBuilder {
-        const builder = new IdentityStatementBuilder(IDENTITY_SUBJECT_SCHEMA);
+        builderCallback: (builder: AccountStatementBuild) => void
+    ): Web3StatementBuilder {
+        const builder = new AccountStatementBuild(IDENTITY_SUBJECT_SCHEMA);
         builderCallback(builder);
         const statement: AccountCredentialStatement = {
             idQualifier: getAccountCredentialQualifier(validIdentityProviders),
-            statement: builder.getStatement(),
-        };
-        this.statements.push(statement);
-        return this;
-    }
-
-    /**
-     * Add statements for identity credentials.
-     *
-     * @param validIdentityProviders Array of identity provider indices that are valid issuers
-     * @param builderCallback Callback function to build the statements using the provided identity builder
-     *
-     * @returns The updated builder instance
-     */
-    forIdentityCredentials(
-        validIdentityProviders: number[],
-        builderCallback: (builder: IdentityStatementBuilder) => void
-    ): CredentialStatementBuilder {
-        const builder = new IdentityStatementBuilder(IDENTITY_SUBJECT_SCHEMA);
-        builderCallback(builder);
-        const statement: IdentityCredentialStatement = {
-            idQualifier: getIdentityCredentialQualifier(validIdentityProviders),
             statement: builder.getStatement(),
         };
         this.statements.push(statement);
@@ -568,13 +535,6 @@ export function createWeb3IdDID(network: Network, publicKey: string, index: bigi
  */
 export function createAccountDID(network: Network, credId: string): string {
     return 'did:ccd:' + network.toLowerCase() + ':cred:' + credId;
-}
-
-/**
- * Create a DID string for an identity credential. Used to build a request for a verifiable credential.
- */
-export function createIdentityDID(network: Network, identityProviderIndex: number, identityIndex: number): DIDString {
-    return 'did:ccd:' + network.toLowerCase() + ':id:' + identityProviderIndex + ':' + identityIndex;
 }
 
 /**

@@ -2,49 +2,10 @@
 
 ## Unreleased
 
-## 12.0.0-alpha.2
-
-### Changes
-
-- Removed `PrivateVerificationAuditRecord` and `VerificationAuditRecord`. There is now `VerificationAuditRecord`, which
-  contains data to be kept privately and its subtype `VerificationAuditRecord.AnchorData` which is the corresponding
-  anchor registered on chain for audit purposes.
-  - `VerificationAuditRecord.create` is used to create an audit record
-  - `VerificationAuditRecord.registerAnchor` is a grpc helper used to register the anchor representation of the record
-    on chain.
-
-## 12.0.0-alpha.1
-
-### Fixes
-
-- An issue where anchor computation would sometimes be different when serializing and deserializing a presentation
-request
-
-### Changes
-
-- `VerifiablePresentationV1.verify`, and the corresponding GRPC helper `VerifiablePresentationV1.verifyWithNode` now
-  return a `VerifiablePresentationV1.VerificationResult` instead of `true | Error`.
-
-## 12.0.0-alpha.0
-
-### Breaking changes
-
-- `AccountStatementBuild` has been renamed to `IdentityStatementBuilder`
-- `Web3StatementBuilder` has been renamed to `CredentialStatementBuilder` with the following method renames
-  - `addForWeb3IdCredentials` -> `forWeb3IdCredentials`, used for statements for web3 ID credentials
-  - `addForIdentityCredentials` -> `forAccountCredentials`, used for statements for the identity credentials tied to an account
-
-- Type renames to align with the target credentials
-  - renamed `VerifiableCredentialQualifier` to `Web3IdCredentialQualifier`
-  - renamed `VerifiableCredentialStatement` to `Web3IdCredentialStatement`
-  - renamed `IdentityQualifier` to `AccountCredentialQualifier`
-  - renamed `RequestStatement` to `SpecifiedCredentialStatement`, which is now a union of
-  `SpecifiedAccountCredentialStatement | SpecifiedWeb3IdCredentialStatement | SpecifiedIdentityCredentialStatement`
-  instead of the corresponding old dynamic version.
+## 11.1.0-alpha.0
 
 ### Added
 
-- `Web3StatementBuilder.forIdentityCredentials`, used for statements for identity credentials without tying it to an account
 - types `IdentityCredentialQualifier`, `IdentityCommitmentInput`, and `CredentialsInputsIdentity` which have been added
   to the respective union types that reflect the possible variants.
 - helper functions `createIdentityCommitmentInput` and `createIdentityCommitmentInputWithHdWallet`
@@ -64,9 +25,10 @@ request
   - **Please note**: some functionality related to this is currently either stubbed or routed into the old verifiable
   presentation computation functions for now.
 
-- types `PrivateVerificationAuditRecord` and `VerificationAuditRecord` for creating audit records.
-  - `PrivateVerificationAuditRecord.registerPublicRecord` is a GRPC helper function for registering a creating a public
-    record and registering it on chain.
+- types `VerificationAuditRecord` and `VerificationAuditRecord.Anchor` for creating audit records.
+  - `VerificationAuditRecord.create` is used to create an audit record
+  - `VerificationAuditRecord.registerAnchor` is a grpc helper used to register the anchor representation of the record
+    on chain.
 
 ## 11.0.0
 

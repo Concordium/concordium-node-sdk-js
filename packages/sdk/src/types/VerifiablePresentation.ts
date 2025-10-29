@@ -53,16 +53,6 @@ export type StatementProofWeb3Id = ZKProofV3Base & {
 };
 
 /**
- * A zero-knowledge proof for an identity credential
- */
-export type StatementProofIdentity = ZKProofV3Base & {
-    /** Commitments to attribute values and their proofs */
-    // TODO: need to model this after
-    // https://github.com/Concordium/concordium-base/blob/c4a5917309b168e4d69f883bc23f92ea62ec97df/rust-src/concordium_base/src/id/types.rs#L2812
-    identityAttributesInfo: unknown;
-};
-
-/**
  * Describes a credential subject of verifiable credential
  */
 export type CredentialSubjectProof<P extends ZKProofV3Base> = {
@@ -104,22 +94,6 @@ export type VerifiableCredentialProofWeb3Id = {
     type: ['VerifiableCredential', 'ConcordiumVerifiableCredential', ...string[]];
 };
 
-// TODO: not implemented in base yet... might need to revise
-/**
- * A proof corresponding to one identity credential statement. This contains almost
- * all the information needed to verify it, except TODO: ...
- *
- * Matches the serialization of `CredentialProof::Identity`from concordium-base
- */
-export type VerifiableCredentialProofIdentity = {
-    /** The credential proof */
-    credentialSubject: CredentialSubjectProof<StatementProofIdentity>;
-    /** The issuer DID */
-    issuer: DIDString;
-    /** The credential type */
-    type: ['VerifiableCredential', 'ConcordiumVerifiableCredential'];
-};
-
 /**
  * A proof corresponding to one credential statement. This contains almost
  * all the information needed to verify it, except the issuer's public key in
@@ -128,10 +102,7 @@ export type VerifiableCredentialProofIdentity = {
  *
  * Matches the serialization of `CredentialProof` enum from concordium-base.
  */
-export type VerifiableCredentialProof =
-    | VerifiableCredentialProofAccount
-    | VerifiableCredentialProofWeb3Id
-    | VerifiableCredentialProofIdentity;
+export type VerifiableCredentialProof = VerifiableCredentialProofAccount | VerifiableCredentialProofWeb3Id;
 
 /**
  * Type predicate to check if the proof is a {@linkcode VerifiableCredentialProofWeb3Id}, or consequently a {@linkcode VerifiableCredentialProofAccount}

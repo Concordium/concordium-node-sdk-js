@@ -15,6 +15,7 @@
   protocol
   - `VerifiablePresentationRequestV1.createContext` and `VerifiablePresentationRequestV1.createSimpleContext` for
     creating the presentation request context.
+  - `VerifiablePresentationRequestV1.statementBuilder` for building presentation request statements
   - `VerifiablePresentationRequestV1.createAndAchor` which is a GRPC helper function for creating a verifiable presentation
     request from a minimal set of values.
   - `VerifiablePresentationV1.createFromAnchor` which is a GRPC helper function for creating a verifiable presentation

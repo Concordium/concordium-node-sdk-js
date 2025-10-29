@@ -32,9 +32,11 @@ have an identical function signature, which consists of
 
 ```ts
 // used for proofs which are not tied to a specific account
-builder.forIdentityCredentials([0,2], (build) => ...)
+builder.addAccountStatement([0,2].map(idp => new IdentityProviderDID('Testnet', idp)), (build) => ...)
 // used for proofs tied to an account created from the identity credential.
-builder.forAccountCredentials([0,2], (build) => ... 
+builder.addIdentityStatement([0,2].map(idp => new IdentityProviderDID('Testnet', idp)), (build) => ...)
+// alternatively let the application producing the proof decide
+builder.addAccountOrIdentityStatement([0,2].map(idp => new IdentityProviderDID('Testnet', idp)), (build) => ...)
 ```
 
 Below are a set of functions accessible for the `build` object passed in the callback
@@ -118,7 +120,7 @@ Note that this type of statement is only allowed for the following attributes:
 
 ### Web3 ID credential statements
 
-To build a statement against a Web3 ID, the builder has exposes an entrypoint `forWeb3IdCredentials`,
+To build a statement against a Web3 ID, the builder has exposes an entrypoint `addWeb3IdStatement`,
 which has a function signature similar to those used for [identity/account statements](#identityaccount-credential-statements)
 
 1. A list smart contract addresses the Web3 ID must be created from
@@ -163,7 +165,7 @@ Example: add the statement that the prover's position in a company is _not_ "man
 
 ## JSON representation
 
-The `VerifiablePresentationRequestV1`, `VerifiablePresentationV1`, and `VerifiableAuditRecord` can be represented as
+The `VerifiablePresentationRequestV1`, `VerifiablePresentationV1`, and `VerifiableAuditRecordV1` can be represented as
 JSON by calling the associated `.toJSON` method (will also be called implicitly with `JSON.stringify`). Correspondingly,
 parsing the JSON values can be done with the `.fromJSON` function exposed for each type.
 
@@ -199,7 +201,7 @@ const connectionID = ... // e.g. a wallet-connect ID
 const contextString = 'My compliant web3 wine shop'
 const context = VerifiablePresentationRequestV1.createSimpleContext(nonce, connectionID, contextString)
 
-const statement = new CredentialStatementBuilder()...
+const statement = new VerifiablePresentationRequestV1.statementBuilder()...
 
 // a GRPC client connected a node on the network the anchor should be registered on
 const grpcClient: ConcordiumGRPCClient = ...;
@@ -248,7 +250,7 @@ const selectedCredentialIds: DIDString[] = [
 
 // These are then paired with the statements from the verifiable presentation request to form the statements
 // required for the verifiable presentation input:
-const statements: SpecifiedCredentialStatement[] = selectedCredentialIds.map((id, i) => ({
+const statements: VerifiablePresentationV1.Statement[] = selectedCredentialIds.map((id, i) => ({
     id,
     statement: presentationRequest.credentialStatements[i].statement
 }));
@@ -277,10 +279,10 @@ const result = VerifiablePresentationV1.verifyWithNode(presentation, presentatio
 
 Services can opt in to create a _verification audit record_ from the _verifiable presentation request_ and corresponding
 _verifiable presentation_. This exists as a record and a corresponding anchor. The record should be stored by the application,
-and the anchor should be registered on chain.
+and the anchor should be registered on chain and stored with the record.
 
 ```ts
 const uuid: string = ...;
-const record = VerificationAuditRecord.create(uuid, presentationRequest, presentation);
-const anchorTransactionHash = await VerificationAuditRecord.registerAnchor(record, grpcClient, sender, signer);
+const record = VerificationAuditRecordV1.create(uuid, presentationRequest, presentation);
+const anchorTransactionHash = await VerificationAuditRecordV1.registerAnchor(record, grpcClient, sender, signer);
 ```

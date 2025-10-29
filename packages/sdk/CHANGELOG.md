@@ -25,9 +25,9 @@
   - **Please note**: some functionality related to this is currently either stubbed or routed into the old verifiable
   presentation computation functions for now.
 
-- types `VerificationAuditRecord` and `VerificationAuditRecord.Anchor` for creating audit records.
-  - `VerificationAuditRecord.create` is used to create an audit record
-  - `VerificationAuditRecord.registerAnchor` is a grpc helper used to register the anchor representation of the record
+- types `VerificationAuditRecordV1` and `VerificationAuditRecordV1.Anchor` for creating audit records.
+  - `VerificationAuditRecordV1.create` is used to create an audit record
+  - `VerificationAuditRecordV1.registerAnchor` is a grpc helper used to register the anchor representation of the record
     on chain.
 
 ## 11.0.0

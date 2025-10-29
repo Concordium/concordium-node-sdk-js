@@ -17,6 +17,8 @@ import { VerifiablePresentationRequestV1, VerifiablePresentationV1 } from './ind
 
 const JSONBig = _JB({ alwaysParseAsBig: true, useNativeBigInt: true });
 
+const VERSION = 1;
+
 /**
  * A verification audit record that contains the complete verifiable presentation
  * request and response data. This record maintains the full audit trail of a verification
@@ -26,23 +28,18 @@ const JSONBig = _JB({ alwaysParseAsBig: true, useNativeBigInt: true });
  * of verification interactions, while only publishing hash-based public records on-chain
  * to preserve privacy.
  */
-class VerificationAuditRecord {
-    /** The type identifier for this audit record */
-    public readonly type = 'ConcordiumVerificationAuditRecord';
-
+class VerificationAuditRecordV1 {
     /**
      * Creates a new verification audit record.
      *
      * @param request - The verifiable presentation request that was made
      * @param presentation - The verifiable presentation that was provided in response
      * @param id - Unique identifier for this audit record
-     * @param version - The version of the audit record format
      */
     constructor(
         public readonly request: VerifiablePresentationRequestV1.Type,
         public readonly presentation: VerifiablePresentationV1.Type,
-        public readonly id: string,
-        public readonly version: number = 1
+        public readonly id: string
     ) {}
 
     /**
@@ -51,7 +48,13 @@ class VerificationAuditRecord {
      * @returns The JSON representation of this audit record
      */
     public toJSON(): JSON {
-        return { ...this, request: this.request.toJSON(), presentation: this.presentation.toJSON() };
+        return {
+            request: this.request.toJSON(),
+            presentation: this.presentation.toJSON(),
+            id: this.id,
+            version: VERSION,
+            type: 'ConcordiumVerificationAuditRecord',
+        };
     }
 }
 
@@ -64,13 +67,17 @@ class VerificationAuditRecord {
  * of verification interactions, while only publishing hash-based public records on-chain
  * to preserve privacy.
  */
-export type Type = VerificationAuditRecord;
+export type Type = VerificationAuditRecordV1;
 
 /**
  * JSON representation of a verification audit record.
  * Contains the serialized forms of the request and presentation data.
  */
-export type JSON = Pick<Type, 'id' | 'type' | 'version'> & {
+export type JSON = Pick<Type, 'id'> & {
+    /** The type identifier for the audit record */
+    type: 'ConcordiumVerificationAuditRecord';
+    /** The audit record version */
+    version: 1;
     /** The serialized verifiable presentation request */
     request: VerifiablePresentationRequestV1.JSON;
     /** The serialized verifiable presentation */
@@ -90,8 +97,8 @@ export function create(
     id: string,
     request: VerifiablePresentationRequestV1.Type,
     presentation: VerifiablePresentationV1.Type
-): VerificationAuditRecord {
-    return new VerificationAuditRecord(request, presentation, id);
+): VerificationAuditRecordV1 {
+    return new VerificationAuditRecordV1(request, presentation, id);
 }
 
 /**
@@ -100,12 +107,11 @@ export function create(
  * @param json - The JSON representation to deserialize
  * @returns The deserialized verification audit record
  */
-export function fromJSON(json: JSON): VerificationAuditRecord {
-    return new VerificationAuditRecord(
+export function fromJSON(json: JSON): VerificationAuditRecordV1 {
+    return new VerificationAuditRecordV1(
         VerifiablePresentationRequestV1.fromJSON(json.request),
         VerifiablePresentationV1.fromJSON(json.presentation),
-        json.id,
-        Number(json.version)
+        json.id
     );
 }
 
@@ -135,10 +141,10 @@ export type AnchorData = {
  *
  * @returns The anchor encoding corresponding to the audit record
  */
-export function createAnchor(record: VerificationAuditRecord, info?: Record<string, any>): Uint8Array {
+export function createAnchor(record: VerificationAuditRecordV1, info?: Record<string, any>): Uint8Array {
     const message = Buffer.from(JSONBig.stringify(record)); // TODO: replace this with proper hashing.. properly from @concordium/rust-bindings
     const hash = Uint8Array.from(sha256([message]));
-    let anchor: AnchorData = { hash: hash, version: record.version, type: 'CCDVAA', public: info };
+    let anchor: AnchorData = { hash: hash, version: VERSION, type: 'CCDVAA', public: info };
     return cborEncode(anchor);
 }
 
@@ -158,8 +164,7 @@ export function decodeAnchor(cbor: Uint8Array): AnchorData {
     if (typeof value !== 'object' || value === null) throw new Error('Expected a cbor encoded object');
     // required fields
     if (!('type' in value) || value.type !== 'CCDVAA') throw new Error('Expected "type" to be "CCDVAA"');
-    if (!('version' in value) || typeof value.version !== 'number')
-        throw new Error('Expected "version" to be a number');
+    if (!('version' in value) || value.version !== VERSION) throw new Error('Expected "version" to be 1');
     if (!('hash' in value) || !(value.hash instanceof Uint8Array))
         throw new Error('Expected "hash" to be a Uint8Array');
     // optional fields
@@ -184,7 +189,7 @@ export function decodeAnchor(cbor: Uint8Array): AnchorData {
  * @throws Error if the transaction fails or network issues occur
  */
 export async function registerAnchor(
-    record: VerificationAuditRecord,
+    record: VerificationAuditRecordV1,
     grpc: ConcordiumGRPCClient,
     sender: AccountAddress.Type,
     signer: AccountSigner,

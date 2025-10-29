@@ -3,7 +3,7 @@ import _JB from 'json-bigint';
 import {
     VerifiablePresentationRequestV1,
     VerifiablePresentationV1,
-    VerificationAuditRecord,
+    VerificationAuditRecordV1,
 } from '../../../src/index.ts';
 
 const JSONBig = _JB({ alwaysParseAsBig: true, useNativeBigInt: true });
@@ -75,17 +75,17 @@ const PRESENTATION = VerifiablePresentationV1.fromJSON({
     proof: { created: '2025-10-17T13:14:14.290Z', proofValue: [], type: 'ConcordiumWeakLinkingProofV1' },
 });
 
-const PRIVATE_RECORD = VerificationAuditRecord.create('VERY unique ID', PRESENTATION_REQUEST, PRESENTATION);
+const PRIVATE_RECORD = VerificationAuditRecordV1.create('VERY unique ID', PRESENTATION_REQUEST, PRESENTATION);
 
 describe('VerificationAuditRecord', () => {
     it('completes JSON roundtrip', () => {
         const json = JSONBig.stringify(PRIVATE_RECORD);
-        const roundtrip = VerificationAuditRecord.fromJSON(JSONBig.parse(json));
+        const roundtrip = VerificationAuditRecordV1.fromJSON(JSONBig.parse(json));
         expect(roundtrip).toEqual(PRIVATE_RECORD);
     });
 
     it('creates expected anchor', () => {
-        const anchor = VerificationAuditRecord.createAnchor(PRIVATE_RECORD, { info: 'some public info?' });
+        const anchor = VerificationAuditRecordV1.createAnchor(PRIVATE_RECORD, { info: 'some public info?' });
         const expected =
             'a464686173685820df6c87461f549ac8d734c42f65b5355e745aa8444ce83907ba1a3ab9f5a0898f647479706566434344564141667075626c6963a164696e666f71736f6d65207075626c696320696e666f3f6776657273696f6e01';
         expect(Buffer.from(anchor).toString('hex')).toEqual(expected);

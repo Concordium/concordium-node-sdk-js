@@ -4,7 +4,7 @@
 
 ## 12.0.0-alpha.2
 
-### Breaking changes
+### Changes
 
 - Removed `PrivateVerificationAuditRecord` and `VerificationAuditRecord`. There is now `VerificationAuditRecord`, which
   contains data to be kept privately and its subtype `VerificationAuditRecord.AnchorData` which is the corresponding

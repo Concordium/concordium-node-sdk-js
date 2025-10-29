@@ -1,16 +1,10 @@
 import * as wasm from '@concordium/rust-bindings/wallet';
 import { stringify } from 'json-bigint';
 
-import { CryptographicParameters } from '../types.js';
-import { VerifiablePresentation } from '../types/VerifiablePresentation.js';
-import { VerifyWeb3IdCredentialSignatureInput } from '../web3-id/helpers.js';
-import {
-    CommitmentInput,
-    CredentialsInputs,
-    SpecifiedCredentialStatement,
-    isSpecifiedAccountCredentialStatement,
-    isSpecifiedWeb3IdCredentialStatement,
-} from '../web3-id/types.js';
+import { CryptographicParameters } from '../types.ts';
+import { CommitmentInput, CredentialsInputs, VerifiablePresentation } from '../types/VerifiablePresentation.ts';
+import { VerifyWeb3IdCredentialSignatureInput } from '../web3-id/helpers.ts';
+import { AtomicStatementV2, DIDString } from '../web3-id/types.ts';
 
 /**
  * Verifies that the given signature is correct for the given values/randomness/holder/issuerPublicKey/issuerContract
@@ -20,6 +14,17 @@ export function verifyWeb3IdCredentialSignature(input: VerifyWeb3IdCredentialSig
     return wasm.verifyWeb3IdCredentialSignature(stringify(input));
 }
 
+export type RequestStatement<AttributeKey = string> = {
+    id: DIDString;
+    statement: AtomicStatementV2<AttributeKey>[];
+    /** The type field is present iff the request is for a verifiable credential */
+    type?: string[];
+};
+
+export function isVerifiableCredentialRequestStatement(statement: RequestStatement): boolean {
+    return Boolean(statement.type);
+}
+
 /**
  * Describes a proof request which is at the core of computing the corresponding proof.
  */
@@ -27,7 +32,7 @@ export type Web3IdProofRequest = {
     /** The challenge of the proof */
     challenge: string;
     /** The statements paired with the credential IDs to prove them for */
-    credentialStatements: SpecifiedCredentialStatement[];
+    credentialStatements: RequestStatement[];
 };
 
 /**
@@ -43,15 +48,6 @@ export type Web3IdProofInput = {
  * Given a statement about an identity and the inputs necessary to prove the statement, produces a proof that the associated identity fulfills the statement.
  */
 export function getVerifiablePresentation(input: Web3IdProofInput): VerifiablePresentation {
-    // validate that we don't pass any unsupported credentials in
-    if (
-        input.request.credentialStatements.some(
-            (statement) =>
-                !isSpecifiedWeb3IdCredentialStatement(statement) && !isSpecifiedAccountCredentialStatement(statement)
-        )
-    )
-        throw new Error('Identity proofs are not supported for this verifiable presentation protocol');
-
     try {
         const s: VerifiablePresentation = VerifiablePresentation.fromString(
             // Use json-bigint stringify to ensure we can handle bigints

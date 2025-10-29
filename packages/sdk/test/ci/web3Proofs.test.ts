@@ -12,6 +12,7 @@ import {
     ContractAddress,
     MAX_DATE_TIMESTAMP,
     MIN_DATE_TIMESTAMP,
+    RequestStatement,
     StatementTypes,
     VerifiablePresentation,
     Web3StatementBuilder,
@@ -21,12 +22,8 @@ import {
     getVerifiablePresentation,
     verifyAtomicStatements,
 } from '../../src/index.js';
-import {
-    CommitmentInput,
-    CredentialSchemaSubject,
-    RequestStatement,
-    TimestampAttribute,
-} from '../../src/web3-id/types.js';
+import { CommitmentInput } from '../../src/types/VerifiablePresentation.js';
+import { CredentialSchemaSubject, TimestampAttribute } from '../../src/web3-id/types.js';
 import {
     expectedAccountCredentialPresentation,
     expectedWeb3IdCredentialPresentation,

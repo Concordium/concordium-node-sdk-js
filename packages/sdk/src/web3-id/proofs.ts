@@ -32,6 +32,7 @@ import {
     CredentialStatement,
     CredentialStatements,
     CredentialSubject,
+    DIDString,
     IDENTITY_SUBJECT_SCHEMA,
     IdObjectUseData,
     IdentityCommitmentInput,
@@ -517,7 +518,7 @@ export class Web3StatementBuilder {
 /**
  * Create a DID string for a web3id credential. Used to build a request for a verifiable credential.
  */
-export function createWeb3IdDID(network: Network, publicKey: string, index: bigint, subindex: bigint): string {
+export function createWeb3IdDID(network: Network, publicKey: string, index: bigint, subindex: bigint): DIDString {
     return (
         'did:ccd:' +
         network.toLowerCase() +
@@ -533,8 +534,16 @@ export function createWeb3IdDID(network: Network, publicKey: string, index: bigi
 /**
  * Create a DID string for a web3id credential. Used to build a request for a verifiable credential.
  */
-export function createAccountDID(network: Network, credId: string): string {
+export function createAccountDID(network: Network, credId: string): DIDString {
     return 'did:ccd:' + network.toLowerCase() + ':cred:' + credId;
+}
+
+/**
+ * Create a DID string for an identity credential. Used to build a request for a verifiable credential.
+ */
+// TODO: figure out if this matches the identifier.
+export function createIdentityDID(network: Network, identityProviderIndex: number, identityIndex: number): DIDString {
+    return 'did:ccd:' + network.toLowerCase() + ':id:' + identityProviderIndex + ':' + identityIndex;
 }
 
 /**

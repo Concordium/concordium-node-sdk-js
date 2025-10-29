@@ -13,9 +13,6 @@ import {
     VerifiablePresentationV1,
 } from '../../../src/pub/wasm.ts';
 import {
-    CommitmentInput,
-    SpecifiedCredentialStatement,
-    SpecifiedIdentityCredentialStatement,
     createAccountDID,
     createIdentityCommitmentInputWithHdWallet,
     createWeb3IdDID,
@@ -36,7 +33,7 @@ test('create testnet account-based presentation v1', () => {
     values.dob = '0';
     values.firstName = 'a';
 
-    const statements: SpecifiedCredentialStatement[] = [
+    const statements: VerifiablePresentationV1.Statement[] = [
         {
             id: createAccountDID(
                 'Testnet',
@@ -56,7 +53,7 @@ test('create testnet account-based presentation v1', () => {
             ],
         },
     ];
-    const inputs: CommitmentInput[] = [
+    const inputs: VerifiablePresentationV1.CommitmentInput[] = [
         {
             type: 'account',
             issuer: 1,
@@ -98,7 +95,7 @@ test('create testnet web3Id-based presentation v1', () => {
         degreeType: 'BachelorDegree',
         graduationDate: '2010-06-01T00:00:00Z',
     };
-    const statements: SpecifiedCredentialStatement[] = [
+    const statements: VerifiablePresentationV1.Statement[] = [
         {
             id: createWeb3IdDID('Testnet', publicKey, 1n, 0n),
             statement: [
@@ -115,7 +112,7 @@ test('create testnet web3Id-based presentation v1', () => {
             type: [],
         },
     ];
-    const inputs: CommitmentInput[] = [
+    const inputs: VerifiablePresentationV1.CommitmentInput[] = [
         {
             type: 'web3Issuer',
             signer: wallet.getVerifiableCredentialSigningKey(ContractAddress.create(1), 1).toString('hex'),
@@ -161,7 +158,7 @@ test('create testnet id-based presentation v1', () => {
     };
     const input = createIdentityCommitmentInputWithHdWallet(idObject, inputContext, 0, wallet);
 
-    const statements: SpecifiedIdentityCredentialStatement[] = [
+    const statements: VerifiablePresentationV1.Statement[] = [
         {
             id: 'ccd:testnet:id:0:0',
             statement: [

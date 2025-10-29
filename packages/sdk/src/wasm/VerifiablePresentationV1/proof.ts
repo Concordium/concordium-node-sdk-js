@@ -16,20 +16,22 @@ import {
     isKnown,
     sha256,
 } from '../../index.js';
-import { ConcordiumWeakLinkingProofV1 } from '../../types/VerifiablePresentation.js';
+import {
+    ConcordiumWeakLinkingProofV1,
+    CommitmentInput as OldCommitmentInputs,
+} from '../../types/VerifiablePresentation.js';
 import { bail } from '../../util.js';
 import {
+    AccountCommitmentInput,
     AtomicStatementV2,
-    CommitmentInput,
-    CredentialsInputs,
+    CredentialsInputsAccount,
+    CredentialsInputsIdentity,
+    CredentialsInputsWeb3,
     DIDString,
     IdentityCommitmentInput,
-    SpecifiedCredentialStatement,
-    SpecifiedIdentityCredentialStatement,
-    isSpecifiedAccountCredentialStatement,
-    isSpecifiedIdentityCredentialStatement,
+    Web3IssuerCommitmentInput,
 } from '../../web3-id/index.js';
-import { Web3IdProofRequest, getVerifiablePresentation } from '../web3Id.js';
+import { Web3IdProofRequest, getVerifiablePresentation } from '../VerifiablePresentation.ts';
 import { GivenContextJSON, givenContextFromJSON, givenContextToJSON } from './internal.js';
 import * as Request from './request.js';
 import { GivenContext, ZKProofV4 } from './types.js';
@@ -47,6 +49,20 @@ export type Context = {
     /** Context information that was requested and is now filled with actual values */
     requested: GivenContext[];
 };
+
+export type AccountStatement = { id: DIDString; statement: AtomicStatementV2<AttributeKey>[] };
+export type IdentityStatement = { id: DIDString; statement: AtomicStatementV2<AttributeKey>[] };
+export type Web3IdStatement = { id: DIDString; statement: AtomicStatementV2<string>[]; type: string[] };
+
+export type Statement = IdentityStatement | Web3IdStatement | AccountStatement;
+
+function isSpecifiedAccountCredentialStatement(statement: Statement): statement is AccountStatement {
+    return statement.id.includes(':cred:');
+}
+
+function isSpecifiedIdentityCredentialStatement(statement: Statement): statement is IdentityStatement {
+    return statement.id.includes(':id:'); // TODO: figure out if this matches the identifier.
+}
 
 /**
  * Creates a proof context by filling in the requested context from a presentation request.
@@ -94,10 +110,7 @@ export type IdentityBasedCredential = {
     issuer: DIDString;
 };
 
-function createIdentityCredentialStub(
-    { id, statement }: SpecifiedIdentityCredentialStatement,
-    ipIndex: number
-): IdentityBasedCredential {
+function createIdentityCredentialStub({ id, statement }: IdentityStatement, ipIndex: number): IdentityBasedCredential {
     const network = id.split(':')[1] as Network;
     const proof: ZKProofV4 = {
         type: 'ConcordiumZKProofV4',
@@ -244,6 +257,8 @@ export function fromJSON(value: JSON): VerifiablePresentationV1 {
     return new VerifiablePresentationV1(presentationContext, value.verifiableCredential, value.proof);
 }
 
+export type CommitmentInput = IdentityCommitmentInput | Web3IssuerCommitmentInput | AccountCommitmentInput;
+
 /**
  * Creates a verifiable presentation from an anchored presentation request.
  *
@@ -264,7 +279,7 @@ export function fromJSON(value: JSON): VerifiablePresentationV1 {
 export async function createFromAnchor(
     grpc: ConcordiumGRPCClient,
     presentationRequest: Request.Type,
-    statements: SpecifiedCredentialStatement[],
+    statements: Statement[],
     inputs: CommitmentInput[],
     additionalContext: GivenContext[]
 ): Promise<VerifiablePresentationV1> {
@@ -317,15 +332,15 @@ export async function createFromAnchor(
 // presentation from the function arguments. For now, we hack something together from the old protocol which
 // means filtering and mapping the input/output.
 export function create(
-    requestStatements: SpecifiedCredentialStatement[],
+    requestStatements: Statement[],
     inputs: CommitmentInput[],
     proofContext: Context,
     globalContext: CryptographicParameters
 ): VerifiablePresentationV1 {
     // first we filter out the id statements, as they're not compatible with the current implementation
     // in concordium-base
-    const idStatements: [number, SpecifiedIdentityCredentialStatement][] = [];
-    const compatibleStatements: Exclude<SpecifiedCredentialStatement, SpecifiedIdentityCredentialStatement>[] = [];
+    const idStatements: [number, IdentityStatement][] = [];
+    const compatibleStatements: Exclude<Statement, IdentityStatement>[] = [];
     requestStatements.forEach((s, i) => {
         if (isSpecifiedIdentityCredentialStatement(s)) idStatements.push([i, s]);
         else compatibleStatements.push(s);
@@ -333,7 +348,7 @@ export function create(
 
     // correspondingly, filter out the the inputs for identity credentials
     const idInputs = inputs.filter((ci) => ci.type === 'identity') as IdentityCommitmentInput[];
-    const compatibleInputs = inputs.filter((ci) => ci.type !== 'identity');
+    const compatibleInputs = inputs.filter((ci) => ci.type !== 'identity') as OldCommitmentInputs[];
 
     if (idStatements.length !== idInputs.length) throw new Error('Mismatch between provided statements and inputs');
 
@@ -385,6 +400,8 @@ export function create(
  * or fail with an associated {@linkcode Error}
  */
 export type VerificationResult = { type: 'success' } | { type: 'failed'; error: Error };
+
+export type CredentialsInputs = CredentialsInputsWeb3 | CredentialsInputsAccount | CredentialsInputsIdentity;
 
 /**
  * Verifies a verifiable presentation against its corresponding request.

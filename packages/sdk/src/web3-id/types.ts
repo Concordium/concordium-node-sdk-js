@@ -97,9 +97,6 @@ export type IdentityCommitmentInput = {
     policy: Policy;
 };
 
-/** Union type of all commitment input types. */
-export type CommitmentInput = AccountCommitmentInput | Web3IssuerCommitmentInput | IdentityCommitmentInput;
-
 /** Represents timestamp property schema for credential attributes. */
 export type TimestampProperty = {
     /** The title of the property. */
@@ -343,12 +340,6 @@ export type Web3IdCredentialStatement = {
 /** Union type for all credential statement types. */
 export type CredentialStatement = AccountCredentialStatement | Web3IdCredentialStatement;
 
-export type RequestStatement<AttributeKey = string> = {
-    id: string;
-    statement: AtomicStatementV2<AttributeKey>[];
-    /** The type field is present iff the request is for a verifiable credential */
-    type?: string[];
-};
 /** Array type for credential statements. */
 export type CredentialStatements = CredentialStatement[];
 
@@ -387,7 +378,7 @@ export type CredentialsInputsIdentity = {
 };
 
 /** Union of the different inputs required to verify corresponding proofs */
-export type CredentialsInputs = CredentialsInputsAccount | CredentialsInputsWeb3 | CredentialsInputsIdentity;
+type CredentialsInputs = CredentialsInputsAccount | CredentialsInputsWeb3 | CredentialsInputsIdentity;
 
 /** Contains the credential status and inputs required to verify a corresponding credential proof */
 export type CredentialWithMetadata = {

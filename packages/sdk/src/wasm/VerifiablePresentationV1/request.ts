@@ -5,7 +5,9 @@ import {
     AccountTransaction,
     AccountTransactionHeader,
     AccountTransactionType,
+    AttributeKey,
     ConcordiumGRPCClient,
+    Network,
     NextAccountNonce,
     RegisterDataPayload,
     cborDecode,
@@ -13,7 +15,7 @@ import {
     signTransaction,
 } from '../../index.js';
 import { ContractAddress, DataBlob, TransactionExpiry, TransactionHash } from '../../types/index.js';
-import { CredentialStatement, StatementProverQualifier } from '../../web3-id/types.js';
+import { AtomicStatementV2, DIDString } from '../../web3-id/types.js';
 import { GivenContextJSON, givenContextFromJSON, givenContextToJSON } from './internal.js';
 import { CredentialContextLabel, GivenContext } from './types.js';
 
@@ -97,7 +99,7 @@ export type AnchorData = {
  */
 export function createAnchor(
     context: Context,
-    credentialStatements: CredentialStatement[],
+    credentialStatements: Statement[],
     publicInfo?: Record<string, any>
 ): Uint8Array {
     const hash = computeAnchorHash(context, credentialStatements);
@@ -117,7 +119,7 @@ export function createAnchor(
  *
  * @returns SHA-256 hash of the serialized request data
  */
-export function computeAnchorHash(context: Context, credentialStatements: CredentialStatement[]): Uint8Array {
+export function computeAnchorHash(context: Context, credentialStatements: Statement[]): Uint8Array {
     // TODO: this is a quick and dirty anchor implementation that needs to be replaced with
     // proper serialization, which is TBD.
     const sanitizedContext: Context = {
@@ -171,9 +173,74 @@ export type JSON = {
     /** The request context with serialized given contexts */
     requestContext: Pick<Context, 'type' | 'requested'> & { given: GivenContextJSON[] };
     /** The credential statements being requested */
-    credentialStatements: CredentialStatement[];
+    credentialStatements: StatementJSON[];
     /** Reference to the blockchain transaction containing the request anchor */
     transactionRef: TransactionHash.JSON;
+};
+
+type IdentityCredType = 'identity' | 'account';
+
+export class IdentityProviderDID {
+    constructor(
+        public network: Network,
+        public index: number
+    ) {}
+
+    public toJSON(): DIDString {
+        return `ccd:${this.network.toLowerCase()}:idp:${this.index}`;
+    }
+
+    public static fromJSON(did: DIDString): IdentityProviderDID {
+        const parts = did.split(':');
+        if (parts.length !== 4 || parts[0] !== 'ccd' || parts[2] !== 'idp') {
+            throw new Error(`Invalid IdentityQualifierDID format: ${did}`);
+        }
+        const network = parts[1].toUpperCase() as Network;
+        const index = parseInt(parts[3], 10);
+        if (isNaN(index)) {
+            throw new Error(`Invalid index in IdentityQualifierDID: ${parts[3]}`);
+        }
+        return new IdentityProviderDID(network, index);
+    }
+}
+export class ContractInstanceDID {
+    constructor(
+        public network: Network,
+        public address: ContractAddress.Type
+    ) {}
+
+    public toJSON(): DIDString {
+        return `ccd:${this.network.toLowerCase()}:sci:${this.address.index}:${this.address.subindex}`;
+    }
+
+    public static fromJSON(did: DIDString): ContractInstanceDID {
+        const parts = did.split(':');
+        if (parts.length !== 5 || parts[0] !== 'ccd' || parts[2] !== 'sci') {
+            throw new Error(`Invalid Web3IdQualifierDID format: ${did}`);
+        }
+        const network = parts[1].toUpperCase() as Network;
+        const index = BigInt(parts[3]);
+        const subindex = BigInt(parts[4]);
+        return new ContractInstanceDID(network, ContractAddress.create(index, subindex));
+    }
+}
+
+export type IdentityStatement = {
+    type: 'identity';
+    source: IdentityCredType[]; // Should never be empty, and always maximum all values from `IdentityCredType`.
+    statements: AtomicStatementV2<AttributeKey>[];
+    issuers: IdentityProviderDID[];
+};
+
+export type Web3IdStatement = {
+    type: 'web3Id';
+    statements: AtomicStatementV2<string>[];
+    issuers: ContractInstanceDID[];
+};
+
+export type Statement = IdentityStatement | Web3IdStatement;
+type StatementJSON = (Omit<IdentityStatement, 'issuers'> | Omit<Web3IdStatement, 'issuers'>) & {
+    issuers: DIDString[];
 };
 
 /**
@@ -192,8 +259,8 @@ class VerifiablePresentationRequestV1 {
      */
     constructor(
         public readonly requestContext: Context,
-        public readonly credentialStatements: CredentialStatement[],
-        public readonly transactionRef: TransactionHash.Type // NOTE: renamed from requestTX in ADR
+        public readonly credentialStatements: Statement[],
+        public readonly transactionRef: TransactionHash.Type
     ) {}
 
     /**
@@ -202,9 +269,13 @@ class VerifiablePresentationRequestV1 {
      * @returns The JSON representation of this presentation request
      */
     public toJSON(): JSON {
+        const credentialStatements = this.credentialStatements.map((statement) => ({
+            ...statement,
+            issuers: statement.issuers.map((i) => i.toJSON()),
+        }));
         return {
             requestContext: { ...this.requestContext, given: this.requestContext.given.map(givenContextToJSON) },
-            credentialStatements: this.credentialStatements,
+            credentialStatements,
             transactionRef: this.transactionRef.toJSON(),
         };
     }
@@ -230,25 +301,20 @@ export type Type = VerifiablePresentationRequestV1;
  */
 export function fromJSON(json: JSON): VerifiablePresentationRequestV1 {
     const requestContext = { ...json.requestContext, given: json.requestContext.given.map(givenContextFromJSON) };
-    const statements: CredentialStatement[] = json.credentialStatements.map(({ statement, idQualifier }) => {
-        let mappedQualifier: StatementProverQualifier;
-        switch (idQualifier.type) {
-            case 'id':
-                mappedQualifier = { type: 'id', issuers: idQualifier.issuers.map(Number) };
-                break;
-            case 'cred':
-                mappedQualifier = { type: 'cred', issuers: idQualifier.issuers.map(Number) };
-                break;
-            case 'sci':
-                mappedQualifier = {
-                    type: 'sci',
-                    issuers: idQualifier.issuers.map((c) => ContractAddress.create(c.index, c.subindex)),
+    const statements: Statement[] = json.credentialStatements.map((statement) => {
+        switch (statement.type) {
+            case 'web3Id':
+                return {
+                    ...statement,
+                    issuers: statement.issuers.map(ContractInstanceDID.fromJSON),
                 };
-                break;
-            default:
-                mappedQualifier = idQualifier;
+            case 'identity':
+                return {
+                    ...statement,
+                    source: statement.source,
+                    issuers: statement.issuers.map(IdentityProviderDID.fromJSON),
+                };
         }
-        return { statement, idQualifier: mappedQualifier } as CredentialStatement;
     });
 
     return new VerifiablePresentationRequestV1(
@@ -281,7 +347,7 @@ export async function createAndAchor(
     sender: AccountAddress.Type,
     signer: AccountSigner,
     context: Omit<Context, 'type'>,
-    credentialStatements: CredentialStatement[],
+    credentialStatements: Statement[],
     anchorPublicInfo?: Record<string, any>
 ): Promise<VerifiablePresentationRequestV1> {
     const requestContext = createContext(context);
@@ -319,7 +385,7 @@ export async function createAndAchor(
  */
 export function create(
     context: Context,
-    credentialStatements: CredentialStatement[],
+    credentialStatements: Statement[],
     transactionRef: TransactionHash.Type
 ): VerifiablePresentationRequestV1 {
     return new VerifiablePresentationRequestV1(context, credentialStatements, transactionRef);

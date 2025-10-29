@@ -1,10 +1,13 @@
 import _JB from 'json-bigint';
 
 import {
+    ContractInstanceDID,
+    IdentityProviderDID,
     VerifiablePresentationRequestV1,
     VerifiablePresentationV1,
     VerificationAuditRecordV1,
 } from '../../../src/index.ts';
+import { ContractAddress } from '../../../src/types/index.ts';
 
 const JSONBig = _JB({ alwaysParseAsBig: true, useNativeBigInt: true });
 
@@ -20,20 +23,24 @@ const PRESENTATION_REQUEST = VerifiablePresentationRequestV1.fromJSON({
     },
     credentialStatements: [
         {
-            idQualifier: {
-                type: 'sci',
-                issuers: [
-                    { index: 2101n, subindex: 0n },
-                    { index: 1337n, subindex: 42n },
-                ] as any,
-            },
+            type: 'web3Id',
+            issuers: [
+                new ContractInstanceDID('Testnet', ContractAddress.create(2101)).toJSON(),
+                new ContractInstanceDID('Testnet', ContractAddress.create(1337)).toJSON(),
+            ],
             statement: [
                 { type: 'AttributeInRange', attributeTag: 'b', lower: 80n, upper: 1237n } as any,
                 { type: 'AttributeInSet', attributeTag: 'c', set: ['aa', 'ff', 'zz'] },
             ],
         },
         {
-            idQualifier: { type: 'id', issuers: [0, 1, 2] },
+            type: 'identity',
+            source: ['identity'],
+            issuers: [
+                new IdentityProviderDID('Testnet', 0).toJSON(),
+                new IdentityProviderDID('Testnet', 1).toJSON(),
+                new IdentityProviderDID('Testnet', 2).toJSON(),
+            ],
             statement: [{ type: 'RevealAttribute', attributeTag: 'firstName' }],
         },
     ],

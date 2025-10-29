@@ -1,4 +1,3 @@
-import { CIS4 } from '../cis4/util.js';
 import {
     GenericAtomicStatement,
     GenericMembershipStatement,
@@ -6,8 +5,17 @@ import {
     GenericRangeStatement,
     GenericRevealStatement,
 } from '../commonProofTypes.js';
-import type { ArInfo, AttributeKey, HexString, IdentityObjectV1, IdentityProvider, IpInfo, Policy } from '../types.js';
-import type * as ContractAddress from '../types/ContractAddress.js';
+import type {
+    ArInfo,
+    AttributeKey,
+    HexString,
+    IdentityObjectV1,
+    IdentityProvider,
+    IpInfo,
+    Network,
+    Policy,
+} from '../types.js';
+import * as ContractAddress from '../types/ContractAddress.js';
 
 /**
  * The "Distributed Identifier" string.
@@ -377,13 +385,47 @@ export type CredentialsInputsIdentity = {
     knownArs: Record<number, ArInfo>;
 };
 
-/** Union of the different inputs required to verify corresponding proofs */
-type CredentialsInputs = CredentialsInputsAccount | CredentialsInputsWeb3 | CredentialsInputsIdentity;
+export class IdentityProviderDID {
+    constructor(
+        public network: Network,
+        public index: number
+    ) {}
 
-/** Contains the credential status and inputs required to verify a corresponding credential proof */
-export type CredentialWithMetadata = {
-    /** The credential status */
-    status: CIS4.CredentialStatus;
-    /** The public data required to verify a corresponding credential proof */
-    inputs: CredentialsInputs;
-};
+    public toJSON(): DIDString {
+        return `ccd:${this.network.toLowerCase()}:idp:${this.index}`;
+    }
+
+    public static fromJSON(did: DIDString): IdentityProviderDID {
+        const parts = did.split(':');
+        if (parts.length !== 4 || parts[0] !== 'ccd' || parts[2] !== 'idp') {
+            throw new Error(`Invalid IdentityQualifierDID format: ${did}`);
+        }
+        const network = parts[1].toUpperCase() as Network;
+        const index = parseInt(parts[3], 10);
+        if (isNaN(index)) {
+            throw new Error(`Invalid index in IdentityProviderDID: ${parts[3]}`);
+        }
+        return new IdentityProviderDID(network, index);
+    }
+}
+export class ContractInstanceDID {
+    constructor(
+        public network: Network,
+        public address: ContractAddress.Type
+    ) {}
+
+    public toJSON(): DIDString {
+        return `ccd:${this.network.toLowerCase()}:sci:${this.address.index}:${this.address.subindex}`;
+    }
+
+    public static fromJSON(did: DIDString): ContractInstanceDID {
+        const parts = did.split(':');
+        if (parts.length !== 5 || parts[0] !== 'ccd' || parts[2] !== 'sci') {
+            throw new Error(`Invalid ContractInstanceDID format: ${did}`);
+        }
+        const network = parts[1].toUpperCase() as Network;
+        const index = BigInt(parts[3]);
+        const subindex = BigInt(parts[4]);
+        return new ContractInstanceDID(network, ContractAddress.create(index, subindex));
+    }
+}

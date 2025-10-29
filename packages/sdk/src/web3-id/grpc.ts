@@ -3,6 +3,7 @@ import { CIS4 } from '../cis4/util.js';
 import { ConcordiumGRPCClient } from '../grpc/GRPCClient.js';
 import { BlockHash, ContractAddress, CredentialRegistrationId, Network, VerifiablePresentation } from '../pub/types.js';
 import {
+    CredentialsInputs,
     VerifiableCredentialProof,
     VerifiableCredentialProofAccount,
     VerifiableCredentialProofWeb3Id,
@@ -10,7 +11,7 @@ import {
 } from '../types/VerifiablePresentation.js';
 import { bail } from '../util.js';
 import { parseYearMonth } from './helpers.js';
-import { CredentialWithMetadata, CredentialsInputsAccount, CredentialsInputsWeb3 } from './types.js';
+import { CredentialsInputsAccount, CredentialsInputsWeb3 } from './types.js';
 
 function parseAccountProofMetadata(cred: VerifiableCredentialProofAccount): {
     credId: CredentialRegistrationId.Type;
@@ -39,6 +40,14 @@ function parseWeb3IdProofMetadata(cred: VerifiableCredentialProofWeb3Id): {
 
     return { contract, holder };
 }
+
+/** Contains the credential status and inputs required to verify a corresponding credential proof */
+export type CredentialWithMetadata = {
+    /** The credential status */
+    status: CIS4.CredentialStatus;
+    /** The public data required to verify a corresponding credential proof */
+    inputs: CredentialsInputs;
+};
 
 /**
  * Verifies the public metadata of the {@linkcode VerifiableCredentialProof}.

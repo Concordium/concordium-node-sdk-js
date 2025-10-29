@@ -7,15 +7,14 @@ import {
     AccountTransactionType,
     AttributeKey,
     ConcordiumGRPCClient,
-    Network,
     NextAccountNonce,
     RegisterDataPayload,
     cborDecode,
     cborEncode,
     signTransaction,
 } from '../../index.js';
-import { ContractAddress, DataBlob, TransactionExpiry, TransactionHash } from '../../types/index.js';
-import { AtomicStatementV2, DIDString } from '../../web3-id/types.js';
+import { DataBlob, TransactionExpiry, TransactionHash } from '../../types/index.js';
+import { AtomicStatementV2, ContractInstanceDID, DIDString, IdentityProviderDID } from '../../web3-id/types.js';
 import { GivenContextJSON, givenContextFromJSON, givenContextToJSON } from './internal.js';
 import { CredentialContextLabel, GivenContext } from './types.js';
 
@@ -180,61 +179,16 @@ export type JSON = {
 
 type IdentityCredType = 'identity' | 'account';
 
-export class IdentityProviderDID {
-    constructor(
-        public network: Network,
-        public index: number
-    ) {}
-
-    public toJSON(): DIDString {
-        return `ccd:${this.network.toLowerCase()}:idp:${this.index}`;
-    }
-
-    public static fromJSON(did: DIDString): IdentityProviderDID {
-        const parts = did.split(':');
-        if (parts.length !== 4 || parts[0] !== 'ccd' || parts[2] !== 'idp') {
-            throw new Error(`Invalid IdentityQualifierDID format: ${did}`);
-        }
-        const network = parts[1].toUpperCase() as Network;
-        const index = parseInt(parts[3], 10);
-        if (isNaN(index)) {
-            throw new Error(`Invalid index in IdentityQualifierDID: ${parts[3]}`);
-        }
-        return new IdentityProviderDID(network, index);
-    }
-}
-export class ContractInstanceDID {
-    constructor(
-        public network: Network,
-        public address: ContractAddress.Type
-    ) {}
-
-    public toJSON(): DIDString {
-        return `ccd:${this.network.toLowerCase()}:sci:${this.address.index}:${this.address.subindex}`;
-    }
-
-    public static fromJSON(did: DIDString): ContractInstanceDID {
-        const parts = did.split(':');
-        if (parts.length !== 5 || parts[0] !== 'ccd' || parts[2] !== 'sci') {
-            throw new Error(`Invalid Web3IdQualifierDID format: ${did}`);
-        }
-        const network = parts[1].toUpperCase() as Network;
-        const index = BigInt(parts[3]);
-        const subindex = BigInt(parts[4]);
-        return new ContractInstanceDID(network, ContractAddress.create(index, subindex));
-    }
-}
-
 export type IdentityStatement = {
     type: 'identity';
     source: IdentityCredType[]; // Should never be empty, and always maximum all values from `IdentityCredType`.
-    statements: AtomicStatementV2<AttributeKey>[];
+    statement: AtomicStatementV2<AttributeKey>[];
     issuers: IdentityProviderDID[];
 };
 
 export type Web3IdStatement = {
     type: 'web3Id';
-    statements: AtomicStatementV2<string>[];
+    statement: AtomicStatementV2<string>[];
     issuers: ContractInstanceDID[];
 };
 

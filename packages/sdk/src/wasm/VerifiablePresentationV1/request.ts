@@ -26,6 +26,8 @@ import {
 import { GivenContextJSON, givenContextFromJSON, givenContextToJSON } from './internal.js';
 import { CredentialContextLabel, GivenContext } from './types.js';
 
+const VERSION = 1;
+
 /**
  * Context information for a verifiable presentation request.
  * Contains both the context data that is already known (given) and
@@ -82,7 +84,7 @@ export type AnchorData = {
     /** Type identifier for Concordium Verifiable Request Anchor */
     type: 'CCDVRA';
     /** Version of the anchor data format */
-    version: number;
+    version: typeof VERSION;
     /** Hash of the presentation request */
     // TODO: maybe use a specific type for sha256 hash
     hash: Uint8Array;
@@ -110,7 +112,7 @@ export function createAnchor(
     publicInfo?: Record<string, any>
 ): Uint8Array {
     const hash = computeAnchorHash(context, credentialStatements);
-    const data: AnchorData = { type: 'CCDVRA', version: 1, hash, public: publicInfo };
+    const data: AnchorData = { type: 'CCDVRA', version: VERSION, hash, public: publicInfo };
     return cborEncode(data);
 }
 
@@ -161,8 +163,7 @@ export function decodeAnchor(cbor: Uint8Array): AnchorData {
     if (typeof value !== 'object' || value === null) throw new Error('Expected a cbor encoded object');
     // required fields
     if (!('type' in value) || value.type !== 'CCDVRA') throw new Error('Expected "type" to be "CCDVRA"');
-    if (!('version' in value) || typeof value.version !== 'number')
-        throw new Error('Expected "version" to be a number');
+    if (!('version' in value) || value.version !== VERSION) throw new Error('Expected "version" to be 1');
     if (!('hash' in value) || !(value.hash instanceof Uint8Array))
         throw new Error('Expected "hash" to be a Uint8Array');
     // optional fields

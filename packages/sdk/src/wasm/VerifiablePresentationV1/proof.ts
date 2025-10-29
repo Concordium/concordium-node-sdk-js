@@ -16,10 +16,7 @@ import {
     isKnown,
     sha256,
 } from '../../index.js';
-import {
-    ConcordiumWeakLinkingProofV1,
-    CommitmentInput as OldCommitmentInputs,
-} from '../../types/VerifiablePresentation.js';
+import { ConcordiumWeakLinkingProofV1 } from '../../types/VerifiablePresentation.js';
 import { bail } from '../../util.js';
 import {
     AccountCommitmentInput,
@@ -29,9 +26,11 @@ import {
     CredentialsInputsWeb3,
     DIDString,
     IdentityCommitmentInput,
+    CommitmentInput as OldCommitmentInputs,
+    Web3IdProofRequest,
     Web3IssuerCommitmentInput,
 } from '../../web3-id/index.js';
-import { Web3IdProofRequest, getVerifiablePresentation } from '../VerifiablePresentation.js';
+import { getVerifiablePresentation } from '../VerifiablePresentation.js';
 import { GivenContextJSON, givenContextFromJSON, givenContextToJSON } from './internal.js';
 import * as Request from './request.js';
 import { GivenContext, ZKProofV4 } from './types.js';

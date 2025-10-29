@@ -22,8 +22,7 @@ import {
     getVerifiablePresentation,
     verifyAtomicStatements,
 } from '../../src/index.js';
-import { CommitmentInput } from '../../src/types/VerifiablePresentation.js';
-import { CredentialSchemaSubject, TimestampAttribute } from '../../src/web3-id/types.js';
+import { CommitmentInput, CredentialSchemaSubject, TimestampAttribute } from '../../src/web3-id/types.js';
 import {
     expectedAccountCredentialPresentation,
     expectedWeb3IdCredentialPresentation,

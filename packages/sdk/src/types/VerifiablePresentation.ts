@@ -142,15 +142,6 @@ export function reviveDateFromTimeStampAttribute(this: any, _key: string, value:
 }
 
 /**
- * The commitment input variants used for the original verifiable presentation version
- */
-export type CommitmentInput = Web3IssuerCommitmentInput | AccountCommitmentInput;
-/**
- * The credentials inputs variants used for the original verifiable presentation version
- */
-export type CredentialsInputs = CredentialsInputsWeb3 | CredentialsInputsAccount;
-
-/**
  * A presentation is the response to a corresponding request containing a set of statements about an identity.
  * It contains proofs for statements, ownership proof for all credentials, and a context. The
  * only missing part to verify the proof are the public commitments.

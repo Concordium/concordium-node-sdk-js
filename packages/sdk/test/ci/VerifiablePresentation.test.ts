@@ -1,6 +1,6 @@
 import { CIS4 } from '../../src/pub/cis4.ts';
-import { Web3IdProofRequest, verifyPresentation } from '../../src/pub/wasm.ts';
-import { CredentialWithMetadata } from '../../src/pub/web3-id.ts';
+import { verifyPresentation } from '../../src/pub/wasm.ts';
+import { CredentialWithMetadata, Web3IdProofRequest } from '../../src/pub/web3-id.ts';
 import {
     VerifiablePresentation,
     replaceDateWithTimeStampAttribute,

@@ -8,6 +8,7 @@ import {
 import type {
     ArInfo,
     AttributeKey,
+    CryptographicParameters,
     HexString,
     IdentityObjectV1,
     IdentityProvider,
@@ -104,6 +105,11 @@ export type IdentityCommitmentInput = {
     /** The policy associated with the credential. */
     policy: Policy;
 };
+
+/**
+ * The commitment input variants used for the original verifiable presentation version
+ */
+export type CommitmentInput = Web3IssuerCommitmentInput | AccountCommitmentInput;
 
 /** Represents timestamp property schema for credential attributes. */
 export type TimestampProperty = {
@@ -320,12 +326,12 @@ export function isAccountCredentialStatement(statement: CredentialStatement): st
 }
 
 /**
- * Type predicate to identifying {@linkcode Web3IdCredentialStatement}s from a {@linkcode CredentialStatement}
+ * Type predicate to identifying {@linkcode VerifiableCredentialStatement}s from a {@linkcode CredentialStatement}
  */
-// TODO: (breaking) rename to isWeb3IdQualifier.
+// TODO: (breaking) rename to isWeb3IdCredentialStatement.
 export function isVerifiableCredentialStatement(
     statement: CredentialStatement
-): statement is Web3IdCredentialStatement {
+): statement is VerifiableCredentialStatement {
     return statement.idQualifier.type === 'sci';
 }
 
@@ -338,7 +344,8 @@ export type AccountCredentialStatement = {
 };
 
 /** Statement type for Web3 ID credentials with string attribute keys. */
-export type Web3IdCredentialStatement = {
+// TODO: (breaking) rename to Web3IdCredentialStatement.
+export type VerifiableCredentialStatement = {
     /** Qualifier specifying which Web3 ID credential issuers are valid. */
     idQualifier: VerifiableCredentialQualifier;
     /** Array of atomic statements to prove about the Web3 ID credential. */
@@ -346,10 +353,40 @@ export type Web3IdCredentialStatement = {
 };
 
 /** Union type for all credential statement types. */
-export type CredentialStatement = AccountCredentialStatement | Web3IdCredentialStatement;
+export type CredentialStatement = AccountCredentialStatement | VerifiableCredentialStatement;
 
 /** Array type for credential statements. */
 export type CredentialStatements = CredentialStatement[];
+
+export type RequestStatement<AttributeKey = string> = {
+    id: DIDString;
+    statement: AtomicStatementV2<AttributeKey>[];
+    /** The type field is present iff the request is for a verifiable credential */
+    type?: string[];
+};
+
+export function isVerifiableCredentialRequestStatement(statement: RequestStatement): boolean {
+    return Boolean(statement.type);
+}
+
+/**
+ * Describes a proof request which is at the core of computing the corresponding proof.
+ */
+export type Web3IdProofRequest = {
+    /** The challenge of the proof */
+    challenge: string;
+    /** The statements paired with the credential IDs to prove them for */
+    credentialStatements: RequestStatement[];
+};
+
+/**
+ * The input to {@linkcode getVerifiablePresentation}
+ */
+export type Web3IdProofInput = {
+    request: Web3IdProofRequest;
+    globalContext: CryptographicParameters;
+    commitmentInputs: CommitmentInput[];
+};
 
 /** Represents a credential subject with identifier and attributes. */
 export type CredentialSubject = {
@@ -374,6 +411,10 @@ export type CredentialsInputsWeb3 = {
     /** The public key of the Web3 ID issuer */
     issuerPk: HexString;
 };
+/**
+ * The credentials inputs variants used for the original verifiable presentation version
+ */
+export type CredentialsInputs = CredentialsInputsWeb3 | CredentialsInputsAccount;
 
 /** Credentials inputs for identity credential proofs. */
 export type CredentialsInputsIdentity = {
@@ -408,6 +449,7 @@ export class IdentityProviderDID {
         return new IdentityProviderDID(network, index);
     }
 }
+
 export class ContractInstanceDID {
     constructor(
         public network: Network,

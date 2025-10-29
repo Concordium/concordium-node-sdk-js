@@ -1,18 +1,30 @@
-import { ContractAddress, CredentialStatementBuilder } from '@concordium/web-sdk';
+import {
+    ContractAddress,
+    ContractInstanceDID,
+    IdentityProviderDID,
+    VerifiablePresentationRequestV1,
+} from '@concordium/web-sdk';
 
 // #region documentation-snippet
-let builder = new CredentialStatementBuilder();
+let builder = VerifiablePresentationRequestV1.statementBuilder();
 
 // Add a web3 ID credential statements
-builder = builder.forWeb3IdCredentials([ContractAddress.create(123)], (b) => b.addMembership('position', ['engineer']));
+builder = builder.addWeb3IdStatement([new ContractInstanceDID('Testnet', ContractAddress.create(123))], (b) =>
+    b.addMembership('position', ['engineer'])
+);
 
 // Add an identity credential statement. Alternatively, if the proof produced from the
-// statement should be tied to an account, use `builder.forAccountCredentials`.
-builder = builder.forIdentityCredentials([0, 1], (b) => {
-    b.addMinimumAge(18);
-    b.addEUResidency();
-    b.revealAttribute('firstName');
-});
+// statement should be tied to an account, use `builder.addAccountStatement`.
+// A third option `builder.addAccountOrIdentityStatement`exists where it's up to the
+// application holding the credentials to decide which proof is produced.
+builder = builder.addIdentityStatement(
+    [0, 1].map((idpIndex) => new IdentityProviderDID('Testnet', idpIndex)),
+    (b) => {
+        b.addMinimumAge(18);
+        b.addEUResidency();
+        b.revealAttribute('firstName');
+    }
+);
 
 // Get the complete statement to request a proof of.
 const statement = builder.getStatements();

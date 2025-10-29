@@ -1,16 +1,14 @@
 import {
     ArInfo,
     ConcordiumHdWallet,
-    CredentialStatementBuilder,
     IdentityObjectV1,
     IdentityProvider,
-    SpecifiedIdentityCredentialStatement,
+    IdentityProviderDID,
     VerifiablePresentationRequestV1,
     VerifiablePresentationV1,
-    VerificationAuditRecord,
+    VerificationAuditRecordV1,
     createIdentityCommitmentInputWithHdWallet,
     createIdentityDID,
-    isIdentityCredentialStatement,
     sha256,
     streamToList,
 } from '@concordium/web-sdk';
@@ -128,8 +126,8 @@ const context = VerifiablePresentationRequestV1.createSimpleContext(
     randomUUID(),
     'Example VP'
 );
-const statements = new CredentialStatementBuilder()
-    .forIdentityCredentials([identityProviderIndex], (b) => {
+const statements = VerifiablePresentationRequestV1.statementBuilder()
+    .addAccountOrIdentityStatement([new IdentityProviderDID(network, identityProviderIndex)], (b) => {
         b.addEUResidency();
         b.addMinimumAge(18);
     })
@@ -169,21 +167,21 @@ const arsInfos: Record<number, ArInfo> = ars.reduce((acc, ar) => {
 }, {});
 const idp: IdentityProvider = { ipInfo, arsInfos };
 
+// simulate receiving presentation request
+const requestParsed = VerifiablePresentationRequestV1.fromJSON(JSONBig.parse(requestJson));
 // At this point, we have all the values held inside the application.
 // From the above, we retreive the secret input which is at the core of creating the verifiable presentation (proof)
 const credentialInput = createIdentityCommitmentInputWithHdWallet(idObject, idp, identityIndex, wallet);
 
 // we select the identity to prove the statement for
-const selectedIdentity = createIdentityDID(network, identityProviderIndex, identityIndex);
-// we unwrap here, as we know the statement exists (we created it just above)
-const idStatement = presentationRequest.credentialStatements.find(isIdentityCredentialStatement)!;
-const specifiedStatement: SpecifiedIdentityCredentialStatement = {
+const selectedIdentity = createIdentityDID(network, identityProviderIndex, identityIndex); // we unwrap here, as we know the statement exists (we created it just above)
+const idStatement = requestParsed.credentialStatements.find(
+    (s) => s.type === 'identity'
+)! as VerifiablePresentationRequestV1.IdentityStatement; // we unwrap here, as we know the statement exists (we created it just above)
+const specifiedStatement: VerifiablePresentationV1.IdentityStatement = {
     id: selectedIdentity,
     statement: idStatement.statement,
 };
-
-// simulate receiving presentation request
-const requestParsed = VerifiablePresentationRequestV1.fromJSON(JSONBig.parse(requestJson));
 
 console.log('Waiting for anchor transaction to finalize:', requestParsed.transactionRef.toString());
 
@@ -210,8 +208,8 @@ if (!(await VerifiablePresentationV1.verifyWithNode(presentationParsed, presenta
     throw new Error('Failed to verify the presentation');
 
 // Finally, the entity requesting the proof stores the audit report and registers a pulic version on chain
-const report = VerificationAuditRecord.create(randomUUID(), presentationRequest, presentation);
-const auditTransaction = await VerificationAuditRecord.registerAnchor(report, grpc, sender, signer, {
+const report = VerificationAuditRecordV1.create(randomUUID(), presentationRequest, presentation);
+const auditTransaction = await VerificationAuditRecordV1.registerAnchor(report, grpc, sender, signer, {
     info: 'Some public info',
 });
 

@@ -31,7 +31,7 @@ import {
     IdentityCommitmentInput,
     Web3IssuerCommitmentInput,
 } from '../../web3-id/index.js';
-import { Web3IdProofRequest, getVerifiablePresentation } from '../VerifiablePresentation.ts';
+import { Web3IdProofRequest, getVerifiablePresentation } from '../VerifiablePresentation.js';
 import { GivenContextJSON, givenContextFromJSON, givenContextToJSON } from './internal.js';
 import * as Request from './request.js';
 import { GivenContext, ZKProofV4 } from './types.js';

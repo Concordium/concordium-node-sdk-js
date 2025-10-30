@@ -292,6 +292,10 @@ function getAccountCredentialQualifier(validIdentityProviders: number[]): Identi
     };
 }
 
+/**
+ * Builder class for constructing atomic statements about credential attributes.
+ * Provides a fluent API for adding range, membership, and reveal statements with validation.
+ */
 export class AtomicStatementBuilder<AttributeKey = string> implements InternalBuilder<AttributeKey> {
     /** Array of atomic statements being built. */
     statements: AtomicStatementV2<AttributeKey>[];
@@ -395,6 +399,11 @@ export class AtomicStatementBuilder<AttributeKey = string> implements InternalBu
     }
 }
 
+/**
+ * Specialized builder for account/identity credential statements.
+ * Extends AtomicStatementBuilder with convenience methods for common identity attributes
+ * like age, residency, and document expiry.
+ */
 export class AccountStatementBuild extends AtomicStatementBuilder<AttributeKey> {
     /**
      * Add to the statement that the age is at minimum the given value.
@@ -456,7 +465,11 @@ export class AccountStatementBuild extends AtomicStatementBuilder<AttributeKey> 
 
 /** Internal type alias for statement builders. */
 type InternalBuilder<AttributeKey> = StatementBuilder<StatementAttributeType, AttributeKey>;
-/** Builder class for constructing credential statements with different credential types. */
+
+/**
+ * Builder class for constructing credential statements for the original verifiable presentation protocol.
+ * Supports both Web3 ID credentials and account/identity credentials with issuer qualifiers.
+ */
 export class Web3StatementBuilder {
     /** Array of credential statements being built. */
     private statements: CredentialStatements = [];
@@ -516,7 +529,14 @@ export class Web3StatementBuilder {
 }
 
 /**
- * Create a DID string for a web3id credential. Used to build a request for a verifiable credential.
+ * Creates a DID string for a Web3 ID credential.
+ * Used to build a request for a verifiable credential issued by a smart contract.
+ *
+ * @param network - The Concordium network
+ * @param publicKey - The public key of the credential holder
+ * @param index - The contract index
+ * @param subindex - The contract subindex
+ * @returns DID string in format: did:ccd:{network}:sci:{index}:{subindex}/credentialEntry/{publicKey}
  */
 export function createWeb3IdDID(network: Network, publicKey: string, index: bigint, subindex: bigint): DIDString {
     return (
@@ -532,14 +552,25 @@ export function createWeb3IdDID(network: Network, publicKey: string, index: bigi
 }
 
 /**
- * Create a DID string for a web3id credential. Used to build a request for a verifiable credential.
+ * Creates a DID string for an account credential.
+ * Used to build a request for a verifiable credential based on an account credential.
+ *
+ * @param network - The Concordium network
+ * @param credId - The credential ID (registration ID)
+ * @returns DID string in format: did:ccd:{network}:cred:{credId}
  */
 export function createAccountDID(network: Network, credId: string): DIDString {
     return 'did:ccd:' + network.toLowerCase() + ':cred:' + credId;
 }
 
 /**
- * Create a DID string for an identity credential. Used to build a request for a verifiable credential.
+ * Creates a DID string for an identity credential.
+ * Used to build a request for a verifiable credential based on an identity object.
+ *
+ * @param network - The Concordium network
+ * @param identityProviderIndex - The index of the identity provider that issued the identity
+ * @param identityIndex - The index of the identity
+ * @returns DID string in format: did:ccd:{network}:id:{identityProviderIndex}:{identityIndex}
  */
 // TODO: figure out if this matches the identifier.
 export function createIdentityDID(network: Network, identityProviderIndex: number, identityIndex: number): DIDString {
@@ -547,7 +578,14 @@ export function createIdentityDID(network: Network, identityProviderIndex: numbe
 }
 
 /**
- * Create the commitment input required to create a proof for the given statements, using an account credential.
+ * Creates the commitment input required to generate a proof for account credential statements.
+ * The commitment input contains the attribute values and randomness needed for zero-knowledge proofs.
+ *
+ * @param statements - The atomic statements to prove
+ * @param identityProvider - The identity provider index that issued the credential
+ * @param attributes - The credential holder's attributes
+ * @param randomness - Randomness values for commitments, keyed by attribute index
+ * @returns Account commitment input for proof generation
  */
 export function createAccountCommitmentInput(
     statements: AtomicStatementV2[],
@@ -571,8 +609,16 @@ export function createAccountCommitmentInput(
 }
 
 /**
- * Create the commitment input required to create a proof for the given statements, using an account credential.
- * Uses a ConcordiumHdWallet to get randomness needed.
+ * Creates the commitment input required to generate a proof for account credential statements.
+ * Uses a ConcordiumHdWallet to derive the necessary randomness values.
+ *
+ * @param statements - The atomic statements to prove
+ * @param identityProvider - The identity provider index that issued the credential
+ * @param attributes - The credential holder's attributes
+ * @param wallet - The HD wallet for deriving randomness
+ * @param identityIndex - The identity index in the wallet
+ * @param credIndex - The credential index in the wallet
+ * @returns Account commitment input for proof generation
  */
 export function createAccountCommitmentInputWithHdWallet(
     statements: AtomicStatementV2[],
@@ -597,7 +643,14 @@ export function createAccountCommitmentInputWithHdWallet(
 }
 
 /**
- * Create the commitment input required to create a proof for the given statements, using an web3Id credential.
+ * Creates the commitment input required to generate a proof for Web3 ID credential statements.
+ * The commitment input contains the attribute values, randomness, and signature needed for proofs.
+ *
+ * @param verifiableCredentialPrivateKey - The private key for signing the credential
+ * @param credentialSubject - The credential subject with attributes
+ * @param randomness - Randomness values for commitments, keyed by attribute name
+ * @param signature - The credential signature
+ * @returns Web3 issuer commitment input for proof generation
  */
 export function createWeb3CommitmentInput(
     verifiableCredentialPrivateKey: HexString,
@@ -615,8 +668,16 @@ export function createWeb3CommitmentInput(
 }
 
 /**
- * Create the commitment input required to create a proof for the given statements, using an web3Id credential.
- * Uses a ConcordiumHdWallet to supply the public key and the signing key of the credential.
+ * Creates the commitment input required to generate a proof for Web3 ID credential statements.
+ * Uses a ConcordiumHdWallet to derive the credential signing key.
+ *
+ * @param wallet - The HD wallet for deriving the signing key
+ * @param issuer - The contract address of the credential issuer
+ * @param credentialIndex - The credential index in the wallet
+ * @param credentialSubject - The credential subject with attributes
+ * @param randomness - Randomness values for commitments, keyed by attribute name
+ * @param signature - The credential signature
+ * @returns Web3 issuer commitment input for proof generation
  */
 export function createWeb3CommitmentInputWithHdWallet(
     wallet: ConcordiumHdWallet,
@@ -635,7 +696,13 @@ export function createWeb3CommitmentInputWithHdWallet(
 }
 
 /**
- * Create the commitment input required to create a proof for the given statements, using an identity credential.
+ * Creates the commitment input required to generate a proof for identity credential statements.
+ * The commitment input contains the identity object and secrets needed for zero-knowledge proofs.
+ *
+ * @param identityProvider - The identity provider that issued the identity
+ * @param idObject - The identity object containing identity information
+ * @param idObjectUseData - Additional data required for using the identity object
+ * @returns Identity commitment input for proof generation
  */
 export function createIdentityCommitmentInput(
     identityProvider: IdentityProvider,
@@ -657,8 +724,14 @@ export function createIdentityCommitmentInput(
 }
 
 /**
- * Create the commitment input required to create a proof for the given statements, using an identity credential.
- * Uses a ConcordiumHdWallet to get values for the {@linkcode IdObjectUseData}.
+ * Creates the commitment input required to generate a proof for identity credential statements.
+ * Uses a ConcordiumHdWallet to derive the identity secrets (PRF key, ID cred secret, randomness).
+ *
+ * @param idObject - The identity object containing identity information
+ * @param identityProvider - The identity provider that issued the identity
+ * @param identityIndex - The identity index in the wallet
+ * @param wallet - The HD wallet for deriving identity secrets
+ * @returns Identity commitment input for proof generation
  */
 export function createIdentityCommitmentInputWithHdWallet(
     idObject: IdentityObjectV1,
@@ -712,7 +785,12 @@ function isInSet(value: AttributeType, set: AttributeType[]) {
 }
 
 /**
- * Given an atomic statement and a prover's attributes, determine whether the statement is fulfilled.
+ * Checks whether a prover can fulfill an atomic statement with their attributes.
+ * Validates that the prover has the required attribute and that it satisfies the statement constraints.
+ *
+ * @param statement - The atomic statement to check
+ * @param attributes - The prover's attributes
+ * @returns True if the statement can be proven with the given attributes
  */
 export function canProveAtomicStatement(
     statement: AtomicStatementV2,
@@ -739,7 +817,12 @@ export function canProveAtomicStatement(
 }
 
 /**
- * Given a credential statement and a prover's attributes, determine whether the statements are fulfilled.
+ * Checks whether a prover can fulfill all atomic statements in a credential statement.
+ * Returns true only if all atomic statements can be proven with the given attributes.
+ *
+ * @param credentialStatement - The credential statement containing multiple atomic statements
+ * @param attributes - The prover's attributes
+ * @returns True if all statements can be proven with the given attributes
  */
 export function canProveCredentialStatement(
     credentialStatement: CredentialStatement,

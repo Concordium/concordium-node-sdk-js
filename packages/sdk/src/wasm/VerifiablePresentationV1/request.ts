@@ -186,26 +186,54 @@ export type JSON = {
     transactionRef: TransactionHash.JSON;
 };
 
+/**
+ * Type of identity credential source that can be used for proving attributes.
+ */
 type IdentityCredType = 'identity' | 'account';
 
+/**
+ * Statement requesting proofs from identity credentials issued by identity providers.
+ * Can specify whether to accept proofs from identity credentials, account credentials, or both.
+ */
 export type IdentityStatement = {
+    /** Type discriminator for identity statements */
     type: 'identity';
-    source: IdentityCredType[]; // Should never be empty, and always maximum all values from `IdentityCredType`.
+    /** Source types accepted for this statement (identity credential, account credential, or both) */
+    source: IdentityCredType[];
+    /** Atomic statements about identity attributes to prove */
     statement: AtomicStatementV2<AttributeKey>[];
+    /** Valid identity provider issuers for this statement */
     issuers: IdentityProviderDID[];
 };
 
+/**
+ * Statement requesting proofs from Web3 ID credentials issued by smart contracts.
+ */
 export type Web3IdStatement = {
+    /** Type discriminator for Web3 ID statements */
     type: 'web3Id';
+    /** Atomic statements about Web3 ID attributes to prove */
     statement: AtomicStatementV2<string>[];
+    /** Valid smart contract issuers for this statement */
     issuers: ContractInstanceDID[];
 };
 
+/**
+ * Union type representing all supported statement types in a verifiable presentation request.
+ */
 export type Statement = IdentityStatement | Web3IdStatement;
+
+/**
+ * JSON representation of statements with issuer DIDs serialized as strings.
+ */
 type StatementJSON = (Omit<IdentityStatement, 'issuers'> | Omit<Web3IdStatement, 'issuers'>) & {
     issuers: DIDString[];
 };
 
+/**
+ * Builder class for constructing credential statement requests.
+ * Provides methods to add different types of credential statements with their requirements.
+ */
 class StatementBuilder {
     /** Array of credential statements being built. */
     private statements: Statement[] = [];
@@ -312,6 +340,11 @@ class StatementBuilder {
     }
 }
 
+/**
+ * Creates a new statement builder for constructing credential requests.
+ *
+ * @returns A new statement builder instance
+ */
 export function statementBuilder(): StatementBuilder {
     return new StatementBuilder();
 }

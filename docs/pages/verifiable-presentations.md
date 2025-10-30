@@ -18,7 +18,7 @@ This document describes how to create v1 verifiable presentations and how to ver
 The SDK contains a helper to create statements about identities, which can
 then be proven.
 
-To do so, use the CredentialStatementBuilder, to build a statement:
+To do so, use the _presentation request statement builder_, to build a statement:
 
 {@codeblock ~~:nodejs/common/verifiable-credential-statements.ts#documentation-snippet}
 

@@ -49,10 +49,28 @@ export type Context = {
     requested: GivenContext[];
 };
 
+/**
+ * Statement proving attributes from an account credential.
+ * Contains the account credential DID and atomic statements about account attributes.
+ */
 export type AccountStatement = { id: DIDString; statement: AtomicStatementV2<AttributeKey>[] };
+
+/**
+ * Statement proving attributes from an identity credential issued by an identity provider.
+ * Contains the identity DID and atomic statements about identity attributes.
+ */
 export type IdentityStatement = { id: DIDString; statement: AtomicStatementV2<AttributeKey>[] };
+
+/**
+ * Statement proving attributes from a Web3 ID credential.
+ * Contains the Web3 ID DID, atomic statements about Web3 attributes, and credential type information.
+ */
 export type Web3IdStatement = { id: DIDString; statement: AtomicStatementV2<string>[]; type: string[] };
 
+/**
+ * Union type representing all supported statement types in a verifiable presentation.
+ * Each statement contains proofs about specific credential attributes.
+ */
 export type Statement = IdentityStatement | Web3IdStatement | AccountStatement;
 
 function isSpecifiedAccountCredentialStatement(statement: Statement): statement is AccountStatement {
@@ -256,6 +274,11 @@ export function fromJSON(value: JSON): VerifiablePresentationV1 {
     return new VerifiablePresentationV1(presentationContext, value.verifiableCredential, value.proof);
 }
 
+/**
+ * Union type of all commitment input types used for generating zero-knowledge proofs.
+ * These inputs contain the secret information needed to create proofs without revealing
+ * the actual credential data.
+ */
 export type CommitmentInput = IdentityCommitmentInput | Web3IssuerCommitmentInput | AccountCommitmentInput;
 
 /**
@@ -400,6 +423,10 @@ export function create(
  */
 export type VerificationResult = { type: 'success' } | { type: 'failed'; error: Error };
 
+/**
+ * Union type of all credential input types used for verification.
+ * These inputs contain the public credential data needed to verify proofs.
+ */
 export type CredentialsInputs = CredentialsInputsWeb3 | CredentialsInputsAccount | CredentialsInputsIdentity;
 
 /**

@@ -194,6 +194,10 @@ export type CredentialSchemaSubject = {
     required: string[];
 };
 
+/**
+ * Standard schema for identity credential subjects issued by Concordium identity providers.
+ * Defines all standard identity attributes like name, date of birth, nationality, etc.
+ */
 export const IDENTITY_SUBJECT_SCHEMA: CredentialSchemaSubject = {
     type: 'object',
     properties: {
@@ -284,15 +288,35 @@ export const IDENTITY_SUBJECT_SCHEMA: CredentialSchemaSubject = {
     required: [],
 };
 
-/** Type aliases for different statement types with specific attribute key constraints. */
+/**
+ * Statement asserting that an attribute value falls within a specified range.
+ * The range is inclusive at the lower bound and exclusive at the upper bound.
+ */
 export type RangeStatementV2<AttributeKey = string> = GenericRangeStatement<AttributeKey, AttributeType>;
+
+/**
+ * Statement asserting that an attribute value is not in a specified set of values.
+ */
 export type NonMembershipStatementV2<AttributeKey = string> = GenericNonMembershipStatement<
     AttributeKey,
     AttributeType
 >;
+
+/**
+ * Statement asserting that an attribute value is in a specified set of values.
+ */
 export type MembershipStatementV2<AttributeKey = string> = GenericMembershipStatement<AttributeKey, AttributeType>;
+
+/**
+ * Statement requesting that an attribute value be revealed in the proof.
+ * The actual value will be included in the proof output.
+ */
 export type RevealStatementV2<AttributeKey = string> = GenericRevealStatement<AttributeKey>;
 
+/**
+ * Union type representing any atomic statement that can be made about a credential attribute.
+ * Atomic statements are the building blocks of credential proofs.
+ */
 export type AtomicStatementV2<AttributeKey = string> = GenericAtomicStatement<AttributeKey, AttributeType>;
 
 /** Qualifier for Web3 ID credentials issued by smart contracts. */
@@ -355,16 +379,31 @@ export type VerifiableCredentialStatement = {
 /** Union type for all credential statement types. */
 export type CredentialStatement = AccountCredentialStatement | VerifiableCredentialStatement;
 
-/** Array type for credential statements. */
+/**
+ * Array type for credential statements.
+ */
 export type CredentialStatements = CredentialStatement[];
 
+/**
+ * A request statement linking atomic statements to a specific credential identifier.
+ * Used in proof requests to specify which credential should be used to prove statements.
+ */
 export type RequestStatement<AttributeKey = string> = {
+    /** The DID of the credential being requested */
     id: DIDString;
+    /** Array of atomic statements to prove about the credential */
     statement: AtomicStatementV2<AttributeKey>[];
     /** The type field is present iff the request is for a verifiable credential */
     type?: string[];
 };
 
+/**
+ * Type guard to check if a request statement is for a Web3 ID verifiable credential.
+ * Returns true if the statement includes type information (indicating Web3 ID).
+ *
+ * @param statement - The request statement to check
+ * @returns True if this is a Web3 ID credential request statement
+ */
 export function isVerifiableCredentialRequestStatement(statement: RequestStatement): boolean {
     return Boolean(statement.type);
 }
@@ -426,16 +465,38 @@ export type CredentialsInputsIdentity = {
     knownArs: Record<number, ArInfo>;
 };
 
+/**
+ * Decentralized Identifier (DID) for Concordium identity providers.
+ * Represents an identity provider on a specific Concordium network.
+ */
 export class IdentityProviderDID {
+    /**
+     * Creates a new identity provider DID.
+     *
+     * @param network - The Concordium network (Mainnet, Testnet)
+     * @param index - The identity provider index on the network
+     */
     constructor(
         public network: Network,
         public index: number
     ) {}
 
+    /**
+     * Serializes the identity provider DID to a string format.
+     *
+     * @returns DID string in format: ccd:{network}:idp:{index}
+     */
     public toJSON(): DIDString {
         return `ccd:${this.network.toLowerCase()}:idp:${this.index}`;
     }
 
+    /**
+     * Deserializes an identity provider DID from its string representation.
+     *
+     * @param did - The DID string to parse
+     * @returns The parsed identity provider DID
+     * @throws Error if the DID format is invalid
+     */
     public static fromJSON(did: DIDString): IdentityProviderDID {
         const parts = did.split(':');
         if (parts.length !== 4 || parts[0] !== 'ccd' || parts[2] !== 'idp') {
@@ -450,16 +511,38 @@ export class IdentityProviderDID {
     }
 }
 
+/**
+ * Decentralized Identifier (DID) for Concordium smart contract instances.
+ * Represents a smart contract that can issue Web3 ID credentials.
+ */
 export class ContractInstanceDID {
+    /**
+     * Creates a new contract instance DID.
+     *
+     * @param network - The Concordium network (Mainnet, Testnet)
+     * @param address - The contract address (index and subindex)
+     */
     constructor(
         public network: Network,
         public address: ContractAddress.Type
     ) {}
 
+    /**
+     * Serializes the contract instance DID to a string format.
+     *
+     * @returns DID string in format: ccd:{network}:sci:{index}:{subindex}
+     */
     public toJSON(): DIDString {
         return `ccd:${this.network.toLowerCase()}:sci:${this.address.index}:${this.address.subindex}`;
     }
 
+    /**
+     * Deserializes a contract instance DID from its string representation.
+     *
+     * @param did - The DID string to parse
+     * @returns The parsed contract instance DID
+     * @throws Error if the DID format is invalid
+     */
     public static fromJSON(did: DIDString): ContractInstanceDID {
         const parts = did.split(':');
         if (parts.length !== 5 || parts[0] !== 'ccd' || parts[2] !== 'sci') {

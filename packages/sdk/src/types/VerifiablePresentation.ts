@@ -2,14 +2,7 @@ import JSONBigInt from 'json-bigint';
 
 import { AtomicProof, GenericAtomicStatement } from '../commonProofTypes.js';
 import { HexString } from '../types.js';
-import {
-    AccountCommitmentInput,
-    AttributeType,
-    CredentialsInputsAccount,
-    CredentialsInputsWeb3,
-    DIDString,
-    Web3IssuerCommitmentInput,
-} from '../web3-id/types.js';
+import { AttributeType, DIDString } from '../web3-id/types.js';
 
 /**
  * A proof that establishes that the owner of the credential has indeed created

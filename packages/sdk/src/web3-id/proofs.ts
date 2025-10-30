@@ -564,17 +564,15 @@ export function createAccountDID(network: Network, credId: string): DIDString {
 }
 
 /**
- * Creates a DID string for an identity credential.
+ * Creates a DID string for an identity credential statement.
  * Used to build a request for a verifiable credential based on an identity object.
  *
  * @param network - The Concordium network
- * @param identityProviderIndex - The index of the identity provider that issued the identity
- * @param identityIndex - The index of the identity
- * @returns DID string in format: did:ccd:{network}:id:{identityProviderIndex}:{identityIndex}
+ * @returns DID string in format: did:ccd:{network}
  */
 // TODO: figure out if this matches the identifier.
-export function createIdentityDID(network: Network, identityProviderIndex: number, identityIndex: number): DIDString {
-    return 'did:ccd:' + network.toLowerCase() + ':id:' + identityProviderIndex + ':' + identityIndex;
+export function createIdentityStatementDID(network: Network): DIDString {
+    return 'did:ccd:' + network.toLowerCase();
 }
 
 /**

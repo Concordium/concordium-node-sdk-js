@@ -243,7 +243,7 @@ const contextValues: GivenContext[] = [{label: 'ResourceID', context: ...}];
 // The application holding the credentials selects the credentials to use and creates a DIDString from them.
 // This will be a combination of the below, i.e. probably not all at once
 const selectedCredentialIds: DIDString[] = [
-    createIdentityDID(...),
+    createIdentityStatementDID(...),
     createAccountDID(...),
     createWeb3IdDID(...),
 ];

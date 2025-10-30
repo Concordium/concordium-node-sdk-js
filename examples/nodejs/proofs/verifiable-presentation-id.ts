@@ -8,7 +8,7 @@ import {
     VerifiablePresentationV1,
     VerificationAuditRecordV1,
     createIdentityCommitmentInputWithHdWallet,
-    createIdentityDID,
+    createIdentityStatementDID,
     sha256,
     streamToList,
 } from '@concordium/web-sdk';
@@ -174,7 +174,7 @@ const requestParsed = VerifiablePresentationRequestV1.fromJSON(JSONBig.parse(req
 const credentialInput = createIdentityCommitmentInputWithHdWallet(idObject, idp, identityIndex, wallet);
 
 // we select the identity to prove the statement for
-const selectedIdentity = createIdentityDID(network, identityProviderIndex, identityIndex); // we unwrap here, as we know the statement exists (we created it just above)
+const selectedIdentity = createIdentityStatementDID(network); // we unwrap here, as we know the statement exists (we created it just above)
 const idStatement = requestParsed.credentialStatements.find(
     (s) => s.type === 'identity'
 )! as VerifiablePresentationRequestV1.IdentityStatement; // we unwrap here, as we know the statement exists (we created it just above)

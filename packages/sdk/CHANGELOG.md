@@ -9,7 +9,7 @@
 - types `IdentityCredentialQualifier`, `IdentityCommitmentInput`, and `CredentialsInputsIdentity` which have been added
   to the respective union types that reflect the possible variants.
 - helper functions `createIdentityCommitmentInput` and `createIdentityCommitmentInputWithHdWallet`
-- helper function `createIdentityDID`
+- helper function `createIdentityStatementDID`
 
 - types `VerifiablePresentationV1` and `VerifiablePresentationRequestV1` to be used with the new zero-knowledge proof
   protocol

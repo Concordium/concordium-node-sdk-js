@@ -52,6 +52,17 @@ Example: add the statement that the prover must be at least 18 years old:
     build.addMinimumAge(18);
 ```
 
+#### Maximum Age
+
+There is a helper function for specifying the prover must have some maximum
+age.
+
+Example: add the statement that the prover must be at most 27 years old:
+
+```ts
+    build.addMaximumAge(27);
+```
+
 #### EU membership
 
 There are helpers for specifying the country of residency or nationality to
@@ -89,7 +100,8 @@ Note that this type of statement is only allowed for the following attributes:
 
 #### Membership statement
 
-Example: add the statement that the prover's country of residency is France or Spain:
+Example: add the statement that the prover's country of residency is France or Spain,
+specified in ISO3166-1 alpha-2 format:
 
 ```ts
     build.addMembership(AttributesKeys.CountryOfResidency, ['FR', 'ES']);
@@ -190,7 +202,8 @@ sequence:
   b. a "connection ID" which identifies the connection between prover and requester
   c. a "context string" which describes the context of the proof request, e.g. which store is being accessed
   d. a set of requested context values, identified by their labels. For now the defaults here are: the block hash of the
-     anchor transaction and the resource ID (i.e. an identifier of the requester, e.g. a url of the website)
+     anchor transaction and the resource ID (i.e. an identifier of the requester, e.g. a url of the website). The
+     requested context is filled out by the application creating the proof.
 2. [Build the statement](#build-statement) to be proven by the user
 
 Once this is done, the request must be _anchored_ on chain with a transaction. This can be achieved by calling
@@ -225,35 +238,39 @@ const presentationRequest = await VerifiablePresentationRequestV1.createAndAchor
 Computing a _verifiable presentation_ from a _verifiable presentation request_ is a process of the following sequence
 for each credential statement in the request:
 
-1. Identify valid credentials for the statement by looking at the ID qualifier of the statement.
+1. Identify valid credentials for the statement by looking at the ID qualifier of the `VerfiablePresentationRequest.Statement`.
 2. Validate the attributes of the credential in the context of the statement.
-3. Construct a `SpecifiedCredentialStatement` corresponding to the credential. This is is _not_ the same as the
-   `CredentialStatement` we built for the `VerfiablePresentationRequest` previously; here we're working with
+3. Construct a `VerifiablePresentationV1.Statement` corresponding to the credential. This is is _not_ the same as the
+   `VerfiablePresentationRequest.Statement` we built for the `VerfiablePresentationRequest` previously; here we're working with
    a specific credential, e.g. from the users wallet.
+    a. for `VerfiablePresentationRequest.IdentityStatement`s, the `source` also needs to be taken into account. This
+       specifies the type of credential requested by the dapp. This can either be set to
+       `["Identity"] | ["Account"] | ["Identity", "Account"]`, where the latter means that the application constructing
+       the proof can decide which proof to construct for the statement.
 
 When this is done for all credential statements in the request, we construct the _proof context_ corresponding to the
 _request context_ of the request, specifying values for each requested context value in
 `VerifiablePresentationRequestV1.Context.requested`.
 
 ```ts
-// specify the resource ID (e.g. website URL or fingerprint of TLS certificate that the wallet is connected to) from the connection to the requester of the proof
-// the block hash is automatically derived from the request
+// specify the resource ID (e.g. website URL or fingerprint of TLS certificate that the wallet is connected to)
+// from the connection to the requester of the proof. The block hash is _not_ specified here, as it is looked up
+// later in `VerifiablePresentationV1.createFromAnchor` from the anchor transaction reference in the presentation
+// request.
 const contextValues: GivenContext[] = [{label: 'ResourceID', context: ...}];
 
-// The application holding the credentials selects the credentials to use and creates a DIDString from them.
-// This will be a combination of the below, i.e. probably not all at once
-const selectedCredentialIds: DIDString[] = [
-    createIdentityStatementDID(...),
-    createAccountDID(...),
-    createWeb3IdDID(...),
-];
+// The application goes through each statement in the presentation request, and constructs a corresponding statement
+// used as input to the presentation. The difference between the two statement types boil down to the presence of an ID
+// qualifier vs. an ID (selected by the application based on the id qualifier).
+const statements: VerifiablePresentationV1.Statement[] = presentationRequest.credentialStatements.map((entry) => {
+    if (entry.type === 'web3Id')
+        return {id: createWeb3IdDID(...), statement: entry.statement};
 
-// These are then paired with the statements from the verifiable presentation request to form the statements
-// required for the verifiable presentation input:
-const statements: VerifiablePresentationV1.Statement[] = selectedCredentialIds.map((id, i) => ({
-    id,
-    statement: presentationRequest.credentialStatements[i].statement
-}));
+    // prioritize creating identity based proofs, as these are more privacy-preserving
+    if (entry.source.includes('identity'))
+        return {id: createIdentityStatementDID(...), statement: entry.statement};
+    return {id: createAccountDID(...), statement: entry.statement};
+});
 
 // the inputs for the credential owned by the user, i.e. credential attribute values. For each
 // `SpecifiedCredentialStatement`, there should be a corresponding input

@@ -1,11 +1,13 @@
 import _JB from 'json-bigint';
 
 import {
+    ContractInstanceDID,
     IdentityProviderDID,
     VerifiablePresentationRequestV1,
     VerifiablePresentationV1,
     VerificationAuditRecordV1,
 } from '../../../src/index.ts';
+import { ContractAddress } from '../../../src/types/index.ts';
 
 const JSONBig = _JB({ alwaysParseAsBig: true, useNativeBigInt: true });
 
@@ -20,6 +22,17 @@ const PRESENTATION_REQUEST = VerifiablePresentationRequestV1.fromJSON({
         requested: ['BlockHash', 'ResourceID'],
     },
     credentialStatements: [
+        {
+            type: 'web3Id',
+            issuers: [
+                new ContractInstanceDID('Testnet', ContractAddress.create(2101)).toJSON(),
+                new ContractInstanceDID('Testnet', ContractAddress.create(1337)).toJSON(),
+            ],
+            statement: [
+                { type: 'AttributeInRange', attributeTag: 'b', lower: 80n, upper: 1237n } as any,
+                { type: 'AttributeInSet', attributeTag: 'c', set: ['aa', 'ff', 'zz'] },
+            ],
+        },
         {
             type: 'identity',
             source: ['identity'],
@@ -81,7 +94,7 @@ describe('VerificationAuditRecord', () => {
     it('creates expected anchor', () => {
         const anchor = VerificationAuditRecordV1.createAnchor(PRIVATE_RECORD, { info: 'some public info?' });
         const expected =
-            'a464686173685820f227b4a9296404d79845fddf3418363d8c12286a8c71b949e5133a948fed793b647479706566434344564141667075626c6963a164696e666f71736f6d65207075626c696320696e666f3f6776657273696f6e01';
+            'a46468617368582011a3c189645df0a5f603436975f0765b319e5f2750c8b0744419319cef5cf665647479706566434344564141667075626c6963a164696e666f71736f6d65207075626c696320696e666f3f6776657273696f6e01';
         expect(Buffer.from(anchor).toString('hex')).toEqual(expected);
     });
 });

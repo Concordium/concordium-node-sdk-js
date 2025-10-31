@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- Support for Web3 ID credentials for `VerifiablePresentationRequestV1` and `VerifiablePresentationV1`.
+
 ## 11.1.0-alpha.0
 
 ### Added

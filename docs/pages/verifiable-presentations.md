@@ -31,9 +31,9 @@ have an identical function signature, which consists of
 2. A callback function which should be used to add statements for the credential
 
 ```ts
-// used for proofs which are not tied to a specific account
-builder.addAccountStatement([0,2].map(idp => new IdentityProviderDID('Testnet', idp)), (build) => ...)
 // used for proofs tied to an account created from the identity credential.
+builder.addAccountStatement([0,2].map(idp => new IdentityProviderDID('Testnet', idp)), (build) => ...)
+// used for proofs which are not tied to a specific account
 builder.addIdentityStatement([0,2].map(idp => new IdentityProviderDID('Testnet', idp)), (build) => ...)
 // alternatively let the application producing the proof decide
 builder.addAccountOrIdentityStatement([0,2].map(idp => new IdentityProviderDID('Testnet', idp)), (build) => ...)

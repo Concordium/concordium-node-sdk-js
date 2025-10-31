@@ -319,7 +319,7 @@ export async function createFromAnchor(
         throw new Error('Unexpected transaction type found for presentation request anchor transaction');
     }
 
-    const expectedAnchor = VerifiablePresentationRequestV1.computeAnchorHash(
+    const expectedAnchorHash = VerifiablePresentationRequestV1.computeAnchorHash(
         presentationRequest.requestContext,
         presentationRequest.credentialStatements
     );

@@ -2,6 +2,35 @@
 
 ## Unreleased
 
+## 11.1.0-alpha.0
+
+### Added
+
+- types `IdentityCredentialQualifier`, `IdentityCommitmentInput`, and `CredentialsInputsIdentity` which have been added
+  to the respective union types that reflect the possible variants.
+- helper functions `createIdentityCommitmentInput` and `createIdentityCommitmentInputWithHdWallet`
+- helper function `createIdentityStatementDID`
+
+- types `VerifiablePresentationV1` and `VerifiablePresentationRequestV1` to be used with the new zero-knowledge proof
+  protocol
+  - `VerifiablePresentationRequestV1.createContext` and `VerifiablePresentationRequestV1.createSimpleContext` for
+    creating the presentation request context.
+  - `VerifiablePresentationRequestV1.statementBuilder` for building presentation request statements
+  - `VerifiablePresentationRequestV1.createAndAchor` which is a GRPC helper function for creating a verifiable presentation
+    request from a minimal set of values.
+  - `VerifiablePresentationV1.createFromAnchor` which is a GRPC helper function for creating a verifiable presentation
+  from a minimal set of values. This also creates the `VerifiablePresentation.Context` from the corresponding
+  `VerifiablePresentationRequestV1.Context`.
+  - `VerifiablePresentationV1.verify`, and the corresponding GRPC helper `VerifiablePresentationV1.verifyWithNode` for
+  verification of the proof.
+  - **Please note**: some functionality related to this is currently either stubbed or routed into the old verifiable
+  presentation computation functions for now.
+
+- types `VerificationAuditRecordV1` and `VerificationAuditRecordV1.Anchor` for creating audit records.
+  - `VerificationAuditRecordV1.create` is used to create an audit record
+  - `VerificationAuditRecordV1.registerAnchor` is a grpc helper used to register the anchor representation of the record
+    on chain.
+
 ## 11.0.0
 
 ### Fixed

@@ -14,15 +14,8 @@ import {
     signTransaction,
 } from '../../index.js';
 import { DataBlob, TransactionExpiry, TransactionHash } from '../../types/index.js';
-import { AccountStatementBuild, AtomicStatementBuilder } from '../../web3-id/proofs.js';
-import {
-    AtomicStatementV2,
-    ContractInstanceDID,
-    CredentialSchemaSubject,
-    DIDString,
-    IDENTITY_SUBJECT_SCHEMA,
-    IdentityProviderDID,
-} from '../../web3-id/types.js';
+import { AccountStatementBuild } from '../../web3-id/proofs.js';
+import { AtomicStatementV2, DIDString, IDENTITY_SUBJECT_SCHEMA, IdentityProviderDID } from '../../web3-id/types.js';
 import { GivenContextJSON, givenContextFromJSON, givenContextToJSON } from './internal.js';
 import { CredentialContextLabel, GivenContext } from './types.js';
 
@@ -207,26 +200,14 @@ export type IdentityStatement = {
 };
 
 /**
- * Statement requesting proofs from Web3 ID credentials issued by smart contracts.
- */
-export type Web3IdStatement = {
-    /** Type discriminator for Web3 ID statements */
-    type: 'web3Id';
-    /** Atomic statements about Web3 ID attributes to prove */
-    statement: AtomicStatementV2<string>[];
-    /** Valid smart contract issuers for this statement */
-    issuers: ContractInstanceDID[];
-};
-
-/**
  * Union type representing all supported statement types in a verifiable presentation request.
  */
-export type Statement = IdentityStatement | Web3IdStatement;
+export type Statement = IdentityStatement;
 
 /**
  * JSON representation of statements with issuer DIDs serialized as strings.
  */
-type StatementJSON = (Omit<IdentityStatement, 'issuers'> | Omit<Web3IdStatement, 'issuers'>) & {
+type StatementJSON = Omit<IdentityStatement, 'issuers'> & {
     issuers: DIDString[];
 };
 
@@ -237,30 +218,6 @@ type StatementJSON = (Omit<IdentityStatement, 'issuers'> | Omit<Web3IdStatement,
 class StatementBuilder {
     /** Array of credential statements being built. */
     private statements: Statement[] = [];
-
-    /**
-     * Add statements for Web3 ID credentials.
-     *
-     * @param validContracts Array of smart contract identifiers that are valid issuers
-     * @param builderCallback Callback function to build the statements using the provided builder
-     * @param schema Optional credential schema for validation
-     *
-     * @returns The updated builder instance
-     */
-    addWeb3IdStatement(
-        validContracts: ContractInstanceDID[],
-        builderCallback: (builder: AtomicStatementBuilder<string>) => void,
-        schema?: CredentialSchemaSubject
-    ): StatementBuilder {
-        const builder = new AtomicStatementBuilder<string>(schema);
-        builderCallback(builder);
-        this.statements.push({
-            type: 'web3Id',
-            issuers: validContracts,
-            statement: builder.getStatement(),
-        });
-        return this;
-    }
 
     /**
      * Add statements for identity credentials.
@@ -409,11 +366,6 @@ export function fromJSON(json: JSON): VerifiablePresentationRequestV1 {
     const requestContext = { ...json.requestContext, given: json.requestContext.given.map(givenContextFromJSON) };
     const statements: Statement[] = json.credentialStatements.map((statement) => {
         switch (statement.type) {
-            case 'web3Id':
-                return {
-                    ...statement,
-                    issuers: statement.issuers.map(ContractInstanceDID.fromJSON),
-                };
             case 'identity':
                 return {
                     ...statement,

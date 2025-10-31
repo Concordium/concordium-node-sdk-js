@@ -1,8 +1,8 @@
 import _JB from 'json-bigint';
 
-import { AttributeKeyString, ContractAddress, TransactionHash } from '../../../src/pub/types.ts';
+import { AttributeKeyString, TransactionHash } from '../../../src/pub/types.ts';
 import { VerifiablePresentationRequestV1 } from '../../../src/pub/wasm.ts';
-import { ContractInstanceDID, IdentityProviderDID } from '../../../src/pub/web3-id.ts';
+import { IdentityProviderDID } from '../../../src/pub/web3-id.ts';
 
 const JSONBig = _JB({ alwaysParseAsBig: true, useNativeBigInt: true });
 
@@ -14,12 +14,6 @@ describe('VerifiablePresentationRequestV1', () => {
             'Wine payment'
         );
         const statement = VerifiablePresentationRequestV1.statementBuilder()
-            .addWeb3IdStatement(
-                [ContractAddress.create(2101), ContractAddress.create(1337, 42)].map(
-                    (c) => new ContractInstanceDID('Testnet', c)
-                ),
-                (b) => b.addRange('b', 80n, 1237n).addMembership('c', ['aa', 'ff', 'zz'])
-            )
             .addIdentityStatement(
                 [0, 1, 2].map((i) => new IdentityProviderDID('Testnet', i)),
                 (b) => b.revealAttribute(AttributeKeyString.firstName)
@@ -40,12 +34,6 @@ describe('VerifiablePresentationRequestV1', () => {
             'Wine payment'
         );
         const statement = VerifiablePresentationRequestV1.statementBuilder()
-            .addWeb3IdStatement(
-                [ContractAddress.create(2101), ContractAddress.create(1337, 42)].map(
-                    (c) => new ContractInstanceDID('Testnet', c)
-                ),
-                (b) => b.addRange('b', 80n, 1237n).addMembership('c', ['aa', 'ff', 'zz'])
-            )
             .addIdentityStatement(
                 [0, 1, 2].map((i) => new IdentityProviderDID('Testnet', i)),
                 (b) => b.revealAttribute(AttributeKeyString.firstName)
@@ -55,7 +43,7 @@ describe('VerifiablePresentationRequestV1', () => {
             somePulicInfo: 'public info',
         });
         const expectedAnchor =
-            'a4646861736858200e601a47ce5f0b34154959e39ab717d51386cda140eb4f6ef12c53aa0a33b3cf647479706566434344565241667075626c6963a16d736f6d6550756c6963496e666f6b7075626c696320696e666f6776657273696f6e01';
+            'a464686173685820acd94ad63951d7c1c48655ddfcf3dbc23a6e11ff20728be1c7f5e6a8b991349d647479706566434344565241667075626c6963a16d736f6d6550756c6963496e666f6b7075626c696320696e666f6776657273696f6e01';
         expect(Buffer.from(anchor).toString('hex')).toEqual(expectedAnchor);
 
         const roundtrip = VerifiablePresentationRequestV1.decodeAnchor(anchor);

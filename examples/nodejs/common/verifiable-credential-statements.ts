@@ -1,17 +1,7 @@
-import {
-    ContractAddress,
-    ContractInstanceDID,
-    IdentityProviderDID,
-    VerifiablePresentationRequestV1,
-} from '@concordium/web-sdk';
+import { IdentityProviderDID, VerifiablePresentationRequestV1 } from '@concordium/web-sdk';
 
 // #region documentation-snippet
 let builder = VerifiablePresentationRequestV1.statementBuilder();
-
-// Add a web3 ID credential statements
-builder = builder.addWeb3IdStatement([new ContractInstanceDID('Testnet', ContractAddress.create(123))], (b) =>
-    b.addMembership('position', ['engineer'])
-);
 
 // Add an identity credential statement. Alternatively, if the proof produced from the
 // statement should be tied to an account, use `builder.addAccountStatement`.

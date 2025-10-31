@@ -326,7 +326,7 @@ export async function createFromAnchor(
     const transactionAnchor = VerifiablePresentationRequestV1.decodeAnchor(
         Buffer.from(summary.dataRegistered.data, 'hex')
     );
-    if (Buffer.from(expectedAnchor).toString('hex') !== Buffer.from(transactionAnchor.hash).toString('hex')) {
+    if (Buffer.from(expectedAnchorHash).toString('hex') !== Buffer.from(transactionAnchor.hash).toString('hex')) {
         throw new Error('presentation anchor verification failed.');
     }
 

@@ -46,13 +46,13 @@ Below are a set of functions accessible for the `build` object passed in the cal
 There is a helper function for specifying the prover must have some minimum
 age.
 
-Example: add the statement that the prover must be born at least 18 years old:
+Example: add the statement that the prover must be at least 18 years old:
 
 ```ts
     build.addMinimumAge(18);
 ```
 
-#### Eu membership
+#### EU membership
 
 There are helpers for specifying the country of residency or nationality to
 be one of the EU member states.
@@ -236,7 +236,7 @@ _request context_ of the request, specifying values for each requested context v
 `VerifiablePresentationRequestV1.Context.requested`.
 
 ```ts
-// specify the resource ID from the connection to the requester of the proof
+// specify the resource ID (e.g. website URL or fingerprint of TLS certificate that the wallet is connected to) from the connection to the requester of the proof
 // the block hash is automatically derived from the request
 const contextValues: GivenContext[] = [{label: 'ResourceID', context: ...}];
 
@@ -278,8 +278,8 @@ const result = VerifiablePresentationV1.verifyWithNode(presentation, presentatio
 ## Verifiable Audit Record
 
 Services can opt in to create a _verification audit record_ from the _verifiable presentation request_ and corresponding
-_verifiable presentation_. This exists as a record and a corresponding anchor. The record should be stored by the application,
-and the anchor should be registered on chain and stored with the record.
+_verifiable presentation_. This exists as a record and a corresponding anchor. The record should be stored by the dapp backend (e.g. in a database),
+and the anchor should be registered on chain. The transacton hash of the anchor registration should be stored along the record.
 
 ```ts
 const uuid: string = ...;

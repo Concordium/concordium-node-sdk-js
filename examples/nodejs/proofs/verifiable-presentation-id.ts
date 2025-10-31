@@ -26,7 +26,7 @@ const JSONBig = _JB({ alwaysParseAsBig: true, useNativeBigInt: true });
 const cli = meow(
     `
   Usage
-    $ yarn run-example <path-to-this-file> <list-name> <action> [options]
+    $ yarn run-example <path-to-this-file> <required> [options]
 
   Required
     --wallet-file,              -w      A path to a wallet export file from a Concordium wallet, used to register anchor and audit report.

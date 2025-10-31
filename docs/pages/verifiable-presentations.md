@@ -6,6 +6,7 @@ This document describes how to create v1 verifiable presentations and how to ver
 <!--toc:start-->
 - [Build Statement](#build-statement)
   - [Identity/account credential statements](#identityaccount-credential-statements)
+  - [Web3 ID credential statements](#web3-id-credential-statements)
 - [JSON representation](#json-representation)
 - [Verifiable Presentation Request (proof request)](#verifiable-presentation-request-proof-request)
 - [Verifiable Presentation (proof)](#verifiable-presentation-proof)
@@ -129,6 +130,51 @@ Note that this type of statement is only allowed for the following attributes:
 - IdDocIssuer
 - IdDocType
 
+### Web3 ID credential statements
+
+To build a statement against a Web3 ID, the builder has exposes an entrypoint `addWeb3IdStatement`,
+which has a function signature similar to those used for [identity/account statements](#identityaccount-credential-statements)
+
+1. A list smart contract addresses the Web3 ID must be created from
+2. A callback function which should be used to add statements for the credential
+
+#### Reveal statement
+
+State that a given attribute should be revealed as part of the proof.
+
+Example: reveal the education degree of an education ID.
+
+```ts
+    build.revealAttribute('degree');
+```
+
+#### Range statement
+
+State that a given attribute should be between 2 given values.
+
+Example: add the statement that the prover must be hired between January 1,
+2015 and Februar 2, 2005.
+
+```ts
+    build.addRange('hired', 20150101, 20050202);
+```
+
+#### Membership statement
+
+Example: add the statement that the prover's position in a company is either "engineer" or "designer"
+
+```ts
+    build.addMembership('position', ['engineer', 'designer']);
+```
+
+#### Non membership statement
+
+Example: add the statement that the prover's position in a company is _not_ "manager":
+
+```ts
+    build.addNonMembership('position', ['manager']);
+```
+
 ## JSON representation
 
 The `VerifiablePresentationRequestV1`, `VerifiablePresentationV1`, and `VerifiableAuditRecordV1` can be represented as
@@ -217,6 +263,9 @@ const contextValues: GivenContext[] = [{label: 'ResourceID', context: ...}];
 // used as input to the presentation. The difference between the two statement types boil down to the presence of an ID
 // qualifier vs. an ID (selected by the application based on the id qualifier).
 const statements: VerifiablePresentationV1.Statement[] = presentationRequest.credentialStatements.map((entry) => {
+    if (entry.type === 'web3Id')
+        return {id: createWeb3IdDID(...), statement: entry.statement};
+
     // prioritize creating identity based proofs, as these are more privacy-preserving
     if (entry.source.includes('identity'))
         return {id: createIdentityStatementDID(...), statement: entry.statement};
@@ -228,6 +277,7 @@ const statements: VerifiablePresentationV1.Statement[] = presentationRequest.cre
 const inputs: CommitmentInput[] = [
     createIdentityCommitmentInputWithHdWallet(...),
     createAccountCommitmentInputWithHdWallet(...),
+    createWeb3CommitmentInputWithHdWallet(...)
 ];
 
 const presentation = await VerifiablePresentationV1.createFromAnchor(

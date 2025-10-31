@@ -24,10 +24,12 @@ import {
     AtomicStatementV2,
     CredentialsInputsAccount,
     CredentialsInputsIdentity,
+    CredentialsInputsWeb3,
     DIDString,
     IdentityCommitmentInput,
     CommitmentInput as OldCommitmentInputs,
     Web3IdProofRequest,
+    Web3IssuerCommitmentInput,
 } from '../../web3-id/index.js';
 import { getVerifiablePresentation } from '../VerifiablePresentation.js';
 import { GivenContextJSON, givenContextFromJSON, givenContextToJSON } from './internal.js';
@@ -61,10 +63,16 @@ export type AccountStatement = { id: DIDString; statement: AtomicStatementV2<Att
 export type IdentityStatement = { id: DIDString; statement: AtomicStatementV2<AttributeKey>[] };
 
 /**
+ * Statement proving attributes from a Web3 ID credential.
+ * Contains the Web3 ID DID, atomic statements about Web3 attributes, and credential type information.
+ */
+export type Web3IdStatement = { id: DIDString; statement: AtomicStatementV2<string>[]; type: string[] };
+
+/**
  * Union type representing all supported statement types in a verifiable presentation.
  * Each statement contains proofs about specific credential attributes.
  */
-export type Statement = IdentityStatement | AccountStatement;
+export type Statement = IdentityStatement | Web3IdStatement | AccountStatement;
 
 function isSpecifiedAccountCredentialStatement(statement: Statement): statement is AccountStatement {
     return statement.id.includes(':cred:');
@@ -161,12 +169,33 @@ export type AccountBasedCredential = {
 };
 
 /**
+ * A verifiable credential based on Web3 ID smart contract information.
+ * This credential type contains zero-knowledge proofs about smart contract
+ * issued credentials and their attributes.
+ */
+export type Web3BasedCredential = {
+    /** Type identifiers for this credential format */
+    type: ['VerifiableCredential', 'ConcordiumVerifiableCredentialV1', 'ConcordiumWeb3BasedCredential'];
+    /** The credential subject containing Web3 ID statements */
+    credentialSubject: {
+        /** The account credential identifier as a DID */
+        id: DIDString;
+        /** Statements about Web3 ID attributes (should match request) */
+        statement: AtomicStatementV2<string>[];
+    };
+    /** The zero-knowledge proof for attestation */
+    proof: ZKProofV4;
+    /** The issuer of the ID credential used to open the account credential */
+    issuer: DIDString;
+};
+
+/**
  * Union type representing all supported verifiable credential formats
  * in Concordium verifiable presentations.
  *
  * The structure is reminiscent of a w3c verifiable credential
  */
-export type Credential = IdentityBasedCredential | AccountBasedCredential;
+export type Credential = IdentityBasedCredential | AccountBasedCredential | Web3BasedCredential;
 
 /**
  * A verifiable presentation containing zero-knowledge proofs of credential statements.
@@ -251,7 +280,7 @@ export function fromJSON(value: JSON): VerifiablePresentationV1 {
  * These inputs contain the secret information needed to create proofs without revealing
  * the actual credential data.
  */
-export type CommitmentInput = IdentityCommitmentInput | AccountCommitmentInput;
+export type CommitmentInput = IdentityCommitmentInput | Web3IssuerCommitmentInput | AccountCommitmentInput;
 
 /**
  * Creates a verifiable presentation from an anchored presentation request.
@@ -312,7 +341,7 @@ export async function createFromAnchor(
  *
  * This function generates zero-knowledge proofs for the requested credential statements
  * using the provided commitment inputs and proof context. It handles different types
- * of credentials (identity-based, account-based) and creates appropriate
+ * of credentials (identity-based, account-based, Web3-based) and creates appropriate
  * proofs for each.
  *
  * @param requestStatements - The credential statements to prove
@@ -355,9 +384,12 @@ export function create(
         request,
     });
     // Map the output to match the format of the V1 protocol.
-    const compatibleCredentials: Credential[] = verifiableCredential.map<Credential>((c) => {
-        const { proof, id, statement } = c.credentialSubject;
+    const compatibleCredentials: Credential[] = verifiableCredential.map<Credential>((c, i) => {
+        const { proof, ...credentialSubject } = c.credentialSubject;
         const { created, type: _type, ...proofValues } = proof;
+        const type = isSpecifiedAccountCredentialStatement(compatibleStatements[i])
+            ? 'ConcordiumAccountBasedCredential'
+            : 'ConcordiumWeb3BasedCredential';
         return {
             proof: {
                 createdAt: created,
@@ -365,8 +397,8 @@ export function create(
                 proofValue: Buffer.from(cborEncode(proofValues)).toString('hex'),
             },
             issuer: c.issuer,
-            type: ['VerifiableCredential', 'ConcordiumVerifiableCredentialV1', 'ConcordiumAccountBasedCredential'],
-            credentialSubject: { id, statement: statement as unknown as AtomicStatementV2<AttributeKey>[] },
+            type: ['VerifiableCredential', 'ConcordiumVerifiableCredentialV1', type] as any,
+            credentialSubject,
         };
     });
     // and add stubbed ID credentials in
@@ -400,7 +432,7 @@ export type VerificationResult = { type: 'success' } | { type: 'failed'; error: 
  * Union type of all credential input types used for verification.
  * These inputs contain the public credential data needed to verify proofs.
  */
-export type CredentialsInputs = CredentialsInputsAccount | CredentialsInputsIdentity;
+export type CredentialsInputs = CredentialsInputsWeb3 | CredentialsInputsAccount | CredentialsInputsIdentity;
 
 /**
  * Verifies a verifiable presentation against its corresponding request.

@@ -71,7 +71,7 @@ function isSpecifiedAccountCredentialStatement(statement: Statement): statement 
 }
 
 function isSpecifiedIdentityCredentialStatement(statement: Statement): statement is IdentityStatement {
-    return statement.id.includes(':id:'); // TODO: figure out if this matches the identifier.
+    return statement.id.endsWith(':id'); // TODO: figure out if this matches the identifier.
 }
 
 /**

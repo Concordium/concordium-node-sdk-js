@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 11.1.0-alpha.1
+
+### Fixed
+
+- Missing DID method identifier in identity statement DID created from `createIdentityStatementDID`.
+
 ## 11.1.0-alpha.0
 
 ### Added

@@ -80,7 +80,7 @@ jobs:
         run: yarn build:all
 
       - name: Store build-release
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: build-release
           path: |
@@ -108,7 +108,7 @@ jobs:
         run: test "${{ steps.get_tag.outputs.tag }}" = "$(jq -r ".version" packages/rust-bindings/package.json)" || exit 1
 
       - name: Get build-output
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           path: packages/rust-bindings
           name: build-release

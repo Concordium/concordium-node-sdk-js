@@ -13,7 +13,9 @@
         "@concordium/web-sdk": "workspace:^",
         "@grpc/grpc-js": "^1.14.0",
         "@noble/ed25519": "^2.0.0",
+        "@types/json-bigint": "^1.0.4",
         "buffer": "^6.0.3",
+        "json-bigint": "^1.0.0",
         "meow": "11.0",
         "node-fetch": "^3.3.2"
     },

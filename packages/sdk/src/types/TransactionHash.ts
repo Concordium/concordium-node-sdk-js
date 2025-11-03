@@ -40,7 +40,7 @@ class TransactionHash {
      * Get a JSON-serializable representation of the transaction hash.
      * @returns {HexString} The JSON-serializable representation.
      */
-    public toJSON(): HexString {
+    public toJSON(): JSON {
         return toHexString(this);
     }
 }
@@ -50,7 +50,7 @@ class TransactionHash {
  * @param {HexString} json The JSON representation of the transaction hash.
  * @returns {TransactionHash} The transaction hash.
  */
-export function fromJSON(json: HexString): TransactionHash {
+export function fromJSON(json: JSON): TransactionHash {
     return fromHexString(json);
 }
 
@@ -66,6 +66,7 @@ export function toUnwrappedJSON(value: Type): Serializable {
 
 /** Hash of a transaction. */
 export type Type = TransactionHash;
+export type JSON = HexString;
 
 /**
  * Type predicate for {@linkcode Type}

@@ -37,6 +37,14 @@ export class DataBlob {
     }
 
     /**
+     * Get a string representation of the data blob in hex format.
+     * @returns {string} The string representation.
+     */
+    public toString(): HexString {
+        return this.data.toString('hex');
+    }
+
+    /**
      * Takes a hex-string and converts it to an instance of type {@linkcode DataBlob}.
      * The method expects the string to be prefixed with a 2-byte length like the one returned by {@linkcode toJSON}.
      *

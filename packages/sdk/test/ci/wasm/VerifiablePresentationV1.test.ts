@@ -92,7 +92,7 @@ test('create testnet id-based presentation v1', () => {
 
     const statements: VerifiablePresentationV1.Statement[] = [
         {
-            id: 'ccd:testnet:id:0:0',
+            id: 'ccd:testnet:id',
             statement: [
                 {
                     attributeTag: AttributeKeyString.dob,

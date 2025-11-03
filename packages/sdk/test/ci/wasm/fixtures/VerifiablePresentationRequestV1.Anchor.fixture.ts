@@ -1,0 +1,12 @@
+export const vraFixture = {
+    type: 'CCDVRA',
+    version: 1,
+    hash: 'acd94ad63951d7c1c48655ddfcf3dbc23a6e11ff20728be1c7f5e6a8b991349d',
+    public: {
+        purpose: 'Age verification',
+        verifier: 'Test Verifier',
+    },
+};
+
+export const vraFixtureEncoded =
+    'a464686173685820acd94ad63951d7c1c48655ddfcf3dbc23a6e11ff20728be1c7f5e6a8b991349d647479706566434344565241667075626c6963a267707572706f73657041676520766572696669636174696f6e6876657269666965726d546573742056657269666965726776657273696f6e01';

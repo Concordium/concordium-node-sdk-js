@@ -42,7 +42,7 @@ import * as CcdAmount from './types/CcdAmount.js';
 import { DataBlob } from './types/DataBlob.js';
 import * as Parameter from './types/Parameter.js';
 import * as ReceiveName from './types/ReceiveName.js';
-
+import { fromString } from './types/InitName.js';
 /**
  * A handler for a specific {@linkcode AccountTransactionType}.
  */
@@ -204,20 +204,20 @@ export class DeployModuleHandler implements AccountTransactionHandler<DeployModu
         }
     }
 
-    deserialize(serializePayload: Cursor): DeployModulePayload {
+    deserialize(serializePayload:Cursor): DeployModulePayload {
         const moduleVersion = serializePayload.read(4); // version
         const moduleLength = serializePayload.read(4)?.readUInt32BE(0); // length
         const moduleSource = serializePayload.read(moduleLength); // wasm module
 
-        if (moduleVersion) {
+        if(moduleVersion) {
             return {
                 source: new Uint8Array(moduleSource),
                 version: moduleVersion.readUInt32BE(0),
-            };
+            }; 
         } else {
-            return {
-                source: new Uint8Array(moduleSource),
-            };
+             return {
+                source: new Uint8Array(moduleSource)
+            }; 
         }
     }
 
@@ -259,8 +259,25 @@ export class InitContractHandler implements AccountTransactionHandler<InitContra
         return Buffer.concat([serializedAmount, serializedModuleRef, serializedInitName, serializedParameters]);
     }
 
-    deserialize(): InitContractPayload {
-        throw new Error('deserialize not supported');
+    deserialize(serializePayload:Cursor): InitContractPayload {
+        const amount = serializePayload.read(8).readBigUInt64BE(0);
+        const moduleRef = serializePayload.read(32);
+        
+        const initNameLength = serializePayload.read(2).readUInt16BE(0);
+        const initName = serializePayload.read(initNameLength);
+        const initNameAfterConversion = fromString(initName.toString('utf8'));
+
+        const paramLength = serializePayload.read(2).readUInt16BE(0);
+        const param = serializePayload.read(paramLength);
+        const paramBuffer = Parameter.fromBuffer(param.buffer);
+
+        return {            
+           amount: CcdAmount.fromMicroCcd(amount),
+           moduleRef: ModuleReference.fromBuffer(moduleRef),
+           initName: ContractName.fromInitName(initNameAfterConversion), 
+           param: paramBuffer,
+           maxContractExecutionEnergy: Energy.create(0n), //TODO: where does this come from??
+        }
     }
 
     toJSON(payload: InitContractPayload): InitContractPayloadJSON {

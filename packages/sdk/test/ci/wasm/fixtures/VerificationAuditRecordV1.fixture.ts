@@ -1,4 +1,4 @@
-import { VerificationAuditRecordV1 } from '../../../../src/index.ts';
+import { type VerificationAuditRecordV1 } from '../../../../src/pub/wasm.ts';
 
 const json: VerificationAuditRecordV1.JSON = {
     request: {

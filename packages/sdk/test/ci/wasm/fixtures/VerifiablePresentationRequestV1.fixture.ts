@@ -1,4 +1,4 @@
-import { VerifiablePresentationRequestV1 } from '../../../../src/index.ts';
+import { type VerifiablePresentationRequestV1 } from '../../../../src/pub/wasm.ts';
 
 const json: VerifiablePresentationRequestV1.JSON = {
     requestContext: {

@@ -288,7 +288,7 @@ describe('VerificationAuditRecordV1.Anchor', () => {
         });
 
         test('should decode from fixture anchor representation', () => {
-            const anchor = Buffer.from(vaaFixtureEncoded, 'hex');
+            const anchor = Uint8Array.from(Buffer.from(vaaFixtureEncoded, 'hex'));
             const decoded = VerificationAuditRecordV1.decodeAnchor(anchor);
 
             expect(decoded.type).toBe(vaaFixture.type);

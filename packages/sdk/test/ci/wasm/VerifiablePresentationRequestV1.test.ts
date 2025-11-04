@@ -121,7 +121,7 @@ describe('VerifiablePresentationRequestV1.Anchor', () => {
     });
 
     it('should decode from fixture anchor representation', () => {
-        const anchor = Buffer.from(vraFixtureEncoded, 'hex');
+        const anchor = Uint8Array.from(Buffer.from(vraFixtureEncoded, 'hex'));
         const decoded = VerifiablePresentationRequestV1.decodeAnchor(anchor);
 
         expect(decoded.type).toBe(vraFixture.type);

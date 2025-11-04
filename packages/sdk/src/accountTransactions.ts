@@ -62,7 +62,7 @@ export interface AccountTransactionHandler<
 
     /**
      * Deserializes the serialized payload into the payload type.
-     * @param serializedPayload - The serialized payload to be deserialized.
+     * @param buffer - The serialized payload to be deserialized.
      * @returns The deserialized payload.
      * @throws If deserializing the type was not possible.
      */

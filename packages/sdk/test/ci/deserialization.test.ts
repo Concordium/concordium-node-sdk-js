@@ -153,3 +153,4 @@ test('Test parsing of Token Addresses', () => {
     expect(address).toEqual(expectedAddress);
     expect(rebase58).toEqual(base58);
 });
+

@@ -204,8 +204,21 @@ export class DeployModuleHandler implements AccountTransactionHandler<DeployModu
         }
     }
 
-    deserialize(): DeployModulePayload {
-        throw new Error('deserialize not supported');
+    deserialize(serializePayload:Cursor): DeployModulePayload {
+        const moduleVersion = serializePayload.read(4); // version
+        const moduleLength = serializePayload.read(4).readUInt32BE(0); // length
+        const moduleSource = serializePayload.read(moduleLength); // wasm module
+
+        if(moduleVersion) {
+            return {
+                source: new Uint8Array(moduleSource),
+                version: moduleVersion.readUInt32BE(0),
+            }; 
+        } else {
+             return {
+                source: new Uint8Array(moduleSource)
+            }; 
+        }
     }
 
     toJSON(payload: DeployModulePayload): DeployModulePayloadJSON {

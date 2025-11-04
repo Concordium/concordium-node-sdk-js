@@ -1,5 +1,6 @@
 import _JB from 'json-bigint';
 import fs from 'node:fs';
+import path from 'node:path';
 
 import { AttributeKeyString, IdentityObjectV1, IdentityProvider, IpInfo } from '../../../src/pub/types.ts';
 import {
@@ -10,7 +11,10 @@ import {
 import { createAccountDID, createIdentityCommitmentInputWithHdWallet } from '../../../src/pub/web3-id.ts';
 import { BlockHash } from '../../../src/types/index.ts';
 import { TESTNET_GLOBAL_CONTEXT, TEST_SEED_1 } from './constants.ts';
-import presentationFixture from './fixtures/VerifiablePresentationV1.fixture.ts';
+
+const presentationFixture = JSON.parse(
+    fs.readFileSync(path.resolve(__dirname, './fixtures/VerifiablePresentationV1.json')).toString()
+);
 
 const JSONBig = _JB({ alwaysParseAsBig: true, useNativeBigInt: true });
 
@@ -122,7 +126,9 @@ describe('VerifiablePresentationV1', () => {
     });
 
     it('should match the JSON fixture representation', () => {
-        const presentation = VerifiablePresentationV1.fromJSON(presentationFixture);
+        const presentation = VerifiablePresentationV1.fromJSON(
+            presentationFixture as unknown as VerifiablePresentationV1.JSON
+        );
 
         const json = presentation.toJSON();
         const jsonString = JSONBig.stringify(json);
@@ -132,7 +138,9 @@ describe('VerifiablePresentationV1', () => {
     });
 
     it('should deserialize from JSON fixture representation', () => {
-        const presentation = VerifiablePresentationV1.fromJSON(presentationFixture);
+        const presentation = VerifiablePresentationV1.fromJSON(
+            presentationFixture as unknown as VerifiablePresentationV1.JSON
+        );
         expect(presentation.toJSON()).toEqual(presentationFixture);
     });
 });

@@ -1,4 +1,6 @@
 import _JB from 'json-bigint';
+import fs from 'node:fs';
+import path from 'node:path';
 
 import {
     IdentityProviderDID,
@@ -6,10 +8,18 @@ import {
     VerifiablePresentationV1,
     VerificationAuditRecordV1,
 } from '../../../src/index.ts';
-import { vaaFixture, vaaFixtureEncoded } from './fixtures/VerificationAuditRecordV1.Anchor.fixture.ts';
-import auditRecordFixture from './fixtures/VerificationAuditRecordV1.fixture.ts';
 
 const JSONBig = _JB({ alwaysParseAsBig: true, useNativeBigInt: true });
+
+const vaaFixtureEncoded = fs
+    .readFileSync(path.resolve(__dirname, './fixtures/VerificationAuditRecordV1.Anchor.hex'))
+    .toString();
+const vaaFixture = JSON.parse(
+    fs.readFileSync(path.resolve(__dirname, './fixtures/VerificationAuditRecordV1.Anchor.json')).toString()
+);
+const auditRecordFixture = JSON.parse(
+    fs.readFileSync(path.resolve(__dirname, './fixtures/VerificationAuditRecordV1.json')).toString()
+);
 
 const PRESENTATION_REQUEST = VerifiablePresentationRequestV1.fromJSON({
     requestContext: {

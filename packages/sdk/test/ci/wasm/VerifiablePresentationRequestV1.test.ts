@@ -1,10 +1,20 @@
 import _JB from 'json-bigint';
+import fs from 'node:fs';
+import path from 'node:path';
 
 import { AttributeKeyString, TransactionHash } from '../../../src/pub/types.ts';
 import { VerifiablePresentationRequestV1 } from '../../../src/pub/wasm.ts';
 import { IdentityProviderDID } from '../../../src/pub/web3-id.ts';
-import { vraFixture, vraFixtureEncoded } from './fixtures/VerifiablePresentationRequestV1.Anchor.fixture.ts';
-import presentationRequestFixture from './fixtures/VerifiablePresentationRequestV1.fixture.ts';
+
+const vraFixtureEncoded = fs
+    .readFileSync(path.resolve(__dirname, './fixtures/VerifiablePresentationRequestV1.Anchor.hex'))
+    .toString();
+const vraFixture = JSON.parse(
+    fs.readFileSync(path.resolve(__dirname, './fixtures/VerifiablePresentationRequestV1.Anchor.json')).toString()
+);
+const presentationRequestFixture = JSON.parse(
+    fs.readFileSync(path.resolve(__dirname, './fixtures/VerifiablePresentationRequestV1.json')).toString()
+);
 
 const JSONBig = _JB({ alwaysParseAsBig: true, useNativeBigInt: true });
 
@@ -54,7 +64,9 @@ describe('VerifiablePresentationRequestV1', () => {
     });
 
     it('should deserialize from JSON fixture representation', () => {
-        const request = VerifiablePresentationRequestV1.fromJSON(presentationRequestFixture);
+        const request = VerifiablePresentationRequestV1.fromJSON(
+            presentationRequestFixture as VerifiablePresentationRequestV1.JSON
+        );
         expect(request.toJSON()).toEqual(presentationRequestFixture);
     });
 });

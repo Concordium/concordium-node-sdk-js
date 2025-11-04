@@ -1,23 +1,22 @@
 import { Buffer } from 'buffer/index.js';
 import _JB from 'json-bigint';
 
-import { ConcordiumGRPCClient } from '../../grpc/index.js';
-import { sha256 } from '../../hash.js';
-import { AccountSigner, signTransaction } from '../../signHelpers.js';
+import { ConcordiumGRPCClient } from '../../../grpc/index.js';
+import { sha256 } from '../../../hash.js';
+import { AccountSigner, signTransaction } from '../../../signHelpers.js';
 import {
     AccountTransaction,
     AccountTransactionHeader,
     AccountTransactionType,
     NextAccountNonce,
     RegisterDataPayload,
-} from '../../types.js';
-import { cborDecode, cborEncode } from '../../types/cbor.js';
-import { AccountAddress, DataBlob, TransactionExpiry, TransactionHash } from '../../types/index.js';
-import { VerifiablePresentationRequestV1, VerifiablePresentationV1 } from './index.js';
+} from '../../../types.js';
+import { cborDecode, cborEncode } from '../../../types/cbor.js';
+import { AccountAddress, DataBlob, TransactionExpiry, TransactionHash } from '../../../types/index.js';
+import { UnfilledVerifiablePresentationRequestV1, VerifiablePresentationV1 } from '../index.js';
+import { VERSION } from './common.js';
 
 const JSONBig = _JB({ alwaysParseAsBig: true, useNativeBigInt: true });
-
-const VERSION = 1;
 
 /**
  * A verification audit record that contains the complete verifiable presentation
@@ -37,7 +36,7 @@ class VerificationAuditRecordV1 {
      * @param id - Unique identifier for this audit record
      */
     constructor(
-        public readonly request: VerifiablePresentationRequestV1.Type,
+        public readonly request: UnfilledVerifiablePresentationRequestV1.Type,
         public readonly presentation: VerifiablePresentationV1.Type,
         public readonly id: string
     ) {}
@@ -79,7 +78,7 @@ export type JSON = Pick<Type, 'id'> & {
     /** The audit record version */
     version: 1;
     /** The serialized verifiable presentation request */
-    request: VerifiablePresentationRequestV1.JSON;
+    request: UnfilledVerifiablePresentationRequestV1.JSON;
     /** The serialized verifiable presentation */
     presentation: VerifiablePresentationV1.JSON;
 };
@@ -95,7 +94,7 @@ export type JSON = Pick<Type, 'id'> & {
  */
 export function create(
     id: string,
-    request: VerifiablePresentationRequestV1.Type,
+    request: UnfilledVerifiablePresentationRequestV1.Type,
     presentation: VerifiablePresentationV1.Type
 ): VerificationAuditRecordV1 {
     return new VerificationAuditRecordV1(request, presentation, id);
@@ -109,7 +108,7 @@ export function create(
  */
 export function fromJSON(json: JSON): VerificationAuditRecordV1 {
     return new VerificationAuditRecordV1(
-        VerifiablePresentationRequestV1.fromJSON(json.request),
+        UnfilledVerifiablePresentationRequestV1.fromJSON(json.request),
         VerifiablePresentationV1.fromJSON(json.presentation),
         json.id
     );

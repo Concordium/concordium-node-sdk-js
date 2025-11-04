@@ -1,6 +1,7 @@
 {
+    "type": "ConcordiumUnfilledVerifiablePresentationRequestV1",
     "requestContext": {
-        "type": "ConcordiumContextInformationV1",
+        "type": "ConcordiumUnfilledContextInformationV1",
         "given": [
             {
                 "label": "Nonce",

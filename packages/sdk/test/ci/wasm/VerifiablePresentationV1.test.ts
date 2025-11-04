@@ -5,7 +5,7 @@ import path from 'node:path';
 import { AttributeKeyString, IdentityObjectV1, IdentityProvider, IpInfo } from '../../../src/pub/types.ts';
 import {
     ConcordiumHdWallet,
-    VerifiablePresentationRequestV1,
+    UnfilledVerifiablePresentationRequestV1,
     VerifiablePresentationV1,
 } from '../../../src/pub/wasm.ts';
 import { createAccountDID, createIdentityCommitmentInputWithHdWallet } from '../../../src/pub/web3-id.ts';
@@ -20,7 +20,7 @@ const JSONBig = _JB({ alwaysParseAsBig: true, useNativeBigInt: true });
 
 describe('VerifiablePresentationV1', () => {
     test('create testnet account-based presentation v1', () => {
-        const requestContext = VerifiablePresentationRequestV1.createContext({
+        const requestContext = UnfilledVerifiablePresentationRequestV1.createContext({
             given: [{ label: 'Nonce', context: Uint8Array.from([0, 1, 2]) }],
             requested: ['BlockHash'],
         });
@@ -64,7 +64,11 @@ describe('VerifiablePresentationV1', () => {
             },
         ];
 
-        const presentation = VerifiablePresentationV1.create(statements, inputs, context, TESTNET_GLOBAL_CONTEXT);
+        const presentation = VerifiablePresentationV1.create(
+            { credentialStatements: statements, context },
+            inputs,
+            TESTNET_GLOBAL_CONTEXT
+        );
 
         const json = JSON.stringify(presentation);
         const roundtrip = VerifiablePresentationV1.fromJSON(JSON.parse(json));
@@ -73,7 +77,7 @@ describe('VerifiablePresentationV1', () => {
     });
 
     test('create testnet id-based presentation v1', () => {
-        const requestContext = VerifiablePresentationRequestV1.createContext({
+        const requestContext = UnfilledVerifiablePresentationRequestV1.createContext({
             given: [{ label: 'Nonce', context: Uint8Array.from([0, 1, 2]) }],
             requested: ['BlockHash'],
         });
@@ -117,7 +121,11 @@ describe('VerifiablePresentationV1', () => {
             },
         ];
 
-        const presentation = VerifiablePresentationV1.create(statements, [input], context, TESTNET_GLOBAL_CONTEXT);
+        const presentation = VerifiablePresentationV1.create(
+            { credentialStatements: statements, context },
+            [input],
+            TESTNET_GLOBAL_CONTEXT
+        );
 
         const json = JSON.stringify(presentation);
         const roundtrip = VerifiablePresentationV1.fromJSON(JSON.parse(json));

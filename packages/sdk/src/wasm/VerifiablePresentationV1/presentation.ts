@@ -12,7 +12,6 @@ import {
     TransactionKindString,
     TransactionStatusEnum,
     TransactionSummaryType,
-    VerifiablePresentationRequestV1,
     cborEncode,
     isKnown,
     sha256,
@@ -30,8 +29,8 @@ import {
     Web3IdProofRequest,
 } from '../../web3-id/index.js';
 import { getVerifiablePresentation } from '../VerifiablePresentation.js';
+import { UnfilledVerifiablePresentationRequestV1, VerificationRequestAnchorV1 } from './index.js';
 import { GivenContextJSON, givenContextFromJSON, givenContextToJSON } from './internal.js';
-import * as Request from './request.js';
 import { GivenContext, ZKProofV4 } from './types.js';
 
 /**
@@ -87,7 +86,10 @@ function isSpecifiedIdentityCredentialStatement(statement: Statement): statement
  * @throws Error if not all requested context is provided or if there's a mismatch
  */
 // Fails if not given the full amount of requested context.
-export function createContext(requestContext: Request.Context, filledRequestedContext: GivenContext[]): Context {
+export function createContext(
+    requestContext: UnfilledVerifiablePresentationRequestV1.Context,
+    filledRequestedContext: GivenContext[]
+): Context {
     // First we validate that the requested context is filled in `filledRequestedContext`.
     if (requestContext.requested.length !== filledRequestedContext.length)
         throw new Error('Mismatch between amount of requested context and filled context');
@@ -195,6 +197,7 @@ class VerifiablePresentationV1 {
      */
     public toJSON(): JSON {
         let json: JSON = {
+            type: ['VerifiablePresentation', 'ConcordiumVerifiablePresentationV1'],
             presentationContext: {
                 type: this.presentationContext.type,
                 given: this.presentationContext.given.map(givenContextToJSON),
@@ -215,13 +218,16 @@ class VerifiablePresentationV1 {
  */
 export type Type = VerifiablePresentationV1;
 
+type ContextJSON = Pick<Context, 'type'> & { given: GivenContextJSON[]; requested: GivenContextJSON[] };
+
 /**
  * JSON representation of a verifiable presentation.
  * Used for serialization and network transmission of presentation data.
  */
 export type JSON = {
+    type: ['VerifiablePresentation', 'ConcordiumVerifiablePresentationV1'];
     /** The presentation context with serialized context information */
-    presentationContext: Pick<Context, 'type'> & { given: GivenContextJSON[]; requested: GivenContextJSON[] };
+    presentationContext: ContextJSON;
     /** Array of verifiable credentials with their proofs */
     verifiableCredential: Credential[];
     /** Optional weak linking proof for account-based credentials */
@@ -246,6 +252,17 @@ export function fromJSON(value: JSON): VerifiablePresentationV1 {
     return new VerifiablePresentationV1(presentationContext, value.verifiableCredential, value.proof);
 }
 
+export type Request = {
+    context: Context;
+    credentialStatements: Statement[];
+};
+
+type RequestJSON = {
+    type: 'ConcordiumVerifiablePresentationRequestV1';
+    context: ContextJSON;
+    credentialStatements: Statement[];
+};
+
 /**
  * Union type of all commitment input types used for generating zero-knowledge proofs.
  * These inputs contain the secret information needed to create proofs without revealing
@@ -254,15 +271,15 @@ export function fromJSON(value: JSON): VerifiablePresentationV1 {
 export type CommitmentInput = IdentityCommitmentInput | AccountCommitmentInput;
 
 /**
- * Creates a verifiable presentation from an anchored presentation request.
+ * Creates a verifiable presentation from an anchored unfilled presentation request.
  *
- * This function retrieves the presentation request anchor from the blockchain,
+ * This function retrieves the unfilled presentation request anchor from the blockchain,
  * verifies its integrity, and creates a verifiable presentation with the
  * requested statements and proofs. It automatically includes blockchain
  * context (block hash) in the presentation.
  *
  * @param grpc - Concordium GRPC client for blockchain interaction
- * @param presentationRequest - The anchored presentation request
+ * @param unfilledRequest - The unfilled presentation request
  * @param statements - The credential statements to prove
  * @param inputs - The commitment inputs for generating proofs
  * @param additionalContext - Additional context information beyond block hash
@@ -270,15 +287,15 @@ export type CommitmentInput = IdentityCommitmentInput | AccountCommitmentInput;
  * @returns Promise resolving to the created verifiable presentation
  * @throws Error if anchor verification fails or blockchain interaction errors
  */
-export async function createFromAnchor(
+export async function createFromUnfilledRequest(
     grpc: ConcordiumGRPCClient,
-    presentationRequest: Request.Type,
+    unfilledRequest: UnfilledVerifiablePresentationRequestV1.Type,
     statements: Statement[],
     inputs: CommitmentInput[],
     additionalContext: GivenContext[]
 ): Promise<VerifiablePresentationV1> {
     const globalContext = await grpc.getCryptographicParameters();
-    const transaction = await grpc.getBlockItemStatus(presentationRequest.transactionRef);
+    const transaction = await grpc.getBlockItemStatus(unfilledRequest.transactionRef);
     if (transaction.status !== TransactionStatusEnum.Finalized) {
         throw new Error('presentation request anchor transaction not finalized');
     }
@@ -291,20 +308,18 @@ export async function createFromAnchor(
         throw new Error('Unexpected transaction type found for presentation request anchor transaction');
     }
 
-    const expectedAnchorHash = VerifiablePresentationRequestV1.computeAnchorHash(
-        presentationRequest.requestContext,
-        presentationRequest.credentialStatements
+    const expectedAnchorHash = VerificationRequestAnchorV1.computeAnchorHash(
+        unfilledRequest.requestContext,
+        unfilledRequest.credentialStatements
     );
-    const transactionAnchor = VerifiablePresentationRequestV1.decodeAnchor(
-        Buffer.from(summary.dataRegistered.data, 'hex')
-    );
+    const transactionAnchor = VerificationRequestAnchorV1.decodeAnchor(Buffer.from(summary.dataRegistered.data, 'hex'));
     if (Buffer.from(expectedAnchorHash).toString('hex') !== Buffer.from(transactionAnchor.hash).toString('hex')) {
         throw new Error('presentation anchor verification failed.');
     }
 
     const blockContext: GivenContext = { label: 'BlockHash', context: blockHash };
-    const proofContext = createContext(presentationRequest.requestContext, [...additionalContext, blockContext]);
-    return create(statements, inputs, proofContext, globalContext);
+    const proofContext = createContext(unfilledRequest.requestContext, [...additionalContext, blockContext]);
+    return create({ context: proofContext, credentialStatements: statements }, inputs, globalContext);
 }
 
 /**
@@ -315,7 +330,7 @@ export async function createFromAnchor(
  * of credentials (identity-based, account-based) and creates appropriate
  * proofs for each.
  *
- * @param requestStatements - The credential statements to prove
+ * @param request- The presentation request
  * @param inputs - The commitment inputs for generating proofs
  * @param proofContext - The complete context for proof generation
  * @param globalContext - Concordium network cryptographic parameters
@@ -326,16 +341,15 @@ export async function createFromAnchor(
 // presentation from the function arguments. For now, we hack something together from the old protocol which
 // means filtering and mapping the input/output.
 export function create(
-    requestStatements: Statement[],
+    { credentialStatements, context }: Request,
     inputs: CommitmentInput[],
-    proofContext: Context,
     globalContext: CryptographicParameters
 ): VerifiablePresentationV1 {
     // first we filter out the id statements, as they're not compatible with the current implementation
     // in concordium-base
     const idStatements: [number, IdentityStatement][] = [];
     const compatibleStatements: Exclude<Statement, IdentityStatement>[] = [];
-    requestStatements.forEach((s, i) => {
+    credentialStatements.forEach((s, i) => {
         if (isSpecifiedIdentityCredentialStatement(s)) idStatements.push([i, s]);
         else compatibleStatements.push(s);
     });
@@ -346,7 +360,7 @@ export function create(
 
     if (idStatements.length !== idInputs.length) throw new Error('Mismatch between provided statements and inputs');
 
-    const challenge = sha256([Buffer.from(JSON.stringify([compatibleStatements, proofContext]))]).toString('hex');
+    const challenge = sha256([Buffer.from(JSON.stringify([compatibleStatements, context]))]).toString('hex');
     const request: Web3IdProofRequest = { challenge, credentialStatements: compatibleStatements };
 
     const { verifiableCredential, proof } = getVerifiablePresentation({
@@ -377,7 +391,7 @@ export function create(
 
     const credentials: Credential[] = [];
     let compatibleCounter = 0;
-    for (let i = 0; i < requestStatements.length; i += 1) {
+    for (let i = 0; i < credentialStatements.length; i += 1) {
         const idCred = idCredentials.find((entry) => entry[0] === i);
         if (idCred !== undefined) {
             credentials.push(idCred[1]);
@@ -387,7 +401,7 @@ export function create(
         }
     }
 
-    return new VerifiablePresentationV1(proofContext, credentials, proof);
+    return new VerifiablePresentationV1(context, credentials, proof);
 }
 
 /**
@@ -420,7 +434,7 @@ export type CredentialsInputs = CredentialsInputsAccount | CredentialsInputsIden
 // @concordium/rust-bindings that verifies the presentation in the context of the request.
 export function verify(
     presentation: VerifiablePresentationV1,
-    request: Request.Type,
+    request: UnfilledVerifiablePresentationRequestV1.Type,
     cryptographicParameters: CryptographicParameters,
     publicData: CredentialsInputs[]
 ): VerificationResult {
@@ -443,7 +457,7 @@ export function verify(
  */
 export async function verifyWithNode(
     presentation: VerifiablePresentationV1,
-    request: Request.Type,
+    request: UnfilledVerifiablePresentationRequestV1.Type,
     grpc: ConcordiumGRPCClient,
     network: Network
 ): Promise<VerificationResult> {

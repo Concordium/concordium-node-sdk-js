@@ -1,7 +1,8 @@
 {
     "request": {
+        "type": "ConcordiumUnfilledVerifiablePresentationRequestV1",
         "requestContext": {
-            "type": "ConcordiumContextInformationV1",
+            "type": "ConcordiumUnfilledContextInformationV1",
             "given": [
                 {
                     "label": "Nonce",
@@ -34,6 +35,7 @@
         "transactionRef": "0102030401020304010203040102030401020304010203040102030401020304"
     },
     "presentation": {
+        "type": ["VerifiablePresentation", "ConcordiumVerifiablePresentationV1"],
         "presentationContext": {
             "type": "ConcordiumContextInformationV1",
             "given": [

@@ -1,4 +1,5 @@
 {
+    "type": ["VerifiablePresentation", "ConcordiumVerifiablePresentationV1"],
     "presentationContext": {
         "type": "ConcordiumContextInformationV1",
         "given": [

@@ -11,17 +11,21 @@
  * - VerificationAuditRecord: For public audit trails of verification events
  * - PrivateVerificationAuditRecord: For private audit records with full data
  */
-import * as VerificationAuditRecordV1 from './audit-record.js';
-import * as VerifiablePresentationV1 from './proof.js';
-import * as VerifiablePresentationRequestV1 from './request.js';
+import * as VerificationAuditAnchorV1 from './audit/anchor.js';
+import * as VerificationAuditRecordV1 from './audit/record.js';
+import * as VerifiablePresentationV1 from './presentation.js';
+import * as VerificationRequestAnchorV1 from './request/anchor.js';
+import * as UnfilledVerifiablePresentationRequestV1 from './request/unfilled-request.js';
 
 export {
     /** Namespace for verifiable presentation request operations */
-    VerifiablePresentationRequestV1,
+    UnfilledVerifiablePresentationRequestV1,
     /** Namespace for verifiable presentation proof operations */
     VerifiablePresentationV1,
     /** Namespace for verification audit record operations */
     VerificationAuditRecordV1,
+    VerificationRequestAnchorV1,
+    VerificationAuditAnchorV1,
 };
 
 /** Export all common types used across the verifiable presentation system */

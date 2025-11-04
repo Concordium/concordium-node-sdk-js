@@ -206,7 +206,7 @@ export class DeployModuleHandler implements AccountTransactionHandler<DeployModu
 
     deserialize(serializePayload:Cursor): DeployModulePayload {
         const moduleVersion = serializePayload.read(4); // version
-        const moduleLength = serializePayload.read(4).readUInt32BE(0); // length
+        const moduleLength = serializePayload.read(4)?.readUInt32BE(0); // length
         const moduleSource = serializePayload.read(moduleLength); // wasm module
 
         if(moduleVersion) {

@@ -89,7 +89,6 @@ test('test deserialize DeployModule ', () => {
     deserializeAccountTransactionBase(AccountTransactionType.DeployModule, payload);
 });
 
-
 test('Expired transactions can be deserialized', () => {
     const payload: SimpleTransferPayload = {
         amount: CcdAmount.fromMicroCcd(5100000),
@@ -153,4 +152,3 @@ test('Test parsing of Token Addresses', () => {
     expect(address).toEqual(expectedAddress);
     expect(rebase58).toEqual(base58);
 });
-

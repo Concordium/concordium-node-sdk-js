@@ -10,6 +10,7 @@ import {
     CcdAmount,
     ContractAddress,
     DataBlob,
+    DeployModulePayload,
     RegisterDataPayload,
     SequenceNumber,
     SimpleTransferPayload,
@@ -78,6 +79,14 @@ test('test deserialize registerData ', () => {
         data: new DataBlob(Buffer.from('00AB5303926810EE', 'hex')),
     };
     deserializeAccountTransactionBase(AccountTransactionType.RegisterData, payload);
+});
+
+test('test deserialize DeployModule ', () => {
+    const payload: DeployModulePayload = {
+        version: 1,
+        source: new Uint8Array([0x00, 0xab, 0x53, 0x03, 0x92, 0x68, 0x10, 0xee]),
+    };
+    deserializeAccountTransactionBase(AccountTransactionType.DeployModule, payload);
 });
 
 test('Expired transactions can be deserialized', () => {

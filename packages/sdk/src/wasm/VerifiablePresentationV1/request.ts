@@ -22,13 +22,13 @@ import { CredentialContextLabel, GivenContext } from './types.js';
 const VERSION = 1;
 
 /**
- * Context information for a verifiable presentation request.
+ * Context information for a verification request.
  * Contains both the context data that is already known (given) and
  * the context data that needs to be provided by the presenter (requested).
  */
 export type Context = {
     /** Type identifier for the context format */
-    type: 'ConcordiumContextInformationV1';
+    type: 'ConcordiumUnfilledContextInformationV1';
     /** Context information that is already provided */
     given: GivenContext[];
     /** Context information that must be provided by the presenter */
@@ -42,7 +42,7 @@ export type Context = {
  * @returns A complete context object with type identifier
  */
 export function createContext(context: Omit<Context, 'type'>): Context {
-    return { type: 'ConcordiumContextInformationV1', ...context };
+    return { type: 'ConcordiumUnfilledContextInformationV1', ...context };
 }
 
 /**
@@ -70,11 +70,11 @@ export function createSimpleContext(nonce: Uint8Array, connectionId: string, con
 }
 
 /**
- * Data structure for CBOR-encoded verifiable presentation request anchors.
+ * Data structure for CBOR-encoded _verification request anchors_.
  * This format is used when storing presentation requests on the Concordium blockchain.
  */
-export type AnchorData = {
-    /** Type identifier for Concordium Verifiable Request Anchor */
+export type Anchor = {
+    /** Type identifier for _Concordium Verification Request Anchor_ */
     type: 'CCDVRA';
     /** Version of the anchor data format */
     version: typeof VERSION;
@@ -86,7 +86,7 @@ export type AnchorData = {
 };
 
 /**
- * Creates a CBOR-encoded anchor for a verifiable presentation request.
+ * Creates a CBOR-encoded anchor for a verification request.
  *
  * This function creates a standardized CBOR-encoded representation of the
  * presentation request that can be stored on the Concordium blockchain as
@@ -105,7 +105,7 @@ export function createAnchor(
     publicInfo?: Record<string, any>
 ): Uint8Array {
     const hash = computeAnchorHash(context, credentialStatements);
-    const data: AnchorData = { type: 'CCDVRA', version: VERSION, hash, public: publicInfo };
+    const data: Anchor = { type: 'CCDVRA', version: VERSION, hash, public: publicInfo };
     return cborEncode(data);
 }
 
@@ -141,7 +141,7 @@ export function computeAnchorHash(context: Context, credentialStatements: Statem
 }
 
 /**
- * Decodes a CBOR-encoded verifiable presentation request anchor.
+ * Decodes a CBOR-encoded _verification request anchor_.
  *
  * This function parses and validates a CBOR-encoded anchor that was previously
  * created with `createAnchor`. It ensures the anchor has the correct format
@@ -151,7 +151,7 @@ export function computeAnchorHash(context: Context, credentialStatements: Statem
  * @returns The decoded anchor data structure
  * @throws Error if the CBOR data is invalid or doesn't match expected format
  */
-export function decodeAnchor(cbor: Uint8Array): AnchorData {
+export function decodeAnchor(cbor: Uint8Array): Anchor {
     const value = cborDecode(cbor);
     if (typeof value !== 'object' || value === null) throw new Error('Expected a cbor encoded object');
     // required fields
@@ -161,18 +161,17 @@ export function decodeAnchor(cbor: Uint8Array): AnchorData {
         throw new Error('Expected "hash" to be a Uint8Array');
     // optional fields
     if ('public' in value && typeof value.public !== 'object') throw new Error('Expected "public" to be an object');
-    return value as AnchorData;
+    return value as Anchor;
 }
 
 /**
- * JSON representation of a verifiable presentation request.
+ * JSON representation of a verification request.
  * Used for serialization and network transmission of request data.
- *
- * The structure is reminiscent of a w3c verifiable presentation
  */
 export type JSON = {
+    type: 'ConcordiumVerificationRequestV1';
     /** The request context with serialized given contexts */
-    requestContext: Pick<Context, 'type' | 'requested'> & { given: GivenContextJSON[] };
+    context: Pick<Context, 'type' | 'requested'> & { given: GivenContextJSON[] };
     /** The credential statements being requested */
     credentialStatements: StatementJSON[];
     /** Reference to the blockchain transaction containing the request anchor */
@@ -182,7 +181,7 @@ export type JSON = {
 /**
  * Type of identity credential source that can be used for proving attributes.
  */
-type IdentityCredType = 'identity' | 'account';
+type IdentityCredType = 'identityCredential' | 'accountCredential';
 
 /**
  * Statement requesting proofs from identity credentials issued by identity providers.
@@ -200,7 +199,7 @@ export type IdentityStatement = {
 };
 
 /**
- * Union type representing all supported statement types in a verifiable presentation request.
+ * Union type representing all supported statement types in a verification request.
  */
 export type Statement = IdentityStatement;
 
@@ -235,7 +234,7 @@ class StatementBuilder {
         builderCallback(builder);
         this.statements.push({
             type: 'identity',
-            source: ['identity'],
+            source: ['identityCredential'],
             statement: builder.getStatement(),
             issuers: validIdentityProviders,
         });
@@ -258,7 +257,7 @@ class StatementBuilder {
         builderCallback(builder);
         this.statements.push({
             type: 'identity',
-            source: ['account'],
+            source: ['accountCredential'],
             statement: builder.getStatement(),
             issuers: validIdentityProviders,
         });
@@ -281,7 +280,7 @@ class StatementBuilder {
         builderCallback(builder);
         this.statements.push({
             type: 'identity',
-            source: ['account', 'identity'],
+            source: ['accountCredential', 'identityCredential'],
             statement: builder.getStatement(),
             issuers: validIdentityProviders,
         });
@@ -307,27 +306,27 @@ export function statementBuilder(): StatementBuilder {
 }
 
 /**
- * A verifiable presentation request that specifies what credentials and proofs
+ * A verification request that specifies what credentials and proofs
  * are being requested from a credential holder. This class encapsulates the
  * request context, the specific credential statements needed, and a reference
  * to the blockchain transaction that anchors the request.
  */
-class VerifiablePresentationRequestV1 {
+class VerificationRequestV1 {
     /**
-     * Creates a new verifiable presentation request.
+     * Creates a new verification request.
      *
-     * @param requestContext - The context information for this request
+     * @param context - The context information for this request
      * @param credentialStatements - The specific credential statements being requested
      * @param transactionRef - Reference to the blockchain transaction anchoring this request
      */
     constructor(
-        public readonly requestContext: Context,
+        public readonly context: Context,
         public readonly credentialStatements: Statement[],
         public readonly transactionRef: TransactionHash.Type
     ) {}
 
     /**
-     * Serializes the presentation request to a JSON representation.
+     * Serializes the verification request to a JSON representation.
      *
      * @returns The JSON representation of this presentation request
      */
@@ -337,7 +336,8 @@ class VerifiablePresentationRequestV1 {
             issuers: statement.issuers.map((i) => i.toJSON()),
         }));
         return {
-            requestContext: { ...this.requestContext, given: this.requestContext.given.map(givenContextToJSON) },
+            type: 'ConcordiumVerificationRequestV1',
+            context: { ...this.context, given: this.context.given.map(givenContextToJSON) },
             credentialStatements,
             transactionRef: this.transactionRef.toJSON(),
         };
@@ -345,25 +345,25 @@ class VerifiablePresentationRequestV1 {
 }
 
 /**
- * A verifiable presentation request that specifies what credentials and proofs
+ * A verification request that specifies what credentials and proofs
  * are being requested from a credential holder. This class encapsulates the
  * request context, the specific credential statements needed, and a reference
  * to the blockchain transaction that anchors the request.
  */
-export type Type = VerifiablePresentationRequestV1;
+export type Type = VerificationRequestV1;
 
 /**
- * Deserializes a verifiable presentation request from its JSON representation.
+ * Deserializes a verification request from its JSON representation.
  *
  * This function reconstructs the request object from JSON data, handling
  * the conversion of serialized context information and credential statements
  * back to their proper types.
  *
  * @param json - The JSON representation to deserialize
- * @returns The deserialized verifiable presentation request
+ * @returns The deserialized verification request
  */
-export function fromJSON(json: JSON): VerifiablePresentationRequestV1 {
-    const requestContext = { ...json.requestContext, given: json.requestContext.given.map(givenContextFromJSON) };
+export function fromJSON(json: JSON): VerificationRequestV1 {
+    const requestContext = { ...json.context, given: json.context.given.map(givenContextFromJSON) };
     const statements: Statement[] = json.credentialStatements.map((statement) => {
         switch (statement.type) {
             case 'identity':
@@ -375,15 +375,11 @@ export function fromJSON(json: JSON): VerifiablePresentationRequestV1 {
         }
     });
 
-    return new VerifiablePresentationRequestV1(
-        requestContext,
-        statements,
-        TransactionHash.fromJSON(json.transactionRef)
-    );
+    return new VerificationRequestV1(requestContext, statements, TransactionHash.fromJSON(json.transactionRef));
 }
 
 /**
- * Creates a verifiable presentation request and anchors it to the Concordium blockchain.
+ * Creates a verification request and anchors it to the Concordium blockchain.
  *
  * This function creates a presentation request with the specified context and credential
  * statements, then stores an anchor of the request on the blockchain as a data registration
@@ -407,7 +403,7 @@ export async function createAndAchor(
     context: Omit<Context, 'type'>,
     credentialStatements: Statement[],
     anchorPublicInfo?: Record<string, any>
-): Promise<VerifiablePresentationRequestV1> {
+): Promise<VerificationRequestV1> {
     const requestContext = createContext(context);
     const anchor = createAnchor(requestContext, credentialStatements, anchorPublicInfo);
 
@@ -430,7 +426,7 @@ export async function createAndAchor(
 }
 
 /**
- * Creates a new verifiable presentation request.
+ * Creates a new verification request.
  *
  * This is a factory function that creates a request with the specified
  * context, credential statements, and transaction reference.
@@ -439,12 +435,12 @@ export async function createAndAchor(
  * @param credentialStatements - The credential statements being requested
  * @param transactionRef - Reference to the blockchain transaction anchoring this request
  *
- * @returns A new verifiable presentation request instance
+ * @returns A new verification request instance
  */
 export function create(
     context: Context,
     credentialStatements: Statement[],
     transactionRef: TransactionHash.Type
-): VerifiablePresentationRequestV1 {
-    return new VerifiablePresentationRequestV1(context, credentialStatements, transactionRef);
+): VerificationRequestV1 {
+    return new VerificationRequestV1(context, credentialStatements, transactionRef);
 }

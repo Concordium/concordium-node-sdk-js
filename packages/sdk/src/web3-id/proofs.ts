@@ -568,11 +568,12 @@ export function createAccountDID(network: Network, credId: string): DIDString {
  * Used to build a request for a verifiable credential based on an identity object.
  *
  * @param network - The Concordium network
+ * @param idpIndex - The index of the identity provider as registered on chain
  * @returns DID string in format: did:ccd:{network}:id
  */
 // TODO: figure out if this matches the identifier.
-export function createIdentityStatementDID(network: Network): DIDString {
-    return 'did:ccd:' + network.toLowerCase() + ':id';
+export function createIdentityStatementDID(network: Network, idpIndex: number | bigint): DIDString {
+    return 'did:ccd:' + network.toLowerCase() + ':idp' + idpIndex;
 }
 
 /**

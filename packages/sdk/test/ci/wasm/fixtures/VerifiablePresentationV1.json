@@ -1,4 +1,5 @@
 {
+    "type": ["VerifiablePresentation", "ConcordiumVerifiablePresentationV1"],
     "presentationContext": {
         "type": "ConcordiumContextInformationV1",
         "given": [
@@ -35,6 +36,8 @@
                 "proofValue": "01020102010201020102010201020102010201020102010201020102010201020102010201020102010201020102010201020102010201020102010201020102"
             },
             "issuer": "ccd:testnet:idp:0",
+            "validFrom": "2000-01-01T00:00:00.000Z",
+            "validTo": "2030-01-01T00:00:00.000Z",
             "credentialSubject": {
                 "statement": [
                     {

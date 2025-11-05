@@ -13,7 +13,7 @@ import {
 } from '../../types.js';
 import { cborDecode, cborEncode } from '../../types/cbor.js';
 import { AccountAddress, DataBlob, TransactionExpiry, TransactionHash } from '../../types/index.js';
-import { VerifiablePresentationRequestV1, VerifiablePresentationV1 } from './index.js';
+import { VerifiablePresentationV1, VerificationRequestV1 } from './index.js';
 
 const JSONBig = _JB({ alwaysParseAsBig: true, useNativeBigInt: true });
 
@@ -37,7 +37,7 @@ class VerificationAuditRecordV1 {
      * @param id - Unique identifier for this audit record
      */
     constructor(
-        public readonly request: VerifiablePresentationRequestV1.Type,
+        public readonly request: VerificationRequestV1.Type,
         public readonly presentation: VerifiablePresentationV1.Type,
         public readonly id: string
     ) {}
@@ -79,7 +79,7 @@ export type JSON = Pick<Type, 'id'> & {
     /** The audit record version */
     version: 1;
     /** The serialized verifiable presentation request */
-    request: VerifiablePresentationRequestV1.JSON;
+    request: VerificationRequestV1.JSON;
     /** The serialized verifiable presentation */
     presentation: VerifiablePresentationV1.JSON;
 };
@@ -95,7 +95,7 @@ export type JSON = Pick<Type, 'id'> & {
  */
 export function create(
     id: string,
-    request: VerifiablePresentationRequestV1.Type,
+    request: VerificationRequestV1.Type,
     presentation: VerifiablePresentationV1.Type
 ): VerificationAuditRecordV1 {
     return new VerificationAuditRecordV1(request, presentation, id);
@@ -109,7 +109,7 @@ export function create(
  */
 export function fromJSON(json: JSON): VerificationAuditRecordV1 {
     return new VerificationAuditRecordV1(
-        VerifiablePresentationRequestV1.fromJSON(json.request),
+        VerificationRequestV1.fromJSON(json.request),
         VerifiablePresentationV1.fromJSON(json.presentation),
         json.id
     );

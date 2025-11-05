@@ -4,11 +4,10 @@ import {
     IdentityObjectV1,
     IdentityProvider,
     IdentityProviderDID,
-    VerifiablePresentationRequestV1,
     VerifiablePresentationV1,
     VerificationAuditRecordV1,
+    VerificationRequestV1,
     createIdentityCommitmentInputWithHdWallet,
-    createIdentityStatementDID,
     sha256,
     streamToList,
 } from '@concordium/web-sdk';
@@ -118,35 +117,30 @@ const grpc = new ConcordiumGRPCNodeClient(
 
 const [sender, signer] = parseKeysFile(walletFile);
 
-// First we generate the presentation request.
+// First we generate the verification request.
 //
 // This will normally happen server-side.
-const context = VerifiablePresentationRequestV1.createSimpleContext(
+const context = VerificationRequestV1.createSimpleContext(
     sha256([Buffer.from(Date.now().toString())]),
     randomUUID(),
     'Example VP'
 );
-const statements = VerifiablePresentationRequestV1.statementBuilder()
+const statements = VerificationRequestV1.statementBuilder()
     .addAccountOrIdentityStatement([new IdentityProviderDID(network, identityProviderIndex)], (b) => {
         b.addEUResidency();
         b.addMinimumAge(18);
     })
     .getStatements();
-const presentationRequest = await VerifiablePresentationRequestV1.createAndAchor(
-    grpc,
-    sender,
-    signer,
-    context,
-    statements,
-    { info: 'Example VP anchor' }
-);
+const verificationRequest = await VerificationRequestV1.createAndAchor(grpc, sender, signer, context, statements, {
+    info: 'Example VP anchor',
+});
 
-console.log('PRESENTATION REQUEST: \n', JSONBig.stringify(presentationRequest, null, 2), '\n');
+console.log('VERIFICATION REQUEST: \n', JSONBig.stringify(verificationRequest, null, 2), '\n');
 
-// simulate sending a response to the client requesting the presentation request
-const requestJson = JSONBig.stringify(presentationRequest);
+// simulate sending a response to the client requesting the verification request
+const requestJson = JSONBig.stringify(verificationRequest);
 
-// Then we create the presentation.
+// Then we create the verification.
 //
 // This will normally happen in an application that holds the user credentials. In this example, the information
 // normally held by said application, i.e. the credential used, the idp index, and the id index, is passed as program
@@ -167,21 +161,21 @@ const arsInfos: Record<number, ArInfo> = ars.reduce((acc, ar) => {
 }, {});
 const idp: IdentityProvider = { ipInfo, arsInfos };
 
-// simulate receiving presentation request
-const requestParsed = VerifiablePresentationRequestV1.fromJSON(JSONBig.parse(requestJson));
+// simulate receiving verification request
+const requestParsed = VerificationRequestV1.fromJSON(JSONBig.parse(requestJson));
 // At this point, we have all the values held inside the application.
 // From the above, we retreive the secret input which is at the core of creating the verifiable presentation (proof)
 const credentialInput = createIdentityCommitmentInputWithHdWallet(idObject, idp, identityIndex, wallet);
 
 // we select the identity to prove the statement for
-const selectedIdentity = createIdentityStatementDID(network); // we unwrap here, as we know the statement exists (we created it just above)
 const idStatement = requestParsed.credentialStatements.find(
     (s) => s.type === 'identity'
-)! as VerifiablePresentationRequestV1.IdentityStatement; // we unwrap here, as we know the statement exists (we created it just above)
-const specifiedStatement: VerifiablePresentationV1.IdentityStatement = {
-    id: selectedIdentity,
-    statement: idStatement.statement,
-};
+)! as VerificationRequestV1.IdentityStatement; // we unwrap here, as we know the statement exists (we created it just above)
+const specifiedStatement = VerifiablePresentationV1.createIdentityStatement(
+    network,
+    idp.ipInfo.ipIdentity,
+    idStatement.statement
+);
 
 console.log('Waiting for anchor transaction to finalize:', requestParsed.transactionRef.toString());
 
@@ -204,11 +198,11 @@ console.log('PRESENTATION:\n', JSONBig.stringify(presentation, null, 2), '\n');
 // simulate receiving presentation to be verified
 const presentationParsed = VerifiablePresentationV1.fromJSON(JSONBig.parse(presentationJson));
 
-if (!(await VerifiablePresentationV1.verifyWithNode(presentationParsed, presentationRequest, grpc, network)))
+if (!(await VerifiablePresentationV1.verifyWithNode(presentationParsed, verificationRequest, grpc, network)))
     throw new Error('Failed to verify the presentation');
 
 // Finally, the entity requesting the proof stores the audit report and registers a pulic version on chain
-const report = VerificationAuditRecordV1.create(randomUUID(), presentationRequest, presentation);
+const report = VerificationAuditRecordV1.create(randomUUID(), verificationRequest, presentation);
 const auditTransaction = await VerificationAuditRecordV1.registerAnchor(report, grpc, sender, signer, {
     info: 'Some public info',
 });

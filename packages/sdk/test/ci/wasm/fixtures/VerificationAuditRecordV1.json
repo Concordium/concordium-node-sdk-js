@@ -1,7 +1,8 @@
 {
     "request": {
-        "requestContext": {
-            "type": "ConcordiumContextInformationV1",
+        "type": "ConcordiumVerificationRequestV1",
+        "context": {
+            "type": "ConcordiumUnfilledContextInformationV1",
             "given": [
                 {
                     "label": "Nonce",
@@ -21,7 +22,7 @@
         "credentialStatements": [
             {
                 "type": "identity",
-                "source": ["identity"],
+                "source": ["identityCredential"],
                 "issuers": ["ccd:testnet:idp:0", "ccd:testnet:idp:1", "ccd:testnet:idp:2"],
                 "statement": [
                     {
@@ -34,6 +35,7 @@
         "transactionRef": "0102030401020304010203040102030401020304010203040102030401020304"
     },
     "presentation": {
+        "type": ["VerifiablePresentation", "ConcordiumVerifiablePresentationV1"],
         "presentationContext": {
             "type": "ConcordiumContextInformationV1",
             "given": [
@@ -70,6 +72,8 @@
                     "proofValue": "01020102010201020102010201020102010201020102010201020102010201020102010201020102010201020102010201020102010201020102010201020102"
                 },
                 "issuer": "ccd:testnet:idp:0",
+                "validFrom": "2000-01-01T00:00:00.000Z",
+                "validTo": "2030-01-01T00:00:00.000Z",
                 "credentialSubject": {
                     "statement": [
                         {

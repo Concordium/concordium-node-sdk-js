@@ -1,6 +1,7 @@
 {
-    "requestContext": {
-        "type": "ConcordiumContextInformationV1",
+    "type": "ConcordiumVerificationRequestV1",
+    "context": {
+        "type": "ConcordiumUnfilledContextInformationV1",
         "given": [
             {
                 "label": "Nonce",
@@ -20,7 +21,7 @@
     "credentialStatements": [
         {
             "type": "identity",
-            "source": ["identity"],
+            "source": ["identityCredential"],
             "statement": [
                 {
                     "type": "RevealAttribute",

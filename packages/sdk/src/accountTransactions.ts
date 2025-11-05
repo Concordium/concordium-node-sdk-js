@@ -40,6 +40,7 @@ import {
 import * as AccountAddress from './types/AccountAddress.js';
 import * as CcdAmount from './types/CcdAmount.js';
 import { DataBlob } from './types/DataBlob.js';
+import * as InitName from './types/InitName.js';
 import * as Parameter from './types/Parameter.js';
 import * as ReceiveName from './types/ReceiveName.js';
 
@@ -259,8 +260,26 @@ export class InitContractHandler implements AccountTransactionHandler<InitContra
         return Buffer.concat([serializedAmount, serializedModuleRef, serializedInitName, serializedParameters]);
     }
 
-    deserialize(): InitContractPayload {
-        throw new Error('deserialize not supported');
+    deserialize(serializePayload: Cursor): InitContractPayload {
+        const amount = serializePayload.read(8).readBigUInt64BE(0);
+        const moduleRef = serializePayload.read(32);
+
+        const initNameLength = serializePayload.read(2).readUInt16BE(0);
+        const initName = serializePayload.read(initNameLength);
+        const initNameAfterConversion = InitName.fromString(initName.toString('utf8'));
+
+        const paramLength = serializePayload.read(2).readUInt16BE(0);
+        const param = serializePayload.read(paramLength);
+        const paramBuffer = Parameter.fromBuffer(param.buffer);
+
+        return {
+            amount: CcdAmount.fromMicroCcd(amount),
+            moduleRef: ModuleReference.fromBuffer(moduleRef),
+            initName: ContractName.fromInitName(initNameAfterConversion),
+            param: paramBuffer,
+            //The execution energy cannot be recovered as it is not part of the payload serialization
+            maxContractExecutionEnergy: Energy.create(0n),
+        };
     }
 
     toJSON(payload: InitContractPayload): InitContractPayloadJSON {

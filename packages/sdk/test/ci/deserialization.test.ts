@@ -9,8 +9,13 @@ import {
     CIS2,
     CcdAmount,
     ContractAddress,
+    ContractName,
     DataBlob,
     DeployModulePayload,
+    Energy,
+    InitContractPayload,
+    ModuleReference,
+    Parameter,
     RegisterDataPayload,
     SequenceNumber,
     SimpleTransferPayload,
@@ -87,6 +92,21 @@ test('test deserialize DeployModule ', () => {
         source: new Uint8Array([0x00, 0xab, 0x53, 0x03, 0x92, 0x68, 0x10, 0xee]),
     };
     deserializeAccountTransactionBase(AccountTransactionType.DeployModule, payload);
+});
+
+test('test deserialize InitContract ', () => {
+    const moduleRef = ModuleReference.fromHexString('44434352ddba724930d6b1b09cd58bd1fba6ad9714cf519566d5fe72d80da0d1');
+    const contractName = ContractName.fromStringUnchecked('weather');
+
+    const deserializePayload: InitContractPayload = {
+        amount: CcdAmount.zero(),
+        moduleRef: moduleRef,
+        initName: contractName,
+        param: Parameter.fromHexString('0a'),
+        maxContractExecutionEnergy: Energy.create(0),
+    };
+
+    deserializeAccountTransactionBase(AccountTransactionType.InitContract, deserializePayload);
 });
 
 test('Expired transactions can be deserialized', () => {

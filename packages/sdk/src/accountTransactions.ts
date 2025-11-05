@@ -276,7 +276,8 @@ export class InitContractHandler implements AccountTransactionHandler<InitContra
            moduleRef: ModuleReference.fromBuffer(moduleRef),
            initName: ContractName.fromInitName(initNameAfterConversion), 
            param: paramBuffer,
-           maxContractExecutionEnergy: Energy.create(0n), //setting this to zero, bluepaper does not specify this
+           //The execution energy cannot be recovered as it is not part of the payload serialization
+           maxContractExecutionEnergy: Energy.create(0n),
         }
     }
 

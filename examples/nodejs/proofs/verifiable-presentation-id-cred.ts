@@ -165,17 +165,13 @@ const idp: IdentityProvider = { ipInfo, arsInfos };
 const requestParsed = VerificationRequestV1.fromJSON(JSONBig.parse(requestJson));
 // At this point, we have all the values held inside the application.
 // From the above, we retreive the secret input which is at the core of creating the verifiable presentation (proof)
-const credentialInput = createIdentityCommitmentInputWithHdWallet(idObject, idp, identityIndex, wallet);
+const proofInput = createIdentityCommitmentInputWithHdWallet(idObject, idp, identityIndex, wallet);
 
 // we select the identity to prove the statement for
 const idStatement = requestParsed.credentialStatements.find(
     (s) => s.type === 'identity'
 )! as VerificationRequestV1.IdentityStatement; // we unwrap here, as we know the statement exists (we created it just above)
-const specifiedStatement = VerifiablePresentationV1.createIdentityStatement(
-    network,
-    idp.ipInfo.ipIdentity,
-    idStatement.statement
-);
+const claims = VerifiablePresentationV1.createIdentityClaims(network, idp.ipInfo.ipIdentity, idStatement.statement);
 
 console.log('Waiting for anchor transaction to finalize:', requestParsed.transactionRef.toString());
 
@@ -185,8 +181,8 @@ await grpc.waitForTransactionFinalization(requestParsed.transactionRef);
 const presentation = await VerifiablePresentationV1.createFromAnchor(
     grpc,
     requestParsed,
-    [specifiedStatement],
-    [credentialInput],
+    [claims],
+    [proofInput],
     [{ label: 'ResourceID', context: 'Example VP use-case' }]
 );
 

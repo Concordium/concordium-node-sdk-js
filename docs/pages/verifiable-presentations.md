@@ -145,7 +145,7 @@ const json = JSON.stringify(presentationRequest); // service sends back presenta
 const presentationRequest = VerificationRequestV1.fromJSON(JSON.parse(json)); // frontend parses the JSON.
 ```
 
-## Verification Request (proof request)
+## Verification Request
 
 To get a _verifiable presentation_ of one or more _verifiable credentials_ owned by a user, the entity requesting
 the information must first build a _verification request_. In the V1 protocol, this is done in the following
@@ -187,7 +187,7 @@ const verificationRequest = await VerificationRequestV1.createAndAchor(
 );
 ```
 
-## Verifiable Presentation (proof)
+## Verifiable Presentation
 
 Computing a _verifiable presentation_ from a _verifiable presentation request_ is a process of the following sequence
 for each credential statement in the request:
@@ -216,11 +216,11 @@ const contextValues: GivenContext[] = [{label: 'ResourceID', context: ...}];
 // The application goes through each statement in the verification request, and constructs a corresponding statement
 // used as input to the presentation. The difference between the two statement types boil down to the presence of an ID
 // qualifier vs. an ID (selected by the application based on the id qualifier).
-const statements: VerifiablePresentationV1.Statement[] = verificationRequest.credentialStatements.map((entry) => {
+const statements: VerifiablePresentationV1.SubjectClaims[] = verificationRequest.credentialStatements.map((entry) => {
     // prioritize creating identity based proofs, as these are more privacy-preserving
     if (entry.source.includes('identity'))
-        return VerifiablePresentationV1.createIdentityStatement(..., entry.statement);
-    return VerifiablePresentation.createAccountStatement(..., entry.statement);
+        return VerifiablePresentationV1.createIdentityClaims(..., entry.statement);
+    return VerifiablePresentation.createAccountClaims(..., entry.statement);
 });
 
 // the inputs for the credential owned by the user, i.e. credential attribute values. For each

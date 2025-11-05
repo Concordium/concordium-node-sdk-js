@@ -61,6 +61,14 @@ export type AccountClaims = {
     statement: AtomicStatementV2<AttributeKey>[];
 };
 
+/**
+ * Create claims about an account based credential
+ *
+ * @param network - The network the account credential exists on.
+ * @param credRegId - The credential registration ID of the account.
+ * @param statement - The atomic statements to prove for the account credential.
+ * @returns The account claims to be used in the presentation input for the verifiable credential.
+ */
 export function createAccountClaims(
     network: Network,
     credRegId: CredentialRegistrationId.Type,
@@ -83,6 +91,14 @@ export type IdentityClaims = {
     statement: AtomicStatementV2<AttributeKey>[];
 };
 
+/**
+ * Create claims about an identity based credential
+ *
+ * @param network - The network of the identity provider used to create the identity.
+ * @param idpIndex - The on-chain index of the identity provider used to create the identity.
+ * @param statement - The atomic statements to prove for the identity credential.
+ * @returns The identity claims to be used in the presentation input for the verifiable credential.
+ */
 export function createIdentityClaims(
     network: Network,
     idpIndex: number,
@@ -100,11 +116,11 @@ export function createIdentityClaims(
  */
 export type SubjectClaims = IdentityClaims | AccountClaims;
 
-function isSpecifiedAccountCredentialStatement(statement: SubjectClaims): statement is AccountClaims {
+function isAccountClaims(statement: SubjectClaims): statement is AccountClaims {
     return (statement as AccountClaims).type.includes('ConcordiumAccountBasedSubjectClaims');
 }
 
-function isSpecifiedIdentityCredentialStatement(statement: SubjectClaims): statement is IdentityClaims {
+function isIdentityClaims(statement: SubjectClaims): statement is IdentityClaims {
     return (statement as IdentityClaims).type.includes('ConcordiumAccountBasedStatement');
 }
 
@@ -393,7 +409,7 @@ export function create(
     const idStatements: [number, IdentityClaims][] = [];
     const compatibleStatements: OldStatement[] = [];
     subjectClaims.forEach((s, i) => {
-        if (isSpecifiedIdentityCredentialStatement(s)) idStatements.push([i, s]);
+        if (isIdentityClaims(s)) idStatements.push([i, s]);
         else compatibleStatements.push(s);
     });
 

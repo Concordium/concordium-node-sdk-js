@@ -1,4 +1,5 @@
 mod aux_functions;
+mod web3id;
 pub mod external_functions;
 
 #[macro_use]

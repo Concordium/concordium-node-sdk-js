@@ -86,7 +86,7 @@ export function createAccountClaims(
  * Contains the identity DID and atomic statements about identity attributes.
  */
 export type IdentityClaims = {
-    type: ['ConcordiumSubjectClaimsV1', 'ConcordiumAccountBasedStatement'];
+    type: ['ConcordiumSubjectClaimsV1', 'ConcordiumIdBasedSubjectClaims'];
     issuer: DIDString;
     statement: AtomicStatementV2<AttributeKey>[];
 };
@@ -105,7 +105,7 @@ export function createIdentityClaims(
     statement: AtomicStatementV2<AttributeKey>[]
 ): IdentityClaims {
     return {
-        type: ['ConcordiumSubjectClaimsV1', 'ConcordiumAccountBasedStatement'],
+        type: ['ConcordiumSubjectClaimsV1', 'ConcordiumIdBasedSubjectClaims'],
         issuer: createIdentityStatementDID(network, idpIndex),
         statement,
     };

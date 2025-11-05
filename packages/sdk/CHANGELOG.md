@@ -6,7 +6,6 @@
 
 - deserialize function for DeployModulePayload implemented instead of throwing an exception of not supporting deserialize
 
-
 ## 11.0.0
 
 ### Fixed

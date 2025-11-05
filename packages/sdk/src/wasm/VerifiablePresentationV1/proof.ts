@@ -1,7 +1,9 @@
 // TODO: remove any eslint disable once fully implemented
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import * as wasm from '@concordium/rust-bindings/wallet';
 import { Buffer } from 'buffer/index.js';
+import _JB from 'json-bigint';
 
 import {
     AttributeKey,
@@ -14,9 +16,7 @@ import {
     TransactionStatusEnum,
     TransactionSummaryType,
     VerificationRequestV1,
-    cborEncode,
     isKnown,
-    sha256,
 } from '../../index.js';
 import { ConcordiumWeakLinkingProofV1 } from '../../types/VerifiablePresentation.js';
 import { bail } from '../../util.js';
@@ -27,15 +27,13 @@ import {
     CredentialsInputsIdentity,
     DIDString,
     IdentityCommitmentInput,
-    CommitmentInput as OldCommitmentInputs,
-    RequestStatement as OldStatement,
-    Web3IdProofRequest,
     createAccountDID,
     createIdentityStatementDID,
 } from '../../web3-id/index.js';
-import { getVerifiablePresentation } from '../VerifiablePresentation.js';
 import { GivenContextJSON, givenContextFromJSON, givenContextToJSON } from './internal.js';
 import { GivenContext, ZKProofV4 } from './types.js';
+
+const JSONBig = _JB({ alwaysParseAsBig: true, useNativeBigInt: true });
 
 /**
  * Context information for a verifiable presentation proof.
@@ -50,6 +48,24 @@ export type Context = {
     /** Context information that was requested and is now filled with actual values */
     requested: GivenContext[];
 };
+
+type ContextJSON = Pick<Context, 'type'> & { given: GivenContextJSON[]; requested: GivenContextJSON[] };
+
+function proofContextToJSON(context: Context): ContextJSON {
+    return {
+        type: context.type,
+        given: context.given.map(givenContextToJSON),
+        requested: context.requested.map(givenContextToJSON),
+    };
+}
+
+function proofContextFromJSON(context: ContextJSON): Context {
+    return {
+        type: context.type,
+        given: context.given.map(givenContextFromJSON),
+        requested: context.requested.map(givenContextFromJSON),
+    };
+}
 
 /**
  * Claims to be proven about an account credential.
@@ -115,14 +131,6 @@ export function createIdentityClaims(
  * Union type representing all supported subject claims types in a verifiable presentation.
  */
 export type SubjectClaims = IdentityClaims | AccountClaims;
-
-function isAccountClaims(statement: SubjectClaims): statement is AccountClaims {
-    return (statement as AccountClaims).type.includes('ConcordiumAccountBasedSubjectClaims');
-}
-
-function isIdentityClaims(statement: SubjectClaims): statement is IdentityClaims {
-    return (statement as IdentityClaims).type.includes('ConcordiumIdBasedSubjectClaims');
-}
 
 /**
  * Creates a proof context by filling in the requested context from a presentation request.
@@ -258,11 +266,7 @@ class VerifiablePresentationV1 {
     public toJSON(): JSON {
         let json: JSON = {
             type: ['VerifiablePresentation', 'ConcordiumVerifiablePresentationV1'],
-            presentationContext: {
-                type: this.presentationContext.type,
-                given: this.presentationContext.given.map(givenContextToJSON),
-                requested: this.presentationContext.requested.map(givenContextToJSON),
-            },
+            presentationContext: proofContextToJSON(this.presentationContext),
             verifiableCredential: this.verifiableCredential,
         };
 
@@ -277,8 +281,6 @@ class VerifiablePresentationV1 {
  * including the context, credentials, and cryptographic proofs.
  */
 export type Type = VerifiablePresentationV1;
-
-type ContextJSON = Pick<Context, 'type'> & { given: GivenContextJSON[]; requested: GivenContextJSON[] };
 
 /**
  * JSON representation of a verifiable presentation.
@@ -304,22 +306,12 @@ export type JSON = {
  * @returns The deserialized verifiable presentation
  */
 export function fromJSON(value: JSON): VerifiablePresentationV1 {
-    const presentationContext: Context = {
-        type: value.presentationContext.type,
-        given: value.presentationContext.given.map(givenContextFromJSON),
-        requested: value.presentationContext.requested.map(givenContextFromJSON),
-    };
+    const presentationContext: Context = proofContextFromJSON(value.presentationContext);
     return new VerifiablePresentationV1(presentationContext, value.verifiableCredential, value.proof);
 }
 
 export type Request = {
     context: Context;
-    subjectClaims: SubjectClaims[];
-};
-
-type RequestJSON = {
-    type: 'ConcordiumVerifiablePresentationRequestV1';
-    context: ContextJSON;
     subjectClaims: SubjectClaims[];
 };
 
@@ -383,6 +375,24 @@ export async function createFromAnchor(
 }
 
 /**
+ * Matches the corresponding type in rust-bindings/wallet
+ */
+type RequestJSON = {
+    type: 'ConcordiumVerifiablePresentationRequestV1';
+    context: ContextJSON;
+    subjectClaims: SubjectClaims[];
+};
+
+/**
+ * Matches the corresponding type in rust-bindings/wallet
+ */
+type PresenationV1Input = {
+    request: RequestJSON;
+    global: CryptographicParameters;
+    inputs: CommitmentInput[];
+};
+
+/**
  * Creates a verifiable presentation with the specified statements, inputs, and context.
  *
  * This function generates zero-knowledge proofs for the requested credential statements
@@ -396,71 +406,23 @@ export async function createFromAnchor(
  *
  * @returns The created verifiable presentation with all proofs
  */
-// TODO: this entire function should call a function in @concordium/rust-bindings to create the verifiable
-// presentation from the function arguments. For now, we hack something together from the old protocol which
-// means filtering and mapping the input/output.
 export function create(
     { context, subjectClaims }: Request,
     inputs: CommitmentInput[],
     globalContext: CryptographicParameters
 ): VerifiablePresentationV1 {
-    // first we filter out the id statements, as they're not compatible with the current implementation
-    // in concordium-base
-    const idStatements: [number, IdentityClaims][] = [];
-    const compatibleStatements: OldStatement[] = [];
-    subjectClaims.forEach((s, i) => {
-        if (isIdentityClaims(s)) idStatements.push([i, s]);
-        else compatibleStatements.push(s);
-    });
-
-    // correspondingly, filter out the the inputs for identity credentials
-    const idInputs = inputs.filter((ci) => ci.type === 'identity') as IdentityCommitmentInput[];
-    const compatibleInputs = inputs.filter((ci) => ci.type !== 'identity') as OldCommitmentInputs[];
-
-    if (idStatements.length !== idInputs.length) throw new Error('Mismatch between provided statements and inputs');
-
-    const challenge = sha256([Buffer.from(JSON.stringify([compatibleStatements, context]))]).toString('hex');
-    const request: Web3IdProofRequest = { challenge, credentialStatements: compatibleStatements };
-
-    const { verifiableCredential, proof } = getVerifiablePresentation({
-        commitmentInputs: compatibleInputs,
-        globalContext,
-        request,
-    });
-    // Map the output to match the format of the V1 protocol.
-    const compatibleCredentials: Credential[] = verifiableCredential.map<Credential>((c) => {
-        const { proof, id, statement } = c.credentialSubject;
-        const { created, type: _type, ...proofValues } = proof;
-        return {
-            proof: {
-                createdAt: created,
-                type: 'ConcordiumZKProofV4',
-                proofValue: Buffer.from(cborEncode(proofValues)).toString('hex'),
-            },
-            issuer: c.issuer,
-            type: ['VerifiableCredential', 'ConcordiumVerifiableCredentialV1', 'ConcordiumAccountBasedCredential'],
-            credentialSubject: { id, statement: statement as unknown as AtomicStatementV2<AttributeKey>[] },
-        };
-    });
-    // and add stubbed ID credentials in
-    const idCredentials: [number, IdentityBasedCredential][] = idStatements.map(([originalIndex, statement], i) => [
-        originalIndex,
-        createIdentityCredentialStub(statement, idInputs[i].context.ipInfo.ipIdentity),
-    ]);
-
-    const credentials: Credential[] = [];
-    let compatibleCounter = 0;
-    for (let i = 0; i < subjectClaims.length; i += 1) {
-        const idCred = idCredentials.find((entry) => entry[0] === i);
-        if (idCred !== undefined) {
-            credentials.push(idCred[1]);
-        } else {
-            credentials.push(compatibleCredentials[compatibleCounter]);
-            compatibleCounter += 1;
-        }
-    }
-
-    return new VerifiablePresentationV1(context, credentials, proof);
+    const requestJson: RequestJSON = {
+        type: 'ConcordiumVerifiablePresentationRequestV1',
+        context: proofContextToJSON(context),
+        subjectClaims: subjectClaims,
+    };
+    const input: PresenationV1Input = {
+        request: requestJson,
+        global: globalContext,
+        inputs,
+    };
+    let serializedPresentation = wasm.createPresentationV1(JSONBig.stringify(input));
+    return fromJSON(JSONBig.parse(serializedPresentation));
 }
 
 /**

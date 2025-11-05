@@ -1,7 +1,8 @@
 import { Buffer } from 'buffer/index.js';
 
 import { BlockHash } from '../../types/index.js';
-import { CredentialContextLabel, GivenContext } from './types.js';
+import type { Context } from './proof.ts';
+import type { CredentialContextLabel, GivenContext } from './types.js';
 
 /**
  * JSON representation of given context information.

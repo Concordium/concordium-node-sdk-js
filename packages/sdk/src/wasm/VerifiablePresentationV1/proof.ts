@@ -470,10 +470,20 @@ export function create(
 export type VerificationResult = { type: 'success' } | { type: 'failed'; error: Error };
 
 /**
- * Union type of all credential input types used for verification.
+ * The public data needed to verify an account based verifiable credential.
+ */
+export type AccountVerificationMaterial = CredentialsInputsAccount;
+
+/**
+ * The public data needed to verify an identity based verifiable credential.
+ */
+export type IdentityVerificationMaterial = CredentialsInputsIdentity;
+
+/**
+ * Union type of all verification material types used for verification.
  * These inputs contain the public credential data needed to verify proofs.
  */
-export type CredentialsInputs = CredentialsInputsAccount | CredentialsInputsIdentity;
+export type VerificationMaterial = AccountVerificationMaterial | IdentityVerificationMaterial;
 
 /**
  * Verifies a verifiable presentation against its corresponding request.
@@ -495,7 +505,7 @@ export function verify(
     presentation: VerifiablePresentationV1,
     request: VerificationRequestV1.Type,
     cryptographicParameters: CryptographicParameters,
-    publicData: CredentialsInputs[]
+    publicData: VerificationMaterial[]
 ): VerificationResult {
     return { type: 'success' };
 }

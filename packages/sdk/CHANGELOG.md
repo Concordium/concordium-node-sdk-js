@@ -19,6 +19,7 @@
     `VerifiablePresentation.createAccountClaims`.
   - `VerifiablePresentationV1.IdentityStatement` -> `VerifiablePresentationV1.IdentityClaims`, created with
     `VerifiablePresentation.createIdentityClaims`.
+- `VerifiablePresentationV1.CredentialInputs` renamed to `VerifiablePresentationV1.VerificationMaterial`.
 
 ## 11.1.0-alpha.1
 

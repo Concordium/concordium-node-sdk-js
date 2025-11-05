@@ -335,8 +335,30 @@ export class UpdateContractHandler
         ]);
     }
 
-    deserialize(): UpdateContractPayload {
-        throw new Error('deserialize not supported');
+    deserialize(serializedPayload: Cursor): UpdateContractPayload {
+        const amount = serializedPayload.read(8).readBigUInt64BE(0);
+
+        //ContractAddress is 16 bytes, two elements of Word64, reading first 8 bytes and then the other 8
+        const contractAddressIndex = serializedPayload.read(8);
+        const contractAddressSubIndex = serializedPayload.read(8);
+
+        const receiveNameLength = serializedPayload.read(2).readInt16BE(0);
+        const receiveName = serializedPayload.read(receiveNameLength);
+        const messageLength = serializedPayload.read(2).readInt16BE(0);
+        const message = serializedPayload.read(messageLength);
+
+        return {
+            amount: CcdAmount.fromMicroCcd(amount),
+            //read each contractAddressIndex and subIndex buffers for the 64 unsigned integer and create a contract address with these
+            address: ContractAddress.create(
+                contractAddressIndex.readBigUInt64BE(0),
+                contractAddressSubIndex.readBigUInt64BE(0)
+            ),
+            receiveName: ReceiveName.fromString(receiveName.toString()),
+            message: Parameter.fromBuffer(message),
+            //The execution energy cannot be recovered as it is not part of the payload serialization
+            maxContractExecutionEnergy: Energy.create(0n),
+        };
     }
 
     toJSON(payload: UpdateContractPayload): UpdateContractPayloadJSON {

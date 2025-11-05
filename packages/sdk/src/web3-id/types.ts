@@ -14,7 +14,6 @@ import type {
     IdentityProvider,
     IpInfo,
     Network,
-    Policy,
 } from '../types.js';
 import * as ContractAddress from '../types/ContractAddress.js';
 
@@ -81,29 +80,24 @@ export type IdObjectUseData = {
         /** Information held by the credential holder. */
         credentialHolderInformation: {
             /** The identity credential secret. */
-            idCredSecret: Uint8Array;
+            idCredSecret: HexString;
         };
         /** The pseudorandom function key. */
-        prfKey: Uint8Array;
+        prfKey: HexString;
     };
     /** Randomness used for signature blinding. */
-    randomness: Uint8Array;
+    randomness: HexString;
 };
 
 /** Commitment input for identity credentials containing context and identity object data. */
 // NOTE: **MUST** match the serialiation of CommitmentInput::Identity in concordium-base
-export type IdentityCommitmentInput = {
+export type IdentityCommitmentInput = IdentityProvider & {
     /** Identifies this as an identity credentials commitment input. */
-    // TODO: make sure this aligns with the chosen representation in concordium-base
     type: 'identity';
-    /** The identity provider context. */
-    context: IdentityProvider;
     /** The identity object containing identity information. */
     idObject: IdentityObjectV1;
     /** Additional data required for using the identity object. */
     idObjectUseData: IdObjectUseData;
-    /** The policy associated with the credential. */
-    policy: Policy;
 };
 
 /**

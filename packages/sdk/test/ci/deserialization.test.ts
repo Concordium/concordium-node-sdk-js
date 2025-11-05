@@ -101,9 +101,9 @@ test('test deserialize InitContract ', () => {
     const deserializePayload: InitContractPayload = {
         amount: CcdAmount.zero(),
         moduleRef: moduleRef,
-        initName: contractName, 
+        initName: contractName,
         param: Parameter.fromHexString('0a'),
-        maxContractExecutionEnergy: Energy.create(0),         
+        maxContractExecutionEnergy: Energy.create(0),
     };
 
     deserializeAccountTransactionBase(AccountTransactionType.InitContract, deserializePayload);

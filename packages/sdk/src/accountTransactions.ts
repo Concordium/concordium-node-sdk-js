@@ -42,7 +42,7 @@ import * as CcdAmount from './types/CcdAmount.js';
 import { DataBlob } from './types/DataBlob.js';
 import * as Parameter from './types/Parameter.js';
 import * as ReceiveName from './types/ReceiveName.js';
-import { fromString } from './types/InitName.js';
+import * as InitName from './types/InitName.js';
 /**
  * A handler for a specific {@linkcode AccountTransactionType}.
  */
@@ -265,7 +265,7 @@ export class InitContractHandler implements AccountTransactionHandler<InitContra
         
         const initNameLength = serializePayload.read(2).readUInt16BE(0);
         const initName = serializePayload.read(initNameLength);
-        const initNameAfterConversion = fromString(initName.toString('utf8'));
+        const initNameAfterConversion = InitName.fromString(initName.toString('utf8'));
 
         const paramLength = serializePayload.read(2).readUInt16BE(0);
         const param = serializePayload.read(paramLength);

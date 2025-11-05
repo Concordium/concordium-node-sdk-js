@@ -140,7 +140,7 @@ console.log('VERIFICATION REQUEST: \n', JSONBig.stringify(verificationRequest, n
 // simulate sending a response to the client requesting the verification request
 const requestJson = JSONBig.stringify(verificationRequest);
 
-// Then we create the verification.
+// Then we create the verifiable presentation.
 //
 // This will normally happen in an application that holds the user credentials. In this example, the information
 // normally held by said application, i.e. the credential used, the idp index, and the id index, is passed as program

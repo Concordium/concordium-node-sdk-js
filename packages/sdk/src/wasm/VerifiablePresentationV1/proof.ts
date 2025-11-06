@@ -121,7 +121,7 @@ function isAccountClaims(statement: SubjectClaims): statement is AccountClaims {
 }
 
 function isIdentityClaims(statement: SubjectClaims): statement is IdentityClaims {
-    return (statement as IdentityClaims).type.includes('ConcordiumAccountBasedStatement');
+    return (statement as IdentityClaims).type.includes('ConcordiumIdBasedSubjectClaims');
 }
 
 /**

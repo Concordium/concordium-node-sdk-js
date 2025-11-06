@@ -16,11 +16,13 @@ import {
     InitContractPayload,
     ModuleReference,
     Parameter,
+    ReceiveName,
     RegisterDataPayload,
     SequenceNumber,
     SimpleTransferPayload,
     SimpleTransferWithMemoPayload,
     TransactionExpiry,
+    UpdateContractPayload,
     tokenAddressFromBase58,
     tokenAddressToBase58,
 } from '../../src/index.js';
@@ -107,6 +109,18 @@ test('test deserialize InitContract ', () => {
     };
 
     deserializeAccountTransactionBase(AccountTransactionType.InitContract, deserializePayload);
+});
+
+test('test deserialize UpdateContract ', () => {
+    const deserializePayload: UpdateContractPayload = {
+        amount: CcdAmount.zero(),
+        address: ContractAddress.create(0, 1),
+        receiveName: ReceiveName.fromString('method.abc'),
+        message: Parameter.fromHexString('0a'),
+        maxContractExecutionEnergy: Energy.create(0),
+    };
+
+    deserializeAccountTransactionBase(AccountTransactionType.Update, deserializePayload);
 });
 
 test('Expired transactions can be deserialized', () => {

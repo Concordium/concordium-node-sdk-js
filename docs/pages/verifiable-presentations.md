@@ -7,8 +7,8 @@ This document describes how to create v1 verifiable presentations and how to ver
 - [Build Statement](#build-statement)
   - [Identity/account credential statements](#identityaccount-credential-statements)
 - [JSON representation](#json-representation)
-- [Verifiable Presentation Request (proof request)](#verifiable-presentation-request-proof-request)
-- [Verifiable Presentation (proof)](#verifiable-presentation-proof)
+- [Verification Request](#verification-request)
+- [Verifiable Presentation](#verifiable-presentation)
 - [Verifiable Audit Record](#verifiable-audit-record)
 <!--toc:end-->
 

@@ -593,7 +593,6 @@ export class TokenUpdateHandler implements AccountTransactionHandler<TokenUpdate
         return { tokenId, operations };
     }
     getBaseEnergyCost(payload: TokenUpdatePayload): bigint {
-        // TODO: update costs when finalized costs are determined.
         const operations = Cbor.decode(payload.operations, 'TokenOperation[]');
         // The base cost for a token transaction.
         let energyCost = 300n;
@@ -689,13 +688,13 @@ export function getAccountTransactionHandler(
         case AccountTransactionType.Update:
             return new UpdateContractHandler();
         case AccountTransactionType.UpdateCredentials:
-            return new UpdateCredentialsHandler();
+            return new UpdateCredentialsHandler(); //TODO:
         case AccountTransactionType.RegisterData:
             return new RegisterDataHandler();
         case AccountTransactionType.ConfigureDelegation:
             return new ConfigureDelegationHandler();
         case AccountTransactionType.ConfigureBaker:
-            return new ConfigureBakerHandler();
+            return new ConfigureBakerHandler(); //TODO
         case AccountTransactionType.TokenUpdate:
             return new TokenUpdateHandler();
         default:

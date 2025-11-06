@@ -7,6 +7,7 @@ import {
     AccountTransactionType,
     BlockItemKind,
     CIS2,
+    Cbor,
     CcdAmount,
     ContractAddress,
     ContractName,
@@ -21,6 +22,9 @@ import {
     SequenceNumber,
     SimpleTransferPayload,
     SimpleTransferWithMemoPayload,
+    TokenId,
+    TokenOperation,
+    TokenUpdatePayload,
     TransactionExpiry,
     UpdateContractPayload,
     tokenAddressFromBase58,
@@ -121,6 +125,19 @@ test('test deserialize UpdateContract ', () => {
     };
 
     deserializeAccountTransactionBase(AccountTransactionType.Update, deserializePayload);
+});
+
+test('test deserialize TokenUpdate ', () => {
+    const pause = {};
+    const pauseOperation = { pause } as TokenOperation;
+    //console.log(`Specified action:`, JSON.stringify(pauseOperation, null, 2));
+
+    const deserializePayload: TokenUpdatePayload = {
+        tokenId: TokenId.fromString('123ABCToken'),
+        operations: Cbor.encode([pauseOperation]),
+    };
+
+    deserializeAccountTransactionBase(AccountTransactionType.TokenUpdate, deserializePayload);
 });
 
 test('Expired transactions can be deserialized', () => {

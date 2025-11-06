@@ -18,7 +18,7 @@ import {
 } from '../../../src/pub/wasm.ts';
 import { createIdentityCommitmentInputWithHdWallet } from '../../../src/pub/web3-id.ts';
 import { BlockHash } from '../../../src/types/index.ts';
-import { ID_0_0_0, PUBLIC_0_0_0, TESTNET_GLOBAL_CONTEXT, TEST_SEED } from './constants.ts';
+import { ID_0_0_0, PUBLIC_0_0_0, TESTNET_GLOBAL_CONTEXT, TESTNET_IP_0, TEST_SEED } from './constants.ts';
 
 const presentationFixture = JSON.parse(
     fs.readFileSync(path.resolve(__dirname, './fixtures/VerifiablePresentationV1.json')).toString()
@@ -97,9 +97,9 @@ describe('VerifiablePresentationV1', () => {
 
         const wallet = ConcordiumHdWallet.fromHex(TEST_SEED, 'Testnet');
         const idObject: IdentityObjectV1 = ID_0_0_0;
-        const ipInfo: IpInfo = JSON.parse(fs.readFileSync('./test/ci/resources/ip_info.json').toString()).value;
+        const ipInfo: IpInfo = TESTNET_IP_0.ipInfo;
 
-        const arsInfos = JSON.parse(fs.readFileSync('./test/ci/resources/ars_infos.json').toString()).value;
+        const arsInfos = TESTNET_IP_0.arsInfos;
         const inputContext: IdentityProvider = {
             ipInfo,
             arsInfos,
@@ -110,9 +110,9 @@ describe('VerifiablePresentationV1', () => {
             VerifiablePresentationV1.createIdentityClaims('Testnet', 0, [
                 {
                     attributeTag: AttributeKeyString.dob,
-                    lower: '81',
+                    lower: '19500101',
                     type: 'AttributeInRange',
-                    upper: '1231',
+                    upper: '20000101',
                 },
                 {
                     attributeTag: AttributeKeyString.firstName,
@@ -134,7 +134,7 @@ describe('VerifiablePresentationV1', () => {
         const publicData: VerifiableCredentialV1.IdentityVerificationMaterial = {
             type: 'identity',
             ipInfo,
-            knownArs: arsInfos,
+            arsInfos,
         };
 
         const result = VerifiablePresentationV1.verify(presentation, TESTNET_GLOBAL_CONTEXT, [publicData]);

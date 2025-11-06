@@ -456,7 +456,7 @@ export type CredentialsInputsIdentity = {
     /** Information about the identity provider. */
     ipInfo: IpInfo;
     /** Known anonymity revokers mapped by their index. */
-    knownArs: Record<number, ArInfo>;
+    arsInfos: Record<number, ArInfo>;
 };
 
 /**

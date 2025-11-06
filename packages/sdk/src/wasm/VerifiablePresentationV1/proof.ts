@@ -10,12 +10,10 @@ import {
     ConcordiumGRPCClient,
     CredentialRegistrationId,
     CryptographicParameters,
-    HexString,
     Network,
     TransactionKindString,
     TransactionStatusEnum,
     TransactionSummaryType,
-    VerificationRequestV1,
     isKnown,
 } from '../../index.js';
 import { ConcordiumWeakLinkingProofV1 } from '../../types/VerifiablePresentation.js';
@@ -30,8 +28,9 @@ import {
     createAccountDID,
     createIdentityStatementDID,
 } from '../../web3-id/index.js';
+import { VerifiableCredentialV1, VerificationRequestV1 } from './index.js';
 import { GivenContextJSON, givenContextFromJSON, givenContextToJSON } from './internal.js';
-import { GivenContext, ZKProofV4 } from './types.js';
+import { GivenContext } from './types.js';
 
 const JSONBig = _JB({ alwaysParseAsBig: true, useNativeBigInt: true });
 
@@ -161,84 +160,6 @@ export function createContext(
 }
 
 /**
- * A verifiable credential based on identity information from an identity provider.
- * This credential type contains zero-knowledge proofs about identity attributes
- * without revealing the actual identity information.
- */
-export type IdentityBasedCredential = {
-    /** Type identifiers for this credential format */
-    type: ['VerifiableCredential', 'ConcordiumVerifiableCredentialV1', 'ConcordiumIDBasedCredential'];
-    /** The credential subject containing identity-based statements */
-    credentialSubject: {
-        /** The identity disclosure information also acts as ephemeral ID */
-        id: HexString;
-        /** Statements about identity attributes (should match request) */
-        statement: AtomicStatementV2<AttributeKey>[];
-    };
-    /** ISO formatted datetime specifying when the credential is valid from */
-    validFrom: string;
-    /** ISO formatted datetime specifying when the credential expires */
-    validTo: string;
-    /** The zero-knowledge proof for attestation */
-    proof: ZKProofV4;
-    /** Issuer of the original ID credential */
-    issuer: DIDString;
-};
-
-function createIdentityCredentialStub(
-    { issuer: id, statement }: IdentityClaims,
-    ipIndex: number
-): IdentityBasedCredential {
-    const network = id.split(':')[1] as Network;
-    const proof: ZKProofV4 = {
-        type: 'ConcordiumZKProofV4',
-        createdAt: new Date().toISOString(),
-        proofValue: '0102'.repeat(32),
-    };
-    const credentialSubject: IdentityBasedCredential['credentialSubject'] = {
-        statement: statement,
-        id: '123456'.repeat(8),
-    };
-    return {
-        type: ['VerifiableCredential', 'ConcordiumVerifiableCredentialV1', 'ConcordiumIDBasedCredential'],
-        proof,
-        issuer: `ccd:${network.toLowerCase()}:idp:${ipIndex}`,
-        validFrom: new Date(2000, 0, 1).toISOString(),
-        validTo: new Date().toISOString(),
-        credentialSubject,
-    };
-}
-
-/**
- * A verifiable credential based on an account credential on the Concordium blockchain.
- * This credential type contains zero-knowledge proofs about account credentials
- * and their associated identity attributes.
- */
-export type AccountBasedCredential = {
-    /** Type identifiers for this credential format */
-    type: ['VerifiableCredential', 'ConcordiumVerifiableCredentialV1', 'ConcordiumAccountBasedCredential'];
-    /** The credential subject containing account-based statements */
-    credentialSubject: {
-        /** The account credential identifier as a DID */
-        id: DIDString;
-        /** Statements about account attributes (should match request) */
-        statement: AtomicStatementV2<AttributeKey>[];
-    };
-    /** The zero-knowledge proof for attestation */
-    proof: ZKProofV4;
-    /** The issuer of the ID credential used to open the account credential */
-    issuer: DIDString;
-};
-
-/**
- * Union type representing all supported verifiable credential formats
- * in Concordium verifiable presentations.
- *
- * The structure is reminiscent of a w3c verifiable credential
- */
-export type Credential = IdentityBasedCredential | AccountBasedCredential;
-
-/**
  * A verifiable presentation containing zero-knowledge proofs of credential statements.
  * This class represents a complete response to a verifiable presentation request,
  * including the context, credentials, and cryptographic proofs.
@@ -253,7 +174,7 @@ class VerifiablePresentationV1 {
      */
     constructor(
         public readonly presentationContext: Context,
-        public readonly verifiableCredential: Credential[],
+        public readonly verifiableCredential: VerifiableCredentialV1.Type[],
         // only present if the verifiable credential includes an account based credential
         public readonly proof?: ConcordiumWeakLinkingProofV1
     ) {}
@@ -291,7 +212,7 @@ export type JSON = {
     /** The presentation context with serialized context information */
     presentationContext: ContextJSON;
     /** Array of verifiable credentials with their proofs */
-    verifiableCredential: Credential[];
+    verifiableCredential: VerifiableCredentialV1.Type[];
     /** Optional weak linking proof for account-based credentials */
     proof?: ConcordiumWeakLinkingProofV1;
 };

@@ -2,7 +2,7 @@ import { Buffer } from 'buffer/index.js';
 
 import { Cursor } from './deserializationHelpers.js';
 import { Cbor, TokenId, TokenOperationType } from './plt/index.js';
-import { ContractAddress, ContractName, Energy, ModuleReference } from './pub/types.js';
+import { ContractAddress, ContractName, CredentialDeploymentValues, CredentialPublicKeys, VerifyKey, Energy, ModuleReference, InitialCredentialDeploymentValues, CredentialDeploymentCommitments } from './pub/types.js';
 import { serializeCredentialDeploymentInfo } from './serialization.js';
 import {
     encodeDataBlob,
@@ -43,6 +43,8 @@ import { DataBlob } from './types/DataBlob.js';
 import * as InitName from './types/InitName.js';
 import * as Parameter from './types/Parameter.js';
 import * as ReceiveName from './types/ReceiveName.js';
+import { ChainArData } from './grpc-api/v2/concordium/types.ts';
+
 
 /**
  * A handler for a specific {@linkcode AccountTransactionType}.
@@ -412,8 +414,196 @@ export class UpdateCredentialsHandler implements AccountTransactionHandler<Updat
         return Buffer.concat([serializedAddedCredentials, serializedRemovedCredIds, serializedThreshold]);
     }
 
-    deserialize(): UpdateCredentialsPayload {
+    deserialize(serializedPayload: Cursor): UpdateCredentialsPayload {
+        // TODO:
+
+        const cdiItems = serializedPayload.read(8);
+        for(let i = 0; i < cdiItems.readUInt8(0); i++) {
+            const index = serializedPayload.read(8).readUInt8(0);
+            
+        }
+
+
+        
+        return {
+            newCredentials:,
+            removeCredentialIds:,
+            threshold:,
+            currentNumberOfCredentials:,
+        }
         throw new Error('deserialize not supported');
+    }
+
+    deserializeCredentialDeploymentProofs(serializedPayload: Cursor) {
+
+        //IdOwnershipProofs.sig
+        const blindedSignature = serializedPayload.read(96);
+
+        //IdOwnershipProofs.commitments
+        const prf = serializedPayload.read(48);
+        const credCounter = serializedPayload.read(48);
+        const maxAccounts = serializedPayload.read(48);
+        
+        const attributeCommitmentRecords: Record<any, any> = {};
+        const lengthAttributes = serializedPayload.read(2).readUInt16BE(0);
+        for(let a = 0; a < lengthAttributes; a++) {
+            const attributeTag = serializedPayload.read(1).readUInt8(0);
+            const attributeCommitment = serializedPayload.read(48);
+            attributeCommitmentRecords[attributeTag] = attributeCommitment;
+        }
+
+        //IdOwnership.challenge
+        const challenge = serializedPayload.read(32);
+
+        //IdOwnership.proofIdCredPub
+        const proofIdCredPubLength = serializedPayload.read(4).readUInt32BE(0);
+        for(let a = 0; a < proofIdCredPubLength; a++) {
+            const arIdentity = serializedPayload.read(4);
+            const comEncEqResponse = serializedPayload.read(96);
+        }
+
+        //IdOwnership.proofIpSig
+        const responseRho = serializedPayload.read(32);
+        const proofLength = serializedPayload.read(4).readUInt32BE(0);
+        //length x (F, F)
+        for(let a = 0; a < proofLength; a++) {
+            const firstF = serializedPayload.read(32);
+            const secondF = serializedPayload.read(32);
+        }
+
+        //IdOwnership.proofRegId
+        serializedPayload.read(160);
+
+        //IdOwnership.proofCredCounter
+        serializedPayload.read(48*4); //4 times 48, g1Elements
+        serializedPayload.read(32*3); //3 times 32, scalars1
+        
+        const groupElementLength = serializedPayload.read(4).readUInt32BE(0);
+        for(let a = 0; a < groupElementLength; a++) {
+            serializedPayload.read(48);
+            serializedPayload.read(48);
+        }
+
+        serializedPayload.read(32*2) //2 times 32, scalars2
+
+
+        //AccountOwnershipProof
+        const numberOfSignatures = serializedPayload.read(1).readUInt8(0);
+
+        for(let a = 0; a < numberOfSignatures; a++) {
+            //AccountOwnershipProofEntry
+            serializedPayload.read(65);
+        }
+
+        //TODO: after this, need to read about number of credentials to be removed (look at function deserializeCredentialsToBeRemoved)
+
+    }
+
+    //TODO:
+    deserializeCredentialsToBeRemoved(serializedPayload: Cursor) {
+        
+        const removeLength = serializedPayload.read(1).readUInt8(0);
+
+        const removeCredIds: Buffer[] = [];
+        for(let a = 0; a < removeLength; a++) {
+            const credentialRegistrationId = serializedPayload.read(48);
+            removeCredIds[a] = credentialRegistrationId;
+        }
+
+        const newThreshold = serializedPayload.read(1);
+
+        //TODO: now probably need to somehow construct the UpdateCredentialsPayload
+    }
+
+    deserializeCredentialDeploymentValues(serializedPayload: Cursor): CredentialDeploymentValues {
+        const publicKeys = this.deserializeCredentialPublicKeys(serializedPayload);
+        
+        const credId = serializedPayload.read(48);
+
+        const ipId = serializedPayload.read(4);
+
+        const revocationThreshold = serializedPayload.read(1).readUInt8(0);
+
+        const arDataCount = serializedPayload.read(1).readUInt8(0);
+
+        const arData = this.deserializeArDataEntry(serializedPayload);
+
+        //policy section
+        const validTo = serializedPayload.read(3);
+        const createdAt = serializedPayload.read(3);
+        const countAtrributes = serializedPayload.read(2).readUInt16BE(0);
+
+        for(let a = 0; a < countAtrributes; a++) {
+            const attributeTag = serializedPayload.read(1);
+            const countAttributeValue = serializedPayload.read(1).readUInt8(0);
+            serializedPayload.read(countAttributeValue);
+        }
+        //end of policy section
+        
+
+        return {
+            credId: credId.toString(),
+            revocationThreshold: revocationThreshold,
+            arData: arData,
+            commitments: undefined, 
+        }
+
+    }
+
+
+
+    deserializeArDataEntry(serializedPayload: Cursor): Record<any, any> {
+
+        const result:Record<any, any> = {};
+        
+        const count = serializedPayload.read(1).readUInt8(0);
+        
+        for(let i = 0; i < count; i++) {
+            const arIdentity = serializedPayload.read(4);
+
+            const data = this.deserializeChainArData(serializedPayload);
+
+            result[arIdentity.toString()] = data;
+        }
+        
+
+        return result;
+    }
+
+    deserializeChainArData(serializedPayload: Cursor): ChainArData {
+        const idCredPubShare = serializedPayload.read(96);
+
+        return {
+            encIdCredPubShare: idCredPubShare,
+        }
+    }
+
+    deserializeCredentialPublicKeys(serializedPayload: Cursor): CredentialPublicKeys {
+        const count = serializedPayload.read(1).readUInt8(0);
+
+        const keys: Record<any, any> = {};
+        for(let i = 0; i < count; i++) {
+            const credentialVerifyKey = this.deserializeCredentialVerifyKey(serializedPayload);
+            keys[i] = credentialVerifyKey;
+        }
+
+        const threshold = serializedPayload.read(1).readUInt8(0);
+
+        return {
+            keys: keys,
+            threshold: threshold,
+        }
+    }
+
+    deserializeCredentialVerifyKey(serializedPayload: Cursor): VerifyKey {
+        const scheme = serializedPayload.read(1).readUInt8(0);
+        const verifyKey = serializedPayload.read(32);
+
+        return {
+            schemeId: scheme.toString(),
+            verifyKey: verifyKey.toString('hex'),
+        }
+
     }
 
     toJSON(updateCredentials: UpdateCredentialsPayload): UpdateCredentialsPayload {
@@ -688,7 +878,7 @@ export function getAccountTransactionHandler(
         case AccountTransactionType.Update:
             return new UpdateContractHandler();
         case AccountTransactionType.UpdateCredentials:
-            return new UpdateCredentialsHandler(); //TODO:
+            return new UpdateCredentialsHandler();
         case AccountTransactionType.RegisterData:
             return new RegisterDataHandler();
         case AccountTransactionType.ConfigureDelegation:

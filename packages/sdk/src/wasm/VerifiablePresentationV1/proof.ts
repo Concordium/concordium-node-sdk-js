@@ -375,7 +375,7 @@ export async function getPublicData(
 
 type VerifyPresentationV1Input = {
     presentation: VerifiablePresentationV1;
-    global: CryptographicParameters;
+    globalContext: CryptographicParameters;
     publicData: VerifiableCredentialV1.VerificationMaterial[];
 };
 
@@ -400,7 +400,7 @@ export function verify(
 ): VerificationResult<Request> {
     const input: VerifyPresentationV1Input = {
         presentation,
-        global: cryptographicParameters,
+        globalContext: cryptographicParameters,
         publicData,
     };
     const serializedRequest = wasm.verifyPresentationV1(JSONBig.stringify(input));

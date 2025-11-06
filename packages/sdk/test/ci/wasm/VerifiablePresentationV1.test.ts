@@ -4,15 +4,21 @@ import path from 'node:path';
 
 import {
     AttributeKeyString,
+    AttributesKeys,
     CredentialRegistrationId,
     IdentityObjectV1,
     IdentityProvider,
     IpInfo,
 } from '../../../src/pub/types.ts';
-import { ConcordiumHdWallet, VerifiablePresentationV1, VerificationRequestV1 } from '../../../src/pub/wasm.ts';
+import {
+    ConcordiumHdWallet,
+    VerifiableCredentialV1,
+    VerifiablePresentationV1,
+    VerificationRequestV1,
+} from '../../../src/pub/wasm.ts';
 import { createIdentityCommitmentInputWithHdWallet } from '../../../src/pub/web3-id.ts';
 import { BlockHash } from '../../../src/types/index.ts';
-import { TESTNET_GLOBAL_CONTEXT, TEST_SEED_1 } from './constants.ts';
+import { ID_0_0_0, PUBLIC_0_0_0, TESTNET_GLOBAL_CONTEXT, TEST_SEED } from './constants.ts';
 
 const presentationFixture = JSON.parse(
     fs.readFileSync(path.resolve(__dirname, './fixtures/VerifiablePresentationV1.json')).toString()
@@ -20,8 +26,10 @@ const presentationFixture = JSON.parse(
 
 const JSONBig = _JB({ alwaysParseAsBig: true, useNativeBigInt: true });
 
+const WALLET = ConcordiumHdWallet.fromHex(TEST_SEED, 'Testnet');
+
 describe('VerifiablePresentationV1', () => {
-    test('create testnet account-based presentation v1', () => {
+    test('Create testnet account-based presentation v1', () => {
         const requestContext = VerificationRequestV1.createContext({
             given: [{ label: 'Nonce', context: Uint8Array.from([0, 1, 2]) }],
             requested: ['BlockHash'],
@@ -30,55 +38,55 @@ describe('VerifiablePresentationV1', () => {
             { label: 'BlockHash', context: BlockHash.fromHexString('01'.repeat(32)) },
         ]);
 
-        const values: Record<string, string> = {};
-        values.dob = '0';
-        values.firstName = 'a';
+        const credRegId = WALLET.getCredentialId(0, 0, 0, TESTNET_GLOBAL_CONTEXT);
+        const values: Record<string, string> = ID_0_0_0.attributeList.chosenAttributes;
 
-        const statements: VerifiablePresentationV1.SubjectClaims[] = [
-            VerifiablePresentationV1.createAccountClaims(
-                'Testnet',
-                CredentialRegistrationId.fromHexString(
-                    '94d3e85bbc8ff0091e562ad8ef6c30d57f29b19f17c98ce155df2a30100df4cac5e161fb81aebe3a04300e63f086d0d8'
-                ),
-                [
-                    {
-                        attributeTag: AttributeKeyString.dob,
-                        lower: '81',
-                        type: 'AttributeInRange',
-                        upper: '1231',
-                    },
-                    {
-                        attributeTag: AttributeKeyString.firstName,
-                        type: 'RevealAttribute',
-                    },
-                ]
-            ),
-        ];
-        const inputs: VerifiablePresentationV1.CommitmentInput[] = [
-            {
-                type: 'account',
-                issuer: 1,
-                values,
-                randomness: {
-                    dob: '575851a4e0558d589a57544a4a9f5ad1bd8467126c1b6767d32f633ea03380e6',
-                    firstName: '575851a4e0558d589a57544a4a9f5ad1bd8467126c1b6767d32f633ea03380e6',
+        const claims: VerifiablePresentationV1.SubjectClaims = VerifiablePresentationV1.createAccountClaims(
+            'Testnet',
+            CredentialRegistrationId.fromHexString(credRegId.toString('hex')),
+            [
+                {
+                    attributeTag: AttributeKeyString.dob,
+                    lower: '19500101',
+                    type: 'AttributeInRange',
+                    upper: '20000101',
                 },
+                {
+                    attributeTag: AttributeKeyString.firstName,
+                    type: 'RevealAttribute',
+                },
+            ]
+        );
+        const inputs: VerifiablePresentationV1.CommitmentInput = {
+            type: 'account',
+            issuer: 0,
+            values,
+            randomness: {
+                dob: WALLET.getAttributeCommitmentRandomness(0, 0, 0, AttributesKeys.dob).toString('hex'),
+                firstName: WALLET.getAttributeCommitmentRandomness(0, 0, 0, AttributesKeys.firstName).toString('hex'),
             },
-        ];
+        };
 
         const presentation = VerifiablePresentationV1.create(
-            { subjectClaims: statements, context: context },
-            inputs,
+            { subjectClaims: [claims], context: context },
+            [inputs],
             TESTNET_GLOBAL_CONTEXT
         );
 
         const json = JSON.stringify(presentation);
         const roundtrip = VerifiablePresentationV1.fromJSON(JSON.parse(json));
         expect(presentation).toEqual(roundtrip);
-        // TODO: for now we just check that it does not fail - later we need to check the actual values
+
+        const publicData: VerifiableCredentialV1.AccountVerificationMaterial = {
+            type: 'account',
+            commitments: PUBLIC_0_0_0.commitments.cmmAttributes,
+        };
+
+        const result = VerifiablePresentationV1.verify(presentation, TESTNET_GLOBAL_CONTEXT, [publicData]);
+        expect(result.type).toBe('success');
     });
 
-    test('create testnet id-based presentation v1', () => {
+    test('Create testnet id-based presentation v1', () => {
         const requestContext = VerificationRequestV1.createContext({
             given: [{ label: 'Nonce', context: Uint8Array.from([0, 1, 2]) }],
             requested: ['BlockHash'],
@@ -87,10 +95,8 @@ describe('VerifiablePresentationV1', () => {
             { label: 'BlockHash', context: BlockHash.fromHexString('01'.repeat(32)) },
         ]);
 
-        const wallet = ConcordiumHdWallet.fromHex(TEST_SEED_1, 'Testnet');
-        const idObject: IdentityObjectV1 = JSON.parse(
-            fs.readFileSync('./test/ci/resources/identity-object.json').toString()
-        ).value;
+        const wallet = ConcordiumHdWallet.fromHex(TEST_SEED, 'Testnet');
+        const idObject: IdentityObjectV1 = ID_0_0_0;
         const ipInfo: IpInfo = JSON.parse(fs.readFileSync('./test/ci/resources/ip_info.json').toString()).value;
 
         const arsInfos = JSON.parse(fs.readFileSync('./test/ci/resources/ars_infos.json').toString()).value;
@@ -124,7 +130,15 @@ describe('VerifiablePresentationV1', () => {
         const json = JSON.stringify(presentation);
         const roundtrip = VerifiablePresentationV1.fromJSON(JSON.parse(json));
         expect(presentation).toEqual(roundtrip);
-        // TODO: for now we just check that it does not fail - later we need to check the actual values
+
+        const publicData: VerifiableCredentialV1.IdentityVerificationMaterial = {
+            type: 'identity',
+            ipInfo,
+            knownArs: arsInfos,
+        };
+
+        const result = VerifiablePresentationV1.verify(presentation, TESTNET_GLOBAL_CONTEXT, [publicData]);
+        expect(result.type).toBe('success');
     });
 
     it('should match the JSON fixture representation', () => {

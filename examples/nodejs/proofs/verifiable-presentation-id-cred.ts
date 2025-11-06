@@ -194,7 +194,7 @@ console.log('PRESENTATION:\n', JSONBig.stringify(presentation, null, 2), '\n');
 // simulate receiving presentation to be verified
 const presentationParsed = VerifiablePresentationV1.fromJSON(JSONBig.parse(presentationJson));
 
-if (!(await VerifiablePresentationV1.verifyWithNode(presentationParsed, verificationRequest, grpc, network)))
+if (!(await VerifiablePresentationV1.verifyWithNode(presentationParsed, grpc, network)))
     throw new Error('Failed to verify the presentation');
 
 // Finally, the entity requesting the proof stores the audit report and registers a pulic version on chain

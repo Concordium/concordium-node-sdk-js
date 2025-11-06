@@ -548,3 +548,15 @@ export class ContractInstanceDID {
         return new ContractInstanceDID(network, ContractAddress.create(index, subindex));
     }
 }
+
+/** Response type for `credentialStatus` query */
+export enum CredentialStatus {
+    /** The credential is active */
+    Active,
+    /** The credential has been revoked */
+    Revoked,
+    /** The credential has expired */
+    Expired,
+    /** The credential has not been activated */
+    NotActivated,
+}

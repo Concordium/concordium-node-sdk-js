@@ -1,4 +1,4 @@
-use crate::{aux_functions::*, web3id::v1};
+use crate::aux_functions::*;
 use anyhow::Context;
 use concordium_base::{
     self as base,
@@ -332,9 +332,10 @@ pub fn create_presentation_v1(raw_input: JsonString) -> JsResult {
         global,
         inputs,
     } = serde_json::from_str(&raw_input)?;
-    let presentation =
-        v1::create_presentation(request, global, inputs.iter().map(|i| i.borrow()).collect())
-            .map_err(to_js_error)?;
+    let inputs = inputs.iter().map(|i| i.borrow());
+    let presentation = request
+        .prove(&global, inputs.into_iter())
+        .map_err(to_js_error)?;
 
     serde_json::to_string(&presentation)
         .context("Failed to serialize PresentationV1")

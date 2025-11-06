@@ -1,6 +1,6 @@
 mod aux_functions;
-mod web3id;
 pub mod external_functions;
+mod web3id;
 
 #[macro_use]
 extern crate serde_json;

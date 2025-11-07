@@ -84,6 +84,9 @@ function deserializeAccountTransactionBase(
     }
 
     /*
+    /* Wont' work to just compare the transaction whole as there is now energy and energy can also be random numbers based
+    on calculation
+    
     expect(deserialized.transaction).toEqual({
         accountTransaction: transaction,
         signatures,

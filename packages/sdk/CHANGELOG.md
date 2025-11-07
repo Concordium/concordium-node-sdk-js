@@ -8,6 +8,7 @@
 
 - `VerifiablePresentationV1.createAccountClaims` and `VerifiablePresentationV1.createIdentityClaims` to build the
   subject claims used as input for the `VerifiablePresentationV1.create...` functions.
+- `VerifiableCredentialV1` module and corresponding types and associated functionality.
 
 ### Changed
 
@@ -20,6 +21,7 @@
   - `VerifiablePresentationV1.IdentityStatement` -> `VerifiablePresentationV1.IdentityClaims`, created with
     `VerifiablePresentation.createIdentityClaims`.
 - `VerifiablePresentationV1.CredentialInputs` renamed to `VerifiablePresentationV1.VerificationMaterial`.
+- Functionality for creating and verifying v1 verifiable presentations now uses implementation from `concordium-base`
 
 ## 11.1.0-alpha.1
 

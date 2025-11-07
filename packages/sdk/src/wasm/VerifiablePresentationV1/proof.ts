@@ -1,21 +1,17 @@
-// TODO: remove any eslint disable once fully implemented
-
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import * as wasm from '@concordium/rust-bindings/wallet';
 import { Buffer } from 'buffer/index.js';
 import _JB from 'json-bigint';
 
 import {
     AttributeKey,
+    BlockHash,
     ConcordiumGRPCClient,
     CredentialRegistrationId,
     CryptographicParameters,
-    HexString,
     Network,
     TransactionKindString,
     TransactionStatusEnum,
     TransactionSummaryType,
-    VerificationRequestV1,
     isKnown,
 } from '../../index.js';
 import { ConcordiumWeakLinkingProofV1 } from '../../types/VerifiablePresentation.js';
@@ -23,15 +19,15 @@ import { bail } from '../../util.js';
 import {
     AccountCommitmentInput,
     AtomicStatementV2,
-    CredentialsInputsAccount,
-    CredentialsInputsIdentity,
+    CredentialStatus,
     DIDString,
     IdentityCommitmentInput,
     createAccountDID,
     createIdentityStatementDID,
 } from '../../web3-id/index.js';
+import { VerifiableCredentialV1, VerificationRequestV1 } from './index.js';
 import { GivenContextJSON, givenContextFromJSON, givenContextToJSON } from './internal.js';
-import { GivenContext, ZKProofV4 } from './types.js';
+import { GivenContext } from './types.js';
 
 const JSONBig = _JB({ alwaysParseAsBig: true, useNativeBigInt: true });
 
@@ -161,84 +157,6 @@ export function createContext(
 }
 
 /**
- * A verifiable credential based on identity information from an identity provider.
- * This credential type contains zero-knowledge proofs about identity attributes
- * without revealing the actual identity information.
- */
-export type IdentityBasedCredential = {
-    /** Type identifiers for this credential format */
-    type: ['VerifiableCredential', 'ConcordiumVerifiableCredentialV1', 'ConcordiumIDBasedCredential'];
-    /** The credential subject containing identity-based statements */
-    credentialSubject: {
-        /** The identity disclosure information also acts as ephemeral ID */
-        id: HexString;
-        /** Statements about identity attributes (should match request) */
-        statement: AtomicStatementV2<AttributeKey>[];
-    };
-    /** ISO formatted datetime specifying when the credential is valid from */
-    validFrom: string;
-    /** ISO formatted datetime specifying when the credential expires */
-    validTo: string;
-    /** The zero-knowledge proof for attestation */
-    proof: ZKProofV4;
-    /** Issuer of the original ID credential */
-    issuer: DIDString;
-};
-
-function createIdentityCredentialStub(
-    { issuer: id, statement }: IdentityClaims,
-    ipIndex: number
-): IdentityBasedCredential {
-    const network = id.split(':')[1] as Network;
-    const proof: ZKProofV4 = {
-        type: 'ConcordiumZKProofV4',
-        createdAt: new Date().toISOString(),
-        proofValue: '0102'.repeat(32),
-    };
-    const credentialSubject: IdentityBasedCredential['credentialSubject'] = {
-        statement: statement,
-        id: '123456'.repeat(8),
-    };
-    return {
-        type: ['VerifiableCredential', 'ConcordiumVerifiableCredentialV1', 'ConcordiumIDBasedCredential'],
-        proof,
-        issuer: `ccd:${network.toLowerCase()}:idp:${ipIndex}`,
-        validFrom: new Date(2000, 0, 1).toISOString(),
-        validTo: new Date().toISOString(),
-        credentialSubject,
-    };
-}
-
-/**
- * A verifiable credential based on an account credential on the Concordium blockchain.
- * This credential type contains zero-knowledge proofs about account credentials
- * and their associated identity attributes.
- */
-export type AccountBasedCredential = {
-    /** Type identifiers for this credential format */
-    type: ['VerifiableCredential', 'ConcordiumVerifiableCredentialV1', 'ConcordiumAccountBasedCredential'];
-    /** The credential subject containing account-based statements */
-    credentialSubject: {
-        /** The account credential identifier as a DID */
-        id: DIDString;
-        /** Statements about account attributes (should match request) */
-        statement: AtomicStatementV2<AttributeKey>[];
-    };
-    /** The zero-knowledge proof for attestation */
-    proof: ZKProofV4;
-    /** The issuer of the ID credential used to open the account credential */
-    issuer: DIDString;
-};
-
-/**
- * Union type representing all supported verifiable credential formats
- * in Concordium verifiable presentations.
- *
- * The structure is reminiscent of a w3c verifiable credential
- */
-export type Credential = IdentityBasedCredential | AccountBasedCredential;
-
-/**
  * A verifiable presentation containing zero-knowledge proofs of credential statements.
  * This class represents a complete response to a verifiable presentation request,
  * including the context, credentials, and cryptographic proofs.
@@ -253,7 +171,7 @@ class VerifiablePresentationV1 {
      */
     constructor(
         public readonly presentationContext: Context,
-        public readonly verifiableCredential: Credential[],
+        public readonly verifiableCredential: VerifiableCredentialV1.Type[],
         // only present if the verifiable credential includes an account based credential
         public readonly proof?: ConcordiumWeakLinkingProofV1
     ) {}
@@ -291,7 +209,7 @@ export type JSON = {
     /** The presentation context with serialized context information */
     presentationContext: ContextJSON;
     /** Array of verifiable credentials with their proofs */
-    verifiableCredential: Credential[];
+    verifiableCredential: VerifiableCredentialV1.Type[];
     /** Optional weak linking proof for account-based credentials */
     proof?: ConcordiumWeakLinkingProofV1;
 };
@@ -429,23 +347,37 @@ export function create(
  * Describes the result of a verifiable presentation verification, which can either succeed
  * or fail with an associated {@linkcode Error}
  */
-export type VerificationResult = { type: 'success' } | { type: 'failed'; error: Error };
+export type VerificationResult<T> = { type: 'success'; result: T } | { type: 'failed'; error: Error };
 
 /**
- * The public data needed to verify an account based verifiable credential.
+ * Get all public metadata of the {@linkcode VerifiablePresentationV1}. The metadata is verified as part of this.
+ *
+ * @param presentation - The verifiable presentation to verify
+ * @param grpc - The {@linkcode ConcordiumGRPCClient} to use for querying
+ * @param network - The target network
+ * @param [blockHash] - The block to verify the proof at. If not specified, the last finalized block is used.
+ *
+ * @returns The corresponding list of {@linkcode CredentialWithMetadata} if successful.
+ * @throws If credential metadata could not be successfully verified
  */
-export type AccountVerificationMaterial = CredentialsInputsAccount;
+export async function getPublicData(
+    presentation: VerifiablePresentationV1,
+    grpc: ConcordiumGRPCClient,
+    network: Network,
+    blockHash?: BlockHash.Type
+): Promise<VerifiableCredentialV1.MetadataVerificationResult[]> {
+    const promises = presentation.verifiableCredential.map((vc) =>
+        VerifiableCredentialV1.verifyMetadata(vc, grpc, network, blockHash)
+    );
 
-/**
- * The public data needed to verify an identity based verifiable credential.
- */
-export type IdentityVerificationMaterial = CredentialsInputsIdentity;
+    return await Promise.all(promises);
+}
 
-/**
- * Union type of all verification material types used for verification.
- * These inputs contain the public credential data needed to verify proofs.
- */
-export type VerificationMaterial = AccountVerificationMaterial | IdentityVerificationMaterial;
+type VerifyPresentationV1Input = {
+    presentation: VerifiablePresentationV1;
+    globalContext: CryptographicParameters;
+    publicData: VerifiableCredentialV1.VerificationMaterial[];
+};
 
 /**
  * Verifies a verifiable presentation against its corresponding request.
@@ -455,21 +387,29 @@ export type VerificationMaterial = AccountVerificationMaterial | IdentityVerific
  * the provided public data and cryptographic parameters.
  *
  * @param presentation - The verifiable presentation to verify
- * @param request - The original verification request
  * @param cryptographicParameters - Concordium network cryptographic parameters
  * @param publicData - Public credential data for verification
  *
- * @returns a {@linkcode VerificationResult}
+ * @returns a {@linkcode VerificationResult} contiaining the {@linkcode Request}.
+ * @throws If presentation could not be successfully verified
  */
-// TODO: for now this just returns true, but this should be replaced with call to the coresponding function in
-// @concordium/rust-bindings that verifies the presentation in the context of the request.
 export function verify(
     presentation: VerifiablePresentationV1,
-    request: VerificationRequestV1.Type,
     cryptographicParameters: CryptographicParameters,
-    publicData: VerificationMaterial[]
-): VerificationResult {
-    return { type: 'success' };
+    publicData: VerifiableCredentialV1.VerificationMaterial[]
+): VerificationResult<Request> {
+    const input: VerifyPresentationV1Input = {
+        presentation,
+        globalContext: cryptographicParameters,
+        publicData,
+    };
+    const serializedRequest = wasm.verifyPresentationV1(JSONBig.stringify(input));
+    const requestJson: RequestJSON = JSONBig.parse(serializedRequest);
+    const request: Request = {
+        context: proofContextFromJSON(requestJson.context),
+        subjectClaims: requestJson.subjectClaims,
+    };
+    return { type: 'success', result: request };
 }
 
 /**
@@ -480,17 +420,39 @@ export function verify(
  * the presentation proofs against the blockchain state.
  *
  * @param presentation - The verifiable presentation to verify
- * @param request - The original verification request
  * @param grpc - Concordium GRPC client for node communication
  * @param network - The Concordium network to verify against
+ * @param [blockHash] - The block to verify the proof at. If not specified, the last finalized block is used.
  *
- * @returns Promise resolving to a {@linkcode VerificationResult}
+ * @returns Promise resolving to a {@linkcode VerificationResult} contiaining the {@linkcode Request} and a
+ * list of statuses for each credential in the presentation.
+ *
+ * @throws If presentation could not be successfully verified
+ * @throws If credential metadata could not be successfully verified
  */
 export async function verifyWithNode(
     presentation: VerifiablePresentationV1,
-    request: VerificationRequestV1.Type,
     grpc: ConcordiumGRPCClient,
-    network: Network
-): Promise<VerificationResult> {
-    return { type: 'success' };
+    network: Network,
+    blockHash?: BlockHash.Type
+): Promise<VerificationResult<{ request: Request; credentialsStatus: CredentialStatus[] }>> {
+    const cryptoParams = await grpc.getCryptographicParameters(blockHash);
+    const publicData = await getPublicData(presentation, grpc, network, blockHash);
+
+    try {
+        const request = verify(
+            presentation,
+            cryptoParams,
+            publicData.map((d) => d.inputs)
+        );
+        if (request.type === 'failed') return request;
+
+        return {
+            type: 'success',
+            result: { request: request.result, credentialsStatus: publicData.map((d) => d.status) },
+        };
+    } catch (e) {
+        const error = e instanceof Error ? e : new Error(`{e}`);
+        return { type: 'failed', error };
+    }
 }

@@ -456,7 +456,7 @@ export type CredentialsInputsIdentity = {
     /** Information about the identity provider. */
     ipInfo: IpInfo;
     /** Known anonymity revokers mapped by their index. */
-    knownArs: Record<number, ArInfo>;
+    arsInfos: Record<number, ArInfo>;
 };
 
 /**
@@ -547,4 +547,16 @@ export class ContractInstanceDID {
         const subindex = BigInt(parts[4]);
         return new ContractInstanceDID(network, ContractAddress.create(index, subindex));
     }
+}
+
+/** Response type for `credentialStatus` query */
+export enum CredentialStatus {
+    /** The credential is active */
+    Active,
+    /** The credential has been revoked */
+    Revoked,
+    /** The credential has expired */
+    Expired,
+    /** The credential has not been activated */
+    NotActivated,
 }

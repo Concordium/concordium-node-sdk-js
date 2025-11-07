@@ -1,9 +1,11 @@
-import { getAccountTransactionHandler } from './accountTransactions.js';
+import { getAccountTransactionHandler, InitContractHandler } from './accountTransactions.js';
 import { Cursor } from './deserializationHelpers.js';
 import {
     AccountTransaction,
     AccountTransactionHeader,
     AccountTransactionSignature,
+    AccountTransactionType,
+    InitContractPayload,
     isAccountTransactionType,
 } from './types.js';
 import * as AccountAddress from './types/AccountAddress.js';
@@ -78,6 +80,14 @@ export function deserializeAccountTransaction(serializedTransaction: Cursor): {
     }
     const accountTransactionHandler = getAccountTransactionHandler(transactionType);
     const payload = accountTransactionHandler.deserialize(serializedTransaction);
+
+    if(transactionType == AccountTransactionType.InitContract) {
+        console.log('Initcontract transaction type detected');
+        if(header.energyAmount !== undefined) {
+            console.log('InitContractPayload detected, setting energy in payload', header.energyAmount);
+            (payload as InitContractPayload).maxContractExecutionEnergy = header.energyAmount;
+        }
+    }
 
     return {
         accountTransaction: {

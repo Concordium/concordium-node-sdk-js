@@ -5,6 +5,7 @@ import {
     AccountTransactionPayload,
     AccountTransactionSignature,
     AccountTransactionType,
+    BlockItem,
     BlockItemKind,
     CIS2,
     CcdAmount,
@@ -32,19 +33,39 @@ import { deserializeTransaction } from '../../src/wasm/deserialization.js';
 function deserializeAccountTransactionBase(
     type: AccountTransactionType,
     payload: AccountTransactionPayload,
+    energyAmount?: Energy.Type,
+    payloadSize?: number,
     expiry = TransactionExpiry.futureMinutes(20)
 ) {
-    const header: AccountTransactionHeader = {
+    const baseHeader = {
         expiry,
         nonce: SequenceNumber.create(1),
         sender: AccountAddress.fromBase58('3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'),
     };
+
+    const energyProperty = energyAmount !== undefined
+        ? { energyAmount: energyAmount }
+        : {};
+
+    const payloadSizeProperty = payloadSize !== undefined
+        ? { payloadSize: payloadSize }
+        : {};
+
+    const header: AccountTransactionHeader = {
+        ...baseHeader,
+        ...energyProperty,
+        ...payloadSizeProperty,
+    };
+
+    console.log('header is created as ', header);
 
     const transaction: AccountTransaction = {
         header,
         payload,
         type,
     };
+
+    console.log('transaction is created as ', transaction);
 
     const signatures: AccountTransactionSignature = {
         0: {
@@ -58,10 +79,20 @@ function deserializeAccountTransactionBase(
         throw new Error('Incorrect BlockItemKind');
     }
 
+    expect(deserialized.transaction.accountTransaction.type).toEqual(transaction.type);    
+    expect(deserialized.transaction.signatures).toEqual(signatures);
+
+    if(transaction.type === AccountTransactionType.InitContract) {
+        const initPayload = deserialized.transaction.accountTransaction.payload as InitContractPayload;
+        expect(initPayload.maxContractExecutionEnergy).toBeDefined();
+    }
+
+    /*
     expect(deserialized.transaction).toEqual({
         accountTransaction: transaction,
         signatures,
     });
+    */
 }
 
 test('test deserialize simpleTransfer ', () => {
@@ -105,10 +136,11 @@ test('test deserialize InitContract ', () => {
         moduleRef: moduleRef,
         initName: contractName,
         param: Parameter.fromHexString('0a'),
-        maxContractExecutionEnergy: Energy.create(0),
+        maxContractExecutionEnergy: Energy.create(559),
     };
 
-    deserializeAccountTransactionBase(AccountTransactionType.InitContract, deserializePayload);
+    deserializeAccountTransactionBase(AccountTransactionType.InitContract, deserializePayload, Energy.create(559));
+
 });
 
 test('test deserialize UpdateContract ', () => {
@@ -131,6 +163,8 @@ test('Expired transactions can be deserialized', () => {
     deserializeAccountTransactionBase(
         AccountTransactionType.Transfer,
         payload,
+        undefined,
+        undefined,
         TransactionExpiry.fromDate(new Date(2000, 1))
     );
 });

@@ -1425,6 +1425,12 @@ export interface AccountTransactionHeader {
 
     /** expiration of the transaction */
     expiry: TransactionExpiry.Type;
+
+    /** energy amount */
+    energyAmount?: Energy.Type;
+
+    /** payload size */
+    payloadSize?: number;
 }
 
 export interface SimpleTransferPayload {

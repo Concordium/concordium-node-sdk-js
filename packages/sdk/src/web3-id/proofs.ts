@@ -12,7 +12,6 @@ import {
     IdentityObjectV1,
     IdentityProvider,
     Network,
-    Policy,
 } from '../types.js';
 import type * as ContractAddress from '../types/ContractAddress.js';
 import { ConcordiumHdWallet } from '../wasm/HdWallet.js';
@@ -707,17 +706,11 @@ export function createIdentityCommitmentInput(
     idObject: IdentityObjectV1,
     idObjectUseData: IdObjectUseData
 ): IdentityCommitmentInput {
-    const policy: Policy = {
-        createdAt: idObject.attributeList.createdAt,
-        validTo: idObject.attributeList.validTo,
-        revealedAttributes: {}, // TODO: this is temporary until we figure out if it's needed or not
-    };
     return {
         type: 'identity',
-        context: identityProvider,
+        ...identityProvider,
         idObject,
         idObjectUseData,
-        policy,
     };
 }
 
@@ -737,9 +730,11 @@ export function createIdentityCommitmentInputWithHdWallet(
     identityIndex: number,
     wallet: ConcordiumHdWallet
 ): IdentityCommitmentInput {
-    const prfKey = wallet.getPrfKey(identityProvider.ipInfo.ipIdentity, identityIndex);
-    const idCredSecret = wallet.getIdCredSec(identityProvider.ipInfo.ipIdentity, identityIndex);
-    const randomness = wallet.getSignatureBlindingRandomness(identityProvider.ipInfo.ipIdentity, identityIndex);
+    const prfKey = wallet.getPrfKey(identityProvider.ipInfo.ipIdentity, identityIndex).toString('hex');
+    const idCredSecret = wallet.getIdCredSec(identityProvider.ipInfo.ipIdentity, identityIndex).toString('hex');
+    const randomness = wallet
+        .getSignatureBlindingRandomness(identityProvider.ipInfo.ipIdentity, identityIndex)
+        .toString('hex');
     const idObjectUseData: IdObjectUseData = {
         randomness,
         aci: { prfKey, credentialHolderInformation: { idCredSecret } },

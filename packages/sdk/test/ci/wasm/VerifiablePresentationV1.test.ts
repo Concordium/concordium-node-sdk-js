@@ -93,15 +93,10 @@ describe('VerifiablePresentationV1', () => {
         ).value;
         const ipInfo: IpInfo = JSON.parse(fs.readFileSync('./test/ci/resources/ip_info.json').toString()).value;
 
+        const arsInfos = JSON.parse(fs.readFileSync('./test/ci/resources/ars_infos.json').toString()).value;
         const inputContext: IdentityProvider = {
             ipInfo,
-            arsInfos: {
-                [1]: {
-                    arPublicKey: '0102',
-                    arIdentity: 0,
-                    arDescription: { description: 'test', name: 'test', url: 'https://ar.com' },
-                },
-            },
+            arsInfos,
         };
         const input = createIdentityCommitmentInputWithHdWallet(idObject, inputContext, 0, wallet);
 

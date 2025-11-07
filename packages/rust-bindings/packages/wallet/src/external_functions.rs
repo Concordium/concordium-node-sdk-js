@@ -1,6 +1,11 @@
 use crate::aux_functions::*;
+use anyhow::Context;
 use concordium_base::{
-    id::{constants::ArCurve, types::GlobalContext},
+    self as base,
+    id::{
+        constants::{ArCurve, IpPairing},
+        types::GlobalContext,
+    },
     web3id::{CredentialsInputs, Presentation, Web3IdAttribute},
 };
 use concordium_rust_bindings_common::{
@@ -308,4 +313,31 @@ pub fn verify_presentation(input: JsonString) -> JsResult {
         .map_err(to_js_error)?;
     let request = serde_json::to_string(&request)?;
     Ok(request)
+}
+
+#[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct PresentationV1Input {
+    request: base::web3id::v1::RequestV1<ArCurve, Web3IdAttribute>,
+    global: GlobalContext<ArCurve>,
+    inputs: Vec<
+        base::web3id::v1::OwnedCredentialProofPrivateInputs<IpPairing, ArCurve, Web3IdAttribute>,
+    >,
+}
+
+#[wasm_bindgen(js_name = createPresentationV1)]
+pub fn create_presentation_v1(raw_input: JsonString) -> JsResult {
+    let PresentationV1Input {
+        request,
+        global,
+        inputs,
+    } = serde_json::from_str(&raw_input)?;
+    let inputs = inputs.iter().map(|i| i.borrow());
+    let presentation = request
+        .prove(&global, inputs.into_iter())
+        .map_err(to_js_error)?;
+
+    serde_json::to_string(&presentation)
+        .context("Failed to serialize PresentationV1")
+        .map_err(to_js_error)
 }

@@ -173,7 +173,16 @@ test('test deserialize UpdateContract ', () => {
         maxContractExecutionEnergy: Energy.create(0),
     };
 
-    deserializeAccountTransactionBase(AccountTransactionType.Update, deserializePayload);
+    const result = deserializeAccountTransactionBase(AccountTransactionType.Update, deserializePayload);
+
+    if (result.kind == BlockItemKind.AccountTransactionKind) {
+        const transactionType = result.transaction.accountTransaction.type;
+        if (transactionType === AccountTransactionType.Update) {
+            const initPayload = result.transaction.accountTransaction.payload as UpdateContractPayload;
+            expect(initPayload.maxContractExecutionEnergy).toBeDefined();
+            expect(initPayload.maxContractExecutionEnergy).not.toEqual(0);
+        }
+    }
 });
 
 test('Expired transactions can be deserialized', () => {

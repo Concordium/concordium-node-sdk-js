@@ -36,7 +36,7 @@ function deserializeAccountTransactionBase(
     energyAmount?: Energy.Type,
     payloadSize?: number,
     expiry = TransactionExpiry.futureMinutes(20)
-) {
+): BlockItem {
     const baseHeader = {
         expiry,
         nonce: SequenceNumber.create(1),
@@ -78,11 +78,7 @@ function deserializeAccountTransactionBase(
     expect(deserialized.transaction.accountTransaction.type).toEqual(transaction.type);
     expect(deserialized.transaction.signatures).toEqual(signatures);
 
-    if (transaction.type === AccountTransactionType.InitContract) {
-        const initPayload = deserialized.transaction.accountTransaction.payload as InitContractPayload;
-        expect(initPayload.maxContractExecutionEnergy).toBeDefined();
-    }
-
+    return deserialized;
     /*
     /* Wont' work to just compare the transaction whole as there is now energy and energy can also be random numbers based
     on calculation
@@ -135,10 +131,23 @@ test('test deserialize InitContract ', () => {
         moduleRef: moduleRef,
         initName: contractName,
         param: Parameter.fromHexString('0a'),
-        maxContractExecutionEnergy: Energy.create(559),
+        maxContractExecutionEnergy: Energy.create(0),
     };
 
-    deserializeAccountTransactionBase(AccountTransactionType.InitContract, deserializePayload, Energy.create(559));
+    const result = deserializeAccountTransactionBase(
+        AccountTransactionType.InitContract,
+        deserializePayload,
+        Energy.create(0)
+    );
+
+    if (result.kind == BlockItemKind.AccountTransactionKind) {
+        const transactionType = result.transaction.accountTransaction.type;
+        if (transactionType === AccountTransactionType.InitContract) {
+            const initPayload = result.transaction.accountTransaction.payload as InitContractPayload;
+            expect(initPayload.maxContractExecutionEnergy).toBeDefined();
+            expect(initPayload.maxContractExecutionEnergy).not.toEqual(0);
+        }
+    }
 });
 
 test('test deserialize UpdateContract ', () => {

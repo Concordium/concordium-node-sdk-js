@@ -1,7 +1,7 @@
 import { ConcordiumGRPCClient } from '../../grpc/index.js';
-import { AttributeKey, HexString, IpInfo, Network } from '../../types.js';
+import { ArInfo, AttributeKey, HexString, IpInfo, Network } from '../../types.js';
 import { BlockHash, CredentialRegistrationId } from '../../types/index.js';
-import { bail, streamToList } from '../../util.js';
+import { bail } from '../../util.js';
 import {
     AtomicStatementV2,
     CredentialStatus,
@@ -160,7 +160,10 @@ async function verifyIdentityMetadata(
     }
     if (ipInfo === undefined) throw new Error('Failed to find identity provider for credential');
 
-    const arsInfos = await streamToList(grpc.getAnonymityRevokers());
+    const arsInfos: Record<number, ArInfo> = {};
+    for await (const arInfo of grpc.getAnonymityRevokers()) {
+        arsInfos[arInfo.arIdentity] = arInfo;
+    }
 
     const { blockSlotTime: now } = await grpc.getBlockInfo(blockHash);
 

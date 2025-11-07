@@ -53,7 +53,7 @@ const cli = meow(
                 alias: 'p',
                 isRequired: true,
                 default:
-                    'culture gun burden again feel gesture remove become manage assist census nice art bulk combine result aim top fee session lock seminar job tiger',
+                    'smooth fortune retreat gesture crunch junk stay define embrace curtain treat grape reunion eye term stool cube main suggest tourist favorite radar couch pair',
             },
             idObject: {
                 type: 'string',
@@ -129,13 +129,12 @@ const statements = VerificationRequestV1.statementBuilder()
     .addAccountOrIdentityStatement([new IdentityProviderDID(network, identityProviderIndex)], (b) => {
         b.addEUResidency();
         b.addMinimumAge(18);
+        b.revealAttribute('firstName');
     })
     .getStatements();
 const verificationRequest = await VerificationRequestV1.createAndAchor(grpc, sender, signer, context, statements, {
     info: 'Example VP anchor',
 });
-
-console.log('VERIFICATION REQUEST: \n', JSONBig.stringify(verificationRequest, null, 2), '\n');
 
 // simulate sending a response to the client requesting the verification request
 const requestJson = JSONBig.stringify(verificationRequest);
@@ -173,10 +172,14 @@ const idStatement = requestParsed.credentialStatements.find(
 )! as VerificationRequestV1.IdentityStatement; // we unwrap here, as we know the statement exists (we created it just above)
 const claims = VerifiablePresentationV1.createIdentityClaims(network, idp.ipInfo.ipIdentity, idStatement.statement);
 
-console.log('Waiting for anchor transaction to finalize:', requestParsed.transactionRef.toString());
+console.log(
+    'Waiting for verification request anchor transaction to finalize:',
+    requestParsed.transactionRef.toString()
+);
 
 // wait for the anchor transaction to finalize
 await grpc.waitForTransactionFinalization(requestParsed.transactionRef);
+console.log('Verification request anchor successfully registered.');
 
 const presentation = await VerifiablePresentationV1.createFromAnchor(
     grpc,
@@ -189,20 +192,23 @@ const presentation = await VerifiablePresentationV1.createFromAnchor(
 // simulate sending a response from the application to the client requesting the presentation
 const presentationJson = JSONBig.stringify(presentation);
 
-console.log('PRESENTATION:\n', JSONBig.stringify(presentation, null, 2), '\n');
-
 // simulate receiving presentation to be verified
 const presentationParsed = VerifiablePresentationV1.fromJSON(JSONBig.parse(presentationJson));
 
-if (!(await VerifiablePresentationV1.verifyWithNode(presentationParsed, grpc, network)))
-    throw new Error('Failed to verify the presentation');
-
 // Finally, the entity requesting the proof stores the audit report and registers a pulic version on chain
-const report = VerificationAuditRecordV1.create(randomUUID(), verificationRequest, presentation);
-const auditTransaction = await VerificationAuditRecordV1.registerAnchor(report, grpc, sender, signer, {
+const result = await VerificationAuditRecordV1.createChecked(
+    randomUUID(),
+    verificationRequest,
+    presentationParsed,
+    grpc,
+    network
+);
+
+if (result.type === 'failed') throw new Error(`Failed to verify presentation: ${result.error}`);
+const auditTransaction = await VerificationAuditRecordV1.registerAnchor(result.result, grpc, sender, signer, {
     info: 'Some public info',
 });
 
-console.log('Waiting for audit report registration to finalize:', auditTransaction.toString());
+console.log('Waiting for verification audit report registration to finalize:', auditTransaction.toString());
 await grpc.waitForTransactionFinalization(auditTransaction);
-console.log('Audit report successfully registered.');
+console.log('Verification audit anchor successfully registered.');

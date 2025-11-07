@@ -3,17 +3,30 @@ import _JB from 'json-bigint';
 
 import { ConcordiumGRPCClient } from '../../grpc/index.js';
 import { sha256 } from '../../hash.js';
+import { AtomicStatementV2, CredentialStatus } from '../../index.js';
 import { AccountSigner, signTransaction } from '../../signHelpers.js';
 import {
     AccountTransaction,
     AccountTransactionHeader,
     AccountTransactionType,
+    Network,
     NextAccountNonce,
     RegisterDataPayload,
+    TransactionStatusEnum,
 } from '../../types.js';
 import { cborDecode, cborEncode } from '../../types/cbor.js';
-import { AccountAddress, DataBlob, TransactionExpiry, TransactionHash } from '../../types/index.js';
+import {
+    AccountAddress,
+    BlockHash,
+    CredentialRegistrationId,
+    DataBlob,
+    TransactionExpiry,
+    TransactionHash,
+} from '../../types/index.js';
+import { bail } from '../../util.js';
 import { VerifiablePresentationV1, VerificationRequestV1 } from './index.js';
+import { contextEquals } from './internal.js';
+import { AccountClaims, IdentityClaims, VerificationResult, isAccountClaims } from './proof.js';
 
 const JSONBig = _JB({ alwaysParseAsBig: true, useNativeBigInt: true });
 
@@ -99,6 +112,191 @@ export function create(
     presentation: VerifiablePresentationV1.Type
 ): VerificationAuditRecordV1 {
     return new VerificationAuditRecordV1(request, presentation, id);
+}
+
+/**
+ * Compares the context of a verification request with a corresponding context of a presentation.
+ * Checks that the given contexts are equal and that requested context is filled in the presentation
+ * context.
+ *
+ * Furthermore, the transaction ref of the verification request is checked against the block hash from presentation
+ * context (if present).
+ *
+ * @param verificationRequest - the origin verification request for the presentation.
+ * @param presentation - the presentation for the origin verification request.
+ * @param grpc - a GRPC client for looking up the verification request anchor.
+ *
+ * @throws if any part of the context comparison fails
+ */
+async function compareContexts(
+    { context: rc, transactionRef }: VerificationRequestV1.Type,
+    { presentationContext: pc }: VerifiablePresentationV1.Type,
+    grpc: ConcordiumGRPCClient
+): Promise<void> {
+    rc.given.length === pc.given.length ||
+        bail(
+            `Mismatch in number of given context items: request context has ${rc.requested.length} while presentation context has ${pc.requested.length}`
+        );
+    rc.requested.length === pc.requested.length ||
+        bail(
+            `Mismatch in number of requested context items: request context has ${rc.requested.length} while presentation context has ${pc.requested.length}`
+        );
+
+    rc.given.every(
+        (rgc) =>
+            pc.given.some((pgc) => contextEquals(rgc, pgc)) ||
+            bail(`No matching context found for given request context ${rgc.label}`)
+    );
+    rc.requested.every(
+        (rrc) =>
+            pc.requested.some((prc) => prc.label === rrc) ||
+            bail(`No matching context found for requested request context ${rrc}`)
+    );
+
+    const blockHashContext = pc.requested.find((prc) => prc.label === 'BlockHash');
+    if (blockHashContext === undefined) return;
+
+    if (!BlockHash.instanceOf(blockHashContext.context))
+        throw new Error('Expected "BlockHash" type for "BlockHash" context');
+
+    const blockItemStatus = await grpc.getBlockItemStatus(transactionRef);
+    if (blockItemStatus.status !== TransactionStatusEnum.Finalized)
+        throw new Error('Verification request anchor not finalized');
+
+    if (!BlockHash.equals(blockItemStatus.outcome.blockHash, blockHashContext.context))
+        throw new Error('Block hash from presentation does not match block found for verification request anchor');
+}
+
+function verifyAtomicStatements<A>(a: AtomicStatementV2<A>[], b: AtomicStatementV2<A>[]): void {
+    if (a.length !== b.length) throw new Error('Mismatch in number of atomic statements for statement/claim');
+
+    const atomicError = new Error(
+        'Mismatch found when comparing atomic statements for verification/presentation request.'
+    );
+
+    a.forEach((as, i) => {
+        const bs = b[i];
+        switch (as.type) {
+            case 'AttributeInSet': {
+                if (bs.type !== 'AttributeInSet') throw atomicError;
+                if (!as.set.every((asv) => bs.set.includes(asv))) throw atomicError;
+                break;
+            }
+            case 'AttributeNotInSet': {
+                if (bs.type !== 'AttributeNotInSet') throw atomicError;
+                if (!as.set.every((asv) => bs.set.includes(asv))) throw atomicError;
+                break;
+            }
+            case 'RevealAttribute': {
+                if (bs.type !== 'RevealAttribute') throw atomicError;
+                break;
+            }
+            case 'AttributeInRange': {
+                if (bs.type !== 'AttributeInRange') throw atomicError;
+                if (as.lower !== bs.lower) throw atomicError;
+                if (as.upper !== bs.upper) throw atomicError;
+                break;
+            }
+        }
+    });
+}
+
+async function verifyAccountClaims(
+    claims: AccountClaims,
+    statement: VerificationRequestV1.Statement,
+    grpc: ConcordiumGRPCClient
+) {
+    if (statement.type !== 'identity')
+        throw new Error(`Request statement of type ${statement.type} does not match account claims`);
+    if (!statement.source.includes('accountCredential'))
+        throw new Error(`Request statement does not include "account" source`);
+
+    // check that the selected credential for the claim is issued by a valid IDP
+    const validIdpIndices = statement.issuers.map((i) => i.index);
+    const [, credId] = claims.id.split(':cred:');
+    const ai = await grpc.getAccountInfo(CredentialRegistrationId.fromHexString(credId));
+    const cred = Object.values(ai.accountCredentials).find(
+        (c) => c.value.type === 'normal' && c.value.contents.credId === credId
+    );
+
+    if (cred === undefined) throw new Error('Failed to find credId in account'); // should never happen, as we looked up this exact credId.
+    if (!validIdpIndices.includes(cred.value.contents.ipIdentity))
+        throw new Error('Credential selected is not issued by a valid identity provider.');
+}
+
+function verifyIdentityClaims(claims: IdentityClaims, statement: VerificationRequestV1.Statement) {
+    if (statement.type !== 'identity')
+        throw new Error(`Request statement of type ${statement.type} does not match account claims`);
+    if (!statement.source.includes('identityCredential'))
+        throw new Error(`Request statement does not include "identity" source`);
+
+    // check that the selected credential for the claim is issued by a valid IDP
+    const validIdpIndices = statement.issuers.map((i) => i.index);
+    const [, idpIndex] = claims.issuer.split(':idp:');
+
+    if (!validIdpIndices.includes(Number(idpIndex)))
+        throw new Error('Credential selected is not issued by a valid identity provider.');
+}
+
+async function verifyClaims(
+    statement: VerificationRequestV1.Statement,
+    claims: VerifiablePresentationV1.SubjectClaims,
+    grpc: ConcordiumGRPCClient
+) {
+    if (statement.statement.length !== claims.statement.length)
+        throw new Error('Mismatch in number of atomic statements for statement/claim');
+
+    verifyAtomicStatements(statement.statement, claims.statement);
+
+    if (isAccountClaims(claims)) {
+        await verifyAccountClaims(claims, statement, grpc);
+    } else {
+        verifyIdentityClaims(claims, statement);
+    }
+}
+
+async function verifyPresentationRequest(
+    verificationRequest: VerificationRequestV1.Type,
+    presentationRequest: VerifiablePresentationV1.Request,
+    grpc: ConcordiumGRPCClient
+) {
+    verificationRequest.credentialStatements.length === presentationRequest.subjectClaims.length ||
+        bail(
+            `Mismatch in number of statements/claims: ${verificationRequest.credentialStatements.length} request statements found, ${presentationRequest.subjectClaims.length} presentation claims found`
+        );
+
+    for (let i = 0; i < verificationRequest.credentialStatements.length; i++) {
+        await verifyClaims(verificationRequest.credentialStatements[i], presentationRequest.subjectClaims[i], grpc);
+    }
+}
+
+export async function createChecked(
+    id: string,
+    request: VerificationRequestV1.Type,
+    presentation: VerifiablePresentationV1.Type,
+    grpc: ConcordiumGRPCClient,
+    network: Network,
+    blockHash?: BlockHash.Type
+): Promise<VerificationResult<VerificationAuditRecordV1>> {
+    // 1. check the context
+    try {
+        compareContexts(request, presentation, grpc);
+    } catch (e) {
+        return { type: 'failed', error: e as Error };
+    }
+
+    // 2. verify cryptographic integrity of presentation
+    const verification = await VerifiablePresentationV1.verifyWithNode(presentation, grpc, network, blockHash);
+    if (verification.type === 'failed') return verification;
+
+    // 3. Checck that none of the credentials have expired
+    verification.result.credentialsStatus.every((cs) => cs === CredentialStatus.Active) ||
+        bail('One or more credentials included in the presentation has expired.');
+
+    // 4. check the claims in presentation request in the context of the request statements
+    verifyPresentationRequest(request, verification.result.request, grpc);
+
+    return { type: 'success', result: create(id, request, presentation) };
 }
 
 /**

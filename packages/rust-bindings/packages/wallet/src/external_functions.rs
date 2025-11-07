@@ -365,6 +365,6 @@ pub fn verify_presentation_v1(raw_input: JsonString) -> JsResult {
         .verify(&global_context, public_data.iter())
         .map_err(to_js_error)?;
     serde_json::to_string(&request)
-        .context("Failed to serialize PresentationV1")
+        .context("Failed to serialize RequestV1")
         .map_err(to_js_error)
 }

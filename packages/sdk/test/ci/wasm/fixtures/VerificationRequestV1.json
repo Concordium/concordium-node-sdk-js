@@ -1,0 +1,35 @@
+{
+    "type": "ConcordiumVerificationRequestV1",
+    "context": {
+        "type": "ConcordiumUnfilledContextInformationV1",
+        "given": [
+            {
+                "label": "Nonce",
+                "context": "00010203"
+            },
+            {
+                "label": "ConnectionID",
+                "context": "0102010201020102010201020102010201020102010201020102010201020102"
+            },
+            {
+                "label": "ContextString",
+                "context": "Wine payment"
+            }
+        ],
+        "requested": ["BlockHash", "ResourceID"]
+    },
+    "credentialStatements": [
+        {
+            "type": "identity",
+            "source": ["identityCredential"],
+            "statement": [
+                {
+                    "type": "RevealAttribute",
+                    "attributeTag": "firstName"
+                }
+            ],
+            "issuers": ["ccd:testnet:idp:0", "ccd:testnet:idp:1", "ccd:testnet:idp:2"]
+        }
+    ],
+    "transactionRef": "0102030401020304010203040102030401020304010203040102030401020304"
+}

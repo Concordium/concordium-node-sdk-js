@@ -2,6 +2,25 @@
 
 ## Unreleased
 
+## 11.1.0-alpha.2
+
+### Added
+
+- `VerifiablePresentationV1.createAccountClaims` and `VerifiablePresentationV1.createIdentityClaims` to build the
+  subject claims used as input for the `VerifiablePresentationV1.create...` functions.
+
+### Changed
+
+- `createIdentityStatementDID` now takes the index of the identity provider of the identity.
+- `VerifiablePresentationRequestV1` renamed to `VerificationRequestV1`
+
+- `VerifiablePresentationV1.Statement` renamed to `VerifiablePresentationV1.SubjectClaims` to align with the w3c VC spec
+  - `VerifiablePresentationV1.AccountStatement` -> `VerifiablePresentationV1.AccountClaims`, created with
+    `VerifiablePresentation.createAccountClaims`.
+  - `VerifiablePresentationV1.IdentityStatement` -> `VerifiablePresentationV1.IdentityClaims`, created with
+    `VerifiablePresentation.createIdentityClaims`.
+- `VerifiablePresentationV1.CredentialInputs` renamed to `VerifiablePresentationV1.VerificationMaterial`.
+
 ## 11.1.0-alpha.1
 
 ### Fixed

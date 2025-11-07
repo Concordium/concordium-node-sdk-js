@@ -1,0 +1,103 @@
+{
+    "request": {
+        "type": "ConcordiumVerificationRequestV1",
+        "context": {
+            "type": "ConcordiumUnfilledContextInformationV1",
+            "given": [
+                {
+                    "label": "Nonce",
+                    "context": "00010203"
+                },
+                {
+                    "label": "ConnectionID",
+                    "context": "0102010201020102010201020102010201020102010201020102010201020102"
+                },
+                {
+                    "label": "ContextString",
+                    "context": "Wine payment"
+                }
+            ],
+            "requested": ["BlockHash", "ResourceID"]
+        },
+        "credentialStatements": [
+            {
+                "type": "identity",
+                "source": ["identityCredential"],
+                "issuers": ["ccd:testnet:idp:0", "ccd:testnet:idp:1", "ccd:testnet:idp:2"],
+                "statement": [
+                    {
+                        "type": "RevealAttribute",
+                        "attributeTag": "firstName"
+                    }
+                ]
+            }
+        ],
+        "transactionRef": "0102030401020304010203040102030401020304010203040102030401020304"
+    },
+    "presentation": {
+        "type": ["VerifiablePresentation", "ConcordiumVerifiablePresentationV1"],
+        "presentationContext": {
+            "type": "ConcordiumContextInformationV1",
+            "given": [
+                {
+                    "label": "Nonce",
+                    "context": "00010203"
+                },
+                {
+                    "label": "ConnectionID",
+                    "context": "0102010201020102010201020102010201020102010201020102010201020102"
+                },
+                {
+                    "label": "ContextString",
+                    "context": "Wine payment"
+                }
+            ],
+            "requested": [
+                {
+                    "label": "BlockHash",
+                    "context": "0101010101010101010101010101010101010101010101010101010101010101"
+                },
+                {
+                    "label": "ResourceID",
+                    "context": "https://compliant.shop"
+                }
+            ]
+        },
+        "verifiableCredential": [
+            {
+                "type": ["VerifiableCredential", "ConcordiumVerifiableCredentialV1", "ConcordiumIDBasedCredential"],
+                "proof": {
+                    "type": "ConcordiumZKProofV4",
+                    "createdAt": "2025-10-17T13:14:14.292Z",
+                    "proofValue": "01020102010201020102010201020102010201020102010201020102010201020102010201020102010201020102010201020102010201020102010201020102"
+                },
+                "issuer": "ccd:testnet:idp:0",
+                "validFrom": "2000-01-01T00:00:00.000Z",
+                "validTo": "2030-01-01T00:00:00.000Z",
+                "credentialSubject": {
+                    "statement": [
+                        {
+                            "attributeTag": "dob",
+                            "lower": "81",
+                            "type": "AttributeInRange",
+                            "upper": "1231"
+                        },
+                        {
+                            "attributeTag": "firstName",
+                            "type": "RevealAttribute"
+                        }
+                    ],
+                    "id": "123456123456123456123456123456123456123456123456"
+                }
+            }
+        ],
+        "proof": {
+            "created": "2025-10-17T13:14:14.290Z",
+            "proofValue": [],
+            "type": "ConcordiumWeakLinkingProofV1"
+        }
+    },
+    "id": "unique-audit-id-12345",
+    "version": 1,
+    "type": "ConcordiumVerificationAuditRecord"
+}

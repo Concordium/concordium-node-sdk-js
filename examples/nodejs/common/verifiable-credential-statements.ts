@@ -1,7 +1,7 @@
-import { IdentityProviderDID, VerifiablePresentationRequestV1 } from '@concordium/web-sdk';
+import { IdentityProviderDID, VerificationRequestV1 } from '@concordium/web-sdk';
 
 // #region documentation-snippet
-let builder = VerifiablePresentationRequestV1.statementBuilder();
+let builder = VerificationRequestV1.statementBuilder();
 
 // Add an identity credential statement. Alternatively, if the proof produced from the
 // statement should be tied to an account, use `builder.addAccountStatement`.

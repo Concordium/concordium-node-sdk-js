@@ -458,7 +458,7 @@ export type CredentialsInputs = CredentialsInputsWeb3 | CredentialsInputsAccount
 /** Credentials inputs for identity credential proofs. */
 export type CredentialsInputsIdentity = {
     /** Identifies this as identity credentials input. */
-    type: 'identityCredentials'; // TODO: or maybe just 'id'?
+    type: 'identity';
     /** Information about the identity provider. */
     ipInfo: IpInfo;
     /** Known anonymity revokers mapped by their index. */

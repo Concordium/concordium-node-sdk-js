@@ -10,6 +10,8 @@
 
 - deserialize function for UpdateContractPayload implemented instead of throwing an exception of not supporting deserialize
 
+- fix the reading for energy cost and payload size.
+
 ## 11.0.0
 
 ### Fixed

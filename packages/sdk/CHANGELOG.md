@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+### Added
+
+- `VerificationAuditRecord.createChecked` which creates a verification audit record while verifying the presentation in
+  the context of the verification request.
+
+### Fixed
+
+- A bug in verification of metadata for identity credentials that causes the verification to fail even with valid
+  credential verification material.
+
 ## 11.1.0-alpha.2
 
 ### Added
@@ -9,8 +19,6 @@
 - `VerifiablePresentationV1.createAccountClaims` and `VerifiablePresentationV1.createIdentityClaims` to build the
   subject claims used as input for the `VerifiablePresentationV1.create...` functions.
 - `VerifiableCredentialV1` module and corresponding types and associated functionality.
-- `VerificationAuditRecord.createChecked` which creates a verification audit record while verifying the presentation in
-  the context of the verification request.
 
 ### Changed
 

@@ -29,7 +29,7 @@
     },
     "verifiableCredential": [
         {
-            "type": ["VerifiableCredential", "ConcordiumVerifiableCredentialV1", "ConcordiumIDBasedCredential"],
+            "type": ["VerifiableCredential", "ConcordiumVerifiableCredentialV1", "ConcordiumIdBasedCredential"],
             "proof": {
                 "type": "ConcordiumZKProofV4",
                 "createdAt": "2025-10-17T13:14:14.292Z",

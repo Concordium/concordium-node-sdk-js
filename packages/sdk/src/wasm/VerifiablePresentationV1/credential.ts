@@ -1,7 +1,7 @@
 import { ConcordiumGRPCClient } from '../../grpc/index.js';
-import { AttributeKey, HexString, Network } from '../../types.js';
+import { AttributeKey, HexString, IpInfo, Network } from '../../types.js';
 import { BlockHash, CredentialRegistrationId } from '../../types/index.js';
-import { bail } from '../../util.js';
+import { bail, streamToList } from '../../util.js';
 import {
     AtomicStatementV2,
     CredentialStatus,
@@ -20,7 +20,7 @@ import { ZKProofV4 } from './types.js';
  */
 type IdentityCredential = {
     /** Type identifiers for this credential format */
-    type: ['VerifiableCredential', 'ConcordiumVerifiableCredentialV1', 'ConcordiumIDBasedCredential'];
+    type: ['VerifiableCredential', 'ConcordiumVerifiableCredentialV1', 'ConcordiumIdBasedCredential'];
     /** The credential subject containing identity-based statements */
     credentialSubject: {
         /** The identity disclosure information also acts as ephemeral ID */
@@ -90,7 +90,7 @@ type Credential = IdentityCredential | AccountCredential;
 export type Type = Credential;
 
 export function isIdentityCredential(credential: Credential): credential is IdentityCredential {
-    return (credential as IdentityCredential).type.includes('ConcordiumIDBasedCredential');
+    return (credential as IdentityCredential).type.includes('ConcordiumIdBasedCredential');
 }
 
 export function isAccountCredential(credential: Credential): credential is AccountCredential {
@@ -119,7 +119,7 @@ function parseAccountProofMetadata(cred: AccountCredential): {
     credId: CredentialRegistrationId.Type;
     issuer: number;
 } {
-    const _bail = () => bail('Failed to parse metedata from credential proof');
+    const _bail = () => bail('Failed to parse metedata from account credential proof');
     const [, c] = cred.credentialSubject.id.match(/.*:cred:(.*)$/) ?? _bail();
     const [, i] = cred.issuer.match(/.*:idp:(\d*)$/) ?? _bail();
 
@@ -129,6 +129,12 @@ function parseAccountProofMetadata(cred: AccountCredential): {
     return { credId, issuer };
 }
 
+function parseIdentityProofMetadata(cred: IdentityCredential): number {
+    const _bail = () => bail('Failed to parse metedata from identity credential proof');
+    const [, i] = cred.issuer.match(/.*:idp:(\d*)$/) ?? _bail();
+    return Number(i);
+}
+
 /** Contains the credential status and inputs required to verify a corresponding credential proof */
 export type MetadataVerificationResult = {
     /** The credential status */
@@ -136,6 +142,75 @@ export type MetadataVerificationResult = {
     /** The public data required to verify a corresponding credential proof */
     inputs: VerificationMaterial;
 };
+
+async function verifyIdentityMetadata(
+    credential: VerifiableCredentialV1.Identity,
+    grpc: ConcordiumGRPCClient,
+    blockHash?: BlockHash.Type
+): Promise<{ status: CredentialStatus; inputs: IdentityVerificationMaterial }> {
+    const issuerIndex = parseIdentityProofMetadata(credential);
+    let ipInfo: IpInfo | undefined;
+    for await (const idp of grpc.getIdentityProviders()) {
+        if (idp.ipIdentity !== issuerIndex) {
+            continue;
+        }
+
+        ipInfo = idp;
+        break;
+    }
+    if (ipInfo === undefined) throw new Error('Failed to find identity provider for credential');
+
+    const arsInfos = await streamToList(grpc.getAnonymityRevokers());
+
+    const { blockSlotTime: now } = await grpc.getBlockInfo(blockHash);
+
+    const validFrom = new Date(credential.validFrom);
+    const validUntil = new Date(credential.validTo);
+
+    let status = CredentialStatus.Active;
+    if (validFrom > now) status = CredentialStatus.NotActivated;
+    if (validUntil < now) status = CredentialStatus.Expired;
+
+    return { inputs: { type: 'identity', arsInfos, ipInfo }, status };
+}
+
+async function verifyAccountMetadata(
+    credential: VerifiableCredentialV1.Account,
+    grpc: ConcordiumGRPCClient,
+    blockHash?: BlockHash.Type
+): Promise<{ status: CredentialStatus; inputs: AccountVerificationMaterial }> {
+    const { credId, issuer } = parseAccountProofMetadata(credential);
+    const ai = await grpc.getAccountInfo(credId, blockHash);
+
+    const cred =
+        Object.values(ai.accountCredentials).find((c) => {
+            const _credId = c.value.type === 'initial' ? c.value.contents.regId : c.value.contents.credId;
+            return credId.credId === _credId;
+        }) ?? bail(`Could not find credential for account ${ai.accountAddress}`);
+
+    if (cred.value.type === 'initial') {
+        throw new Error(`Initial credential ${cred.value.contents.regId} cannot be used`);
+    }
+    const { ipIdentity, policy, commitments } = cred.value.contents;
+    if (ipIdentity !== issuer) {
+        throw new Error('Mismatch between expected issuer and found issuer for credential');
+    }
+
+    // At this point, we know we're dealing with a "normal" account credential.
+    const validFrom = parseYearMonth(policy.createdAt);
+    const validUntil = parseYearMonth(policy.validTo);
+
+    const { blockSlotTime: now } = await grpc.getBlockInfo(blockHash);
+    let status = CredentialStatus.Active;
+    if (validFrom > now) status = CredentialStatus.NotActivated;
+    if (validUntil < now) status = CredentialStatus.Expired;
+
+    const inputs: AccountVerificationMaterial = {
+        type: 'account',
+        commitments: commitments.cmmAttributes,
+    };
+    return { status, inputs };
+}
 
 /**
  * Verifies the public metadata of the {@linkcode VerifiableCredentialProof}.
@@ -163,39 +238,8 @@ export async function verifyMetadata(
     }
 
     if (VerifiableCredentialV1.isIdentityCredential(credential)) {
-        // TODO: implement...
-        throw new Error('unimplemented');
+        return verifyIdentityMetadata(credential, grpc, blockHash);
     } else {
-        const { credId, issuer } = parseAccountProofMetadata(credential);
-        const ai = await grpc.getAccountInfo(credId, blockHash);
-
-        const cred =
-            Object.values(ai.accountCredentials).find((c) => {
-                const _credId = c.value.type === 'initial' ? c.value.contents.regId : c.value.contents.credId;
-                return credId.credId === _credId;
-            }) ?? bail(`Could not find credential for account ${ai.accountAddress}`);
-
-        if (cred.value.type === 'initial') {
-            throw new Error(`Initial credential ${cred.value.contents.regId} cannot be used`);
-        }
-        const { ipIdentity, policy, commitments } = cred.value.contents;
-        if (ipIdentity !== issuer) {
-            throw new Error('Mismatch between expected issuer and found issuer for credential');
-        }
-
-        // At this point, we know we're dealing with a "normal" account credential.
-        const validFrom = parseYearMonth(policy.createdAt);
-        const validUntil = parseYearMonth(policy.validTo);
-
-        const { blockSlotTime: now } = await grpc.getBlockInfo(blockHash);
-        let status = CredentialStatus.Active;
-        if (validFrom > now) status = CredentialStatus.NotActivated;
-        if (validUntil < now) status = CredentialStatus.Expired;
-
-        const inputs: AccountVerificationMaterial = {
-            type: 'account',
-            commitments: commitments.cmmAttributes,
-        };
-        return { status, inputs };
+        return verifyAccountMetadata(credential, grpc, blockHash);
     }
 }

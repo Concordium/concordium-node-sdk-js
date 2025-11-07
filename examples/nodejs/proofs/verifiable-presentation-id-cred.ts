@@ -48,12 +48,12 @@ const cli = meow(
                 alias: 'w',
                 isRequired: true,
             },
-            seedPhraseHex: {
+            seedPhrase: {
                 type: 'string',
                 alias: 'p',
                 isRequired: true,
                 default:
-                    'efa5e27326f8fa0902e647b52449bf335b7b605adc387015ec903f41d95080eb71361cbc7fb78721dcd4f3926a337340aa1406df83332c44c1cdcfe100603860',
+                    'culture gun burden again feel gesture remove become manage assist census nice art bulk combine result aim top fee session lock seminar job tiger',
             },
             idObject: {
                 type: 'string',
@@ -96,7 +96,7 @@ const cli = meow(
 );
 
 const {
-    seedPhraseHex,
+    seedPhrase,
     network,
     secure,
     idObject: idObjectFile,
@@ -147,7 +147,7 @@ const requestJson = JSONBig.stringify(verificationRequest);
 // input.
 
 // First, we get an interface to retrieve the cryptographic values required by the VP protocol
-const wallet = ConcordiumHdWallet.fromHex(seedPhraseHex, network);
+const wallet = ConcordiumHdWallet.fromSeedPhrase(seedPhrase, network);
 // Get the ID object - this will normally be stored inside the application constructing the proof
 const idObject: IdentityObjectV1 = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), idObjectFile)).toString());
 // The `IdentityProvider` information is normally stored alongside the ID object

@@ -63,7 +63,7 @@ const PRESENTATION = VerifiablePresentationV1.fromJSON({
     },
     verifiableCredential: [
         {
-            type: ['VerifiableCredential', 'ConcordiumVerifiableCredentialV1', 'ConcordiumIDBasedCredential'],
+            type: ['VerifiableCredential', 'ConcordiumVerifiableCredentialV1', 'ConcordiumIdBasedCredential'],
             proof: {
                 type: 'ConcordiumZKProofV4',
                 createdAt: '2025-10-17T13:14:14.292Z',
@@ -150,7 +150,7 @@ describe('VerificationAuditRecordV1', () => {
                         type: [
                             'VerifiableCredential',
                             'ConcordiumVerifiableCredentialV1',
-                            'ConcordiumIDBasedCredential',
+                            'ConcordiumIdBasedCredential',
                         ],
                         proof: {
                             type: 'ConcordiumZKProofV4',
@@ -202,7 +202,7 @@ describe('VerificationAuditRecordV1.Anchor', () => {
     it('creates expected anchor', () => {
         const anchor = VerificationAuditRecordV1.createAnchor(PRIVATE_RECORD, { info: 'some public info?' });
         const expected =
-            'a464686173685820f9b0b6960b51228b23cc55d75e2b5f3360fbf6ef10854fc728840d2d9220a47e647479706566434344564141667075626c6963a164696e666f71736f6d65207075626c696320696e666f3f6776657273696f6e01';
+            'a464686173685820dc06a0cc87d686e85f7fb5d73814dce0cae459fd18998cf7933dd9a056fa64a7647479706566434344564141667075626c6963a164696e666f71736f6d65207075626c696320696e666f3f6776657273696f6e01';
         expect(Buffer.from(anchor).toString('hex')).toEqual(expected);
     });
 
@@ -262,7 +262,7 @@ describe('VerificationAuditRecordV1.Anchor', () => {
                         type: [
                             'VerifiableCredential',
                             'ConcordiumVerifiableCredentialV1',
-                            'ConcordiumIDBasedCredential',
+                            'ConcordiumIdBasedCredential',
                         ],
                         proof: {
                             type: 'ConcordiumZKProofV4',

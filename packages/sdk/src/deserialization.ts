@@ -7,9 +7,9 @@ import {
     isAccountTransactionType,
 } from './types.js';
 import * as AccountAddress from './types/AccountAddress.js';
+import * as Energy from './types/Energy.js';
 import * as AccountSequenceNumber from './types/SequenceNumber.js';
 import * as TransactionExpiry from './types/TransactionExpiry.js';
-import * as Energy from './types/Energy.js';
 
 /**
  * Reads an unsigned 8-bit integer from the given {@link Cursor}.

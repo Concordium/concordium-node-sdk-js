@@ -29,6 +29,7 @@ import {
     DeployModulePayload,
     HexString,
     InitContractPayload,
+    IndexedCredentialDeploymentInfo,
     OpenStatus,
     RegisterDataPayload,
     SimpleTransferPayload,
@@ -44,7 +45,7 @@ import { DataBlob } from './types/DataBlob.js';
 import * as InitName from './types/InitName.js';
 import * as Parameter from './types/Parameter.js';
 import * as ReceiveName from './types/ReceiveName.js';
-import { ChainArData } from './grpc-api/v2/concordium/types.ts';
+import { ChainArData, CredentialPublicKeys } from './grpc-api/v2/concordium/types.ts';
 
 
 /**
@@ -557,25 +558,32 @@ export class UpdateCredentialsHandler implements AccountTransactionHandler<Updat
 
     deserialize(serializedPayload: Cursor): UpdateCredentialsPayload {
         // TODO:
+        const partialData: UpdateCredentialsPayloadPlaceholder = {} as UpdateCredentialsPayloadPlaceholder;
 
         const cdiItems = serializedPayload.read(8);
+        partialData.newCredentials = [];
         for(let i = 0; i < cdiItems.readUInt8(0); i++) {
-            const index = serializedPayload.read(8).readUInt8(0);
-            
+            const index = serializedPayload.read(8).readUInt8(0);            
+            partialData.newCredentials[i].index = index;
+
+            this.deserializeCredentialDeploymentValues(serializedPayload, partialData, i);
+            console.log(`partialData after populating crdValue at i=${i}:`, partialData);
+
+            this.deserializeCredentialDeploymentProofs(serializedPayload, partialData, i);
+            console.log(`partialData after populating crdProofs at i=${i}:`, partialData);
         }
-
-
         
+        this.deserializeCredentialsToBeRemoved(serializedPayload, partialData);
+
         return {
-            newCredentials:,
-            removeCredentialIds:,
-            threshold:,
-            currentNumberOfCredentials:,
+            newCredentials: partialData.newCredentials,
+            removeCredentialIds: partialData.removeCredentialIds ?? [], //TODO: I am putting ?? just to experiment for now
+            threshold: partialData.threshold ?? 0,
+            currentNumberOfCredentials: partialData.currentNumberOfCredentials ?? 0n,
         }
-        throw new Error('deserialize not supported');
     }
 
-    deserializeCredentialDeploymentProofs(serializedPayload: Cursor) {
+    deserializeCredentialDeploymentProofs(serializedPayload: Cursor, data: UpdateCredentialsPayloadPlaceholder, currentLocation: number): UpdateCredentialsPayloadPlaceholder {
 
         //IdOwnershipProofs.sig
         const blindedSignature = serializedPayload.read(96);
@@ -627,41 +635,57 @@ export class UpdateCredentialsHandler implements AccountTransactionHandler<Updat
 
         serializedPayload.read(32*2) //2 times 32, scalars2
 
-
         //AccountOwnershipProof
         const numberOfSignatures = serializedPayload.read(1).readUInt8(0);
 
         for(let a = 0; a < numberOfSignatures; a++) {
             //AccountOwnershipProofEntry
-            serializedPayload.read(65);
+            const index = serializedPayload.read(0);
+            const sig = serializedPayload.read(64);
         }
 
-        //TODO: after this, need to read about number of credentials to be removed (look at function deserializeCredentialsToBeRemoved)
+        //TODO: populate partial data?
+        if(data.newCredentials) {
+            const currentNewCred = data.newCredentials[currentLocation];
+            currentNewCred.cdi.proofs
+        }
+        
+        return data;
 
     }
 
     //TODO:
-    deserializeCredentialsToBeRemoved(serializedPayload: Cursor) {
+    deserializeCredentialsToBeRemoved(serializedPayload: Cursor, data: UpdateCredentialsPayloadPlaceholder): UpdateCredentialsPayloadPlaceholder {
         
         const removeLength = serializedPayload.read(1).readUInt8(0);
 
-        const removeCredIds: Buffer[] = [];
+        const removeCredIds: string[] = [];
         for(let a = 0; a < removeLength; a++) {
             const credentialRegistrationId = serializedPayload.read(48);
-            removeCredIds[a] = credentialRegistrationId;
+            removeCredIds[a] = credentialRegistrationId.toString();
         }
 
-        const newThreshold = serializedPayload.read(1);
+        const newThreshold = serializedPayload.read(1).readUInt8(0);
 
-        //TODO: now probably need to somehow construct the UpdateCredentialsPayload
+        data.removeCredentialIds = removeCredIds;
+
+        data.threshold = newThreshold;
+
+        //TODO: does this tell how many credentials we have currently? Doesn't seem to be in the bluepaper?
+        //data.currentNumberOfCredentials = 
+
+        //now need to somehow construct the UpdateCredentialsPayload, so we return our way upwards to the deserialize() function
+
+        return data;
     }
 
-    deserializeCredentialDeploymentValues(serializedPayload: Cursor): CredentialDeploymentValues {
+    deserializeCredentialDeploymentValues(serializedPayload: Cursor, data: UpdateCredentialsPayloadPlaceholder, currentLocation: number): UpdateCredentialsPayloadPlaceholder {
+
         const publicKeys = this.deserializeCredentialPublicKeys(serializedPayload);
         
         const credId = serializedPayload.read(48);
 
-        const ipId = serializedPayload.read(4);
+        const ipId = serializedPayload.read(4).readUInt32BE(0);
 
         const revocationThreshold = serializedPayload.read(1).readUInt8(0);
 
@@ -674,20 +698,41 @@ export class UpdateCredentialsHandler implements AccountTransactionHandler<Updat
         const createdAt = serializedPayload.read(3);
         const countAtrributes = serializedPayload.read(2).readUInt16BE(0);
 
+        const revealedAttributes: Partial<Record<any,any>> = {}; 
         for(let a = 0; a < countAtrributes; a++) {
             const attributeTag = serializedPayload.read(1);
             const countAttributeValue = serializedPayload.read(1).readUInt8(0);
-            serializedPayload.read(countAttributeValue);
+            const attributeValue = serializedPayload.read(countAttributeValue);
+            
+            revealedAttributes[attributeTag.toString()] = attributeValue;
         }
         //end of policy section
         
-
-        return {
-            credId: credId.toString(),
-            revocationThreshold: revocationThreshold,
-            arData: arData,
-            commitments: undefined, 
+        if(data.newCredentials) {
+            data.newCredentials[currentLocation].cdi = {
+                credId: credId.toString(),
+                revocationThreshold: revocationThreshold,
+                arData: arData,
+                commitments: {
+                    cmmPrf: '',
+                    cmmCredCounter: '',
+                    cmmIdCredSecSharingCoeff: [],
+                    cmmAttributes: {},
+                    cmmMaxAccounts: '',
+                },
+                proofs: '',
+                ipIdentity: ipId,
+                credentialPublicKeys: publicKeys,
+                policy: {
+                    validTo: validTo.toString(),
+                    createdAt: createdAt.toString(),
+                    revealedAttributes: revealedAttributes,
+                },
+            }
         }
+        
+
+        return data;
 
     }
 

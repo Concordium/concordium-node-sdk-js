@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 11.1.0-alpha.2
+
 ### Added
 
 - `VerifiablePresentationV1.createAccountClaims` and `VerifiablePresentationV1.createIdentityClaims` to build the

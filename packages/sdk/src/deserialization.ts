@@ -1,4 +1,4 @@
-import { getAccountTransactionHandler, InitContractHandler } from './accountTransactions.js';
+import { InitContractHandler, getAccountTransactionHandler } from './accountTransactions.js';
 import { Cursor } from './deserializationHelpers.js';
 import {
     AccountTransaction,
@@ -9,9 +9,9 @@ import {
     isAccountTransactionType,
 } from './types.js';
 import * as AccountAddress from './types/AccountAddress.js';
+import * as Energy from './types/Energy.js';
 import * as AccountSequenceNumber from './types/SequenceNumber.js';
 import * as TransactionExpiry from './types/TransactionExpiry.js';
-import * as Energy from './types/Energy.js';
 
 /**
  * Reads an unsigned 8-bit integer from the given {@link Cursor}.
@@ -81,9 +81,9 @@ export function deserializeAccountTransaction(serializedTransaction: Cursor): {
     const accountTransactionHandler = getAccountTransactionHandler(transactionType);
     const payload = accountTransactionHandler.deserialize(serializedTransaction);
 
-    if(transactionType == AccountTransactionType.InitContract) {
+    if (transactionType == AccountTransactionType.InitContract) {
         console.log('Initcontract transaction type detected');
-        if(header.energyAmount !== undefined) {
+        if (header.energyAmount !== undefined) {
             console.log('InitContractPayload detected, setting energy in payload', header.energyAmount);
             (payload as InitContractPayload).maxContractExecutionEnergy = header.energyAmount;
         }

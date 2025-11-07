@@ -43,13 +43,9 @@ function deserializeAccountTransactionBase(
         sender: AccountAddress.fromBase58('3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'),
     };
 
-    const energyProperty = energyAmount !== undefined
-        ? { energyAmount: energyAmount }
-        : {};
+    const energyProperty = energyAmount !== undefined ? { energyAmount: energyAmount } : {};
 
-    const payloadSizeProperty = payloadSize !== undefined
-        ? { payloadSize: payloadSize }
-        : {};
+    const payloadSizeProperty = payloadSize !== undefined ? { payloadSize: payloadSize } : {};
 
     const header: AccountTransactionHeader = {
         ...baseHeader,
@@ -79,10 +75,10 @@ function deserializeAccountTransactionBase(
         throw new Error('Incorrect BlockItemKind');
     }
 
-    expect(deserialized.transaction.accountTransaction.type).toEqual(transaction.type);    
+    expect(deserialized.transaction.accountTransaction.type).toEqual(transaction.type);
     expect(deserialized.transaction.signatures).toEqual(signatures);
 
-    if(transaction.type === AccountTransactionType.InitContract) {
+    if (transaction.type === AccountTransactionType.InitContract) {
         const initPayload = deserialized.transaction.accountTransaction.payload as InitContractPayload;
         expect(initPayload.maxContractExecutionEnergy).toBeDefined();
     }
@@ -140,7 +136,6 @@ test('test deserialize InitContract ', () => {
     };
 
     deserializeAccountTransactionBase(AccountTransactionType.InitContract, deserializePayload, Energy.create(559));
-
 });
 
 test('test deserialize UpdateContract ', () => {

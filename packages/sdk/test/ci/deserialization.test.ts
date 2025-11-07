@@ -1,3 +1,5 @@
+import { deserialize } from 'v8';
+
 import {
     AccountAddress,
     AccountTransaction,
@@ -78,16 +80,19 @@ function deserializeAccountTransactionBase(
     expect(deserialized.transaction.accountTransaction.type).toEqual(transaction.type);
     expect(deserialized.transaction.signatures).toEqual(signatures);
 
+    // we no longer can just compare deserialized.transaction with {accountTransaction: transaction, signatures,} without
+    // being specific to fields that may not be common between types.
+    // Will need to exclude InitContract from comparing the payload,
+    // as the payload placeholder structure initially being passed into this parent function will not have the right energy
+    if (deserialized.kind == BlockItemKind.AccountTransactionKind) {
+        const transactionType = deserialized.transaction.accountTransaction.type;
+        if (transactionType !== AccountTransactionType.InitContract) {
+            expect(deserialized.transaction.accountTransaction.payload).toEqual(payload);
+        }
+    }
+
+    //we may want to do some specific tests, if required, so returning this to the calling function
     return deserialized;
-    /*
-    /* Wont' work to just compare the transaction whole as there is now energy and energy can also be random numbers based
-    on calculation
-    
-    expect(deserialized.transaction).toEqual({
-        accountTransaction: transaction,
-        signatures,
-    });
-    */
 }
 
 test('test deserialize simpleTransfer ', () => {
@@ -95,7 +100,16 @@ test('test deserialize simpleTransfer ', () => {
         amount: CcdAmount.fromMicroCcd(5100000),
         toAddress: AccountAddress.fromBase58('3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'),
     };
-    deserializeAccountTransactionBase(AccountTransactionType.Transfer, payload);
+    const result = deserializeAccountTransactionBase(AccountTransactionType.Transfer, payload);
+
+    if (result.kind == BlockItemKind.AccountTransactionKind) {
+        const transactionType = result.transaction.accountTransaction.type;
+        if (transactionType === AccountTransactionType.Transfer) {
+            console.log('result payload: ', result.transaction.accountTransaction.payload);
+            console.log('setup payload: ', payload);
+            expect(result.transaction.accountTransaction.payload).toEqual(payload);
+        }
+    }
 });
 
 test('test deserialize simpleTransfer with memo ', () => {

@@ -1,4 +1,4 @@
-import { InitContractHandler, getAccountTransactionHandler } from './accountTransactions.js';
+import { getAccountTransactionHandler } from './accountTransactions.js';
 import { Cursor } from './deserializationHelpers.js';
 import {
     AccountTransaction,

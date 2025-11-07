@@ -1,5 +1,3 @@
-import { deserialize } from 'v8';
-
 import {
     AccountAddress,
     AccountTransaction,

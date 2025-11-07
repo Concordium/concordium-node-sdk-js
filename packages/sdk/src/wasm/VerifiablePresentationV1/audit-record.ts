@@ -179,11 +179,13 @@ function verifyAtomicStatements<A>(a: AtomicStatementV2<A>[], b: AtomicStatement
         switch (as.type) {
             case 'AttributeInSet': {
                 if (bs.type !== 'AttributeInSet') throw atomicError;
+                if (as.set.length !== bs.set.length) throw atomicError;
                 if (!as.set.every((asv) => bs.set.includes(asv))) throw atomicError;
                 break;
             }
             case 'AttributeNotInSet': {
                 if (bs.type !== 'AttributeNotInSet') throw atomicError;
+                if (as.set.length !== bs.set.length) throw atomicError;
                 if (!as.set.every((asv) => bs.set.includes(asv))) throw atomicError;
                 break;
             }
@@ -270,6 +272,25 @@ async function verifyPresentationRequest(
     }
 }
 
+/**
+ * Creates a verification audit record after performing comprehensive validation of the presentation against the request.
+ *
+ * @param id - Unique identifier for the audit record
+ * @param request - The verification request containing statements to verify
+ * @param presentation - The verifiable presentation to validate
+ * @param grpc - Concordium gRPC client for on-chain verification
+ * @param network - Network identifier for verification context
+ * @param blockHash - Optional block hash to verify against a specific chain state
+ *
+ * @returns A verification result containing either the audit record on success or an error on failure
+ *
+ * @remarks
+ * This function performs four validation steps:
+ * 1. Compares contexts between request and presentation
+ * 2. Verifies cryptographic integrity of the presentation with public on-chain data
+ * 3. Checks that all credentials are active
+ * 4. Validates presentation claims against request statements
+ */
 export async function createChecked(
     id: string,
     request: VerificationRequestV1.Type,

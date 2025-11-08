@@ -3,7 +3,7 @@ import _JB from 'json-bigint';
 
 import { ConcordiumGRPCClient } from '../../grpc/index.js';
 import { sha256 } from '../../hash.js';
-import { AtomicStatementV2, CredentialStatus } from '../../index.js';
+import { AtomicStatementV2, CredentialStatus, attributeTypeEquals } from '../../index.js';
 import { AccountSigner, signTransaction } from '../../signHelpers.js';
 import {
     AccountTransaction,
@@ -176,17 +176,19 @@ function verifyAtomicStatements<A>(a: AtomicStatementV2<A>[], b: AtomicStatement
 
     a.forEach((as, i) => {
         const bs = b[i];
+        if (as.attributeTag !== bs.attributeTag) throw atomicError;
+
         switch (as.type) {
             case 'AttributeInSet': {
                 if (bs.type !== 'AttributeInSet') throw atomicError;
                 if (as.set.length !== bs.set.length) throw atomicError;
-                if (!as.set.every((asv) => bs.set.includes(asv))) throw atomicError;
+                if (!as.set.every((asv) => bs.set.some((bsv) => attributeTypeEquals(asv, bsv)))) throw atomicError;
                 break;
             }
             case 'AttributeNotInSet': {
                 if (bs.type !== 'AttributeNotInSet') throw atomicError;
                 if (as.set.length !== bs.set.length) throw atomicError;
-                if (!as.set.every((asv) => bs.set.includes(asv))) throw atomicError;
+                if (!as.set.every((asv) => bs.set.some((bsv) => attributeTypeEquals(asv, bsv)))) throw atomicError;
                 break;
             }
             case 'RevealAttribute': {
@@ -195,8 +197,8 @@ function verifyAtomicStatements<A>(a: AtomicStatementV2<A>[], b: AtomicStatement
             }
             case 'AttributeInRange': {
                 if (bs.type !== 'AttributeInRange') throw atomicError;
-                if (as.lower !== bs.lower) throw atomicError;
-                if (as.upper !== bs.upper) throw atomicError;
+                if (!attributeTypeEquals(as.lower, bs.lower)) throw atomicError;
+                if (!attributeTypeEquals(as.upper, bs.upper)) throw atomicError;
                 break;
             }
         }

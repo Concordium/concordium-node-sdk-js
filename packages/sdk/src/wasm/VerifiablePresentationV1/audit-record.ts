@@ -174,6 +174,7 @@ function verifyAtomicStatements<A>(a: AtomicStatementV2<A>[], b: AtomicStatement
         'Mismatch found when comparing atomic statements for verification/presentation request.'
     );
 
+    // We expect the order or statements to be identical.
     a.forEach((as, i) => {
         const bs = b[i];
         if (as.attributeTag !== bs.attributeTag) throw atomicError;
@@ -182,6 +183,8 @@ function verifyAtomicStatements<A>(a: AtomicStatementV2<A>[], b: AtomicStatement
             case 'AttributeInSet': {
                 if (bs.type !== 'AttributeInSet') throw atomicError;
                 if (as.set.length !== bs.set.length) throw atomicError;
+                // For the sets, not all implementations used lists where the order items are added
+                // is enforced (i.e. some use Sets). We expect no duplicates in the sets.
                 if (!as.set.every((asv) => bs.set.some((bsv) => attributeTypeEquals(asv, bsv)))) throw atomicError;
                 break;
             }

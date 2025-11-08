@@ -192,14 +192,23 @@ function verifyAtomicStatements<A>(a: AtomicStatementV2<A>[], b: AtomicStatement
                 if (bs.type !== 'AttributeInSet') throw atomicError;
                 if (as.set.length !== bs.set.length) throw atomicError;
                 // For the sets, not all implementations used lists where the order items are added
-                // is enforced (i.e. some use Sets). We expect no duplicates in the sets.
-                if (!as.set.every((asv) => bs.set.some((bsv) => attributeTypeEquals(asv, bsv)))) throw atomicError;
+                // is enforced (i.e. some use Sets).
+                //
+                // This is O(2*n^2), but we don't expect a lot of elements to compare.
+                const setEqual =
+                    as.set.every((asv) => bs.set.some((bsv) => attributeTypeEquals(asv, bsv))) &&
+                    bs.set.every((bsv) => as.set.some((asv) => attributeTypeEquals(asv, bsv)));
+                if (!setEqual) throw atomicError;
                 break;
             }
             case 'AttributeNotInSet': {
                 if (bs.type !== 'AttributeNotInSet') throw atomicError;
                 if (as.set.length !== bs.set.length) throw atomicError;
-                if (!as.set.every((asv) => bs.set.some((bsv) => attributeTypeEquals(asv, bsv)))) throw atomicError;
+
+                const setEqual =
+                    as.set.every((asv) => bs.set.some((bsv) => attributeTypeEquals(asv, bsv))) &&
+                    bs.set.every((bsv) => as.set.some((asv) => attributeTypeEquals(asv, bsv)));
+                if (!setEqual) throw atomicError;
                 break;
             }
             case 'RevealAttribute': {

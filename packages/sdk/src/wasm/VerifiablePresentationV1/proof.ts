@@ -128,6 +128,14 @@ export function createIdentityClaims(
  */
 export type SubjectClaims = IdentityClaims | AccountClaims;
 
+export function isAccountClaims(claim: SubjectClaims): claim is AccountClaims {
+    return (claim as AccountClaims).type.includes('ConcordiumAccountBasedSubjectClaims');
+}
+
+export function isIdentityClaims(claim: SubjectClaims): claim is AccountClaims {
+    return (claim as IdentityClaims).type.includes('ConcordiumIdBasedSubjectClaims');
+}
+
 /**
  * Creates a proof context by filling in the requested context from a presentation request.
  *

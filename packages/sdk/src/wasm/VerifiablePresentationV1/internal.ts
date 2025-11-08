@@ -15,6 +15,20 @@ export type GivenContextJSON = {
 };
 
 /**
+ * Comparison between two context parts
+ *
+ * @param a - a context part
+ * @param b - a corresponding context part
+ *
+ * @returns whether `a` and `b` are equal
+ */
+export function contextEquals(a: GivenContext, b: GivenContext): boolean {
+    const aj = givenContextToJSON(a);
+    const bj = givenContextToJSON(b);
+    return a.label === b.label && aj.context === bj.context;
+}
+
+/**
  * Serializes given context information to its JSON representation.
  *
  * This function handles the conversion of different context types to their

@@ -42,6 +42,20 @@ export function isTimestampAttribute(attribute: AttributeType): attribute is Tim
     );
 }
 
+/**
+ * Checks two attributes for equality
+ *
+ * @param a - an attribute to compare
+ * @param b - another attribute to compare with
+ * @returns whether they're equal
+ */
+export function attributeTypeEquals(a: AttributeType, b: AttributeType): boolean {
+    if (isTimestampAttribute(a) && isTimestampAttribute(b)) {
+        return a.timestamp === b.timestamp;
+    }
+    return a === b;
+}
+
 /** Commitment input for account credentials containing issuer and attribute information. */
 // NOTE: **MUST** match the serialiation of CommitmentInput::Account in concordium-base
 export type AccountCommitmentInput = {

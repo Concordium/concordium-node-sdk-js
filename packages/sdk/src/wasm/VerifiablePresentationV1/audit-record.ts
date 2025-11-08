@@ -167,6 +167,14 @@ async function compareContexts(
         throw new Error('Block hash from presentation does not match block found for verification request anchor');
 }
 
+/**
+ * Verifies that two lists of atomic statements match in structure and content.
+ *
+ * @param a - First list of atomic statements to compare
+ * @param b - Second list of atomic statements to compare
+ *
+ * @throws Error if statements differ in length, order, type, or content
+ */
 function verifyAtomicStatements<A>(a: AtomicStatementV2<A>[], b: AtomicStatementV2<A>[]): void {
     if (a.length !== b.length) throw new Error('Mismatch in number of atomic statements for statement/claim');
 
@@ -208,6 +216,19 @@ function verifyAtomicStatements<A>(a: AtomicStatementV2<A>[], b: AtomicStatement
     });
 }
 
+/**
+ * Verifies account claims against a verification request statement.
+ *
+ * @param claims - Account claims from the verifiable presentation
+ * @param statement - Verification request statement to validate against
+ * @param grpc - gRPC client for querying account information
+ *
+ * @throws Error if:
+ * - statement type is not 'identity';
+ * - source is invalid;
+ * - atomic statements mismatch;
+ * - issuer is not valid
+ */
 async function verifyAccountClaims(
     claims: AccountClaims,
     statement: VerificationRequestV1.Statement,
@@ -217,6 +238,8 @@ async function verifyAccountClaims(
         throw new Error(`Request statement of type ${statement.type} does not match account claims`);
     if (!statement.source.includes('accountCredential'))
         throw new Error(`Request statement does not include "account" source`);
+
+    verifyAtomicStatements(statement.statement, claims.statement);
 
     // check that the selected credential for the claim is issued by a valid IDP
     const validIdpIndices = statement.issuers.map((i) => i.index);
@@ -231,11 +254,25 @@ async function verifyAccountClaims(
         throw new Error('Credential selected is not issued by a valid identity provider.');
 }
 
+/**
+ * Verifies identity claims against a verification request statement.
+ *
+ * @param claims - Identity claims from the verifiable presentation
+ * @param statement - Verification request statement to validate against
+ *
+ * @throws Error if:
+ * - statement type is not 'identity';
+ * - source is invalid;
+ * - atomic statements mismatch;
+ * - issuer is not valid
+ */
 function verifyIdentityClaims(claims: IdentityClaims, statement: VerificationRequestV1.Statement) {
     if (statement.type !== 'identity')
         throw new Error(`Request statement of type ${statement.type} does not match account claims`);
     if (!statement.source.includes('identityCredential'))
         throw new Error(`Request statement does not include "identity" source`);
+
+    verifyAtomicStatements(statement.statement, claims.statement);
 
     // check that the selected credential for the claim is issued by a valid IDP
     const validIdpIndices = statement.issuers.map((i) => i.index);
@@ -245,16 +282,20 @@ function verifyIdentityClaims(claims: IdentityClaims, statement: VerificationReq
         throw new Error('Credential selected is not issued by a valid identity provider.');
 }
 
+/**
+ * Verifies subject claims against a verification request statement.
+ *
+ * @param statement - Verification request statement to validate against
+ * @param claims - Subject claims from the verifiable presentation (account or identity)
+ * @param grpc - gRPC client for querying account information
+ *
+ * @throws Error if claims do not match the statement requirements
+ */
 async function verifyClaims(
     statement: VerificationRequestV1.Statement,
     claims: VerifiablePresentationV1.SubjectClaims,
     grpc: ConcordiumGRPCClient
 ) {
-    if (statement.statement.length !== claims.statement.length)
-        throw new Error('Mismatch in number of atomic statements for statement/claim');
-
-    verifyAtomicStatements(statement.statement, claims.statement);
-
     if (isAccountClaims(claims)) {
         await verifyAccountClaims(claims, statement, grpc);
     } else {
@@ -262,6 +303,15 @@ async function verifyClaims(
     }
 }
 
+/**
+ * Verifies that a presentation request matches the verification request.
+ *
+ * @param verificationRequest - Original verification request with credential statements
+ * @param presentationRequest - Presentation request containing subject claims
+ * @param grpc - gRPC client for querying account information
+ *
+ * @throws Error if number of statements/claims mismatch or any individual claim verification fails
+ */
 async function verifyPresentationRequest(
     verificationRequest: VerificationRequestV1.Type,
     presentationRequest: VerifiablePresentationV1.Request,

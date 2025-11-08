@@ -135,7 +135,7 @@ async function compareContexts(
 ): Promise<void> {
     rc.given.length === pc.given.length ||
         bail(
-            `Mismatch in number of given context items: request context has ${rc.requested.length} while presentation context has ${pc.requested.length}`
+            `Mismatch in number of given context items: request context has ${rc.given.length} while presentation context has ${pc.given.length}`
         );
     rc.requested.length === pc.requested.length ||
         bail(
@@ -312,7 +312,7 @@ export async function createChecked(
 
     // 3. Checck that none of the credentials have expired
     verification.result.credentialsStatus.every((cs) => cs === CredentialStatus.Active) ||
-        bail('One or more credentials included in the presentation has expired.');
+        bail('One or more credentials included in the presentation is not active.');
 
     // 4. check the claims in presentation request in the context of the request statements
     verifyPresentationRequest(request, verification.result.request, grpc);

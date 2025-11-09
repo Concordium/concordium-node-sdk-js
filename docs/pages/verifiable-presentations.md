@@ -237,9 +237,6 @@ const presentation = await VerifiablePresentationV1.createFromAnchor(
     inputs,
     contextValues
 );
-
-// verify the presentation elsewhere
-const result = VerifiablePresentationV1.verifyWithNode(presentation, verificationRequest, grpcClient, network);
 ```
 
 ## Verifiable Audit Record
@@ -250,6 +247,8 @@ and the anchor should be registered on chain. The transacton hash of the anchor 
 
 ```ts
 const uuid: string = ...;
-const record = VerificationAuditRecordV1.create(uuid, verificationRequest, presentation);
+// Verify the presentation in the context of the verification request and create the audit record.
+const record = VerificationAuditRecordV1.createChecked(uuid, verificationRequest, presentation, grpcClient, network);
+// Register the verification audit anchor on the chain
 const anchorTransactionHash = await VerificationAuditRecordV1.registerAnchor(record, grpcClient, sender, signer);
 ```

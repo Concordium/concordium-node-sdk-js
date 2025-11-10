@@ -8,6 +8,7 @@ import {
     BlockItem,
     BlockItemKind,
     CIS2,
+    Cbor,
     CcdAmount,
     ContractAddress,
     ContractName,
@@ -22,6 +23,9 @@ import {
     SequenceNumber,
     SimpleTransferPayload,
     SimpleTransferWithMemoPayload,
+    TokenId,
+    TokenOperation,
+    TokenUpdatePayload,
     TransactionExpiry,
     UpdateContractPayload,
     tokenAddressFromBase58,
@@ -87,6 +91,18 @@ function deserializeAccountTransactionBase(
 
     //we may want to do some specific tests, if required, so returning this to the calling function
     return deserialized;
+    /* Wont' work to just compare the transaction whole as the structure being compared now has energy field/amount 
+     * and energy are dynamically generated on calculations based on the formulae, so not really something we can set 
+     * in the transaction.payload before sending this inside serializeAccountTransactionForSubmission.
+     * So, transaction object is created (energy is unknown here, as we are just instantiating), then we sen this into
+     * serializeAccountTransactionForSubmission where the costs are calculated, then we send the result of the function into deserialize.
+     * So, deserialize would have the costs calculated from within the flow, transaction does not.
+    
+    expect(deserialized.transaction).toEqual({
+        accountTransaction: transaction,
+        signatures,
+    });
+    */
 }
 
 test('test deserialize simpleTransfer ', () => {
@@ -175,6 +191,19 @@ test('test deserialize UpdateContract ', () => {
             expect(initPayload.maxContractExecutionEnergy).not.toEqual(0);
         }
     }
+});
+
+test('test deserialize TokenUpdate ', () => {
+    const pause = {};
+    const pauseOperation = { pause } as TokenOperation;
+    //console.log(`Specified action:`, JSON.stringify(pauseOperation, null, 2));
+
+    const deserializePayload: TokenUpdatePayload = {
+        tokenId: TokenId.fromString('123ABCToken'),
+        operations: Cbor.encode([pauseOperation]),
+    };
+
+    deserializeAccountTransactionBase(AccountTransactionType.TokenUpdate, deserializePayload);
 });
 
 test('Expired transactions can be deserialized', () => {

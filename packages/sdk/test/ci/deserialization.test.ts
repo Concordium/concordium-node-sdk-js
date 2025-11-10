@@ -53,15 +53,11 @@ function deserializeAccountTransactionBase(
         ...payloadSizeProperty,
     };
 
-    console.log('header is created as ', header);
-
     const transaction: AccountTransaction = {
         header,
         payload,
         type,
     };
-
-    console.log('transaction is created as ', transaction);
 
     const signatures: AccountTransactionSignature = {
         0: {
@@ -103,8 +99,6 @@ test('test deserialize simpleTransfer ', () => {
     if (result.kind == BlockItemKind.AccountTransactionKind) {
         const transactionType = result.transaction.accountTransaction.type;
         if (transactionType === AccountTransactionType.Transfer) {
-            console.log('result payload: ', result.transaction.accountTransaction.payload);
-            console.log('setup payload: ', payload);
             expect(result.transaction.accountTransaction.payload).toEqual(payload);
         }
     }

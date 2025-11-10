@@ -396,7 +396,7 @@ export function fromJSON(json: JSON): VerificationRequestV1 {
  * @returns Promise resolving to the created presentation request
  * @throws Error if the transaction fails or network issues occur
  */
-export async function createAndAchor(
+export async function createAndAnchor(
     grpc: ConcordiumGRPCClient,
     sender: AccountAddress.Type,
     signer: AccountSigner,

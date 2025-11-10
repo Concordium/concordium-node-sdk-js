@@ -132,7 +132,7 @@ const statements = VerificationRequestV1.statementBuilder()
         b.revealAttribute('firstName');
     })
     .getStatements();
-const verificationRequest = await VerificationRequestV1.createAndAchor(grpc, sender, signer, context, statements, {
+const verificationRequest = await VerificationRequestV1.createAndAnchor(grpc, sender, signer, context, statements, {
     info: 'Example VP anchor',
 });
 

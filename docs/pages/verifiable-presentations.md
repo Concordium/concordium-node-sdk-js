@@ -178,7 +178,7 @@ const sender: AccountAddress.Type = ...;
 const signer: Signer = ...;
 
 // create the verification request with an on-chain anchor, which can be checked by the owner of the credentials.
-const verificationRequest = await VerificationRequestV1.createAndAchor(
+const verificationRequest = await VerificationRequestV1.createAndAnchor(
     grpcClient,
     sender,
     signer,

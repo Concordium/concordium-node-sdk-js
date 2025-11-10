@@ -385,6 +385,9 @@ export class UpdateContractHandler
     }
 }
 
+//Created this to have the flexibility of partial data, so fields are marked as optional
+//the original UpdateCredentialsPayloadPlaceholder is not set like that and I can potentially
+//use this object more flexibly as it is specific to my purpose in populating the partial data
 interface UpdateCredentialsPayloadPlaceholder {
     newCredentials?: IndexedCredentialDeploymentInfo[];
     
@@ -426,11 +429,12 @@ export class UpdateCredentialsHandler implements AccountTransactionHandler<Updat
     }
 
     deserialize(serializedPayload: Cursor): UpdateCredentialsPayload {
-        // TODO:
+        //using this to as a placeholder to populate the values to be used in the final response
         const partialData: UpdateCredentialsPayloadPlaceholder = {} as UpdateCredentialsPayloadPlaceholder;
 
         const cdiItems = serializedPayload.read(8);
         partialData.newCredentials = [];
+        //the following for loop is to read the CredentialDeploymentInformation
         for(let i = 0; i < cdiItems.readUInt8(0); i++) {
             const index = serializedPayload.read(8).readUInt8(0);            
             partialData.newCredentials[i].index = index;
@@ -446,13 +450,13 @@ export class UpdateCredentialsHandler implements AccountTransactionHandler<Updat
 
         return {
             newCredentials: partialData.newCredentials,
-            removeCredentialIds: partialData.removeCredentialIds ?? [], //TODO: I am putting ?? just to experiment for now
+            removeCredentialIds: partialData.removeCredentialIds ?? [],
             threshold: partialData.threshold ?? 0,
             currentNumberOfCredentials: partialData.currentNumberOfCredentials ?? 0n,
         }
     }
 
-    deserializeCredentialDeploymentProofs(serializedPayload: Cursor, data: UpdateCredentialsPayloadPlaceholder, currentLocation: number): UpdateCredentialsPayloadPlaceholder {
+    deserializeCredentialDeploymentProofs(serializedPayload: Cursor, data: UpdateCredentialsPayloadPlaceholder, currentLocation: number) {
 
         //IdOwnershipProofs.sig
         const blindedSignature = serializedPayload.read(96);
@@ -513,39 +517,36 @@ export class UpdateCredentialsHandler implements AccountTransactionHandler<Updat
             const sig = serializedPayload.read(64);
         }
 
-        //TODO: populate partial data?
+        //populate placeholder and go back to the for loop in deserialize() and read next CredentialDeploymentInformation, if any
         if(data.newCredentials) {
             const currentNewCred = data.newCredentials[currentLocation];
             currentNewCred.cdi.proofs
         }
-        
-        return data;
-
     }
 
-    //TODO:
     deserializeCredentialsToBeRemoved(serializedPayload: Cursor, data: UpdateCredentialsPayloadPlaceholder): UpdateCredentialsPayloadPlaceholder {
         
+        //number of credentials to be removed
         const removeLength = serializedPayload.read(1).readUInt8(0);
 
         const removeCredIds: string[] = [];
+        //the credential IDs of the credentials to be removed, based on the removeLength value
         for(let a = 0; a < removeLength; a++) {
             const credentialRegistrationId = serializedPayload.read(48);
             removeCredIds[a] = credentialRegistrationId.toString();
         }
 
+        //AccountThreshold
         const newThreshold = serializedPayload.read(1).readUInt8(0);
 
+        //populate placeholder
         data.removeCredentialIds = removeCredIds;
-
         data.threshold = newThreshold;
 
-        //TODO: does this tell how many credentials we have currently? Doesn't seem to be in the bluepaper?
-        //data.currentNumberOfCredentials = 
+        //This is not part of the transaction model, so no value to deserialize, will be passing an empty value for now
+        data.currentNumberOfCredentials = undefined;
 
-        //now need to somehow construct the UpdateCredentialsPayload, so we return our way upwards to the deserialize() function
-
-        return data;
+        //now need to construct the UpdateCredentialsPayload based on the partial data, so we return our way upwards to the deserialize() function
     }
 
     deserializeCredentialDeploymentValues(serializedPayload: Cursor, data: UpdateCredentialsPayloadPlaceholder, currentLocation: number): UpdateCredentialsPayloadPlaceholder {
@@ -582,6 +583,8 @@ export class UpdateCredentialsHandler implements AccountTransactionHandler<Updat
                 credId: credId.toString(),
                 revocationThreshold: revocationThreshold,
                 arData: arData,
+
+                //TODO: Still looking for this
                 commitments: {
                     cmmPrf: '',
                     cmmCredCounter: '',
@@ -589,7 +592,9 @@ export class UpdateCredentialsHandler implements AccountTransactionHandler<Updat
                     cmmAttributes: {},
                     cmmMaxAccounts: '',
                 },
+                //TODO: still looking for this
                 proofs: '',
+
                 ipIdentity: ipId,
                 credentialPublicKeys: publicKeys,
                 policy: {
@@ -600,12 +605,8 @@ export class UpdateCredentialsHandler implements AccountTransactionHandler<Updat
             }
         }
         
-
         return data;
-
     }
-
-
 
     deserializeArDataEntry(serializedPayload: Cursor): Record<any, any> {
 

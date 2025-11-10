@@ -2,9 +2,16 @@
 
 ## Unreleased
 
+## 4.0.0-alpha.0
+
 ### Breaking changes
 
 - This package is now an ESM module.
+
+### Added
+
+- `create_presentation_v1` for creating v1 verifiable presentations.
+- `verify_presentation_v1` for verifying v1 verifiable presentations.
 
 ## 3.3.0
 

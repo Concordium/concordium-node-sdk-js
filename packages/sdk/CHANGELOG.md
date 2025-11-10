@@ -2,9 +2,12 @@
 
 ## Unreleased
 
+## 11.1.0-alpha.3
+
 ### Fixed
 
 - Typo in function name `VerificationRequest.createAndAchor`, is now `VerificationRequest.createAndAnchor`.
+- Update the `@concordium/rust-bindings` version to `4.0.0`.
 
 ## 11.1.0-alpha.2
 

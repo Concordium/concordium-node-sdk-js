@@ -2,7 +2,7 @@ import { Buffer } from 'buffer/index.js';
 
 import { Cursor } from './deserializationHelpers.js';
 import { Cbor, TokenId, TokenOperationType } from './plt/index.js';
-import { AccountTransaction, ContractAddress, ContractName, CredentialDeploymentValues, CredentialPublicKeys, VerifyKey, Energy, ModuleReference, InitialCredentialDeploymentValues, CredentialDeploymentCommitments } from './pub/types.js';
+import { AccountTransaction, ContractAddress, ContractName, CredentialPublicKeys, VerifyKey, Energy, ModuleReference, ChainArData } from './pub/types.js';
 import { serializeCredentialDeploymentInfo } from './serialization.js';
 import {
     encodeDataBlob,
@@ -45,8 +45,6 @@ import { DataBlob } from './types/DataBlob.js';
 import * as InitName from './types/InitName.js';
 import * as Parameter from './types/Parameter.js';
 import * as ReceiveName from './types/ReceiveName.js';
-import { ChainArData, CredentialPublicKeys } from './grpc-api/v2/concordium/types.ts';
-
 
 /**
  * A handler for a specific {@linkcode AccountTransactionType}.
@@ -558,7 +556,7 @@ export class UpdateCredentialsHandler implements AccountTransactionHandler<Updat
 
     deserialize(serializedPayload: Cursor): UpdateCredentialsPayload {
         //using this to as a placeholder to populate the values to be used in the final response
-        const partialData: UpdateCredentialsPayloadPlaceholder = {} as UpdateCredentialsPayloadPlaceholder;
+        const partialData: Partial<UpdateCredentialsPayload> = {};
 
         const cdiItems = serializedPayload.read(8);
         partialData.newCredentials = [];
@@ -584,7 +582,7 @@ export class UpdateCredentialsHandler implements AccountTransactionHandler<Updat
         }
     }
 
-    deserializeCredentialDeploymentProofs(serializedPayload: Cursor, data: UpdateCredentialsPayloadPlaceholder, currentLocation: number) {
+    deserializeCredentialDeploymentProofs(serializedPayload: Cursor, data: Partial<UpdateCredentialsPayload>, currentLocation: number) {
 
         //IdOwnershipProofs.sig
         const blindedSignature = serializedPayload.read(96);
@@ -652,7 +650,7 @@ export class UpdateCredentialsHandler implements AccountTransactionHandler<Updat
         }
     }
 
-    deserializeCredentialsToBeRemoved(serializedPayload: Cursor, data: UpdateCredentialsPayloadPlaceholder): UpdateCredentialsPayloadPlaceholder {
+    deserializeCredentialsToBeRemoved(serializedPayload: Cursor, data: Partial<UpdateCredentialsPayload>) {
         
         //number of credentials to be removed
         const removeLength = serializedPayload.read(1).readUInt8(0);
@@ -677,7 +675,7 @@ export class UpdateCredentialsHandler implements AccountTransactionHandler<Updat
         //now need to construct the UpdateCredentialsPayload based on the partial data, so we return our way upwards to the deserialize() function
     }
 
-    deserializeCredentialDeploymentValues(serializedPayload: Cursor, data: UpdateCredentialsPayloadPlaceholder, currentLocation: number): UpdateCredentialsPayloadPlaceholder {
+    deserializeCredentialDeploymentValues(serializedPayload: Cursor, data: Partial<UpdateCredentialsPayload>, currentLocation: number) {
 
         const publicKeys = this.deserializeCredentialPublicKeys(serializedPayload);
         
@@ -732,8 +730,6 @@ export class UpdateCredentialsHandler implements AccountTransactionHandler<Updat
                 },
             }
         }
-        
-        return data;
     }
 
     deserializeArDataEntry(serializedPayload: Cursor): Record<any, any> {
@@ -750,7 +746,6 @@ export class UpdateCredentialsHandler implements AccountTransactionHandler<Updat
             result[arIdentity.toString()] = data;
         }
         
-
         return result;
     }
 
@@ -758,7 +753,7 @@ export class UpdateCredentialsHandler implements AccountTransactionHandler<Updat
         const idCredPubShare = serializedPayload.read(96);
 
         return {
-            encIdCredPubShare: idCredPubShare,
+            encIdCredPubShare: idCredPubShare.toString(),
         }
     }
 

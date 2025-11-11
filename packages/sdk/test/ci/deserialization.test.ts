@@ -95,7 +95,7 @@ function deserializeAccountTransactionBase(
         }
     } else {
         //as we are here, we are going to be comparing for InitContract or Update
-        //we read the header and obtain the energy related field which is the calculated cost, 
+        //we read the header and obtain the energy related field which is the calculated cost,
         // so expected payload won't have the same energy as resulting payload, as expected payload would only be a given energy cost
         // or a base cost manually inserted
         expect(deserialized.transaction.accountTransaction.type).toEqual(transaction.type);

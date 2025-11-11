@@ -159,7 +159,6 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
         address: unwrap(contractAddress),
         receiveName,
         message: updateParams,
-        maxContractExecutionEnergy: maxCost,
     };
 
     const updateTransaction: AccountTransaction = {

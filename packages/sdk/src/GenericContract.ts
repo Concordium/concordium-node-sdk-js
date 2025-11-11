@@ -351,7 +351,6 @@ class ContractBase<E extends string = string, V extends string = string> {
             amount,
             address: this.contractAddress,
             receiveName: ReceiveName.create(this.contractName, entrypoint),
-            maxContractExecutionEnergy: energy,
             message: parameter,
         };
         const transaction: ContractUpdateTransaction = {

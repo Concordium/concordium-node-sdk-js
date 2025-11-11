@@ -1410,7 +1410,7 @@ export interface UpdateContractPayload {
 
     /** The amount of energy that can be used for contract execution.
     The base energy amount for transaction verification will be added to this cost.*/
-    maxContractExecutionEnergy: Energy.Type;
+    //maxContractExecutionEnergy: Energy.Type;
 }
 
 export interface AccountTransactionHeader {
@@ -1561,10 +1561,13 @@ export type AccountTransactionPayload =
     | ConfigureDelegationPayload
     | TokenUpdatePayload;
 
-export interface AccountTransaction {
-    type: AccountTransactionType;
+export interface AccountTransaction<
+    T extends AccountTransactionType = AccountTransactionType,
+    P extends AccountTransactionPayload = AccountTransactionPayload,
+> {
+    type: T;
     header: AccountTransactionHeader;
-    payload: AccountTransactionPayload;
+    payload: P;
 }
 
 export interface InstanceInfoCommon {

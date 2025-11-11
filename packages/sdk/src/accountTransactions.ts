@@ -308,14 +308,14 @@ export interface UpdateContractPayloadJSON {
     address: ContractAddress.SchemaValue;
     receiveName: string;
     message: HexString;
-    maxContractExecutionEnergy: bigint;
+    //maxContractExecutionEnergy: bigint;
 }
 
 export class UpdateContractHandler
     implements AccountTransactionHandler<UpdateContractPayload, UpdateContractPayloadJSON>
 {
     getBaseEnergyCost(payload: UpdateContractPayload): bigint {
-        return payload.maxContractExecutionEnergy.value;
+        return 0n;
     }
 
     serialize(payload: UpdateContractPayload): Buffer {
@@ -357,7 +357,7 @@ export class UpdateContractHandler
             receiveName: ReceiveName.fromString(receiveName.toString()),
             message: Parameter.fromBuffer(message),
             //The execution energy cannot be recovered as it is not part of the payload serialization
-            maxContractExecutionEnergy: Energy.create(0n),
+            //maxContractExecutionEnergy: Energy.create(0n),
         };
     }
 
@@ -367,7 +367,7 @@ export class UpdateContractHandler
             address: ContractAddress.toSchemaValue(payload.address),
             receiveName: payload.receiveName.toJSON(),
             message: payload.message.toJSON(),
-            maxContractExecutionEnergy: payload.maxContractExecutionEnergy.value,
+            //maxContractExecutionEnergy: payload.maxContractExecutionEnergy.value,
         };
     }
 
@@ -377,7 +377,7 @@ export class UpdateContractHandler
             address: ContractAddress.fromSchemaValue(json.address),
             receiveName: ReceiveName.fromJSON(json.receiveName),
             message: Parameter.fromJSON(json.message),
-            maxContractExecutionEnergy: Energy.create(json.maxContractExecutionEnergy),
+            //maxContractExecutionEnergy: Energy.create(json.maxContractExecutionEnergy),
         };
     }
 }

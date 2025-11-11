@@ -9,6 +9,7 @@ import type * as ContractEvent from './ContractEvent.js';
 import type * as Energy from './Energy.js';
 import type * as TransactionHash from './TransactionHash.js';
 import { UpdateInstructionPayload } from './chainUpdate.js';
+import { CcdAmount } from './index.js';
 import { RejectReason } from './rejectReason.js';
 import {
     AccountTransferredEvent,
@@ -41,10 +42,38 @@ export interface BaseBlockItemSummary {
     hash: TransactionHash.Type;
 }
 
+type SponsorDetails = {
+    /**
+     * The account address of the party sponsoring the transaction.
+     */
+    sponsor: AccountAddress.Type;
+    /**
+     * The transaction cost paid by the transaction sponsor.
+     */
+    cost: CcdAmount.Type;
+};
+
 export interface BaseAccountTransactionSummary extends BaseBlockItemSummary {
+    /**
+     * The account transaction type
+     */
     type: TransactionSummaryType.AccountTransaction;
+    /**
+     * The transaction cost paid by the transaction subject.
+     * In the case the transaction is sponsored by another party, the transaction cost
+     * will be accessible in `sponsor.cost`.
+     */
     cost: bigint;
+    /**
+     * The account address of the transaction subject.
+     */
     sender: AccountAddress.Type;
+    /**
+     * Optional sponsor details, which are present in the case the transaction
+     * is sponsored by another party. The details hold the sponsorring account
+     * and the transaction cost attributed to that account.
+     */
+    sponsor?: SponsorDetails;
 }
 
 export enum TransactionKindString {

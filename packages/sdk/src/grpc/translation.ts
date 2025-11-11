@@ -1776,6 +1776,13 @@ function trAccountTransactionSummary(
         sender: AccountAddress.fromProto(unwrap(details.sender)),
     };
 
+    if (details.sponsor !== undefined) {
+        base.sponsor = {
+            cost: CcdAmount.fromProto(unwrap(details.sponsor.cost)),
+            sponsor: AccountAddress.fromProto(unwrap(details.sponsor.sponsor)),
+        };
+    }
+
     const effect = unwrap(details.effects?.effect);
     switch (effect.oneofKind) {
         case 'none':

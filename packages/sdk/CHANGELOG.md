@@ -10,7 +10,7 @@
 
 - deserialize function for UpdateContractPayload implemented instead of throwing an exception of not supporting deserialize
 
-- fix the reading for energy cost and payload size.
+- remove the maxContractExecutionEnergy from UpdateContractPayload. This must be passed in manually instead of deriving from payload.
 
 ## 11.0.0
 

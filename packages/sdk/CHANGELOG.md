@@ -9,6 +9,8 @@
 - deserialize function for InitContractPayload implemented instead of throwing an exception of not supporting deserialize
 
 - deserialize function for UpdateContractPayload implemented instead of throwing an exception of not supporting deserialize
+- Extended `AccountTransactionSummary` with optional sponsor details in case the transaction summary details a sponsored
+  transaction.
 
 ## 11.0.0
 

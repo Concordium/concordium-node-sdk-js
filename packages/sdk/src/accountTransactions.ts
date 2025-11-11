@@ -314,7 +314,8 @@ export interface UpdateContractPayloadJSON {
 export class UpdateContractHandler
     implements AccountTransactionHandler<UpdateContractPayload, UpdateContractPayloadJSON>
 {
-    getBaseEnergyCost(_: UpdateContractPayload): bigint {
+    getBaseEnergyCost(payload: UpdateContractPayload): bigint {
+        void payload;
         return 0n;
     }
 

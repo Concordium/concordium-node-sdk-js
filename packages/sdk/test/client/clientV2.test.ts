@@ -317,7 +317,7 @@ test.each(clients)('transactionHash', async (client) => {
         },
     };
 
-    const serializedAccountTransaction = serializeAccountTransaction(transaction, signature).slice(71);
+    const serializedAccountTransaction = serializeAccountTransaction(transaction as v1.AccountTransaction<v1.OtherType, v1.OtherPayload>, signature).slice(71);
     const localHash = Buffer.from(sha256([serializedAccountTransaction])).toString('hex');
 
     const queries: QueriesClient = (client as any).client;

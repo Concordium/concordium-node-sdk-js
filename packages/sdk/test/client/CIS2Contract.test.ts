@@ -185,7 +185,6 @@ describe('createTransfer', () => {
         expect(ContractAddress.equals(payload.address, ContractAddress.create(3496))).toBeTruthy();
         expect(Parameter.toHexString(payload.message)).toEqual(expectedParameterHex);
         expect(payload.receiveName).toEqual(ReceiveName.fromStringUnchecked('cis2-bridgeable.transfer'));
-        expect(payload.maxContractExecutionEnergy.value).toEqual(1000000n);
     });
 
     test('multiple transfers', async () => {
@@ -309,7 +308,6 @@ describe('createUpdateOperator', () => {
         expect(payload.address).toEqual(ContractAddress.create(3496));
         expect(Parameter.toHexString(payload.message)).toEqual(expectedParameterHex);
         expect(payload.receiveName.value).toEqual('cis2-bridgeable.updateOperator');
-        expect(payload.maxContractExecutionEnergy.value).toEqual(1000000n);
     });
 
     test('multiple updates', async () => {

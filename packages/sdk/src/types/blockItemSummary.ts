@@ -9,6 +9,7 @@ import type * as ContractEvent from './ContractEvent.js';
 import type * as Energy from './Energy.js';
 import type * as TransactionHash from './TransactionHash.js';
 import { UpdateInstructionPayload } from './chainUpdate.js';
+import { CcdAmount } from './index.ts';
 import { RejectReason } from './rejectReason.js';
 import {
     AccountTransferredEvent,
@@ -41,10 +42,16 @@ export interface BaseBlockItemSummary {
     hash: TransactionHash.Type;
 }
 
+type SponsorDetails = {
+    address: AccountAddress.Type;
+    cost: CcdAmount.Type;
+};
+
 export interface BaseAccountTransactionSummary extends BaseBlockItemSummary {
     type: TransactionSummaryType.AccountTransaction;
     cost: bigint;
     sender: AccountAddress.Type;
+    sponsor?: SponsorDetails;
 }
 
 export enum TransactionKindString {

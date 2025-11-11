@@ -341,7 +341,7 @@ class ContractBase<E extends string = string, V extends string = string> {
     public createUpdateTransaction<T, J extends SmartContractTypeValues>(
         entrypoint: EntrypointName.Type<E>,
         serializeInput: (input: T) => ArrayBuffer,
-        { amount = CcdAmount.zero(), energy }: CreateContractTransactionMetadata,
+        { amount = CcdAmount.zero() }: CreateContractTransactionMetadata,
         input: T,
         inputJsonFormatter?: (input: T) => J
     ): ContractUpdateTransaction | MakeOptional<ContractUpdateTransactionWithSchema<J>, 'schema'> {

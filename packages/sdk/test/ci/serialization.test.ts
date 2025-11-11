@@ -8,6 +8,8 @@ import {
     AccountTransactionHeader,
     AccountTransactionSignature,
     AccountTransactionType,
+    OtherPayload,
+    OtherType,
     SimpleTransferPayload,
 } from '../../src/types.js';
 
@@ -29,7 +31,12 @@ test('fail account transaction serialization if no signatures', () => {
         type: AccountTransactionType.Transfer,
     };
 
-    expect(() => serializeAccountTransactionForSubmission(simpleTransferAccountTransaction, {})).toThrow();
+    expect(() =>
+        serializeAccountTransactionForSubmission(
+            simpleTransferAccountTransaction as AccountTransaction<OtherType, OtherPayload>,
+            {}
+        )
+    ).toThrow();
 });
 
 test('serialization of an account signature with two credentials', () => {

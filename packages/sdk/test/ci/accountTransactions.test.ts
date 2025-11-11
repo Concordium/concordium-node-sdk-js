@@ -210,14 +210,12 @@ test('UpdateContractPayload serializes to JSON correctly', async () => {
         address: ContractAddress.fromSchemaValue({ index: 1n, subindex: 2n }),
         receiveName: ReceiveName.fromString('test.abc'),
         message: Parameter.fromBuffer(Buffer.from('test', 'utf8')),
-        maxContractExecutionEnergy: Energy.create(30000),
     };
     const handler = new UpdateContractHandler();
     const json = handler.toJSON(payload);
 
     const actual = JSONBig.stringify(json);
-    const expected =
-        '{"amount":"5","address":{"index":1,"subindex":2},"receiveName":"test.abc","message":"74657374","maxContractExecutionEnergy":30000}';
+    const expected = '{"amount":"5","address":{"index":1,"subindex":2},"receiveName":"test.abc","message":"74657374"}';
     expect(actual).toEqual(expected);
 
     // ID test

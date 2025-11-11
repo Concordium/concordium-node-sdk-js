@@ -28,6 +28,10 @@ import {
     CredentialSignature,
     IdOwnershipProofs,
     InitContractPayload,
+    InitUpdatePayload,
+    InitUpdateType,
+    OtherPayload,
+    OtherType,
     UnsignedCredentialDeploymentInformation,
     UpdateContractPayload,
 } from './types.js';
@@ -236,14 +240,6 @@ export function getAccountTransactionSignDigest(accountTransaction: AccountTrans
 
     return sha256([serializedHeader, serializedPayload]);
 }
-
-// For Overload 1 (Energy Required)
-type InitUpdateType = AccountTransactionType.InitContract | AccountTransactionType.Update;
-type InitUpdatePayload = InitContractPayload | UpdateContractPayload;
-
-// For Overload 2 (Energy Forbidden)
-type OtherType = Exclude<AccountTransactionType, InitUpdateType>;
-type OtherPayload = Exclude<AccountTransactionPayload, InitUpdatePayload>;
 
 //defining the overload rules for the serializeAccountTransaction
 //if accountTransaction is of AccountTransaction and the type is Update or InitContract and payload is InitContractPayload or UpdateContractPayload

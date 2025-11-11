@@ -1561,6 +1561,14 @@ export type AccountTransactionPayload =
     | ConfigureDelegationPayload
     | TokenUpdatePayload;
 
+// For Overload 1 (Energy will need to be supplied manually)
+export type InitUpdateType = AccountTransactionType.InitContract | AccountTransactionType.Update;
+export type InitUpdatePayload = InitContractPayload | UpdateContractPayload;
+
+// For Overload 2 (Energy will use some automatic calculations)
+export type OtherType = Exclude<AccountTransactionType, InitUpdateType>;
+export type OtherPayload = Exclude<AccountTransactionPayload, InitUpdatePayload>;
+
 export interface AccountTransaction<
     T extends AccountTransactionType = AccountTransactionType,
     P extends AccountTransactionPayload = AccountTransactionPayload,

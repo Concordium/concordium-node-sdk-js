@@ -15,7 +15,11 @@ import {
     DeployModulePayload,
     Energy,
     InitContractPayload,
+    InitUpdatePayload,
+    InitUpdateType,
     ModuleReference,
+    OtherPayload,
+    OtherType,
     Parameter,
     ReceiveName,
     RegisterDataPayload,
@@ -56,7 +60,24 @@ function deserializeAccountTransactionBase(
         },
     };
 
-    const deserialized = deserializeTransaction(serializeAccountTransactionForSubmission(transaction, signatures));
+    let deserialized;
+    if (type === AccountTransactionType.InitContract || type === AccountTransactionType.Update) {
+        //Hardcoding the energy here and will assume the given energy here is actually passed in by some calculation before submitting here
+        deserialized = deserializeTransaction(
+            serializeAccountTransactionForSubmission(
+                transaction as AccountTransaction<InitUpdateType, InitUpdatePayload>,
+                signatures,
+                Energy.create(30000n)
+            )
+        );
+    } else {
+        deserialized = deserializeTransaction(
+            serializeAccountTransactionForSubmission(
+                transaction as AccountTransaction<OtherType, OtherPayload>,
+                signatures
+            )
+        );
+    }
 
     if (deserialized.kind !== BlockItemKind.AccountTransactionKind) {
         throw new Error('Incorrect BlockItemKind');
@@ -132,7 +153,6 @@ test('test deserialize UpdateContract ', () => {
         address: ContractAddress.create(0, 1),
         receiveName: ReceiveName.fromString('method.abc'),
         message: Parameter.fromHexString('0a'),
-        maxContractExecutionEnergy: Energy.create(0),
     };
 
     deserializeAccountTransactionBase(AccountTransactionType.Update, deserializePayload);

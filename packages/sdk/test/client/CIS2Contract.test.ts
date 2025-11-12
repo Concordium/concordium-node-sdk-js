@@ -152,7 +152,7 @@ describe('createTransfer', () => {
     test('single update', async () => {
         const cis2 = await getCIS2Single();
         const { type, parameter, payload } = cis2.createTransfer(
-            { energy: Energy.create(1000000) },
+            {},
             {
                 tokenId: '',
                 to: AccountAddress.fromBase58('3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB'),
@@ -189,7 +189,7 @@ describe('createTransfer', () => {
 
     test('multiple transfers', async () => {
         const cis2 = await getCIS2Single();
-        const { parameter, schema } = cis2.createTransfer({ energy: Energy.create(10000) }, [
+        const { parameter, schema } = cis2.createTransfer({}, [
             {
                 tokenId: '',
                 to: AccountAddress.fromBase58('3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB'),
@@ -281,7 +281,7 @@ describe('createUpdateOperator', () => {
     test('single update', async () => {
         const cis2 = await getCIS2Single();
         const { type, parameter, payload } = cis2.createUpdateOperator(
-            { energy: Energy.create(1000000) },
+            {},
             {
                 type: 'add',
                 address: AccountAddress.fromBase58('3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB'),
@@ -312,7 +312,7 @@ describe('createUpdateOperator', () => {
 
     test('multiple updates', async () => {
         const cis2 = await getCIS2Single();
-        const { parameter } = cis2.createUpdateOperator({ energy: Energy.create(1000000) }, [
+        const { parameter } = cis2.createUpdateOperator({}, [
             {
                 type: 'add',
                 address: AccountAddress.fromBase58('3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB'),

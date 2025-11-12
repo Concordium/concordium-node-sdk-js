@@ -69,7 +69,7 @@ describe('permit', () => {
         const contract = await getContract();
         const params = await makePermitParams();
 
-        const tx = contract.createPermit({ energy: Energy.create(100000) }, params);
+        const tx = contract.createPermit({}, params);
         const schemaSerial = serializeTypeValue(tx.parameter.json, Buffer.from(tx.schema.value, 'base64'), true);
         expect(tx.parameter.hex).toEqual(Parameter.toHexString(schemaSerial));
     });

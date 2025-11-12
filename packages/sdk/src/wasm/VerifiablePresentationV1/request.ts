@@ -1,22 +1,19 @@
 import { sha256 } from '../../hash.js';
 import {
-    AccountAddress,
-    AccountSigner,
     AccountTransaction,
     AccountTransactionHeader,
     AccountTransactionType,
     AttributeKey,
     ConcordiumGRPCClient,
-    NextAccountNonce,
     RegisterDataPayload,
     cborDecode,
     cborEncode,
     signTransaction,
 } from '../../index.js';
-import { DataBlob, TransactionExpiry, TransactionHash } from '../../types/index.js';
+import { DataBlob, SequenceNumber, TransactionExpiry, TransactionHash } from '../../types/index.js';
 import { AccountStatementBuild } from '../../web3-id/proofs.js';
 import { AtomicStatementV2, DIDString, IDENTITY_SUBJECT_SCHEMA, IdentityProviderDID } from '../../web3-id/types.js';
-import { GivenContextJSON, givenContextFromJSON, givenContextToJSON } from './internal.js';
+import { AnchorTransactionMetadata, GivenContextJSON, givenContextFromJSON, givenContextToJSON } from './internal.js';
 import { CredentialContextLabel, GivenContext } from './types.js';
 
 const VERSION = 1;
@@ -387,8 +384,7 @@ export function fromJSON(json: JSON): VerificationRequestV1 {
  * record of the request.
  *
  * @param grpc - The Concordium GRPC client for blockchain interaction
- * @param sender - The account address that will send the anchoring transaction
- * @param signer - The signer for the anchoring transaction
+ * @param anchorTransactionMetadata - The metadata used for registering the anchor transaction on chain.
  * @param context - The context information for the request (without type field)
  * @param credentialStatements - The credential statements being requested
  * @param anchorPublicInfo - Optional public information to include in the anchor
@@ -398,8 +394,7 @@ export function fromJSON(json: JSON): VerificationRequestV1 {
  */
 export async function createAndAnchor(
     grpc: ConcordiumGRPCClient,
-    sender: AccountAddress.Type,
-    signer: AccountSigner,
+    { sender, sequenceNumber, signer }: AnchorTransactionMetadata,
     context: Omit<Context, 'type'>,
     credentialStatements: Statement[],
     anchorPublicInfo?: Record<string, any>
@@ -407,10 +402,10 @@ export async function createAndAnchor(
     const requestContext = createContext(context);
     const anchor = createAnchor(requestContext, credentialStatements, anchorPublicInfo);
 
-    const nextNonce: NextAccountNonce = await grpc.getNextAccountNonce(sender);
+    const nonce: SequenceNumber.Type = sequenceNumber ?? (await grpc.getNextAccountNonce(sender)).nonce;
     const header: AccountTransactionHeader = {
         expiry: TransactionExpiry.futureMinutes(60),
-        nonce: nextNonce.nonce,
+        nonce,
         sender,
     };
     const payload: RegisterDataPayload = { data: new DataBlob(anchor) };

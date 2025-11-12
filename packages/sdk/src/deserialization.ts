@@ -3,7 +3,9 @@ import { Cursor } from './deserializationHelpers.js';
 import {
     AccountTransaction,
     AccountTransactionHeader,
+    AccountTransactionPayload,
     AccountTransactionSignature,
+    AccountTransactionType,
     isAccountTransactionType,
 } from './types.js';
 import * as AccountAddress from './types/AccountAddress.js';
@@ -36,7 +38,13 @@ function deserializeMap<K extends string | number | symbol, T>(
     return result;
 }
 
-function deserializeAccountTransactionSignature(signatures: Cursor): AccountTransactionSignature {
+/**
+ * Deserializes account transaction signatures from a cursor.
+ *
+ * @param signatures - The cursor containing the serialized signature data.
+ * @returns A map of credential indexes to credential signatures, where each credential signature maps key indexes to signature hex strings.
+ */
+export function deserializeAccountTransactionSignature(signatures: Cursor): AccountTransactionSignature {
     const decodeSignature = (serialized: Cursor) => {
         const length = serialized.read(2).readUInt16BE(0);
         return serialized.read(length).toString('hex');
@@ -46,7 +54,13 @@ function deserializeAccountTransactionSignature(signatures: Cursor): AccountTran
     return deserializeMap(signatures, deserializeUint8, deserializeUint8, decodeCredentialSignatures);
 }
 
-function deserializeTransactionHeader(serializedHeader: Cursor): AccountTransactionHeader {
+/**
+ * Deserializes an account transaction header from a cursor.
+ *
+ * @param serializedHeader - The cursor containing the serialized header data.
+ * @returns The deserialized account transaction header containing sender, nonce, and expiry.
+ */
+export function deserializeAccountTransactionHeader(serializedHeader: Cursor): AccountTransactionHeader {
     const sender = AccountAddress.fromBuffer(serializedHeader.read(32));
     const nonce = AccountSequenceNumber.create(serializedHeader.read(8).readBigUInt64BE(0));
     // TODO: extract payloadSize and energyAmount?
@@ -62,24 +76,44 @@ function deserializeTransactionHeader(serializedHeader: Cursor): AccountTransact
     };
 }
 
+/**
+ * Deserializes an account transaction payload from a cursor.
+ *
+ * @param value - The cursor containing the serialized payload data.
+ * @returns An object containing the transaction type and the deserialized payload.
+ * @throws {Error} If the transaction type is not valid.
+ */
+export function deserializeAccountTransactionPayload(value: Cursor): {
+    type: AccountTransactionType;
+    payload: AccountTransactionPayload;
+} {
+    const type = deserializeUint8(value);
+    if (!isAccountTransactionType(type)) {
+        throw new Error('TransactionType is not a valid value: ' + type);
+    }
+
+    const accountTransactionHandler = getAccountTransactionHandler(type);
+    const payload = accountTransactionHandler.deserialize(value);
+    return { type, payload };
+}
+
+/**
+ * Deserializes a complete account transaction from a cursor.
+ *
+ * @param serializedTransaction - The cursor containing the serialized transaction data.
+ * @returns An object containing the deserialized account transaction and its signatures.
+ */
 export function deserializeAccountTransaction(serializedTransaction: Cursor): {
     accountTransaction: AccountTransaction;
     signatures: AccountTransactionSignature;
 } {
     const signatures = deserializeAccountTransactionSignature(serializedTransaction);
-
-    const header = deserializeTransactionHeader(serializedTransaction);
-
-    const transactionType = deserializeUint8(serializedTransaction);
-    if (!isAccountTransactionType(transactionType)) {
-        throw new Error('TransactionType is not a valid value: ' + transactionType);
-    }
-    const accountTransactionHandler = getAccountTransactionHandler(transactionType);
-    const payload = accountTransactionHandler.deserialize(serializedTransaction);
+    const header = deserializeAccountTransactionHeader(serializedTransaction);
+    const { type, payload } = deserializeAccountTransactionPayload(serializedTransaction);
 
     return {
         accountTransaction: {
-            type: transactionType,
+            type,
             payload,
             header,
         },

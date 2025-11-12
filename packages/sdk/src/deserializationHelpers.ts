@@ -57,6 +57,21 @@ export class Cursor {
         return data;
     }
 
+    /**
+     * Read a number of bytes from the cursor without advancing the internal pointer.
+     *
+     * @param {number} [numBytes=this.remainingBytes.length] - The number of bytes to read. Defaults to the remaining bytes from the cursor position.
+     * @returns {Buffer} A buffer containing the number of bytes specified from the cursor position
+     * @throws If the buffer contains fewer bytes than being read.
+     */
+    public peek(numBytes: number = this.remainingBytes.length): Buffer {
+        const end = this.cursor + numBytes;
+        if (this.data.length < end) {
+            throw new Error(`Failed to read ${numBytes} bytes from the cursor.`);
+        }
+        return Buffer.from(this.data.subarray(this.cursor, end));
+    }
+
     /** The remaining bytes, i.e. not including the bytes already read. */
     public get remainingBytes(): Buffer {
         return Buffer.from(this.data.subarray(this.cursor));

@@ -1,14 +1,27 @@
 import { Buffer } from 'buffer/index.js';
 
-import { serializeAccountTransactionHeader, serializeAccountTransactionPayload } from '../serialization.js';
-import { SerializationSpec, encodeWord16, getBitmap, orUndefined, serializeFromSpec } from '../serializationHelpers.js';
+import { deserializeAccountTransactionPayload, deserializeAccountTransactionSignature } from '../deserialization.ts';
+import { Cursor } from '../deserializationHelpers.js';
+import {
+    serializeAccountTransactionHeader,
+    serializeAccountTransactionPayload,
+    serializeAccountTransactionSignature,
+} from '../serialization.js';
+import {
+    SerializationSpec,
+    encodeWord8,
+    encodeWord16,
+    getBitmap,
+    orUndefined,
+    serializeFromSpec,
+} from '../serializationHelpers.js';
 import {
     type AccountTransactionHeader,
     type AccountTransactionPayload,
     type AccountTransactionSignature,
     type AccountTransactionType,
 } from '../types.js';
-import { AccountAddress, type Energy } from '../types/index.js';
+import { AccountAddress, Energy, SequenceNumber, TransactionExpiry } from '../types/index.js';
 
 // Data that is currently missing on `AccountTransactionHeader`.
 type MissingHeaderData = {
@@ -90,6 +103,19 @@ export function serializeHeader({ sponsor, ...v0 }: Header): Uint8Array {
 }
 
 /**
+ * Serializes the signatures for a V1 account transaction, including sender and optional sponsor signatures.
+ *
+ * @param signatures - The sender and optional sponsor signatures to serialize.
+ * @returns The serialized signatures as a Uint8Array.
+ */
+export function serializeSignatures(signatures: Signatures): Uint8Array {
+    const sender = serializeAccountTransactionSignature(signatures.sender);
+    const sponsor =
+        signatures.sponsor !== undefined ? serializeAccountTransactionSignature(signatures.sponsor) : encodeWord8(0);
+    return Buffer.concat([sender, sponsor]);
+}
+
+/**
  * Serializes the payload of a V1 account transaction.
  */
 export const serializePayload = serializeAccountTransactionPayload;
@@ -104,4 +130,105 @@ export function serialize(transaction: AccountTransactionV1): Uint8Array {
     const header = serializeHeader(transaction.header);
     const payload = serializePayload(transaction);
     return Buffer.concat([header, payload]);
+}
+
+const SPONSOR_MASK = 0x0001;
+const VALIDATION_MASK = 0xffff - SPONSOR_MASK;
+
+function deserializeBitmap(cursor: Cursor): number {
+    const bitmap = cursor.read(2).readUInt16BE(0);
+    if ((bitmap & VALIDATION_MASK) !== 0) throw new Error('Found unsupported bits in bitmap');
+    return bitmap;
+}
+
+// TODO: replace with `deserializeTransactionHeader` when `AccountTransactionHeader` includes the
+// necessary information
+function deserializeV0Header(cursor: Cursor): AccountTransactionHeader & MissingHeaderData {
+    const sender = AccountAddress.fromBuffer(cursor.read(32));
+    const nonce = SequenceNumber.create(cursor.read(8).readBigUInt64BE(0));
+    const energyAmount = Energy.create(cursor.read(8).readBigUInt64BE(0));
+    const payloadSize = cursor.read(4).readUInt32BE(0);
+    const expiry = TransactionExpiry.fromEpochSeconds(cursor.read(8).readBigUInt64BE(0));
+    return {
+        sender,
+        nonce,
+        expiry,
+        energyAmount,
+        payloadSize,
+    };
+}
+
+function deserializeHeaderOptions(cursor: Cursor, bitmap: number): HeaderOptionals {
+    const optionals: HeaderOptionals = {};
+
+    const hasSponsor = Boolean(bitmap & SPONSOR_MASK);
+    if (hasSponsor) optionals.sponsor = AccountAddress.fromBuffer(cursor.read(32));
+
+    return optionals;
+}
+
+/**
+ * Deserializes a V1 account transaction header from a buffer or cursor.
+ *
+ * @param value - The buffer or cursor containing the serialized header data.
+ * @returns The deserialized V1 transaction header, including base fields and optional extensions.
+ * @throws {Error} If the invoked with a buffer which is not fully consumed during deserialization.
+ */
+export function deserializeHeader(value: Cursor | ArrayBuffer): Header {
+    const isRawBuffer = value instanceof Cursor;
+    const cursor = isRawBuffer ? value : Cursor.fromBuffer(value);
+
+    const bitmap = deserializeBitmap(cursor);
+    const v0Header = deserializeV0Header(cursor);
+    const options = deserializeHeaderOptions(cursor, bitmap);
+
+    if (isRawBuffer && cursor.remainingBytes.length !== 0)
+        throw new Error('Deserializing the transaction did not exhaust the buffer');
+
+    return { ...v0Header, ...options };
+}
+
+/**
+ * Deserializes the signatures for a V1 account transaction from a buffer or cursor.
+ *
+ * @param value - The buffer or cursor containing the serialized signatures data.
+ * @returns The deserialized sender and optional sponsor signatures.
+ * @throws {Error} If the invoked with a buffer which is not fully consumed during deserialization.
+ */
+export function deserializeSignatures(value: Cursor | ArrayBuffer): Signatures {
+    const isRawBuffer = value instanceof Cursor;
+    const cursor = isRawBuffer ? value : Cursor.fromBuffer(value);
+
+    const sender = deserializeAccountTransactionSignature(cursor);
+    const hasSponsor = Boolean(cursor.peek(1).readUInt8(0));
+    const sponsor = hasSponsor ? deserializeAccountTransactionSignature(cursor) : undefined;
+
+    if (isRawBuffer && cursor.remainingBytes.length !== 0)
+        throw new Error('Deserializing the transaction did not exhaust the buffer');
+
+    return { sender, sponsor };
+}
+
+/**
+ * Deserializes a complete V1 account transaction from a buffer or cursor.
+ *
+ * @param value - The buffer or cursor containing the serialized transaction data.
+ * @returns An object containing the deserialized signatures and transaction.
+ * @throws {Error} If the invoked with a buffer which is not fully consumed during deserialization.
+ */
+export function deserialize(value: Cursor | ArrayBuffer): {
+    signatures: Signatures;
+    transaction: AccountTransactionV1;
+} {
+    const isRawBuffer = value instanceof Cursor;
+    const cursor = isRawBuffer ? value : Cursor.fromBuffer(value);
+
+    const signatures = deserializeSignatures(cursor);
+    const header = deserializeHeader(cursor);
+    const { type, payload } = deserializeAccountTransactionPayload(cursor);
+
+    if (isRawBuffer && cursor.remainingBytes.length !== 0)
+        throw new Error('Deserializing the transaction did not exhaust the buffer');
+
+    return { signatures, transaction: { header, type, payload } };
 }

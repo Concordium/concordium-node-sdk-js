@@ -45,7 +45,7 @@ function serializeAccountTransactionType(type: AccountTransactionType): Buffer {
  * @param energyAmount dedicated amount of energy for this transaction, if it is insufficient, the transaction will fail
  * @returns the serialized account transaction header
  */
-function serializeAccountTransactionHeader(
+export function serializeAccountTransactionHeader(
     header: AccountTransactionHeader,
     payloadSize: number,
     energyAmount: Energy.Type

@@ -4,19 +4,26 @@ import {
     type AccountTransactionSignature,
     type AccountTransactionType,
 } from '../types.js';
-import { type AccountAddress } from '../types/index.js';
+import { type AccountAddress, type Energy } from '../types/index.js';
+
+// Data that is currently missing on `AccountTransactionHeader`.
+type MissingHeaderData = {
+    payloadSize: number;
+    energyAmount: Energy.Type;
+};
 
 /**
  * Describes the V1 account transaction header, which is an extension of {@linkcode AccountTransactionHeader}
  * defining extra optional fields.
  */
-export type Header = AccountTransactionHeader & {
-    /**
-     * An optional sponsor account for the transaction, which will pay for the transaction fee
-     * associated with the transaction execution.
-     */
-    sponsor?: AccountAddress.Type;
-};
+export type Header = AccountTransactionHeader &
+    MissingHeaderData & {
+        /**
+         * An optional sponsor account for the transaction, which will pay for the transaction fee
+         * associated with the transaction execution.
+         */
+        sponsor?: AccountAddress.Type;
+    };
 
 /**
  * The signatures for {@linkcode AccountTransactionV1}.

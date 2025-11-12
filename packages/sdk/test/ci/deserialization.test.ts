@@ -83,24 +83,7 @@ function deserializeAccountTransactionBase(
         throw new Error('Incorrect BlockItemKind');
     }
 
-    //if we are no comparing InitContract and Update, we can just compare the expected payload and resulting payload here
-    //as we won't be having energy related field from the header
-    if (deserialized.kind == BlockItemKind.AccountTransactionKind) {
-        const transactionType = deserialized.transaction.accountTransaction.type;
-        if (
-            transactionType !== AccountTransactionType.InitContract &&
-            transactionType !== AccountTransactionType.Update
-        ) {
-            expect(deserialized.transaction.accountTransaction.payload).toEqual(payload);
-        }
-    } else {
-        //as we are here, we are going to be comparing for InitContract or Update
-        //we read the header and obtain the energy related field which is the calculated cost,
-        // so expected payload won't have the same energy as resulting payload, as expected payload would only be a given energy cost
-        // or a base cost manually inserted
-        expect(deserialized.transaction.accountTransaction.type).toEqual(transaction.type);
-        expect(deserialized.transaction.signatures).toEqual(signatures);
-    }
+    expect(deserialized.transaction.accountTransaction.payload).toEqual(payload);
 }
 
 test('test deserialize simpleTransfer ', () => {

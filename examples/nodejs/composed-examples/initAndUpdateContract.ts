@@ -94,6 +94,8 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
         expiry: TransactionExpiry.futureMinutes(60),
         nonce: (await client.getNextAccountNonce(sender)).nonce,
         sender,
+        energyAmount: maxCost,
+        payloadSize: 1,  //TODO: hardcoding this to 1, is it ok?
     };
 
     const initParams = serializeInitContractParameters(contractName, sunnyWeather, schema!.buffer);
@@ -145,6 +147,8 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
         expiry: TransactionExpiry.futureMinutes(60),
         nonce: (await client.getNextAccountNonce(sender)).nonce,
         sender,
+        energyAmount: maxCost,
+        payloadSize: 1,   //TODO: hardcoding this to 1, is this ok?
     };
 
     const updateParams = serializeUpdateContractParameters(

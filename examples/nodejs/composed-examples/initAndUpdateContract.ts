@@ -95,7 +95,7 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
         nonce: (await client.getNextAccountNonce(sender)).nonce,
         sender,
         energyAmount: maxCost, //hardcoding this to maxCost for the purpose of this example
-        payloadSize: 1,  // hardcoding this to 1 for the purpose of this example
+        payloadSize: 1, // hardcoding this to 1 for the purpose of this example
     };
 
     const initParams = serializeInitContractParameters(contractName, sunnyWeather, schema!.buffer);
@@ -148,7 +148,7 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
         nonce: (await client.getNextAccountNonce(sender)).nonce,
         sender,
         energyAmount: maxCost, //hardcoding this to maxCost for the purpose of this example
-        payloadSize: 1,   //hardcoding this to 1 for the purpose of this example
+        payloadSize: 1, //hardcoding this to 1 for the purpose of this example
     };
 
     const updateParams = serializeUpdateContractParameters(

@@ -180,8 +180,7 @@ const signer: Signer = ...;
 // create the verification request with an on-chain anchor, which can be checked by the owner of the credentials.
 const verificationRequest = await VerificationRequestV1.createAndAnchor(
     grpcClient,
-    sender,
-    signer,
+    { sender, signer }
     context,
     statement
 );
@@ -250,5 +249,5 @@ const uuid: string = ...;
 // Verify the presentation in the context of the verification request and create the audit record.
 const record = VerificationAuditRecordV1.createChecked(uuid, verificationRequest, presentation, grpcClient, network);
 // Register the verification audit anchor on the chain
-const anchorTransactionHash = await VerificationAuditRecordV1.registerAnchor(record, grpcClient, sender, signer);
+const anchorTransactionHash = await VerificationAuditRecordV1.registerAnchor(record, grpcClient, { sender, signer });
 ```

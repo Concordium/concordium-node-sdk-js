@@ -132,7 +132,7 @@ const statements = VerificationRequestV1.statementBuilder()
         b.revealAttribute('firstName');
     })
     .getStatements();
-const verificationRequest = await VerificationRequestV1.createAndAnchor(grpc, sender, signer, context, statements, {
+const verificationRequest = await VerificationRequestV1.createAndAnchor(grpc, { sender, signer }, context, statements, {
     info: 'Example VP anchor',
 });
 
@@ -205,9 +205,14 @@ const result = await VerificationAuditRecordV1.createChecked(
 );
 
 if (result.type === 'failed') throw new Error(`Failed to verify presentation: ${result.error}`);
-const auditTransaction = await VerificationAuditRecordV1.registerAnchor(result.result, grpc, sender, signer, {
-    info: 'Some public info',
-});
+const auditTransaction = await VerificationAuditRecordV1.registerAnchor(
+    result.result,
+    grpc,
+    { sender, signer },
+    {
+        info: 'Some public info',
+    }
+);
 
 console.log('Waiting for verification audit report registration to finalize:', auditTransaction.toString());
 await grpc.waitForTransactionFinalization(auditTransaction);

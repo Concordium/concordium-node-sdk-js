@@ -1,6 +1,7 @@
 import { Buffer } from 'buffer/index.js';
 
-import { BlockHash } from '../../types/index.js';
+import { AccountSigner } from '../../signHelpers.js';
+import { AccountAddress, BlockHash, SequenceNumber } from '../../types/index.js';
 import type { CredentialContextLabel, GivenContext } from './types.js';
 
 /**
@@ -77,3 +78,18 @@ export function givenContextFromJSON(context: GivenContextJSON): GivenContext {
             return context as GivenContext;
     }
 }
+
+export type AnchorTransactionMetadata = {
+    /**
+     * The sender account of the anchor transaction.
+     */
+    sender: AccountAddress.Type;
+    /**
+     * The signer object used to sign the on-chain anchor registration. This must correspond to the `sender` account.
+     */
+    signer: AccountSigner;
+    /**
+     * The sequence number for the sender account to use. If this is not defined it will be fetched from the node.
+     */
+    sequenceNumber?: SequenceNumber.Type;
+};

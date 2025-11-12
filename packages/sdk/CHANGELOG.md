@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Breaking changes
+
+- `VerificationRequestV1.createAndAnchor` and `VerificationAuditRecordV1.registerAnchor` now also allows for 
+  specififying a sequence number to use for the transaction.
+  The function signature has been changed to take "transaction metadata" as an object, which now includes the
+  the transaction `sender` and `signer`, in addition to an optional `sequenceNumber`.
+
 ## 11.1.0-alpha.3
 
 ### Fixed

@@ -4,28 +4,27 @@ import _JB from 'json-bigint';
 import { ConcordiumGRPCClient } from '../../grpc/index.js';
 import { sha256 } from '../../hash.js';
 import { AtomicStatementV2, CredentialStatus, attributeTypeEquals } from '../../index.js';
-import { AccountSigner, signTransaction } from '../../signHelpers.js';
+import { signTransaction } from '../../signHelpers.js';
 import {
     AccountTransaction,
     AccountTransactionHeader,
     AccountTransactionType,
     Network,
-    NextAccountNonce,
     RegisterDataPayload,
     TransactionStatusEnum,
 } from '../../types.js';
 import { cborDecode, cborEncode } from '../../types/cbor.js';
 import {
-    AccountAddress,
     BlockHash,
     CredentialRegistrationId,
     DataBlob,
+    SequenceNumber,
     TransactionExpiry,
     TransactionHash,
 } from '../../types/index.js';
 import { bail } from '../../util.js';
 import { VerifiablePresentationV1, VerificationRequestV1 } from './index.js';
-import { contextEquals } from './internal.js';
+import { AnchorTransactionMetadata, contextEquals } from './internal.js';
 import { AccountClaims, IdentityClaims, VerificationResult, isAccountClaims } from './proof.js';
 
 const JSONBig = _JB({ alwaysParseAsBig: true, useNativeBigInt: true });
@@ -464,8 +463,7 @@ export function decodeAnchor(cbor: Uint8Array): AnchorData {
  *
  * @param record - The audit record to register publicly
  * @param grpc - The Concordium GRPC client for blockchain interaction
- * @param sender - The account address that will send the transaction
- * @param signer - The signer for the transaction
+ * @param anchorTransactionMetadata - The metadata used for registering the anchor transaction on chain.
  * @param info - Optional additional public information to include
  *
  * @returns Promise resolving to the transaction hash
@@ -474,14 +472,13 @@ export function decodeAnchor(cbor: Uint8Array): AnchorData {
 export async function registerAnchor(
     record: VerificationAuditRecordV1,
     grpc: ConcordiumGRPCClient,
-    sender: AccountAddress.Type,
-    signer: AccountSigner,
+    { sender, sequenceNumber, signer }: AnchorTransactionMetadata,
     info?: Record<string, any>
 ): Promise<TransactionHash.Type> {
-    const nextNonce: NextAccountNonce = await grpc.getNextAccountNonce(sender);
+    const nonce: SequenceNumber.Type = sequenceNumber ?? (await grpc.getNextAccountNonce(sender)).nonce;
     const header: AccountTransactionHeader = {
         expiry: TransactionExpiry.futureMinutes(60),
-        nonce: nextNonce.nonce,
+        nonce,
         sender,
     };
 

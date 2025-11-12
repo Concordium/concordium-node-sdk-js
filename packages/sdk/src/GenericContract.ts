@@ -61,7 +61,7 @@ export type ContractInvokeMetadata = {
 /**
  * Metadata necessary for creating a {@link UpdateTransaction}
  */
-export type CreateContractTransactionMetadata = Pick<ContractTransactionMetadata, 'amount' | 'energy'>;
+export type CreateContractTransactionMetadata = Pick<ContractTransactionMetadata, 'amount'>;
 
 /**
  * Holds either a contract module schema, or the schema for a single parameters of a contract entrypoint

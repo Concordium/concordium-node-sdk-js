@@ -6,6 +6,7 @@ import { AccountSigner, signTransaction } from './signHelpers.js';
 import {
     AccountTransactionType,
     Base64String,
+    ContractContext,
     HexString,
     InstanceInfo,
     InvokeContractResult,
@@ -406,19 +407,40 @@ class ContractBase<E extends string = string, V extends string = string> {
         signer: AccountSigner
     ): Promise<TransactionHash.Type> {
         const { nonce } = await this.grpcClient.getNextAccountNonce(senderAddress);
-        const { dryRunEnergy } = await this.grpcClient.invokeContract(). //TODO: I am stuck here at the moment, will talk to Soren
 
-        const header = {
+        /*
+        export interface ContractContext {
+            invoker?: ContractAddress.Type | AccountAddress.Type;
+            contract: ContractAddress.Type;
+            amount?: CcdAmount.Type;
+            method: ReceiveName.Type;
+            parameter?: Parameter.Type;
+            energy?: Energy.Type;
+        }
+        */
+       const context: ContractContext = {
+        method: transactionBase.payload.receiveName,
+        contract: transactionBase.payload.address,
+       }
+       //TODO: Will double check with Soren about this bit, I am not 100 percent sure about the params below, context and block hash
+       const result = await this.grpcClient.invokeContract(context, undefined); 
+
+       if(result.tag === 'failure') {        
+        throw new Error(`unable to invoke contract: ${result.reason}`);
+       }
+    
+       const header = {
             expiry,
             nonce: nonce,
             sender: senderAddress,
         };
         
         const handler = getAccountTransactionHandler(AccountTransactionType.Update);
-        const transaction = handler.create(header, transactionBase.payload, dryRunEnergy);
+        const transaction = handler.create(header, transactionBase.payload, result.usedEnergy);
 
         const signature = await signTransaction(transaction, signer);
         return this.grpcClient.sendAccountTransaction(transaction, signature);
+    
     }
 
     /**

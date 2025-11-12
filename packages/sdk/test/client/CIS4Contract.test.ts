@@ -4,7 +4,6 @@ import {
     CIS4,
     CIS4Contract,
     ContractAddress,
-    Energy,
     Parameter,
     Timestamp,
     Web3IdSigner,

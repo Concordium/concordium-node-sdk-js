@@ -6,7 +6,6 @@ import {
     CIS3,
     CIS3Contract,
     ContractAddress,
-    Energy,
     EntrypointName,
     Parameter,
     Timestamp,

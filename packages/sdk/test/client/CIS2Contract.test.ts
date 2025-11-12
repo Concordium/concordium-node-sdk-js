@@ -4,7 +4,6 @@ import {
     BlockHash,
     CIS2Contract,
     ContractAddress,
-    Energy,
     EntrypointName,
     Parameter,
     ReceiveName,

@@ -111,6 +111,12 @@ export function serializeAccountTransaction(
     signatures: AccountTransactionSignature
 ): Buffer;
 
+export function serializeAccountTransaction(
+    accountTransaction: AccountTransaction,
+    signatures: AccountTransactionSignature,
+    givenEnergy?: Energy.Type
+): Buffer;
+
 /**
  * Serializes a transaction and its signatures. This serialization when sha256 hashed
  * is considered as the transaction hash, and is used to look up the status of a
@@ -199,23 +205,7 @@ export function getAccountTransactionHash(
     signatures: AccountTransactionSignature,
     givenEnergy?: Energy.Type
 ): string {
-    let serializedAccountTransaction;
-    if (
-        accountTransaction.type === AccountTransactionType.Update ||
-        accountTransaction.type === AccountTransactionType.InitContract
-    ) {
-        if (givenEnergy === undefined) throw new Error('need to specify energy for contract transactions');
-        serializedAccountTransaction = serializeAccountTransaction(
-            accountTransaction as AccountTransaction<InitUpdateType, InitUpdatePayload>,
-            signatures,
-            givenEnergy
-        );
-    } else {
-        serializedAccountTransaction = serializeAccountTransaction(
-            accountTransaction as AccountTransaction<OtherType, OtherPayload>,
-            signatures
-        );
-    }
+    const serializedAccountTransaction = serializeAccountTransaction(accountTransaction, signatures);
 
     return sha256([serializedAccountTransaction]).toString('hex');
 }
@@ -274,26 +264,7 @@ export function serializeAccountTransactionForSubmission(
     signatures: AccountTransactionSignature,
     givenEnergy?: Energy.Type
 ): Buffer {
-    let serializedAccountTransaction;
-
-    if (
-        accountTransaction.type === AccountTransactionType.Update ||
-        accountTransaction.type === AccountTransactionType.InitContract
-    ) {
-        if (givenEnergy === undefined) throw new Error('need to specify energy for contract transactions');
-
-        serializedAccountTransaction = serializeAccountTransaction(
-            accountTransaction as AccountTransaction<InitUpdateType, InitUpdatePayload>,
-            signatures,
-            givenEnergy
-        );
-    } else {
-        serializedAccountTransaction = serializeAccountTransaction(
-            accountTransaction as AccountTransaction<OtherType, OtherPayload>,
-            signatures
-        );
-    }
-
+    const serializedAccountTransaction = serializeAccountTransaction(accountTransaction, signatures, givenEnergy);
     const serializedVersion = encodeWord8(0);
     return Buffer.concat([serializedVersion, serializedAccountTransaction]);
 }

@@ -26,6 +26,8 @@ import * as ReceiveName from './types/ReceiveName.js';
 import * as ReturnValue from './types/ReturnValue.js';
 import * as TransactionExpiry from './types/TransactionExpiry.js';
 import * as TransactionHash from './types/TransactionHash.js';
+import { getAccountTransactionHandler } from './accountTransactions.ts';
+import { DryRunErrorResponse } from './grpc-api/v2/concordium/types.ts';
 
 /**
  * Metadata necessary for smart contract transactions
@@ -404,15 +406,17 @@ class ContractBase<E extends string = string, V extends string = string> {
         signer: AccountSigner
     ): Promise<TransactionHash.Type> {
         const { nonce } = await this.grpcClient.getNextAccountNonce(senderAddress);
+        const { dryRunEnergy } = await this.grpcClient.invokeContract(). //TODO: I am stuck here at the moment, will talk to Soren
+
         const header = {
             expiry,
             nonce: nonce,
             sender: senderAddress,
         };
-        const transaction = {
-            ...transactionBase,
-            header,
-        };
+        
+        const handler = getAccountTransactionHandler(AccountTransactionType.Update);
+        const transaction = handler.create(header, transactionBase.payload, dryRunEnergy);
+
         const signature = await signTransaction(transaction, signer);
         return this.grpcClient.sendAccountTransaction(transaction, signature);
     }

@@ -2,7 +2,7 @@ import { Buffer } from 'buffer/index.js';
 
 import { Cursor } from './deserializationHelpers.js';
 import { Cbor, TokenId, TokenOperationType } from './plt/index.js';
-import { ContractAddress, ContractName, Energy, ModuleReference } from './pub/types.js';
+import { AccountTransaction, ContractAddress, ContractName, Energy, ModuleReference, UpdateType } from './pub/types.js';
 import { serializeCredentialDeploymentInfo } from './serialization.js';
 import {
     encodeDataBlob,
@@ -17,6 +17,7 @@ import {
     serializeList,
 } from './serializationHelpers.js';
 import {
+    AccountTransactionHeader,
     AccountTransactionPayload,
     AccountTransactionType,
     BakerKeysWithProofs,
@@ -51,6 +52,11 @@ export interface AccountTransactionHandler<
     PayloadType extends AccountTransactionPayload = AccountTransactionPayload,
     JSONType = PayloadType,
 > {
+    create(
+        metadata: TransactionMetadata, 
+        payload: PayloadType
+    ): AccountTransaction;
+
     /**
      * Serializes the payload to a buffer.
      * This does NOT include the serialized transaction type. To have this included, use {@linkcode serializeAccountTransactionPayload} instead.
@@ -99,6 +105,27 @@ export interface SimpleTransferPayloadJSON {
 export class SimpleTransferHandler
     implements AccountTransactionHandler<SimpleTransferPayload, SimpleTransferPayloadJSON>
 {
+    create(
+        metadata: TransactionMetadata,
+        payload: SimpleTransferPayload
+    ): AccountTransaction<AccountTransactionType.Transfer, SimpleTransferPayload> {
+        const { sender, nonce, expiry } = metadata;
+
+        // construct the transaction, deriving the payload size.
+        // set the initial energyAmount using base, once it goes to serializeAccountTransaction function, there will be some calculations using signatures and payload size
+        return {
+            type: AccountTransactionType.Transfer,
+            header: {
+                sender: sender,
+                nonce: nonce,
+                expiry: expiry,
+                energyAmount: Energy.create(this.getBaseEnergyCost()), 
+                payloadSize: this.serialize(payload).length, //derive the payload size from the Buffer
+            },
+            payload: payload,
+        };
+    }
+
     getBaseEnergyCost(): bigint {
         return 300n;
     }
@@ -141,6 +168,27 @@ export class SimpleTransferWithMemoHandler
     extends SimpleTransferHandler
     implements AccountTransactionHandler<SimpleTransferWithMemoPayload, SimpleTransferWithMemoPayloadJSON>
 {
+    create(
+        metadata: TransactionMetadata,
+        payload: SimpleTransferWithMemoPayload
+    ): AccountTransaction<AccountTransactionType.Transfer, SimpleTransferWithMemoPayload> {
+        const { sender, nonce, expiry } = metadata;
+
+        // construct the transaction, deriving the payload size.
+        // set the initial energyAmount using base, once it goes to serializeAccountTransaction function, there will be some calculations using signatures and payload size
+        return {
+            type: AccountTransactionType.Transfer,
+            header: {
+                sender: sender,
+                nonce: nonce,
+                expiry: expiry,
+                energyAmount: Energy.create(this.getBaseEnergyCost()), 
+                payloadSize: this.serialize(payload).length, //derive the payload size from the Buffer
+            },
+            payload: payload,
+        };
+    }
+
     serialize(transfer: SimpleTransferWithMemoPayload): Buffer {
         const serializedToAddress = AccountAddress.toBuffer(transfer.toAddress);
         const serializedMemo = encodeDataBlob(transfer.memo);
@@ -183,6 +231,27 @@ export interface DeployModulePayloadJSON {
 }
 
 export class DeployModuleHandler implements AccountTransactionHandler<DeployModulePayload, DeployModulePayloadJSON> {
+
+    create(
+        metadata: TransactionMetadata,
+        payload: DeployModulePayload
+    ): AccountTransaction<AccountTransactionType.DeployModule, DeployModulePayload> {
+        const { sender, nonce, expiry } = metadata;
+
+        // construct the transaction, deriving the payload size.
+        return {
+            type: AccountTransactionType.DeployModule,
+            header: {
+                sender: sender,
+                nonce: nonce,
+                expiry: expiry,
+                energyAmount: Energy.create(this.getBaseEnergyCost(payload)), 
+                payloadSize: this.serialize(payload).length, //derive the payload size from the Buffer
+            },
+            payload: payload,
+        };
+    }
+
     getBaseEnergyCost(payload: DeployModulePayload): bigint {
         let length = payload.source.byteLength;
         if (payload.version === undefined) {
@@ -246,6 +315,27 @@ export interface InitContractPayloadJSON {
 }
 
 export class InitContractHandler implements AccountTransactionHandler<InitContractPayload, InitContractPayloadJSON> {
+
+    create(
+        metadata: TransactionMetadata,
+        payload: InitContractPayload
+    ): AccountTransaction<AccountTransactionType.InitContract, InitContractPayload> {
+        const { sender, nonce, expiry } = metadata;
+
+        // construct the transaction, deriving the payload size.
+        return {
+            type: AccountTransactionType.InitContract,
+            header: {
+                sender: sender,
+                nonce: nonce,
+                expiry: expiry,
+                energyAmount: Energy.create(this.getBaseEnergyCost(payload)), 
+                payloadSize: this.serialize(payload).length, //derive the payload size from the Buffer
+            },
+            payload: payload,
+        };
+    }
+
     getBaseEnergyCost(payload: InitContractPayload): bigint {
         return payload.maxContractExecutionEnergy.value;
     }
@@ -310,9 +400,32 @@ export interface UpdateContractPayloadJSON {
     message: HexString;
 }
 
+export type TransactionMetadata = Pick<AccountTransactionHeader, 'sender' | 'nonce' | 'expiry'>;
+
 export class UpdateContractHandler
     implements AccountTransactionHandler<UpdateContractPayload, UpdateContractPayloadJSON>
 {
+    create(
+        metadata: TransactionMetadata,
+        payload: UpdateContractPayload,
+        givenEnergy: Energy.Type
+    ): AccountTransaction<AccountTransactionType.Update, UpdateContractPayload> {
+        const { sender, nonce, expiry } = metadata;
+
+        // construct the transaction, deriving the payload size.
+        return {
+            type: AccountTransactionType.Update,
+            header: {
+                sender: sender,
+                nonce: nonce,
+                expiry: expiry,
+                energyAmount: givenEnergy,
+                payloadSize: this.serialize(payload).length, //derive the payload size from the Buffer
+            },
+            payload: payload,
+        };
+    }
+
     getBaseEnergyCost(payload: UpdateContractPayload): bigint {
         void payload;
         return 0n;
@@ -377,8 +490,28 @@ export class UpdateContractHandler
         };
     }
 }
-
 export class UpdateCredentialsHandler implements AccountTransactionHandler<UpdateCredentialsPayload> {
+
+    create(
+        metadata: TransactionMetadata,
+        payload: UpdateCredentialsPayload
+    ): AccountTransaction<AccountTransactionType.UpdateCredentials, UpdateCredentialsPayload> {
+        const { sender, nonce, expiry } = metadata;
+
+        // construct the transaction, deriving the payload size.
+        return {
+            type: AccountTransactionType.UpdateCredentials,
+            header: {
+                sender: sender,
+                nonce: nonce,
+                expiry: expiry,
+                energyAmount: Energy.create(this.getBaseEnergyCost(payload)), 
+                payloadSize: this.serialize(payload).length, //derive the payload size from the Buffer
+            },
+            payload: payload,
+        };
+    }
+
     getBaseEnergyCost(updateCredentials: UpdateCredentialsPayload): bigint {
         const newCredentialsCost = updateCredentials.newCredentials
             .map((credential) => {
@@ -442,6 +575,27 @@ export interface RegisterDataPayloadJSON {
 }
 
 export class RegisterDataHandler implements AccountTransactionHandler<RegisterDataPayload, RegisterDataPayloadJSON> {
+
+    create(
+        metadata: TransactionMetadata,
+        payload: RegisterDataPayload
+    ): AccountTransaction<AccountTransactionType.RegisterData, RegisterDataPayload> {
+        const { sender, nonce, expiry } = metadata;
+
+        // construct the transaction, deriving the payload size.
+        return {
+            type: AccountTransactionType.RegisterData,
+            header: {
+                sender: sender,
+                nonce: nonce,
+                expiry: expiry,
+                energyAmount: Energy.create(this.getBaseEnergyCost()), 
+                payloadSize: this.serialize(payload).length, //derive the payload size from the Buffer
+            },
+            payload: payload,
+        };
+    }
+
     getBaseEnergyCost(): bigint {
         return 300n;
     }
@@ -485,6 +639,27 @@ export interface ConfigureBakerPayloadJSON {
 export class ConfigureBakerHandler
     implements AccountTransactionHandler<ConfigureBakerPayload, ConfigureBakerPayloadJSON>
 {
+
+    create(
+        metadata: TransactionMetadata,
+        payload: ConfigureBakerPayload
+    ): AccountTransaction<AccountTransactionType.ConfigureBaker, ConfigureBakerPayload> {
+        const { sender, nonce, expiry } = metadata;
+
+        // construct the transaction, deriving the payload size.
+        return {
+            type: AccountTransactionType.ConfigureBaker,
+            header: {
+                sender: sender,
+                nonce: nonce,
+                expiry: expiry,
+                energyAmount: Energy.create(this.getBaseEnergyCost(payload)), 
+                payloadSize: this.serialize(payload).length, //derive the payload size from the Buffer
+            },
+            payload: payload,
+        };
+    }
+
     getBaseEnergyCost(payload: ConfigureBakerPayload): bigint {
         if (payload.keys) {
             return 4050n;
@@ -532,6 +707,27 @@ export interface ConfigureDelegationPayloadJSON {
 export class ConfigureDelegationHandler
     implements AccountTransactionHandler<ConfigureDelegationPayload, ConfigureDelegationPayloadJSON>
 {
+
+    create(
+        metadata: TransactionMetadata,
+        payload: ConfigureDelegationPayload
+    ): AccountTransaction<AccountTransactionType.ConfigureDelegation, ConfigureDelegationPayload> {
+        const { sender, nonce, expiry } = metadata;
+
+        // construct the transaction, deriving the payload size.
+        return {
+            type: AccountTransactionType.ConfigureDelegation,
+            header: {
+                sender: sender,
+                nonce: nonce,
+                expiry: expiry,
+                energyAmount: Energy.create(this.getBaseEnergyCost()), 
+                payloadSize: this.serialize(payload).length, //derive the payload size from the Buffer
+            },
+            payload: payload,
+        };
+    }
+
     getBaseEnergyCost(): bigint {
         return 300n;
     }
@@ -575,6 +771,27 @@ export type TokenUpdatePayloadJSON = {
 };
 
 export class TokenUpdateHandler implements AccountTransactionHandler<TokenUpdatePayload, TokenUpdatePayloadJSON> {
+
+    create(
+        metadata: TransactionMetadata,
+        payload: TokenUpdatePayload
+    ): AccountTransaction<AccountTransactionType.TokenUpdate, TokenUpdatePayload> {
+        const { sender, nonce, expiry } = metadata;
+
+        // construct the transaction, deriving the payload size.
+        return {
+            type: AccountTransactionType.TokenUpdate,
+            header: {
+                sender: sender,
+                nonce: nonce,
+                expiry: expiry,
+                energyAmount: Energy.create(this.getBaseEnergyCost(payload)), 
+                payloadSize: this.serialize(payload).length, //derive the payload size from the Buffer
+            },
+            payload: payload,
+        };
+    }
+
     serialize(payload: TokenUpdatePayload): Buffer {
         const tokenId = packBufferWithWord8Length(TokenId.toBytes(payload.tokenId));
         const ops = packBufferWithWord32Length(payload.operations.bytes);

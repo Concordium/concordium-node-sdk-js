@@ -1423,10 +1423,10 @@ export interface AccountTransactionHeader {
     expiry: TransactionExpiry.Type;
 
     /** energy amount */
-    energyAmount?: Energy.Type;
+    energyAmount: Energy.Type;
 
     /** payload size */
-    payloadSize?: number;
+    payloadSize: number;
 }
 
 export interface SimpleTransferPayload {

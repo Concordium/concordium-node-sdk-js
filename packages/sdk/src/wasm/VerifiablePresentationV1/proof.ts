@@ -14,7 +14,6 @@ import {
     TransactionSummaryType,
     isKnown,
 } from '../../index.js';
-import { ConcordiumWeakLinkingProofV1 } from '../../types/VerifiablePresentation.js';
 import { bail } from '../../util.js';
 import {
     AccountCommitmentInput,
@@ -165,6 +164,19 @@ export function createContext(
 }
 
 /**
+ * A proof that establishes that the owner of the credential has indeed created
+ * the presentation. At present this is a list of signatures.
+ */
+export type WeakLinkingProof = {
+    /** When the statement was created, serialized as an ISO string */
+    created: string;
+    /** The proof value */
+    proofValue: string;
+    /** The proof type */
+    type: 'ConcordiumWeakLinkingProofV1';
+};
+
+/**
  * A verifiable presentation containing zero-knowledge proofs of credential statements.
  * This class represents a complete response to a verifiable presentation request,
  * including the context, credentials, and cryptographic proofs.
@@ -175,13 +187,12 @@ class VerifiablePresentationV1 {
      *
      * @param presentationContext - The complete context for this presentation
      * @param verifiableCredential - Array of verifiable credentials with proofs
-     * @param proof - Optional weak linking proof (required for account-based credentials)
+     * @param proof - Weak linking proof
      */
     constructor(
         public readonly presentationContext: Context,
         public readonly verifiableCredential: VerifiableCredentialV1.Type[],
-        // only present if the verifiable credential includes an account based credential
-        public readonly proof?: ConcordiumWeakLinkingProofV1
+        public readonly proof: WeakLinkingProof
     ) {}
 
     /**
@@ -190,14 +201,12 @@ class VerifiablePresentationV1 {
      * @returns The JSON representation of this presentation
      */
     public toJSON(): JSON {
-        let json: JSON = {
+        return {
             type: ['VerifiablePresentation', 'ConcordiumVerifiablePresentationV1'],
             presentationContext: proofContextToJSON(this.presentationContext),
             verifiableCredential: this.verifiableCredential,
+            proof: this.proof,
         };
-
-        if (this.proof !== undefined) json.proof = this.proof;
-        return json;
     }
 }
 
@@ -219,7 +228,7 @@ export type JSON = {
     /** Array of verifiable credentials with their proofs */
     verifiableCredential: VerifiableCredentialV1.Type[];
     /** Optional weak linking proof for account-based credentials */
-    proof?: ConcordiumWeakLinkingProofV1;
+    proof: WeakLinkingProof;
 };
 
 /**

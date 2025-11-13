@@ -66,7 +66,7 @@ const PRESENTATION = VerifiablePresentationV1.fromJSON({
             type: ['VerifiableCredential', 'ConcordiumVerifiableCredentialV1', 'ConcordiumIdBasedCredential'],
             proof: {
                 type: 'ConcordiumZKProofV4',
-                createdAt: '2025-10-17T13:14:14.292Z',
+                created: '2025-10-17T13:14:14.292Z',
                 proofValue:
                     '01020102010201020102010201020102010201020102010201020102010201020102010201020102010201020102010201020102010201020102010201020102',
             },
@@ -82,7 +82,7 @@ const PRESENTATION = VerifiablePresentationV1.fromJSON({
             },
         },
     ],
-    proof: { created: '2025-10-17T13:14:14.290Z', proofValue: [], type: 'ConcordiumWeakLinkingProofV1' },
+    proof: { created: '2025-10-17T13:14:14.290Z', proofValue: '', type: 'ConcordiumWeakLinkingProofV1' },
 });
 
 const PRIVATE_RECORD = VerificationAuditRecordV1.create('VERY unique ID', VERIFICATION_REQUEST, PRESENTATION);
@@ -154,7 +154,7 @@ describe('VerificationAuditRecordV1', () => {
                         ],
                         proof: {
                             type: 'ConcordiumZKProofV4',
-                            createdAt: '2025-10-17T13:14:14.292Z',
+                            created: '2025-10-17T13:14:14.292Z',
                             proofValue:
                                 '01020102010201020102010201020102010201020102010201020102010201020102010201020102010201020102010201020102010201020102010201020102',
                         },
@@ -172,7 +172,7 @@ describe('VerificationAuditRecordV1', () => {
                 ],
                 proof: {
                     created: '2025-10-17T13:14:14.290Z',
-                    proofValue: [],
+                    proofValue: '',
                     type: 'ConcordiumWeakLinkingProofV1',
                 },
             });
@@ -266,7 +266,7 @@ describe('VerificationAuditRecordV1.Anchor', () => {
                         ],
                         proof: {
                             type: 'ConcordiumZKProofV4',
-                            createdAt: '2025-10-17T13:14:14.292Z',
+                            created: '2025-10-17T13:14:14.292Z',
                             proofValue:
                                 '01020102010201020102010201020102010201020102010201020102010201020102010201020102010201020102010201020102010201020102010201020102',
                         },
@@ -282,7 +282,7 @@ describe('VerificationAuditRecordV1.Anchor', () => {
                         },
                     },
                 ],
-                proof: { created: '2025-10-17T13:14:14.290Z', proofValue: [], type: 'ConcordiumWeakLinkingProofV1' },
+                proof: { created: '2025-10-17T13:14:14.290Z', proofValue: '', type: 'ConcordiumWeakLinkingProofV1' },
             });
 
             return VerificationAuditRecordV1.create('unique-audit-id-12345', presentationRequest, presentation);

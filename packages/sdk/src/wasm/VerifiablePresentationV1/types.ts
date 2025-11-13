@@ -66,9 +66,7 @@ export type ZKProofV4 = {
     /** The type identifier for this proof format */
     type: 'ConcordiumZKProofV4';
     /** ISO formatted datetime when the proof was created */
-    createdAt: string;
+    created: string;
     /** Serialized cryptographic proof data as hex string */
-    // TODO: what's going on here? why is this not a `AtomicProof[]` corresponding to the `AtomicStatement[]`
-    // in the statement being proven?
-    proofValue: HexString; // a serialization of the proof corresponding to the credential it's contained in.
+    proofValue: HexString;
 };

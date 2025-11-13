@@ -32,7 +32,7 @@
             "type": ["VerifiableCredential", "ConcordiumVerifiableCredentialV1", "ConcordiumIdBasedCredential"],
             "proof": {
                 "type": "ConcordiumZKProofV4",
-                "createdAt": "2025-10-17T13:14:14.292Z",
+                "created": "2025-10-17T13:14:14.292Z",
                 "proofValue": "01020102010201020102010201020102010201020102010201020102010201020102010201020102010201020102010201020102010201020102010201020102"
             },
             "issuer": "ccd:testnet:idp:0",
@@ -57,7 +57,7 @@
     ],
     "proof": {
         "created": "2025-10-17T13:14:14.290Z",
-        "proofValue": [],
+        "proofValue": "",
         "type": "ConcordiumWeakLinkingProofV1"
     }
 }

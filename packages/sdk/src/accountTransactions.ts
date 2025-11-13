@@ -162,19 +162,18 @@ export interface SimpleTransferWithMemoPayloadJSON extends SimpleTransferPayload
 }
 
 export class SimpleTransferWithMemoHandler
-    extends SimpleTransferHandler
     implements AccountTransactionHandler<SimpleTransferWithMemoPayload, SimpleTransferWithMemoPayloadJSON>
 {
     create(
         metadata: TransactionMetadata,
         payload: SimpleTransferWithMemoPayload
-    ): AccountTransaction<AccountTransactionType.Transfer, SimpleTransferWithMemoPayload> {
+    ): AccountTransaction<AccountTransactionType.TransferWithMemo, SimpleTransferWithMemoPayload> {
         const { sender, nonce, expiry } = metadata;
 
         // construct the transaction, deriving the payload size.
         // set the initial energyAmount using base, once it goes to serializeAccountTransaction function, there will be some calculations using signatures and payload size
         return {
-            type: AccountTransactionType.Transfer,
+            type: AccountTransactionType.TransferWithMemo,
             header: {
                 sender: sender,
                 nonce: nonce,
@@ -184,6 +183,10 @@ export class SimpleTransferWithMemoHandler
             },
             payload: payload,
         };
+    }
+
+    getBaseEnergyCost(): bigint {
+        return 300n;
     }
 
     serialize(transfer: SimpleTransferWithMemoPayload): Buffer {

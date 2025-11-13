@@ -15,8 +15,6 @@ import {
     UpdateCredentialsHandler,
 } from '../../src/accountTransactions.ts';
 import {
-    AccountTransaction,
-    AccountTransactionHeader,
     AccountTransactionType,
     CcdAmount,
     ConfigureBakerPayload,

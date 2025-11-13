@@ -1,12 +1,10 @@
-import { AccountAddress, CcdAmount, SequenceNumber, TransactionExpiry } from '../../src/pub/types.js';
-import { getAccountTransactionHandler } from '../../src/pub/types.js';
+import { AccountAddress, CcdAmount, SequenceNumber, TransactionExpiry , getAccountTransactionHandler } from '../../src/pub/types.js';
 import {
     serializeAccountTransactionForSubmission,
     serializeAccountTransactionSignature,
 } from '../../src/serialization.js';
 import {
     AccountTransaction,
-    AccountTransactionHeader,
     AccountTransactionSignature,
     AccountTransactionType,
     OtherPayload,

@@ -172,24 +172,6 @@ export function serializeAccountTransactionPayload(accountTransaction: Omit<Acco
     return Buffer.concat([serializedType, serializedPayload]);
 }
 
-export function getAccountTransactionHash(
-    accountTransaction: AccountTransaction<
-        AccountTransactionType.Update | AccountTransactionType.InitContract,
-        InitContractPayload | UpdateContractPayload
-    >,
-    signatures: AccountTransactionSignature,
-    givenEnergy: Energy.Type
-): string;
-
-//if accountTransaction is of AccountTransaction and not Update or Init
-export function getAccountTransactionHash(
-    accountTransaction: AccountTransaction<
-        Exclude<AccountTransactionType, AccountTransactionType.Update | AccountTransactionType.InitContract>,
-        Exclude<AccountTransactionPayload, InitContractPayload | UpdateContractPayload>
-    >,
-    signatures: AccountTransactionSignature
-): string;
-
 /**
  * Gets the transaction hash that is used to look up the status of a transaction.
  * @param accountTransaction the transaction to hash
@@ -199,7 +181,6 @@ export function getAccountTransactionHash(
 export function getAccountTransactionHash(
     accountTransaction: AccountTransaction,
     signatures: AccountTransactionSignature,
-    givenEnergy?: Energy.Type
 ): string {
     const serializedAccountTransaction = serializeAccountTransaction(accountTransaction, signatures);
 

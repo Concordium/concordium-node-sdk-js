@@ -22,8 +22,7 @@ import {
     serializeUpdateContractParameters,
     signTransaction,
     unwrap,
-} from '@concordium/web-sdk';
-import { getAccountTransactionHandler } from '@concordium/web-sdk';
+ getAccountTransactionHandler } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';

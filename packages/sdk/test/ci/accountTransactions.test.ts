@@ -4,17 +4,6 @@ import JSONBig from 'json-bigint';
 import path from 'path';
 
 import {
-    ConfigureBakerHandler,
-    ConfigureDelegationHandler,
-    DeployModuleHandler,
-    InitContractHandler,
-    RegisterDataHandler,
-    SimpleTransferHandler,
-    SimpleTransferWithMemoHandler,
-    UpdateContractHandler,
-    UpdateCredentialsHandler,
-} from '../../src/accountTransactions.ts';
-import {
     AccountTransactionType,
     CcdAmount,
     ConfigureBakerPayload,
@@ -41,6 +30,17 @@ import {
     getAccountTransactionSignDigest,
     serializeAccountTransactionPayload,
 } from '../../src/index.js';
+import {
+    ConfigureBakerHandler,
+    ConfigureDelegationHandler,
+    DeployModuleHandler,
+    InitContractHandler,
+    RegisterDataHandler,
+    SimpleTransferHandler,
+    SimpleTransferWithMemoHandler,
+    UpdateContractHandler,
+    UpdateCredentialsHandler,
+} from '../../src/accountTransactions.ts';
 import { AccountAddress, TransactionExpiry } from '../../src/pub/types.js';
 
 const senderAccountAddress = '4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M';

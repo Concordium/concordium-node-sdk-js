@@ -1,7 +1,7 @@
 import { Buffer } from 'buffer/index.js';
 import { stringify } from 'json-bigint';
 
-import { getAccountTransactionHandler } from './accountTransactions.ts';
+import { getAccountTransactionHandler } from './accountTransactions.js';
 import { ConcordiumGRPCClient } from './grpc/GRPCClient.js';
 import { AccountSigner, signTransaction } from './signHelpers.js';
 import {

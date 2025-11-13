@@ -1389,10 +1389,6 @@ export interface InitContractPayload {
 
     /** Parameters for the init function */
     param: Parameter.Type;
-
-    /** The amount of energy that can be used for contract execution.
-    The base energy amount for transaction verification will be added to this cost.*/
-    maxContractExecutionEnergy: Energy.Type;
 }
 
 export interface UpdateContractPayload {

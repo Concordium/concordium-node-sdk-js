@@ -321,14 +321,17 @@ export interface InitContractPayloadJSON {
     moduleRef: HexString;
     initName: string;
     param: HexString;
-    maxContractExecutionEnergy: bigint;
 }
 
 export class InitContractHandler implements AccountTransactionHandler<InitContractPayload, InitContractPayloadJSON> {
     create(
         metadata: TransactionMetadata,
-        payload: InitContractPayload
+        payload: InitContractPayload,
+        givenEnergy?: Energy.Type
     ): AccountTransaction<AccountTransactionType.InitContract, InitContractPayload> {
+        if (givenEnergy === undefined) {
+            throw new Error('InitContractHandler requires the givenEnergy parameter to be provided.');
+        }
         const { sender, nonce, expiry } = metadata;
 
         // construct the transaction, deriving the payload size.
@@ -338,7 +341,7 @@ export class InitContractHandler implements AccountTransactionHandler<InitContra
                 sender: sender,
                 nonce: nonce,
                 expiry: expiry,
-                executionEnergyAmount: Energy.create(this.getBaseEnergyCost(payload)),
+                executionEnergyAmount: givenEnergy,
                 payloadSize: this.serialize(payload).length, //derive the payload size from the Buffer
             },
             payload: payload,
@@ -346,7 +349,8 @@ export class InitContractHandler implements AccountTransactionHandler<InitContra
     }
 
     getBaseEnergyCost(payload: InitContractPayload): bigint {
-        return payload.maxContractExecutionEnergy.value;
+        void payload;
+        return 0n;
     }
 
     serialize(payload: InitContractPayload): Buffer {
@@ -376,8 +380,6 @@ export class InitContractHandler implements AccountTransactionHandler<InitContra
             moduleRef: ModuleReference.fromBuffer(moduleRef),
             initName: ContractName.fromInitName(initNameAfterConversion),
             param: paramBuffer,
-            //The execution energy cannot be recovered as it is not part of the payload serialization
-            maxContractExecutionEnergy: Energy.create(0n),
         };
     }
 
@@ -387,7 +389,6 @@ export class InitContractHandler implements AccountTransactionHandler<InitContra
             moduleRef: payload.moduleRef.toJSON(),
             initName: payload.initName.toJSON(),
             param: payload.param.toJSON(),
-            maxContractExecutionEnergy: payload.maxContractExecutionEnergy.value,
         };
     }
 
@@ -397,7 +398,6 @@ export class InitContractHandler implements AccountTransactionHandler<InitContra
             moduleRef: ModuleReference.fromJSON(json.moduleRef),
             initName: ContractName.fromJSON(json.initName),
             param: Parameter.fromJSON(json.param),
-            maxContractExecutionEnergy: Energy.create(json.maxContractExecutionEnergy),
         };
     }
 }

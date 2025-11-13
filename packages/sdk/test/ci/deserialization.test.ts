@@ -126,10 +126,15 @@ test('test deserialize InitContract ', () => {
         moduleRef: moduleRef,
         initName: contractName,
         param: Parameter.fromHexString('0a'),
-        maxContractExecutionEnergy: Energy.create(0),
     };
 
-    const transaction = prepareTransaction(AccountTransactionType.InitContract, deserializePayload);
+    const givenEnergy = Energy.create(30000);
+    const transaction = prepareTransaction(
+        AccountTransactionType.InitContract,
+        deserializePayload,
+        undefined,
+        givenEnergy
+    );
 
     deserializeAccountTransactionBase(transaction);
 });
@@ -142,12 +147,8 @@ test('test deserialize UpdateContract ', () => {
         message: Parameter.fromHexString('0a'),
     };
 
-    const transaction = prepareTransaction(
-        AccountTransactionType.Update,
-        deserializePayload,
-        undefined,
-        Energy.create(3000)
-    );
+    const givenEnergy = Energy.create(3000);
+    const transaction = prepareTransaction(AccountTransactionType.Update, deserializePayload, undefined, givenEnergy);
 
     deserializeAccountTransactionBase(transaction);
 });

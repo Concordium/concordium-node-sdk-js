@@ -1,9 +1,9 @@
+import * as wasm from '@concordium/rust-bindings/wallet';
 import { Buffer } from 'buffer/index.js';
 import _JB from 'json-bigint';
 
 import { ConcordiumGRPCClient } from '../../grpc/index.js';
-import { sha256 } from '../../hash.js';
-import { AtomicStatementV2, CredentialStatus, attributeTypeEquals } from '../../index.js';
+import { AtomicStatementV2, CredentialStatus, HexString, attributeTypeEquals } from '../../index.js';
 import { signTransaction } from '../../signHelpers.js';
 import {
     AccountTransaction,
@@ -414,6 +414,11 @@ export type AnchorData = {
     public?: Record<string, any>;
 };
 
+type VerificationAuditV1Input = {
+    record: VerificationAuditRecordV1;
+    publicInfo: Record<string, HexString>;
+};
+
 /**
  * Converts a verification audit record to its corresopnding anchor representation encoding.
  *
@@ -427,10 +432,15 @@ export type AnchorData = {
  * @returns The anchor encoding corresponding to the audit record
  */
 export function createAnchor(record: VerificationAuditRecordV1, info?: Record<string, any>): Uint8Array {
-    const message = Buffer.from(JSONBig.stringify(record)); // TODO: replace this with proper hashing.. properly from @concordium/rust-bindings
-    const hash = Uint8Array.from(sha256([message]));
-    let anchor: AnchorData = { hash: hash, version: VERSION, type: 'CCDVAA', public: info };
-    return cborEncode(anchor);
+    const publicInfo = Object.entries(info ?? {}).reduce<Record<string, HexString>>(
+        (acc, [k, v]) => ({ ...acc, [k]: Buffer.from(cborEncode(v)).toString('hex') }),
+        {}
+    );
+    const input: VerificationAuditV1Input = {
+        record: record,
+        publicInfo,
+    };
+    return wasm.createVerificationAuditV1Anchor(JSONBig.stringify(input));
 }
 
 /**

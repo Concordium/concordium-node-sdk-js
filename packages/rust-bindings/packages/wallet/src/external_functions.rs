@@ -11,7 +11,7 @@ use concordium_base::{
     },
     web3id::{
         v1::{
-            anchor::{RequestedSubjectClaims, UnfilledContextInformation, VerificationRequestData},
+            anchor::{RequestedSubjectClaims, UnfilledContextInformation, VerificationAuditRecord, VerificationRequestData},
             CredentialVerificationMaterial, PresentationV1,
         },
         CredentialsInputs, Presentation, Web3IdAttribute,
@@ -419,7 +419,7 @@ impl From<VerificationRequestV1Input> for VerificationRequestData {
 pub fn create_verification_request_v1_anchor(raw_input: JsonString) -> JsResult<Vec<u8>> {
     let input: VerificationRequestV1Input = serde_json::from_str(&raw_input)?;
     let public = input.public_info.clone();
-    let anchor = VerificationRequestData::from(input).to_anchor(public);
+    let anchor = VerificationRequestData::from(input).to_anchor(Some(public));
     cbor_encode(&anchor).map_err(to_js_error)
 }
 
@@ -427,6 +427,24 @@ pub fn create_verification_request_v1_anchor(raw_input: JsonString) -> JsResult<
 pub fn compute_verification_request_v1_anchor_hash(raw_input: JsonString) -> JsResult<Vec<u8>> {
     let input: VerificationRequestV1Input = serde_json::from_str(&raw_input)?;
     let public = input.public_info.clone();
-    let anchor = VerificationRequestData::from(input).to_anchor(public);
+    let anchor = VerificationRequestData::from(input).to_anchor(Some(public));
     Ok(anchor.hash.bytes.to_vec())
+}
+
+#[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct VerificationAuditV1Input {
+    /// The verification audit record
+    record: VerificationAuditRecord,
+    /// The optional public info to register with the anchor.
+    #[serde(deserialize_with = "deserialize_public_info")]
+    pub public_info: HashMap<String, cbor::value::Value>,
+}
+
+#[wasm_bindgen(js_name = createVerificationAuditV1Anchor)]
+pub fn create_verification_audit_v1_anchor(raw_input: JsonString) -> JsResult<Vec<u8>> {
+    let input: VerificationAuditV1Input = serde_json::from_str(&raw_input)?;
+    let public = input.public_info.clone();
+    let anchor = input.record.to_anchor(Some(public));
+    cbor_encode(&anchor).map_err(to_js_error)
 }

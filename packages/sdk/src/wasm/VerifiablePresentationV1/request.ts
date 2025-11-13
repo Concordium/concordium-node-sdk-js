@@ -345,14 +345,14 @@ class VerificationRequestV1 {
      * @returns The JSON representation of this presentation request
      */
     public toJSON(): JSON {
-        const credentialStatements = this.subjectClaims.map((statement) => ({
+        const subjectClaims = this.subjectClaims.map((statement) => ({
             ...statement,
             issuers: statement.issuers.map((i) => i.toJSON()),
         }));
         return {
             type: 'ConcordiumVerificationRequestV1',
-            context: { ...this.context, given: this.context.given.map(givenContextToJSON) },
-            subjectClaims: credentialStatements,
+            context: requestContextToJSON(this.context),
+            subjectClaims,
             transactionRef: this.transactionRef.toJSON(),
         };
     }

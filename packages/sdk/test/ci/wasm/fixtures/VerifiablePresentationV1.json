@@ -37,7 +37,7 @@
             },
             "issuer": "did:ccd:testnet:idp:0",
             "validFrom": "2000-01-01T00:00:00.000Z",
-            "validTo": "2030-01-01T00:00:00.000Z",
+            "validUntil": "2030-01-01T00:00:00.000Z",
             "credentialSubject": {
                 "statement": [
                     {
@@ -51,7 +51,7 @@
                         "type": "RevealAttribute"
                     }
                 ],
-                "id": "123456123456123456123456123456123456123456123456"
+                "id": "did:ccd:testnet:encidcred:123456123456123456123456123456123456123456123456"
             }
         }
     ],

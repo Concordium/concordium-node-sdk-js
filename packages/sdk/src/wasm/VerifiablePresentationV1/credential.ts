@@ -31,7 +31,7 @@ type IdentityCredential = {
     /** ISO formatted datetime specifying when the credential is valid from */
     validFrom: string;
     /** ISO formatted datetime specifying when the credential expires */
-    validTo: string;
+    validUntil: string;
     /** The zero-knowledge proof for attestation */
     proof: ZKProofV4;
     /** Issuer of the original ID credential */
@@ -168,7 +168,7 @@ async function verifyIdentityMetadata(
     const { blockSlotTime: now } = await grpc.getBlockInfo(blockHash);
 
     const validFrom = new Date(credential.validFrom);
-    const validUntil = new Date(credential.validTo);
+    const validUntil = new Date(credential.validUntil);
 
     let status = CredentialStatus.Active;
     if (validFrom > now) status = CredentialStatus.NotActivated;

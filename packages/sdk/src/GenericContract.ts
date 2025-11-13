@@ -1,6 +1,7 @@
 import { Buffer } from 'buffer/index.js';
 import { stringify } from 'json-bigint';
 
+import { getAccountTransactionHandler } from './accountTransactions.js';
 import { ConcordiumGRPCClient } from './grpc/GRPCClient.js';
 import { AccountSigner, signTransaction } from './signHelpers.js';
 import {
@@ -61,7 +62,7 @@ export type ContractInvokeMetadata = {
 /**
  * Metadata necessary for creating a {@link UpdateTransaction}
  */
-export type CreateContractTransactionMetadata = Pick<ContractTransactionMetadata, 'amount' | 'energy'>;
+export type CreateContractTransactionMetadata = Pick<ContractTransactionMetadata, 'amount'>;
 
 /**
  * Holds either a contract module schema, or the schema for a single parameters of a contract entrypoint
@@ -341,7 +342,7 @@ class ContractBase<E extends string = string, V extends string = string> {
     public createUpdateTransaction<T, J extends SmartContractTypeValues>(
         entrypoint: EntrypointName.Type<E>,
         serializeInput: (input: T) => ArrayBuffer,
-        { amount = CcdAmount.zero(), energy }: CreateContractTransactionMetadata,
+        { amount = CcdAmount.zero() }: CreateContractTransactionMetadata,
         input: T,
         inputJsonFormatter?: (input: T) => J
     ): ContractUpdateTransaction | MakeOptional<ContractUpdateTransactionWithSchema<J>, 'schema'> {
@@ -351,7 +352,6 @@ class ContractBase<E extends string = string, V extends string = string> {
             amount,
             address: this.contractAddress,
             receiveName: ReceiveName.create(this.contractName, entrypoint),
-            maxContractExecutionEnergy: energy,
             message: parameter,
         };
         const transaction: ContractUpdateTransaction = {
@@ -401,19 +401,20 @@ class ContractBase<E extends string = string, V extends string = string> {
      */
     protected async sendUpdateTransaction(
         transactionBase: ContractUpdateTransaction,
-        { senderAddress, expiry = getContractUpdateDefaultExpiryDate() }: ContractTransactionMetadata,
+        { senderAddress, expiry = getContractUpdateDefaultExpiryDate(), energy }: ContractTransactionMetadata,
         signer: AccountSigner
     ): Promise<TransactionHash.Type> {
         const { nonce } = await this.grpcClient.getNextAccountNonce(senderAddress);
+
         const header = {
             expiry,
             nonce: nonce,
             sender: senderAddress,
         };
-        const transaction = {
-            ...transactionBase,
-            header,
-        };
+
+        const handler = getAccountTransactionHandler(AccountTransactionType.Update);
+        const transaction = handler.create(header, transactionBase.payload, energy);
+
         const signature = await signTransaction(transaction, signer);
         return this.grpcClient.sendAccountTransaction(transaction, signature);
     }

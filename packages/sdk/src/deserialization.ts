@@ -7,6 +7,7 @@ import {
     isAccountTransactionType,
 } from './types.js';
 import * as AccountAddress from './types/AccountAddress.js';
+import * as Energy from './types/Energy.js';
 import * as AccountSequenceNumber from './types/SequenceNumber.js';
 import * as TransactionExpiry from './types/TransactionExpiry.js';
 
@@ -49,16 +50,17 @@ function deserializeAccountTransactionSignature(signatures: Cursor): AccountTran
 function deserializeTransactionHeader(serializedHeader: Cursor): AccountTransactionHeader {
     const sender = AccountAddress.fromBuffer(serializedHeader.read(32));
     const nonce = AccountSequenceNumber.create(serializedHeader.read(8).readBigUInt64BE(0));
-    // TODO: extract payloadSize and energyAmount?
-    // energyAmount
-    serializedHeader.read(8).readBigUInt64BE(0);
+    // execution energyAmount
+    const executionEnergyAmount = Energy.create(serializedHeader.read(8).readBigUInt64BE(0));
     // payloadSize
-    serializedHeader.read(4).readUInt32BE(0);
+    const payloadSize = serializedHeader.read(4).readUInt32BE(0);
     const expiry = TransactionExpiry.fromEpochSeconds(serializedHeader.read(8).readBigUInt64BE(0));
     return {
         sender,
         nonce,
         expiry,
+        executionEnergyAmount,
+        payloadSize,
     };
 }
 

@@ -1407,10 +1407,6 @@ export interface UpdateContractPayload {
 
     /** Parameters for the update function */
     message: Parameter.Type;
-
-    /** The amount of energy that can be used for contract execution.
-    The base energy amount for transaction verification will be added to this cost.*/
-    maxContractExecutionEnergy: Energy.Type;
 }
 
 export interface AccountTransactionHeader {
@@ -1425,6 +1421,12 @@ export interface AccountTransactionHeader {
 
     /** expiration of the transaction */
     expiry: TransactionExpiry.Type;
+
+    /** a base energy amount, this amount excludes transaction size and signature costs */
+    executionEnergyAmount: Energy.Type;
+
+    /** payload size */
+    payloadSize: number;
 }
 
 export interface SimpleTransferPayload {
@@ -1555,10 +1557,21 @@ export type AccountTransactionPayload =
     | ConfigureDelegationPayload
     | TokenUpdatePayload;
 
-export interface AccountTransaction {
-    type: AccountTransactionType;
+// For Overload 1 (Energy will need to be supplied manually)
+export type InitUpdateType = AccountTransactionType.InitContract | AccountTransactionType.Update;
+export type InitUpdatePayload = InitContractPayload | UpdateContractPayload;
+
+// For Overload 2 (Energy will use some automatic calculations)
+export type OtherType = Exclude<AccountTransactionType, InitUpdateType>;
+export type OtherPayload = Exclude<AccountTransactionPayload, InitUpdatePayload>;
+
+export interface AccountTransaction<
+    T extends AccountTransactionType = AccountTransactionType,
+    P extends AccountTransactionPayload = AccountTransactionPayload,
+> {
+    type: T;
     header: AccountTransactionHeader;
-    payload: AccountTransactionPayload;
+    payload: P;
 }
 
 export interface InstanceInfoCommon {

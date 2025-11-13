@@ -19,6 +19,8 @@ import { readFileSync } from 'node:fs';
 
 import { parseEndpoint } from '../shared/util.js';
 
+import { getAccountTransactionHandler } from '@concordium/web-sdk';
+
 const cli = meow(
     `
   Usage
@@ -82,7 +84,7 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
     const toAddress = AccountAddress.fromBase58(cli.flags.receiver);
     const nextNonce: NextAccountNonce = await client.getNextAccountNonce(sender);
 
-    const header: AccountTransactionHeader = {
+    const header = {
         expiry: TransactionExpiry.futureMinutes(60),
         nonce: nextNonce.nonce,
         sender,
@@ -104,11 +106,9 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
     }
 
     // #region documentation-snippet-sign-transaction
-    const accountTransaction: AccountTransaction = {
-        header: header,
-        payload: simpleTransfer,
-        type: AccountTransactionType.Transfer,
-    };
+
+    const handler = getAccountTransactionHandler(AccountTransactionType.Transfer);
+    const accountTransaction = handler.create(header, simpleTransfer);
 
     // Sign transaction
     const signer = buildAccountSigner(walletExport);

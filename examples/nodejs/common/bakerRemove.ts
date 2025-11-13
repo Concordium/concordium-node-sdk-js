@@ -17,6 +17,8 @@ import { readFileSync } from 'node:fs';
 
 import { parseEndpoint } from '../shared/util.js';
 
+import { getAccountTransactionHandler } from '@concordium/web-sdk';
+
 const cli = meow(
     `
   Usage
@@ -61,7 +63,7 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
     const sender = AccountAddress.fromBase58(wallet.value.address);
     const signer = buildAccountSigner(wallet);
 
-    const header: AccountTransactionHeader = {
+    const header = {
         expiry: TransactionExpiry.futureMinutes(60),
         nonce: (await client.getNextAccountNonce(sender)).nonce,
         sender,
@@ -71,11 +73,8 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
         stake: CcdAmount.zero(),
     };
 
-    const configureBakerAccountTransaction: AccountTransaction = {
-        header: header,
-        payload: configureBakerPayload,
-        type: AccountTransactionType.ConfigureBaker,
-    };
+    const handler = getAccountTransactionHandler(AccountTransactionType.ConfigureBaker);
+    const configureBakerAccountTransaction = handler.create(header, configureBakerPayload);
 
     // Sign transaction
     const signature = await signTransaction(configureBakerAccountTransaction, signer);

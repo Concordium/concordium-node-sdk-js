@@ -142,7 +142,7 @@ test('test deserialize UpdateContract ', () => {
         message: Parameter.fromHexString('0a'),
     };
 
-    const transaction = prepareTransaction(AccountTransactionType.Update, deserializePayload);
+    const transaction = prepareTransaction(AccountTransactionType.Update, deserializePayload, undefined, Energy.create(3000));
 
     deserializeAccountTransactionBase(transaction);
 });
@@ -231,7 +231,8 @@ test('Test parsing of Token Addresses', () => {
 function prepareTransaction<T extends AccountTransactionType, P extends AccountTransactionPayload>(
     transactionType: T,
     payload: P,
-    inputExpiry?: TransactionExpiry.Type
+    inputExpiry?: TransactionExpiry.Type,
+    givenEnergy?: Energy.Type,
 ) {
     const handler = getAccountTransactionHandler(transactionType);
 
@@ -240,6 +241,6 @@ function prepareTransaction<T extends AccountTransactionType, P extends AccountT
     const defaultExpiry = TransactionExpiry.futureMinutes(20);
     const finalExpiry = inputExpiry ?? defaultExpiry;
 
-    const transaction = handler.create({ sender, nonce, expiry: finalExpiry }, payload);
+    const transaction = handler.create({ sender, nonce, expiry: finalExpiry }, payload, givenEnergy);
     return transaction;
 }

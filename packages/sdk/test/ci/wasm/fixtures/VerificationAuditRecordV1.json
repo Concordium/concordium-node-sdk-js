@@ -19,7 +19,7 @@
             ],
             "requested": ["BlockHash", "ResourceID"]
         },
-        "credentialStatements": [
+        "subjectClaims": [
             {
                 "type": "identity",
                 "source": ["identityCredential"],

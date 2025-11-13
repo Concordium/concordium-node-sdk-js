@@ -25,7 +25,7 @@ import {
 import { bail } from '../../util.js';
 import { VerifiablePresentationV1, VerificationRequestV1 } from './index.js';
 import { AnchorTransactionMetadata, contextEquals } from './internal.js';
-import { AccountClaims, IdentityClaims, VerificationResult, isAccountClaims } from './proof.js';
+import { VerificationResult, isAccountClaims } from './proof.js';
 
 const JSONBig = _JB({ alwaysParseAsBig: true, useNativeBigInt: true });
 
@@ -225,10 +225,10 @@ function verifyAtomicStatements<A>(a: AtomicStatementV2<A>[], b: AtomicStatement
 }
 
 /**
- * Verifies account claims against a verification request statement.
+ * Verifies verifiable presentation account claims against a verification request identity claims.
  *
- * @param claims - Account claims from the verifiable presentation
- * @param statement - Verification request statement to validate against
+ * @param vpClaims - Account claims from the verifiable presentation
+ * @param vrClaims - Verification request claims to validate against
  * @param grpc - gRPC client for querying account information
  *
  * @throws Error if:
@@ -238,20 +238,20 @@ function verifyAtomicStatements<A>(a: AtomicStatementV2<A>[], b: AtomicStatement
  * - issuer is not valid
  */
 async function verifyAccountClaims(
-    claims: AccountClaims,
-    statement: VerificationRequestV1.Statement,
+    vpClaims: VerifiablePresentationV1.AccountClaims,
+    vrClaims: VerificationRequestV1.IdentityClaims,
     grpc: ConcordiumGRPCClient
 ) {
-    if (statement.type !== 'identity')
-        throw new Error(`Request statement of type ${statement.type} does not match account claims`);
-    if (!statement.source.includes('accountCredential'))
+    if (vrClaims.type !== 'identity')
+        throw new Error(`Request statement of type ${vrClaims.type} does not match account claims`);
+    if (!vrClaims.source.includes('accountCredential'))
         throw new Error(`Request statement does not include "account" source`);
 
-    verifyAtomicStatements(statement.statement, claims.statement);
+    verifyAtomicStatements(vrClaims.statement, vpClaims.statement);
 
     // check that the selected credential for the claim is issued by a valid IDP
-    const validIdpIndices = statement.issuers.map((i) => i.index);
-    const [, credId] = claims.id.split(':cred:');
+    const validIdpIndices = vrClaims.issuers.map((i) => i.index);
+    const [, credId] = vpClaims.id.split(':cred:');
     const ai = await grpc.getAccountInfo(CredentialRegistrationId.fromHexString(credId));
     const cred = Object.values(ai.accountCredentials).find(
         (c) => c.value.type === 'normal' && c.value.contents.credId === credId
@@ -263,10 +263,10 @@ async function verifyAccountClaims(
 }
 
 /**
- * Verifies identity claims against a verification request statement.
+ * Verifies verificable presenation identity claims against a verification request identity claims.
  *
- * @param claims - Identity claims from the verifiable presentation
- * @param statement - Verification request statement to validate against
+ * @param vpClaims - Identity claims from the verifiable presentation
+ * @param vrClaims - Verification request claims to validate against
  *
  * @throws Error if:
  * - statement type is not 'identity';
@@ -274,17 +274,20 @@ async function verifyAccountClaims(
  * - atomic statements mismatch;
  * - issuer is not valid
  */
-function verifyIdentityClaims(claims: IdentityClaims, statement: VerificationRequestV1.Statement) {
-    if (statement.type !== 'identity')
-        throw new Error(`Request statement of type ${statement.type} does not match account claims`);
-    if (!statement.source.includes('identityCredential'))
+function verifyIdentityClaims(
+    vpClaims: VerifiablePresentationV1.IdentityClaims,
+    vrClaims: VerificationRequestV1.IdentityClaims
+) {
+    if (vrClaims.type !== 'identity')
+        throw new Error(`Request statement of type ${vrClaims.type} does not match account claims`);
+    if (!vrClaims.source.includes('identityCredential'))
         throw new Error(`Request statement does not include "identity" source`);
 
-    verifyAtomicStatements(statement.statement, claims.statement);
+    verifyAtomicStatements(vrClaims.statement, vpClaims.statement);
 
     // check that the selected credential for the claim is issued by a valid IDP
-    const validIdpIndices = statement.issuers.map((i) => i.index);
-    const [, idpIndex] = claims.issuer.split(':idp:');
+    const validIdpIndices = vrClaims.issuers.map((i) => i.index);
+    const [, idpIndex] = vpClaims.issuer.split(':idp:');
 
     if (!validIdpIndices.includes(Number(idpIndex)))
         throw new Error('Credential selected is not issued by a valid identity provider.');
@@ -293,45 +296,45 @@ function verifyIdentityClaims(claims: IdentityClaims, statement: VerificationReq
 /**
  * Verifies subject claims against a verification request statement.
  *
- * @param statement - Verification request statement to validate against
- * @param claims - Subject claims from the verifiable presentation (account or identity)
+ * @param vpClaims - Subject claims from the verifiable presentation request (account or identity)
+ * @param vrClaims - Verification request subject claims to validate against
  * @param grpc - gRPC client for querying account information
  *
  * @throws Error if claims do not match the statement requirements
  */
 async function verifyClaims(
-    statement: VerificationRequestV1.Statement,
-    claims: VerifiablePresentationV1.SubjectClaims,
+    vpClaims: VerifiablePresentationV1.SubjectClaims,
+    vrClaims: VerificationRequestV1.SubjectClaims,
     grpc: ConcordiumGRPCClient
 ) {
-    if (isAccountClaims(claims)) {
-        await verifyAccountClaims(claims, statement, grpc);
+    if (isAccountClaims(vpClaims)) {
+        await verifyAccountClaims(vpClaims, vrClaims, grpc);
     } else {
-        verifyIdentityClaims(claims, statement);
+        verifyIdentityClaims(vpClaims, vrClaims);
     }
 }
 
 /**
  * Verifies that a presentation request matches the verification request.
  *
- * @param verificationRequest - Original verification request with credential statements
  * @param presentationRequest - Presentation request containing subject claims
+ * @param verificationRequest - Original verification request with credential statements
  * @param grpc - gRPC client for querying account information
  *
  * @throws Error if number of statements/claims mismatch or any individual claim verification fails
  */
 async function verifyPresentationRequest(
-    verificationRequest: VerificationRequestV1.Type,
     presentationRequest: VerifiablePresentationV1.Request,
+    verificationRequest: VerificationRequestV1.Type,
     grpc: ConcordiumGRPCClient
 ) {
-    verificationRequest.credentialStatements.length === presentationRequest.subjectClaims.length ||
+    verificationRequest.subjectClaims.length === presentationRequest.subjectClaims.length ||
         bail(
-            `Mismatch in number of statements/claims: ${verificationRequest.credentialStatements.length} request statements found, ${presentationRequest.subjectClaims.length} presentation claims found`
+            `Mismatch in number of statements/claims: ${verificationRequest.subjectClaims.length} request statements found, ${presentationRequest.subjectClaims.length} presentation claims found`
         );
 
-    for (let i = 0; i < verificationRequest.credentialStatements.length; i++) {
-        await verifyClaims(verificationRequest.credentialStatements[i], presentationRequest.subjectClaims[i], grpc);
+    for (let i = 0; i < verificationRequest.subjectClaims.length; i++) {
+        await verifyClaims(presentationRequest.subjectClaims[i], verificationRequest.subjectClaims[i], grpc);
     }
 }
 
@@ -378,7 +381,7 @@ export async function createChecked(
         bail('One or more credentials included in the presentation is not active.');
 
     // 4. check the claims in presentation request in the context of the request statements
-    verifyPresentationRequest(request, verification.result.request, grpc);
+    verifyPresentationRequest(verification.result.request, request, grpc);
 
     return { type: 'success', result: create(id, request, presentation) };
 }

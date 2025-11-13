@@ -32,7 +32,7 @@ const VERIFICATION_REQUEST = VerificationRequestV1.fromJSON({
         ],
         requested: ['BlockHash', 'ResourceID'],
     },
-    credentialStatements: [
+    subjectClaims: [
         {
             type: 'identity',
             source: ['identityCredential'],
@@ -110,7 +110,7 @@ describe('VerificationAuditRecordV1', () => {
                     ],
                     requested: ['BlockHash', 'ResourceID'],
                 },
-                credentialStatements: [
+                subjectClaims: [
                     {
                         type: 'identity',
                         source: ['identityCredential'],
@@ -222,7 +222,7 @@ describe('VerificationAuditRecordV1.Anchor', () => {
                     ],
                     requested: ['BlockHash', 'ResourceID'],
                 },
-                credentialStatements: [
+                subjectClaims: [
                     {
                         type: 'identity',
                         source: ['identityCredential'],

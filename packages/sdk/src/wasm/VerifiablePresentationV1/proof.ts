@@ -297,7 +297,7 @@ export async function createFromAnchor(
 
     const expectedAnchorHash = VerificationRequestV1.computeAnchorHash(
         verificationRequest.context,
-        verificationRequest.credentialStatements
+        verificationRequest.subjectClaims
     );
     const transactionAnchor = VerificationRequestV1.decodeAnchor(Buffer.from(summary.dataRegistered.data, 'hex'));
     if (Buffer.from(expectedAnchorHash).toString('hex') !== Buffer.from(transactionAnchor.hash).toString('hex')) {

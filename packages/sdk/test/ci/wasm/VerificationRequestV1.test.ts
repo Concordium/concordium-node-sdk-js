@@ -25,12 +25,12 @@ describe('VerificationRequestV1', () => {
             '0102'.repeat(16),
             'Wine payment'
         );
-        const statement = VerificationRequestV1.statementBuilder()
-            .addIdentityStatement(
+        const statement = VerificationRequestV1.claimsBuilder()
+            .addIdentityClaims(
                 [0, 1, 2].map((i) => new IdentityProviderDID('Testnet', i)),
                 (b) => b.revealAttribute(AttributeKeyString.firstName)
             )
-            .getStatements();
+            .getClaims();
         const transactionRef = TransactionHash.fromHexString('01020304'.repeat(8));
         const presentationRequest = VerificationRequestV1.create(context, statement, transactionRef);
 
@@ -45,12 +45,12 @@ describe('VerificationRequestV1', () => {
             '0102010201020102010201020102010201020102010201020102010201020102',
             'Wine payment'
         );
-        const statement = VerificationRequestV1.statementBuilder()
-            .addIdentityStatement(
+        const statement = VerificationRequestV1.claimsBuilder()
+            .addIdentityClaims(
                 [0, 1, 2].map((i) => new IdentityProviderDID('Testnet', i)),
                 (b) => b.revealAttribute(AttributeKeyString.firstName)
             )
-            .getStatements();
+            .getClaims();
         const transactionRef = TransactionHash.fromHexString(
             '0102030401020304010203040102030401020304010203040102030401020304'
         );
@@ -76,12 +76,12 @@ describe('VerificationRequestV1.Anchor', () => {
             '0102'.repeat(16),
             'Wine payment'
         );
-        const statement = VerificationRequestV1.statementBuilder()
-            .addIdentityStatement(
+        const statement = VerificationRequestV1.claimsBuilder()
+            .addIdentityClaims(
                 [0, 1, 2].map((i) => new IdentityProviderDID('Testnet', i)),
                 (b) => b.revealAttribute(AttributeKeyString.firstName)
             )
-            .getStatements();
+            .getClaims();
         const anchor = VerificationRequestV1.createAnchor(context, statement, {
             somePulicInfo: 'public info',
         });
@@ -105,12 +105,12 @@ describe('VerificationRequestV1.Anchor', () => {
             '0102010201020102010201020102010201020102010201020102010201020102',
             'Wine payment'
         );
-        const statement = VerificationRequestV1.statementBuilder()
-            .addIdentityStatement(
+        const statement = VerificationRequestV1.claimsBuilder()
+            .addIdentityClaims(
                 [0, 1, 2].map((i) => new IdentityProviderDID('Testnet', i)),
                 (b) => b.revealAttribute(AttributeKeyString.firstName)
             )
-            .getStatements();
+            .getClaims();
 
         const anchor = VerificationRequestV1.createAnchor(context, statement, {
             verifier: 'Test Verifier',

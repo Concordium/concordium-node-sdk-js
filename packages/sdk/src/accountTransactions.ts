@@ -52,7 +52,18 @@ export interface AccountTransactionHandler<
     PayloadType extends AccountTransactionPayload = AccountTransactionPayload,
     JSONType = PayloadType,
 > {
-    create(metadata: TransactionMetadata, payload: PayloadType, givenEnergy?: Energy.Type): AccountTransaction;
+    /**
+     * Creates a transaction object given a type and payload.
+     * Metadata is used to hold values which can be inserted into the header elements
+     * energy is a base energy amount which will be used to calculate the final cost using number of signatures and payload size
+     * this transaction object would then be signed and sent
+     *
+     * @param metadata
+     * @param payload
+     * @param givenEnergy
+     * @returns
+     */
+    create: (metadata: TransactionMetadata, payload: PayloadType, givenEnergy?: Energy.Type) => AccountTransaction;
 
     /**
      * Serializes the payload to a buffer.
@@ -116,7 +127,7 @@ export class SimpleTransferHandler
                 sender: sender,
                 nonce: nonce,
                 expiry: expiry,
-                energyAmount: Energy.create(this.getBaseEnergyCost()),
+                executionEnergyAmount: Energy.create(this.getBaseEnergyCost()),
                 payloadSize: this.serialize(payload).length, //derive the payload size from the Buffer
             },
             payload: payload,
@@ -178,7 +189,7 @@ export class SimpleTransferWithMemoHandler
                 sender: sender,
                 nonce: nonce,
                 expiry: expiry,
-                energyAmount: Energy.create(this.getBaseEnergyCost()),
+                executionEnergyAmount: Energy.create(this.getBaseEnergyCost()),
                 payloadSize: this.serialize(payload).length, //derive the payload size from the Buffer
             },
             payload: payload,
@@ -244,7 +255,7 @@ export class DeployModuleHandler implements AccountTransactionHandler<DeployModu
                 sender: sender,
                 nonce: nonce,
                 expiry: expiry,
-                energyAmount: Energy.create(this.getBaseEnergyCost(payload)),
+                executionEnergyAmount: Energy.create(this.getBaseEnergyCost(payload)),
                 payloadSize: this.serialize(payload).length, //derive the payload size from the Buffer
             },
             payload: payload,
@@ -327,7 +338,7 @@ export class InitContractHandler implements AccountTransactionHandler<InitContra
                 sender: sender,
                 nonce: nonce,
                 expiry: expiry,
-                energyAmount: Energy.create(this.getBaseEnergyCost(payload)),
+                executionEnergyAmount: Energy.create(this.getBaseEnergyCost(payload)),
                 payloadSize: this.serialize(payload).length, //derive the payload size from the Buffer
             },
             payload: payload,
@@ -406,8 +417,12 @@ export class UpdateContractHandler
     create(
         metadata: TransactionMetadata,
         payload: UpdateContractPayload,
-        givenEnergy: Energy.Type
+        givenEnergy?: Energy.Type
     ): AccountTransaction<AccountTransactionType.Update, UpdateContractPayload> {
+        if (givenEnergy === undefined) {
+            throw new Error('UpdateContractHandler requires the givenEnergy parameter to be provided.');
+        }
+
         const { sender, nonce, expiry } = metadata;
 
         // construct the transaction, deriving the payload size.
@@ -417,7 +432,7 @@ export class UpdateContractHandler
                 sender: sender,
                 nonce: nonce,
                 expiry: expiry,
-                energyAmount: givenEnergy,
+                executionEnergyAmount: givenEnergy,
                 payloadSize: this.serialize(payload).length, //derive the payload size from the Buffer
             },
             payload: payload,
@@ -502,7 +517,7 @@ export class UpdateCredentialsHandler implements AccountTransactionHandler<Updat
                 sender: sender,
                 nonce: nonce,
                 expiry: expiry,
-                energyAmount: Energy.create(this.getBaseEnergyCost(payload)),
+                executionEnergyAmount: Energy.create(this.getBaseEnergyCost(payload)),
                 payloadSize: this.serialize(payload).length, //derive the payload size from the Buffer
             },
             payload: payload,
@@ -585,7 +600,7 @@ export class RegisterDataHandler implements AccountTransactionHandler<RegisterDa
                 sender: sender,
                 nonce: nonce,
                 expiry: expiry,
-                energyAmount: Energy.create(this.getBaseEnergyCost()),
+                executionEnergyAmount: Energy.create(this.getBaseEnergyCost()),
                 payloadSize: this.serialize(payload).length, //derive the payload size from the Buffer
             },
             payload: payload,
@@ -648,7 +663,7 @@ export class ConfigureBakerHandler
                 sender: sender,
                 nonce: nonce,
                 expiry: expiry,
-                energyAmount: Energy.create(this.getBaseEnergyCost(payload)),
+                executionEnergyAmount: Energy.create(this.getBaseEnergyCost(payload)),
                 payloadSize: this.serialize(payload).length, //derive the payload size from the Buffer
             },
             payload: payload,
@@ -715,7 +730,7 @@ export class ConfigureDelegationHandler
                 sender: sender,
                 nonce: nonce,
                 expiry: expiry,
-                energyAmount: Energy.create(this.getBaseEnergyCost()),
+                executionEnergyAmount: Energy.create(this.getBaseEnergyCost()),
                 payloadSize: this.serialize(payload).length, //derive the payload size from the Buffer
             },
             payload: payload,
@@ -778,7 +793,7 @@ export class TokenUpdateHandler implements AccountTransactionHandler<TokenUpdate
                 sender: sender,
                 nonce: nonce,
                 expiry: expiry,
-                energyAmount: Energy.create(this.getBaseEnergyCost(payload)),
+                executionEnergyAmount: Energy.create(this.getBaseEnergyCost(payload)),
                 payloadSize: this.serialize(payload).length, //derive the payload size from the Buffer
             },
             payload: payload,

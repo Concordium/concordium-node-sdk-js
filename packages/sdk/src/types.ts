@@ -1422,8 +1422,8 @@ export interface AccountTransactionHeader {
     /** expiration of the transaction */
     expiry: TransactionExpiry.Type;
 
-    /** energy amount */
-    energyAmount: Energy.Type;
+    /** a base energy amount, this amount excludes transaction size and signature costs */
+    executionEnergyAmount: Energy.Type;
 
     /** payload size */
     payloadSize: number;

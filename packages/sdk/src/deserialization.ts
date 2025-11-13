@@ -50,8 +50,8 @@ function deserializeAccountTransactionSignature(signatures: Cursor): AccountTran
 function deserializeTransactionHeader(serializedHeader: Cursor): AccountTransactionHeader {
     const sender = AccountAddress.fromBuffer(serializedHeader.read(32));
     const nonce = AccountSequenceNumber.create(serializedHeader.read(8).readBigUInt64BE(0));
-    // energyAmount
-    const energyAmount = Energy.create(serializedHeader.read(8).readBigUInt64BE(0));
+    // execution energyAmount
+    const executionEnergyAmount = Energy.create(serializedHeader.read(8).readBigUInt64BE(0));
     // payloadSize
     const payloadSize = serializedHeader.read(4).readUInt32BE(0);
     const expiry = TransactionExpiry.fromEpochSeconds(serializedHeader.read(8).readBigUInt64BE(0));
@@ -59,7 +59,7 @@ function deserializeTransactionHeader(serializedHeader: Cursor): AccountTransact
         sender,
         nonce,
         expiry,
-        energyAmount,
+        executionEnergyAmount,
         payloadSize,
     };
 }

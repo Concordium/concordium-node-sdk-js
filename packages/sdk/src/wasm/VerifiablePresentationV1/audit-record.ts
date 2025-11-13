@@ -416,7 +416,7 @@ export type AnchorData = {
 
 type VerificationAuditV1Input = {
     record: VerificationAuditRecordV1;
-    publicInfo: Record<string, HexString>;
+    publicInfo?: Record<string, HexString>;
 };
 
 /**
@@ -432,14 +432,15 @@ type VerificationAuditV1Input = {
  * @returns The anchor encoding corresponding to the audit record
  */
 export function createAnchor(record: VerificationAuditRecordV1, info?: Record<string, any>): Uint8Array {
-    const publicInfo = Object.entries(info ?? {}).reduce<Record<string, HexString>>(
-        (acc, [k, v]) => ({ ...acc, [k]: Buffer.from(cborEncode(v)).toString('hex') }),
-        {}
-    );
     const input: VerificationAuditV1Input = {
         record: record,
-        publicInfo,
     };
+    if (info !== undefined) {
+        input.publicInfo = Object.entries(info).reduce<Record<string, HexString>>(
+            (acc, [k, v]) => ({ ...acc, [k]: Buffer.from(cborEncode(v)).toString('hex') }),
+            {}
+        );
+    }
     return wasm.createVerificationAuditV1Anchor(JSONBig.stringify(input));
 }
 

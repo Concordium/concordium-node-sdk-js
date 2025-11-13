@@ -99,7 +99,7 @@ function requestContextToJSON(context: Context): ContextJSON {
 type RequestAnchorInput = {
     context: ContextJSON;
     subjectClaims: SubjectClaims[];
-    publicInfo: Record<string, HexString>;
+    publicInfo?: Record<string, HexString>;
 };
 
 /**
@@ -121,15 +121,16 @@ export function createAnchor(
     subjectClaims: SubjectClaims[],
     publicInfo?: Record<string, any>
 ): Uint8Array {
-    const info = Object.entries(publicInfo ?? {}).reduce<Record<string, HexString>>(
-        (acc, [k, v]) => ({ ...acc, [k]: Buffer.from(cborEncode(v)).toString('hex') }),
-        {}
-    );
-    const input: RequestAnchorInput = {
+    let input: RequestAnchorInput = {
         context: requestContextToJSON(context),
         subjectClaims,
-        publicInfo: info,
     };
+    if (publicInfo !== undefined) {
+        input.publicInfo = Object.entries(publicInfo).reduce<Record<string, HexString>>(
+            (acc, [k, v]) => ({ ...acc, [k]: Buffer.from(cborEncode(v)).toString('hex') }),
+            {}
+        );
+    }
     return wasm.createVerificationRequestV1Anchor(JSONBig.stringify(input));
 }
 
@@ -149,7 +150,6 @@ export function computeAnchorHash(context: Context, subjectClaims: SubjectClaims
     const input: RequestAnchorInput = {
         context: requestContextToJSON(context),
         subjectClaims,
-        publicInfo: {},
     };
     return wasm.computeVerificationRequestV1AnchorHash(JSONBig.stringify(input));
 }

@@ -120,8 +120,6 @@ describe('VerificationAuditRecordV1.Anchor', () => {
                 timestamp: '2025-10-17T13:14:14.000Z',
             });
 
-            console.log(Buffer.from(anchor).toString('hex'));
-
             const anchorData = VerificationAuditRecordV1.decodeAnchor(anchor);
             const json = {
                 type: anchorData.type,

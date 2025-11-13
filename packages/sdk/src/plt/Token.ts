@@ -6,7 +6,8 @@ import {
     TokenUpdatePayload,
     TransactionExpiry,
     TransactionHash,
- getAccountTransactionHandler } from '../pub/types.js';
+    getAccountTransactionHandler,
+} from '../pub/types.js';
 import { AccountSigner, signTransaction } from '../signHelpers.js';
 import { SequenceNumber } from '../types/index.js';
 import { bail } from '../util.js';

@@ -180,7 +180,7 @@ export function serializeAccountTransactionPayload(accountTransaction: Omit<Acco
  */
 export function getAccountTransactionHash(
     accountTransaction: AccountTransaction,
-    signatures: AccountTransactionSignature,
+    signatures: AccountTransactionSignature
 ): string {
     const serializedAccountTransaction = serializeAccountTransaction(accountTransaction, signatures);
 

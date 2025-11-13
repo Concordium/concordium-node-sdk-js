@@ -28,10 +28,6 @@ import {
     CredentialSignature,
     IdOwnershipProofs,
     InitContractPayload,
-    InitUpdatePayload,
-    InitUpdateType,
-    OtherPayload,
-    OtherType,
     UnsignedCredentialDeploymentInformation,
     UpdateContractPayload,
 } from './types.js';

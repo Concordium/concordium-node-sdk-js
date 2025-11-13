@@ -2,8 +2,6 @@ import { ConcordiumGRPCClient } from '../grpc/GRPCClient.js';
 import {
     AccountAddress,
     AccountInfo,
-    AccountTransaction,
-    AccountTransactionHeader,
     AccountTransactionType,
     TokenUpdatePayload,
     TransactionExpiry,

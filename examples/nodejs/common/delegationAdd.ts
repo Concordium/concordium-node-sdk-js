@@ -1,7 +1,5 @@
 import {
     AccountAddress,
-    AccountTransaction,
-    AccountTransactionHeader,
     AccountTransactionType,
     CcdAmount,
     ConfigureDelegationPayload,

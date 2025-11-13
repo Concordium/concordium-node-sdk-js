@@ -1,7 +1,5 @@
 import {
     AccountAddress,
-    AccountTransaction,
-    AccountTransactionHeader,
     AccountTransactionSignature,
     AccountTransactionType,
     DeployModulePayload,

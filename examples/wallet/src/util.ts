@@ -2,8 +2,6 @@ import {
     AccountAddress,
     AccountInfo,
     AccountInfoType,
-    AccountTransaction,
-    AccountTransactionHeader,
     AccountTransactionType,
     AttributesKeys,
     CcdAmount,

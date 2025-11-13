@@ -13,7 +13,6 @@ import {
     CcdAmount,
     ConcordiumGRPCClient,
     ContractAddress,
-    Energy,
     ReceiveName,
     SchemaVersion,
 } from '@concordium/web-sdk';

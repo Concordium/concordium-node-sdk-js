@@ -32,6 +32,8 @@ import { readFileSync } from 'node:fs';
 
 import { parseEndpoint } from '../shared/util.js';
 
+import { getAccountTransactionHandler } from '@concordium/web-sdk';
+
 const cli = meow(
     `
   Usage
@@ -90,12 +92,10 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
 
     // #region documentation-snippet-init-contract
 
-    const initHeader: AccountTransactionHeader = {
+    const initHeader = {
         expiry: TransactionExpiry.futureMinutes(60),
         nonce: (await client.getNextAccountNonce(sender)).nonce,
         sender,
-        energyAmount: maxCost, //TODO: hardcoding this to maxCost for the purpose of this example
-        payloadSize: 1, //TODO: hardcoding this to 1 for the purpose of this example
     };
 
     const initParams = serializeInitContractParameters(contractName, sunnyWeather, schema!.buffer);
@@ -108,11 +108,8 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
         maxContractExecutionEnergy: maxCost,
     };
 
-    const initTransaction: AccountTransaction = {
-        header: initHeader,
-        payload: initPayload,
-        type: AccountTransactionType.InitContract,
-    };
+    const handler = getAccountTransactionHandler(AccountTransactionType.InitContract);
+    const initTransaction = handler.create(initHeader, initPayload);
 
     const initSignature = await signTransaction(initTransaction, signer);
     const initTrxHash = await client.sendAccountTransaction(initTransaction, initSignature);
@@ -143,12 +140,10 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
 
     // #region documentation-snippet-update-contract
 
-    const updateHeader: AccountTransactionHeader = {
+    const updateHeader = {
         expiry: TransactionExpiry.futureMinutes(60),
         nonce: (await client.getNextAccountNonce(sender)).nonce,
         sender,
-        energyAmount: maxCost, //TODO: hardcoding this to maxCost for the purpose of this example
-        payloadSize: 1, //TODO: hardcoding this to 1 for the purpose of this example
     };
 
     const updateParams = serializeUpdateContractParameters(
@@ -165,11 +160,8 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
         message: updateParams,
     };
 
-    const updateTransaction: AccountTransaction = {
-        header: updateHeader,
-        payload: updatePayload,
-        type: AccountTransactionType.Update,
-    };
+    const updateHandler = getAccountTransactionHandler(AccountTransactionType.Update);
+    const updateTransaction = updateHandler.create(updateHeader, updatePayload, maxCost);  //using maxCost constant here supplied in beginning of function
 
     const updateSignature = await signTransaction(updateTransaction, signer);
     const updateTrxHash = await client.sendAccountTransaction(updateTransaction, updateSignature);

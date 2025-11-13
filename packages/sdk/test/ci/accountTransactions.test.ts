@@ -4,41 +4,38 @@ import JSONBig from 'json-bigint';
 import path from 'path';
 
 import {
-    ConfigureBakerHandler,
-    ConfigureDelegationHandler,
-    DeployModuleHandler,
-    InitContractHandler,
-    RegisterDataHandler,
-    SimpleTransferHandler,
-    SimpleTransferWithMemoHandler,
-    UpdateContractHandler,
-    UpdateCredentialsHandler,
-} from '../../src/accountTransactions.ts';
-import {
-    AccountTransaction,
-    AccountTransactionHeader,
     AccountTransactionType,
     CcdAmount,
+    ConfigureBakerHandler,
     ConfigureBakerPayload,
+    ConfigureDelegationHandler,
     ConfigureDelegationPayload,
     ContractAddress,
     ContractName,
     DataBlob,
     DelegationTargetType,
+    DeployModuleHandler,
     DeployModulePayload,
     Energy,
     IndexedCredentialDeploymentInfo,
+    InitContractHandler,
     InitContractPayload,
     ModuleReference,
     OpenStatus,
     Parameter,
     ReceiveName,
+    RegisterDataHandler,
     RegisterDataPayload,
     SequenceNumber,
+    SimpleTransferHandler,
     SimpleTransferPayload,
+    SimpleTransferWithMemoHandler,
     SimpleTransferWithMemoPayload,
+    UpdateContractHandler,
     UpdateContractPayload,
+    UpdateCredentialsHandler,
     UpdateCredentialsPayload,
+    getAccountTransactionHandler,
     getAccountTransactionSignDigest,
     serializeAccountTransactionPayload,
 } from '../../src/index.js';
@@ -50,7 +47,7 @@ const expiry = TransactionExpiry.fromDate(new Date(1675872215));
 test('configureBaker is serialized correctly', async () => {
     const expectedDigest = 'dcfb92b6e57b1d3e252c52cb8b838f44a33bf8d67301e89753101912f299dffb';
 
-    const header: AccountTransactionHeader = {
+    const header = {
         expiry,
         nonce: SequenceNumber.create(1),
         sender: AccountAddress.fromBase58(senderAccountAddress),
@@ -78,11 +75,8 @@ test('configureBaker is serialized correctly', async () => {
         finalizationRewardCommission: 1,
     };
 
-    const transaction: AccountTransaction = {
-        header,
-        payload,
-        type: AccountTransactionType.ConfigureBaker,
-    };
+    const handler = getAccountTransactionHandler(AccountTransactionType.ConfigureBaker);
+    const transaction = handler.create(header, payload);
 
     const signDigest = getAccountTransactionSignDigest(transaction);
 
@@ -90,7 +84,7 @@ test('configureBaker is serialized correctly', async () => {
 });
 
 test('Init contract serializes init name correctly', async () => {
-    const header: AccountTransactionHeader = {
+    const header = {
         expiry,
         nonce: SequenceNumber.create(1),
         sender: AccountAddress.fromBase58(senderAccountAddress),
@@ -106,11 +100,8 @@ test('Init contract serializes init name correctly', async () => {
         param: Parameter.empty(),
     };
 
-    const transaction: AccountTransaction = {
-        header,
-        payload,
-        type: AccountTransactionType.InitContract,
-    };
+    const handler = getAccountTransactionHandler(AccountTransactionType.InitContract);
+    const transaction = handler.create(header, payload);
 
     const serializedTransaction = serializeAccountTransactionPayload(transaction);
 
@@ -210,14 +201,12 @@ test('UpdateContractPayload serializes to JSON correctly', async () => {
         address: ContractAddress.fromSchemaValue({ index: 1n, subindex: 2n }),
         receiveName: ReceiveName.fromString('test.abc'),
         message: Parameter.fromBuffer(Buffer.from('test', 'utf8')),
-        maxContractExecutionEnergy: Energy.create(30000),
     };
     const handler = new UpdateContractHandler();
     const json = handler.toJSON(payload);
 
     const actual = JSONBig.stringify(json);
-    const expected =
-        '{"amount":"5","address":{"index":1,"subindex":2},"receiveName":"test.abc","message":"74657374","maxContractExecutionEnergy":30000}';
+    const expected = '{"amount":"5","address":{"index":1,"subindex":2},"receiveName":"test.abc","message":"74657374"}';
     expect(actual).toEqual(expected);
 
     // ID test

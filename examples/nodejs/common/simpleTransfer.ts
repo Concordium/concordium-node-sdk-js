@@ -1,7 +1,5 @@
 import {
     AccountAddress,
-    AccountTransaction,
-    AccountTransactionHeader,
     AccountTransactionSignature,
     AccountTransactionType,
     CcdAmount,
@@ -9,6 +7,7 @@ import {
     NextAccountNonce,
     TransactionExpiry,
     buildAccountSigner,
+    getAccountTransactionHandler,
     parseWallet,
     signTransaction,
 } from '@concordium/web-sdk';
@@ -82,7 +81,7 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
     const toAddress = AccountAddress.fromBase58(cli.flags.receiver);
     const nextNonce: NextAccountNonce = await client.getNextAccountNonce(sender);
 
-    const header: AccountTransactionHeader = {
+    const header = {
         expiry: TransactionExpiry.futureMinutes(60),
         nonce: nextNonce.nonce,
         sender,
@@ -90,25 +89,26 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
 
     // Include memo if it is given otherwise don't
     let simpleTransfer = undefined;
+    let handler;
+    let accountTransaction;
     if (cli.flags.memo) {
         simpleTransfer = {
             amount: CcdAmount.fromMicroCcd(cli.flags.amount),
             toAddress,
             memo: new DataBlob(Buffer.from(cli.flags.memo, 'hex')),
         };
+        handler = getAccountTransactionHandler(AccountTransactionType.TransferWithMemo);
+        accountTransaction = handler.create(header, simpleTransfer);
     } else {
         simpleTransfer = {
             amount: CcdAmount.fromMicroCcd(cli.flags.amount),
             toAddress,
         };
+        handler = getAccountTransactionHandler(AccountTransactionType.Transfer);
+        accountTransaction = handler.create(header, simpleTransfer);
     }
 
     // #region documentation-snippet-sign-transaction
-    const accountTransaction: AccountTransaction = {
-        header: header,
-        payload: simpleTransfer,
-        type: AccountTransactionType.Transfer,
-    };
 
     // Sign transaction
     const signer = buildAccountSigner(walletExport);

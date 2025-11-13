@@ -249,7 +249,7 @@ test.each(clients)('sendBlockItem', async (client) => {
     const nextNonce = await client.getNextAccountNonce(senderAccount);
 
     // Create local transaction
-    const header: v1.AccountTransactionHeader = {
+    const header = {
         expiry: v1.TransactionExpiry.futureMinutes(60),
         nonce: nextNonce.nonce,
         sender: senderAccount,
@@ -258,11 +258,9 @@ test.each(clients)('sendBlockItem', async (client) => {
         amount: v1.CcdAmount.fromCcd(10_000),
         toAddress: testAccount,
     };
-    const accountTransaction: v1.AccountTransaction = {
-        header: header,
-        payload: simpleTransfer,
-        type: v1.AccountTransactionType.Transfer,
-    };
+
+    const handler = getAccountTransactionHandler(v1.AccountTransactionType.Transfer);
+    const accountTransaction = handler.create(header, simpleTransfer);
 
     // Sign transaction
     const signer = buildBasicAccountSigner(privateKey);
@@ -277,7 +275,7 @@ test.each(clients)('transactionHash', async (client) => {
     const nextNonce = await client.getNextAccountNonce(senderAccount);
 
     // Create local transaction
-    const headerLocal: v1.AccountTransactionHeader = {
+    const headerLocal = {
         expiry: v1.TransactionExpiry.futureMinutes(60),
         nonce: nextNonce.nonce,
         sender: senderAccount,
@@ -286,17 +284,15 @@ test.each(clients)('transactionHash', async (client) => {
         amount: v1.CcdAmount.fromCcd(10_000),
         toAddress: testAccount,
     };
-    const transaction: v1.AccountTransaction = {
-        header: headerLocal,
-        payload: simpleTransfer,
-        type: v1.AccountTransactionType.Transfer,
-    };
+
+    const handler = getAccountTransactionHandler(v1.AccountTransactionType.Transfer);
+    const transaction = handler.create(headerLocal, simpleTransfer);
 
     const rawPayload = serializeAccountTransactionPayload(transaction);
 
     // Energy cost
     const accountTransactionHandler = getAccountTransactionHandler(transaction.type);
-    const baseEnergyCost = accountTransactionHandler.getBaseEnergyCost(transaction.payload);
+    const baseEnergyCost = accountTransactionHandler.getBaseEnergyCost();
     const energyCost = calculateEnergyCost(1n, BigInt(rawPayload.length), baseEnergyCost);
 
     // Sign transaction
@@ -317,7 +313,10 @@ test.each(clients)('transactionHash', async (client) => {
         },
     };
 
-    const serializedAccountTransaction = serializeAccountTransaction(transaction, signature).slice(71);
+    const serializedAccountTransaction = serializeAccountTransaction(
+        transaction as v1.AccountTransaction<v1.OtherType, v1.OtherPayload>,
+        signature
+    ).slice(71);
     const localHash = Buffer.from(sha256([serializedAccountTransaction])).toString('hex');
 
     const queries: QueriesClient = (client as any).client;

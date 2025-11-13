@@ -37,7 +37,7 @@ import {
     UpdateCredentialsPayload,
     getAccountTransactionHandler,
     getAccountTransactionSignDigest,
-    serializeAccountTransactionPayload
+    serializeAccountTransactionPayload,
 } from '../../src/index.js';
 import { AccountAddress, TransactionExpiry } from '../../src/pub/types.js';
 

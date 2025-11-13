@@ -52,10 +52,7 @@ export interface AccountTransactionHandler<
     PayloadType extends AccountTransactionPayload = AccountTransactionPayload,
     JSONType = PayloadType,
 > {
-    create(
-        metadata: TransactionMetadata, 
-        payload: PayloadType
-    ): AccountTransaction;
+    create(metadata: TransactionMetadata, payload: PayloadType, givenEnergy?: Energy.Type): AccountTransaction;
 
     /**
      * Serializes the payload to a buffer.
@@ -119,7 +116,7 @@ export class SimpleTransferHandler
                 sender: sender,
                 nonce: nonce,
                 expiry: expiry,
-                energyAmount: Energy.create(this.getBaseEnergyCost()), 
+                energyAmount: Energy.create(this.getBaseEnergyCost()),
                 payloadSize: this.serialize(payload).length, //derive the payload size from the Buffer
             },
             payload: payload,
@@ -182,7 +179,7 @@ export class SimpleTransferWithMemoHandler
                 sender: sender,
                 nonce: nonce,
                 expiry: expiry,
-                energyAmount: Energy.create(this.getBaseEnergyCost()), 
+                energyAmount: Energy.create(this.getBaseEnergyCost()),
                 payloadSize: this.serialize(payload).length, //derive the payload size from the Buffer
             },
             payload: payload,
@@ -231,7 +228,6 @@ export interface DeployModulePayloadJSON {
 }
 
 export class DeployModuleHandler implements AccountTransactionHandler<DeployModulePayload, DeployModulePayloadJSON> {
-
     create(
         metadata: TransactionMetadata,
         payload: DeployModulePayload
@@ -245,7 +241,7 @@ export class DeployModuleHandler implements AccountTransactionHandler<DeployModu
                 sender: sender,
                 nonce: nonce,
                 expiry: expiry,
-                energyAmount: Energy.create(this.getBaseEnergyCost(payload)), 
+                energyAmount: Energy.create(this.getBaseEnergyCost(payload)),
                 payloadSize: this.serialize(payload).length, //derive the payload size from the Buffer
             },
             payload: payload,
@@ -315,7 +311,6 @@ export interface InitContractPayloadJSON {
 }
 
 export class InitContractHandler implements AccountTransactionHandler<InitContractPayload, InitContractPayloadJSON> {
-
     create(
         metadata: TransactionMetadata,
         payload: InitContractPayload
@@ -329,7 +324,7 @@ export class InitContractHandler implements AccountTransactionHandler<InitContra
                 sender: sender,
                 nonce: nonce,
                 expiry: expiry,
-                energyAmount: Energy.create(this.getBaseEnergyCost(payload)), 
+                energyAmount: Energy.create(this.getBaseEnergyCost(payload)),
                 payloadSize: this.serialize(payload).length, //derive the payload size from the Buffer
             },
             payload: payload,
@@ -491,7 +486,6 @@ export class UpdateContractHandler
     }
 }
 export class UpdateCredentialsHandler implements AccountTransactionHandler<UpdateCredentialsPayload> {
-
     create(
         metadata: TransactionMetadata,
         payload: UpdateCredentialsPayload
@@ -505,7 +499,7 @@ export class UpdateCredentialsHandler implements AccountTransactionHandler<Updat
                 sender: sender,
                 nonce: nonce,
                 expiry: expiry,
-                energyAmount: Energy.create(this.getBaseEnergyCost(payload)), 
+                energyAmount: Energy.create(this.getBaseEnergyCost(payload)),
                 payloadSize: this.serialize(payload).length, //derive the payload size from the Buffer
             },
             payload: payload,
@@ -575,7 +569,6 @@ export interface RegisterDataPayloadJSON {
 }
 
 export class RegisterDataHandler implements AccountTransactionHandler<RegisterDataPayload, RegisterDataPayloadJSON> {
-
     create(
         metadata: TransactionMetadata,
         payload: RegisterDataPayload
@@ -589,7 +582,7 @@ export class RegisterDataHandler implements AccountTransactionHandler<RegisterDa
                 sender: sender,
                 nonce: nonce,
                 expiry: expiry,
-                energyAmount: Energy.create(this.getBaseEnergyCost()), 
+                energyAmount: Energy.create(this.getBaseEnergyCost()),
                 payloadSize: this.serialize(payload).length, //derive the payload size from the Buffer
             },
             payload: payload,
@@ -639,7 +632,6 @@ export interface ConfigureBakerPayloadJSON {
 export class ConfigureBakerHandler
     implements AccountTransactionHandler<ConfigureBakerPayload, ConfigureBakerPayloadJSON>
 {
-
     create(
         metadata: TransactionMetadata,
         payload: ConfigureBakerPayload
@@ -653,7 +645,7 @@ export class ConfigureBakerHandler
                 sender: sender,
                 nonce: nonce,
                 expiry: expiry,
-                energyAmount: Energy.create(this.getBaseEnergyCost(payload)), 
+                energyAmount: Energy.create(this.getBaseEnergyCost(payload)),
                 payloadSize: this.serialize(payload).length, //derive the payload size from the Buffer
             },
             payload: payload,
@@ -707,7 +699,6 @@ export interface ConfigureDelegationPayloadJSON {
 export class ConfigureDelegationHandler
     implements AccountTransactionHandler<ConfigureDelegationPayload, ConfigureDelegationPayloadJSON>
 {
-
     create(
         metadata: TransactionMetadata,
         payload: ConfigureDelegationPayload
@@ -721,7 +712,7 @@ export class ConfigureDelegationHandler
                 sender: sender,
                 nonce: nonce,
                 expiry: expiry,
-                energyAmount: Energy.create(this.getBaseEnergyCost()), 
+                energyAmount: Energy.create(this.getBaseEnergyCost()),
                 payloadSize: this.serialize(payload).length, //derive the payload size from the Buffer
             },
             payload: payload,
@@ -771,7 +762,6 @@ export type TokenUpdatePayloadJSON = {
 };
 
 export class TokenUpdateHandler implements AccountTransactionHandler<TokenUpdatePayload, TokenUpdatePayloadJSON> {
-
     create(
         metadata: TransactionMetadata,
         payload: TokenUpdatePayload
@@ -785,7 +775,7 @@ export class TokenUpdateHandler implements AccountTransactionHandler<TokenUpdate
                 sender: sender,
                 nonce: nonce,
                 expiry: expiry,
-                energyAmount: Energy.create(this.getBaseEnergyCost(payload)), 
+                energyAmount: Energy.create(this.getBaseEnergyCost(payload)),
                 payloadSize: this.serialize(payload).length, //derive the payload size from the Buffer
             },
             payload: payload,

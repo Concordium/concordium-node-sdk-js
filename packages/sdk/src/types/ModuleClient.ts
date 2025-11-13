@@ -9,7 +9,7 @@ import * as ModuleReference from './ModuleReference.js';
 import * as Parameter from './Parameter.js';
 import * as TransactionExpiry from './TransactionExpiry.js';
 import * as TransactionHash from './TransactionHash.js';
-
+import { getAccountTransactionHandler } from '../index.ts';
 /**
  * An update transaction without header.
  */
@@ -140,11 +140,10 @@ export async function createAndSendInitTransaction(
         nonce: nonce,
         sender: metadata.senderAddress,
     };
-    const transaction = {
-        type: AccountTransactionType.InitContract,
-        header,
-        payload,
-    };
+
+    const handler = getAccountTransactionHandler(AccountTransactionType.InitContract);
+    const transaction = handler.create(header, payload);
+    
     const signature = await signTransaction(transaction, signer);
     return moduleClient.grpcClient.sendAccountTransaction(transaction, signature);
 }

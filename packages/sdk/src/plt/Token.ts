@@ -35,6 +35,8 @@ import {
     createTokenUpdatePayload,
 } from './index.js';
 
+import { getAccountTransactionHandler } from '../pub/types.js';
+
 /**
  * Enum representing the types of errors that can occur when interacting with PLT instances through the client.
  */
@@ -387,16 +389,15 @@ export async function sendRaw(
     { expiry = TransactionExpiry.futureMinutes(5), nonce }: TokenUpdateMetadata = {}
 ): Promise<TransactionHash.Type> {
     const { nonce: nextNonce } = nonce ? { nonce } : await token.grpc.getNextAccountNonce(sender);
-    const header: AccountTransactionHeader = {
+    const header = {
         expiry,
         nonce: nextNonce,
         sender,
     };
-    const transaction: AccountTransaction = {
-        type: AccountTransactionType.TokenUpdate,
-        payload,
-        header,
-    };
+    
+    const handler = getAccountTransactionHandler(AccountTransactionType.TokenUpdate);
+    const transaction = handler.create(header, payload);
+
     const signature = await signTransaction(transaction, signer);
     return token.grpc.sendAccountTransaction(transaction, signature);
 }

@@ -1,12 +1,12 @@
 import { Buffer } from 'buffer/index.js';
 import { stringify } from 'json-bigint';
 
+import { getAccountTransactionHandler } from './accountTransactions.ts';
 import { ConcordiumGRPCClient } from './grpc/GRPCClient.js';
 import { AccountSigner, signTransaction } from './signHelpers.js';
 import {
     AccountTransactionType,
     Base64String,
-    ContractContext,
     HexString,
     InstanceInfo,
     InvokeContractResult,
@@ -27,8 +27,6 @@ import * as ReceiveName from './types/ReceiveName.js';
 import * as ReturnValue from './types/ReturnValue.js';
 import * as TransactionExpiry from './types/TransactionExpiry.js';
 import * as TransactionHash from './types/TransactionHash.js';
-import { getAccountTransactionHandler } from './accountTransactions.ts';
-import { DryRunErrorResponse } from './grpc-api/v2/concordium/types.ts';
 
 /**
  * Metadata necessary for smart contract transactions
@@ -403,44 +401,22 @@ class ContractBase<E extends string = string, V extends string = string> {
      */
     protected async sendUpdateTransaction(
         transactionBase: ContractUpdateTransaction,
-        { senderAddress, expiry = getContractUpdateDefaultExpiryDate() }: ContractTransactionMetadata,
+        { senderAddress, expiry = getContractUpdateDefaultExpiryDate(), energy }: ContractTransactionMetadata,
         signer: AccountSigner
     ): Promise<TransactionHash.Type> {
         const { nonce } = await this.grpcClient.getNextAccountNonce(senderAddress);
 
-        /*
-        export interface ContractContext {
-            invoker?: ContractAddress.Type | AccountAddress.Type;
-            contract: ContractAddress.Type;
-            amount?: CcdAmount.Type;
-            method: ReceiveName.Type;
-            parameter?: Parameter.Type;
-            energy?: Energy.Type;
-        }
-        */
-       const context: ContractContext = {
-        method: transactionBase.payload.receiveName,
-        contract: transactionBase.payload.address,
-       }
-       //TODO: Will double check with Soren about this bit, I am not 100 percent sure about the params below, context and block hash
-       const result = await this.grpcClient.invokeContract(context, undefined); 
-
-       if(result.tag === 'failure') {        
-        throw new Error(`unable to invoke contract: ${result.reason}`);
-       }
-    
-       const header = {
+        const header = {
             expiry,
             nonce: nonce,
             sender: senderAddress,
         };
-        
+
         const handler = getAccountTransactionHandler(AccountTransactionType.Update);
-        const transaction = handler.create(header, transactionBase.payload, result.usedEnergy);
+        const transaction = handler.create(header, transactionBase.payload, energy);
 
         const signature = await signTransaction(transaction, signer);
         return this.grpcClient.sendAccountTransaction(transaction, signature);
-    
     }
 
     /**

@@ -37,9 +37,7 @@ import {
 import { serializeAccountTransactionForSubmission } from '../../src/serialization.js';
 import { deserializeTransaction } from '../../src/wasm/deserialization.js';
 
-function deserializeAccountTransactionBase(
-    transaction: AccountTransaction
-) {
+function deserializeAccountTransactionBase(transaction: AccountTransaction) {
     const signatures: AccountTransactionSignature = {
         0: {
             0: '780e4f5e00554fb4e235c67795fbd6d4ad638f3778199713f03634c846e4dbec496f0b13c4454e1a760c3efffec7cc8c11c6053a632dd32c9714cd26952cda08',
@@ -47,7 +45,10 @@ function deserializeAccountTransactionBase(
     };
 
     let deserialized;
-    if (transaction.type === AccountTransactionType.InitContract || transaction.type === AccountTransactionType.Update) {
+    if (
+        transaction.type === AccountTransactionType.InitContract ||
+        transaction.type === AccountTransactionType.Update
+    ) {
         //Hardcoding the energy here and will assume the given energy here is actually passed in by some calculation before submitting here
         deserialized = deserializeTransaction(
             serializeAccountTransactionForSubmission(
@@ -77,7 +78,7 @@ test('test deserialize simpleTransfer ', () => {
         amount: CcdAmount.fromMicroCcd(5100000),
         toAddress: AccountAddress.fromBase58('3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'),
     };
-    
+
     const transaction = prepareTransaction(AccountTransactionType.Transfer, payload);
 
     deserializeAccountTransactionBase(transaction);
@@ -89,7 +90,7 @@ test('test deserialize simpleTransfer with memo ', () => {
         toAddress: AccountAddress.fromBase58('3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'),
         memo: new DataBlob(Buffer.from('00', 'hex')),
     };
-    
+
     const transaction = prepareTransaction(AccountTransactionType.TransferWithMemo, payload);
 
     deserializeAccountTransactionBase(transaction);
@@ -166,7 +167,11 @@ test('Expired transactions can be deserialized', () => {
         toAddress: AccountAddress.fromBase58('3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'),
     };
 
-    const transaction = prepareTransaction(AccountTransactionType.Transfer, payload, TransactionExpiry.fromDate(new Date(2000, 1)));
+    const transaction = prepareTransaction(
+        AccountTransactionType.Transfer,
+        payload,
+        TransactionExpiry.fromDate(new Date(2000, 1))
+    );
 
     deserializeAccountTransactionBase(transaction);
 });
@@ -223,17 +228,11 @@ test('Test parsing of Token Addresses', () => {
     expect(rebase58).toEqual(base58);
 });
 
-
-function prepareTransaction<
-    T extends AccountTransactionType,
-    P extends AccountTransactionPayload
->
-(
+function prepareTransaction<T extends AccountTransactionType, P extends AccountTransactionPayload>(
     transactionType: T,
     payload: P,
     inputExpiry?: TransactionExpiry.Type
-) 
-{
+) {
     const handler = getAccountTransactionHandler(transactionType);
 
     const nonce = SequenceNumber.create(1);
@@ -244,4 +243,3 @@ function prepareTransaction<
     const transaction = handler.create({ sender, nonce, expiry: finalExpiry }, payload);
     return transaction;
 }
-

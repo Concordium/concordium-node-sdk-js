@@ -11,14 +11,13 @@ import {
     parseWallet,
     signTransaction,
 } from '@concordium/web-sdk';
+import { getAccountTransactionHandler } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
 import { readFileSync } from 'node:fs';
 
 import { parseEndpoint } from '../shared/util.js';
-
-import { getAccountTransactionHandler } from '@concordium/web-sdk';
 
 const cli = meow(
     `

@@ -12,14 +12,13 @@ import {
     parseWallet,
     signTransaction,
 } from '@concordium/web-sdk';
+import { getAccountTransactionHandler } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
 import { readFileSync } from 'node:fs';
 
 import { parseEndpoint } from '../shared/util.js';
-
-import { getAccountTransactionHandler } from '@concordium/web-sdk';
 
 const cli = meow(
     `
@@ -92,23 +91,26 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
 
     // Include memo if it is given otherwise don't
     let simpleTransfer = undefined;
+    let handler;
+    let accountTransaction;
     if (cli.flags.memo) {
         simpleTransfer = {
             amount: CcdAmount.fromMicroCcd(cli.flags.amount),
             toAddress,
             memo: new DataBlob(Buffer.from(cli.flags.memo, 'hex')),
         };
+        handler = getAccountTransactionHandler(AccountTransactionType.TransferWithMemo);
+        accountTransaction = handler.create(header, simpleTransfer);
     } else {
         simpleTransfer = {
             amount: CcdAmount.fromMicroCcd(cli.flags.amount),
             toAddress,
         };
+        handler = getAccountTransactionHandler(AccountTransactionType.Transfer);
+        accountTransaction = handler.create(header, simpleTransfer);
     }
 
     // #region documentation-snippet-sign-transaction
-
-    const handler = getAccountTransactionHandler(AccountTransactionType.Transfer);
-    const accountTransaction = handler.create(header, simpleTransfer);
 
     // Sign transaction
     const signer = buildAccountSigner(walletExport);

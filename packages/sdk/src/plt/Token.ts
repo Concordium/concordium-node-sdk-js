@@ -9,6 +9,7 @@ import {
     TransactionExpiry,
     TransactionHash,
 } from '../pub/types.js';
+import { getAccountTransactionHandler } from '../pub/types.js';
 import { AccountSigner, signTransaction } from '../signHelpers.js';
 import { SequenceNumber } from '../types/index.js';
 import { bail } from '../util.js';
@@ -34,8 +35,6 @@ import {
     TokenUnpauseOperation,
     createTokenUpdatePayload,
 } from './index.js';
-
-import { getAccountTransactionHandler } from '../pub/types.js';
 
 /**
  * Enum representing the types of errors that can occur when interacting with PLT instances through the client.
@@ -394,7 +393,7 @@ export async function sendRaw(
         nonce: nextNonce,
         sender,
     };
-    
+
     const handler = getAccountTransactionHandler(AccountTransactionType.TokenUpdate);
     const transaction = handler.create(header, payload);
 

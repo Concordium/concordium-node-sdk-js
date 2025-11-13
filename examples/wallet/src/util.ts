@@ -19,6 +19,7 @@ import {
     TransactionExpiry,
     Versioned,
     buildBasicAccountSigner,
+    getAccountTransactionHandler,
     serializeCredentialDeploymentPayload,
     signTransaction,
 } from '@concordium/web-sdk';
@@ -353,17 +354,14 @@ async function createSimpleTransferTransaction(
     };
     const nonce = (await client.getNextAccountNonce(senderAddress)).nonce;
 
-    const header: AccountTransactionHeader = {
+    const header = {
         expiry: getDefaultTransactionExpiry(),
         nonce,
         sender: senderAddress,
     };
 
-    const transaction: AccountTransaction = {
-        type: AccountTransactionType.Transfer,
-        payload,
-        header,
-    };
+    const handler = getAccountTransactionHandler(AccountTransactionType.Transfer);
+    const transaction = handler.create(header, payload);
 
     return transaction;
 }

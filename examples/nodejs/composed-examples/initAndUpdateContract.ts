@@ -25,14 +25,13 @@ import {
     signTransaction,
     unwrap,
 } from '@concordium/web-sdk';
+import { getAccountTransactionHandler } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
 import { readFileSync } from 'node:fs';
 
 import { parseEndpoint } from '../shared/util.js';
-
-import { getAccountTransactionHandler } from '@concordium/web-sdk';
 
 const cli = meow(
     `
@@ -161,7 +160,7 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
     };
 
     const updateHandler = getAccountTransactionHandler(AccountTransactionType.Update);
-    const updateTransaction = updateHandler.create(updateHeader, updatePayload, maxCost);  //using maxCost constant here supplied in beginning of function
+    const updateTransaction = updateHandler.create(updateHeader, updatePayload, maxCost); //using maxCost constant here supplied in beginning of function
 
     const updateSignature = await signTransaction(updateTransaction, signer);
     const updateTrxHash = await client.sendAccountTransaction(updateTransaction, updateSignature);

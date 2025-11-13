@@ -5,7 +5,7 @@
         "given": [
             {
                 "label": "Nonce",
-                "context": "00010203"
+                "context": "0101010101010101010101010101010101010101010101010101010101010101"
             },
             {
                 "label": "ConnectionID",
@@ -22,13 +22,13 @@
         {
             "type": "identity",
             "source": ["identityCredential"],
-            "statement": [
+            "statements": [
                 {
                     "type": "RevealAttribute",
                     "attributeTag": "firstName"
                 }
             ],
-            "issuers": ["ccd:testnet:idp:0", "ccd:testnet:idp:1", "ccd:testnet:idp:2"]
+            "issuers": ["did:ccd:testnet:idp:0", "did:ccd:testnet:idp:1", "did:ccd:testnet:idp:2"]
         }
     ],
     "transactionRef": "0102030401020304010203040102030401020304010203040102030401020304"

@@ -495,7 +495,7 @@ export class IdentityProviderDID {
      * @returns DID string in format: ccd:{network}:idp:{index}
      */
     public toJSON(): DIDString {
-        return `ccd:${this.network.toLowerCase()}:idp:${this.index}`;
+        return `did:ccd:${this.network.toLowerCase()}:idp:${this.index}`;
     }
 
     /**
@@ -507,11 +507,11 @@ export class IdentityProviderDID {
      */
     public static fromJSON(did: DIDString): IdentityProviderDID {
         const parts = did.split(':');
-        if (parts.length !== 4 || parts[0] !== 'ccd' || parts[2] !== 'idp') {
+        if (parts.length !== 5 || parts[0] !== 'did' || parts[1] !== 'ccd' || parts[3] !== 'idp') {
             throw new Error(`Invalid IdentityQualifierDID format: ${did}`);
         }
-        const network = (parts[1].charAt(0).toUpperCase() + parts[1].slice(1)) as Network;
-        const index = parseInt(parts[3], 10);
+        const network = (parts[2].charAt(0).toUpperCase() + parts[2].slice(1)) as Network;
+        const index = parseInt(parts[4], 10);
         if (isNaN(index)) {
             throw new Error(`Invalid index in IdentityProviderDID: ${parts[3]}`);
         }
@@ -541,7 +541,7 @@ export class ContractInstanceDID {
      * @returns DID string in format: ccd:{network}:sci:{index}:{subindex}
      */
     public toJSON(): DIDString {
-        return `ccd:${this.network.toLowerCase()}:sci:${this.address.index}:${this.address.subindex}`;
+        return `did:ccd:${this.network.toLowerCase()}:sci:${this.address.index}:${this.address.subindex}`;
     }
 
     /**
@@ -553,12 +553,12 @@ export class ContractInstanceDID {
      */
     public static fromJSON(did: DIDString): ContractInstanceDID {
         const parts = did.split(':');
-        if (parts.length !== 5 || parts[0] !== 'ccd' || parts[2] !== 'sci') {
+        if (parts.length !== 6 || parts[0] !== 'did' || parts[1] !== 'ccd' || parts[3] !== 'sci') {
             throw new Error(`Invalid ContractInstanceDID format: ${did}`);
         }
-        const network = (parts[1].charAt(0).toUpperCase() + parts[1].slice(1)) as Network;
-        const index = BigInt(parts[3]);
-        const subindex = BigInt(parts[4]);
+        const network = (parts[2].charAt(0).toUpperCase() + parts[2].slice(1)) as Network;
+        const index = BigInt(parts[4]);
+        const subindex = BigInt(parts[5]);
         return new ContractInstanceDID(network, ContractAddress.create(index, subindex));
     }
 }

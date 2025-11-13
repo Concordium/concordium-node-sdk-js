@@ -21,7 +21,7 @@ const JSONBig = _JB({ alwaysParseAsBig: true, useNativeBigInt: true });
 describe('VerificationRequestV1', () => {
     it('should perform successful JSON roundtrip', () => {
         const context = VerificationRequestV1.createSimpleContext(
-            Uint8Array.from([0, 1, 2, 3]),
+            Uint8Array.from(Buffer.from('01'.repeat(32), 'hex')),
             '0102'.repeat(16),
             'Wine payment'
         );
@@ -41,7 +41,7 @@ describe('VerificationRequestV1', () => {
 
     it('should match the JSON fixture representation', () => {
         const context = VerificationRequestV1.createSimpleContext(
-            Uint8Array.from([0, 1, 2, 3]),
+            Uint8Array.from(Buffer.from('01'.repeat(32), 'hex')),
             '0102010201020102010201020102010201020102010201020102010201020102',
             'Wine payment'
         );
@@ -72,7 +72,7 @@ describe('VerificationRequestV1', () => {
 describe('VerificationRequestV1.Anchor', () => {
     it('should compute the correct anchor', () => {
         const context = VerificationRequestV1.createSimpleContext(
-            Uint8Array.from([0, 1, 2, 3]),
+            Uint8Array.from(Buffer.from('01'.repeat(32), 'hex')),
             '0102'.repeat(16),
             'Wine payment'
         );
@@ -86,7 +86,7 @@ describe('VerificationRequestV1.Anchor', () => {
             somePulicInfo: 'public info',
         });
         const expectedAnchor =
-            'a4646861736858202b3cab3d547ded97cfebd24e9d5193e221675ba715795ef5931c0557ba5e2277647479706566434344565241667075626c6963a16d736f6d6550756c6963496e666f6b7075626c696320696e666f6776657273696f6e01';
+            'a464686173685820eb2499bd1ab8f24357945bb59e05a51c4cf19631d20bf1cb1bfc2c5974083ca9647479706566434344565241667075626c6963a16d736f6d6550756c6963496e666f6b7075626c696320696e666f6776657273696f6e01';
         expect(Buffer.from(anchor).toString('hex')).toEqual(expectedAnchor);
 
         const roundtrip = VerificationRequestV1.decodeAnchor(anchor);
@@ -101,8 +101,8 @@ describe('VerificationRequestV1.Anchor', () => {
 
     it('should match the fixture anchor representation', () => {
         const context = VerificationRequestV1.createSimpleContext(
-            Uint8Array.from([0, 1, 2, 3]),
-            '0102010201020102010201020102010201020102010201020102010201020102',
+            Uint8Array.from(Buffer.from('01'.repeat(32), 'hex')),
+            '0102'.repeat(16),
             'Wine payment'
         );
         const statement = VerificationRequestV1.claimsBuilder()

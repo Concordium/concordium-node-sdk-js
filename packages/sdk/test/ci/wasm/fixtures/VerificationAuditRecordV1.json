@@ -23,8 +23,8 @@
             {
                 "type": "identity",
                 "source": ["identityCredential"],
-                "issuers": ["ccd:testnet:idp:0", "ccd:testnet:idp:1", "ccd:testnet:idp:2"],
-                "statement": [
+                "issuers": ["did:ccd:testnet:idp:0", "did:ccd:testnet:idp:1", "did:ccd:testnet:idp:2"],
+                "statements": [
                     {
                         "type": "RevealAttribute",
                         "attributeTag": "firstName"
@@ -71,7 +71,7 @@
                     "created": "2025-10-17T13:14:14.292Z",
                     "proofValue": "01020102010201020102010201020102010201020102010201020102010201020102010201020102010201020102010201020102010201020102010201020102"
                 },
-                "issuer": "ccd:testnet:idp:0",
+                "issuer": "did:ccd:testnet:idp:0",
                 "validFrom": "2000-01-01T00:00:00.000Z",
                 "validTo": "2030-01-01T00:00:00.000Z",
                 "credentialSubject": {

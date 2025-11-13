@@ -247,7 +247,7 @@ async function verifyAccountClaims(
     if (!vrClaims.source.includes('accountCredential'))
         throw new Error(`Request statement does not include "account" source`);
 
-    verifyAtomicStatements(vrClaims.statement, vpClaims.statement);
+    verifyAtomicStatements(vrClaims.statements, vpClaims.statement);
 
     // check that the selected credential for the claim is issued by a valid IDP
     const validIdpIndices = vrClaims.issuers.map((i) => i.index);
@@ -283,7 +283,7 @@ function verifyIdentityClaims(
     if (!vrClaims.source.includes('identityCredential'))
         throw new Error(`Request statement does not include "identity" source`);
 
-    verifyAtomicStatements(vrClaims.statement, vpClaims.statement);
+    verifyAtomicStatements(vrClaims.statements, vpClaims.statement);
 
     // check that the selected credential for the claim is issued by a valid IDP
     const validIdpIndices = vrClaims.issuers.map((i) => i.index);

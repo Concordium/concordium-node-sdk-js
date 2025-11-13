@@ -1,10 +1,14 @@
-import { sha256 } from '../../hash.js';
+import * as wasm from '@concordium/rust-bindings/wallet';
+import { Buffer } from 'buffer/index.js';
+import JSONBig from 'json-bigint';
+
 import {
     AccountTransaction,
     AccountTransactionHeader,
     AccountTransactionType,
     AttributeKey,
     ConcordiumGRPCClient,
+    HexString,
     RegisterDataPayload,
     cborDecode,
     cborEncode,
@@ -82,6 +86,22 @@ export type Anchor = {
     public?: Record<string, any>;
 };
 
+type ContextJSON = Pick<Context, 'type' | 'requested'> & { given: GivenContextJSON[] };
+
+function requestContextToJSON(context: Context): ContextJSON {
+    return {
+        type: context.type,
+        given: context.given.map(givenContextToJSON),
+        requested: context.requested,
+    };
+}
+
+type RequestAnchorInput = {
+    context: ContextJSON;
+    subjectClaims: SubjectClaims[];
+    publicInfo: Record<string, HexString>;
+};
+
 /**
  * Creates a CBOR-encoded anchor for a verification request.
  *
@@ -91,19 +111,26 @@ export type Anchor = {
  * public metadata.
  *
  * @param context - The context information for the request
- * @param credentialStatements - The credential statements being requested
+ * @param subjectClaims - The credential subject claims being requested
  * @param publicInfo - Optional public information to include in the anchor
  *
  * @returns CBOR-encoded anchor data suitable for blockchain storage
  */
 export function createAnchor(
     context: Context,
-    credentialStatements: SubjectClaims[],
+    subjectClaims: SubjectClaims[],
     publicInfo?: Record<string, any>
 ): Uint8Array {
-    const hash = computeAnchorHash(context, credentialStatements);
-    const data: Anchor = { type: 'CCDVRA', version: VERSION, hash, public: publicInfo };
-    return cborEncode(data);
+    const info = Object.entries(publicInfo ?? {}).reduce<Record<string, HexString>>(
+        (acc, [k, v]) => ({ ...acc, [k]: Buffer.from(cborEncode(v)).toString('hex') }),
+        {}
+    );
+    const input: RequestAnchorInput = {
+        context: requestContextToJSON(context),
+        subjectClaims,
+        publicInfo: info,
+    };
+    return wasm.createVerificationRequestV1Anchor(JSONBig.stringify(input));
 }
 
 /**
@@ -114,27 +141,17 @@ export function createAnchor(
  * specific parameters.
  *
  * @param context - The context information for the request
- * @param credentialStatements - The credential statements being requested
+ * @param subjectClaims - The credential subject claims being requested
  *
  * @returns SHA-256 hash of the serialized request data
  */
-export function computeAnchorHash(context: Context, credentialStatements: SubjectClaims[]): Uint8Array {
-    // TODO: this is a quick and dirty anchor implementation that needs to be replaced with
-    // proper serialization, which is TBD.
-    const sanitizedContext: Context = {
-        ...context,
-        given: context.given.map(
-            (c) =>
-                ({
-                    ...c,
-                    // convert any potential `Buffer` instances to raw Uint8Array to avoid discrepancies when decoding
-                    context: c.context instanceof Uint8Array ? Uint8Array.from(c.context) : c.context,
-                }) as GivenContext
-        ),
+export function computeAnchorHash(context: Context, subjectClaims: SubjectClaims[]): Uint8Array {
+    const input: RequestAnchorInput = {
+        context: requestContextToJSON(context),
+        subjectClaims,
+        publicInfo: {},
     };
-    const contextDigest = cborEncode(sanitizedContext);
-    const statementsDigest = cborEncode(credentialStatements);
-    return Uint8Array.from(sha256([contextDigest, statementsDigest]));
+    return wasm.computeVerificationRequestV1AnchorHash(JSONBig.stringify(input));
 }
 
 /**
@@ -190,7 +207,7 @@ export type IdentityClaims = {
     /** Source types accepted for this statement (identity credential, account credential, or both) */
     source: IdentityCredType[];
     /** Atomic statements about identity attributes to prove */
-    statement: AtomicStatementV2<AttributeKey>[];
+    statements: AtomicStatementV2<AttributeKey>[];
     /** Valid identity provider issuers for this statement */
     issuers: IdentityProviderDID[];
 };
@@ -232,7 +249,7 @@ class SubjectClaimsBuilder {
         this.claims.push({
             type: 'identity',
             source: ['identityCredential'],
-            statement: builder.getStatement(),
+            statements: builder.getStatement(),
             issuers: validIdentityProviders,
         });
         return this;
@@ -255,7 +272,7 @@ class SubjectClaimsBuilder {
         this.claims.push({
             type: 'identity',
             source: ['accountCredential'],
-            statement: builder.getStatement(),
+            statements: builder.getStatement(),
             issuers: validIdentityProviders,
         });
         return this;
@@ -278,7 +295,7 @@ class SubjectClaimsBuilder {
         this.claims.push({
             type: 'identity',
             source: ['accountCredential', 'identityCredential'],
-            statement: builder.getStatement(),
+            statements: builder.getStatement(),
             issuers: validIdentityProviders,
         });
         return this;

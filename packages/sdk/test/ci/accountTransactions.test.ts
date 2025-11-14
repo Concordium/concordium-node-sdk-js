@@ -95,13 +95,13 @@ test('Init contract serializes init name correctly', async () => {
     const payload: InitContractPayload = {
         amount: CcdAmount.fromMicroCcd(0),
         initName: ContractName.fromString(initNameBase),
-        maxContractExecutionEnergy: Energy.create(30000),
         moduleRef: ModuleReference.fromHexString('aabbccddaabbccddaabbccddaabbccddaabbccddaabbccddaabbccddaabbccdd'),
         param: Parameter.empty(),
     };
 
+    const givenEnergyAmount = Energy.create(30000);
     const handler = getAccountTransactionHandler(AccountTransactionType.InitContract);
-    const transaction = handler.create(header, payload);
+    const transaction = handler.create(header, payload, givenEnergyAmount);
 
     const serializedTransaction = serializeAccountTransactionPayload(transaction);
 
@@ -179,7 +179,6 @@ test('InitContractPayload serializes to JSON correctly', async () => {
     const payload: InitContractPayload = {
         amount: CcdAmount.fromMicroCcd(1000),
         initName: ContractName.fromString('test'),
-        maxContractExecutionEnergy: Energy.create(30000),
         moduleRef: ModuleReference.fromHexString('aabbccddaabbccddaabbccddaabbccddaabbccddaabbccddaabbccddaabbccdd'),
         param: Parameter.fromBuffer(Buffer.from('test', 'utf8')),
     };
@@ -188,7 +187,7 @@ test('InitContractPayload serializes to JSON correctly', async () => {
 
     const actual = JSONBig.stringify(json);
     const expected =
-        '{"amount":"1000","moduleRef":"00000020aabbccddaabbccddaabbccddaabbccddaabbccddaabbccddaabbccddaabbccdd","initName":"test","param":"74657374","maxContractExecutionEnergy":30000}';
+        '{"amount":"1000","moduleRef":"00000020aabbccddaabbccddaabbccddaabbccddaabbccddaabbccddaabbccddaabbccdd","initName":"test","param":"74657374"}';
     expect(actual).toEqual(expected);
 
     // ID test

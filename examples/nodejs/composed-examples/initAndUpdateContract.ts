@@ -102,11 +102,10 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
         moduleRef: moduleRef,
         initName: contractName,
         param: initParams,
-        maxContractExecutionEnergy: maxCost,
     };
 
     const handler = getAccountTransactionHandler(AccountTransactionType.InitContract);
-    const initTransaction = handler.create(initHeader, initPayload);
+    const initTransaction = handler.create(initHeader, initPayload, maxCost);
 
     const initSignature = await signTransaction(initTransaction, signer);
     const initTrxHash = await client.sendAccountTransaction(initTransaction, initSignature);

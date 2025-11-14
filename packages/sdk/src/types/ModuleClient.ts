@@ -132,7 +132,6 @@ export async function createAndSendInitTransaction(
         moduleRef: moduleClient.moduleReference,
         amount: metadata.amount ?? CcdAmount.zero(),
         initName: contractName,
-        maxContractExecutionEnergy: metadata.energy,
         param: parameter,
     };
     const { nonce } = await moduleClient.grpcClient.getNextAccountNonce(metadata.senderAddress);
@@ -143,7 +142,7 @@ export async function createAndSendInitTransaction(
     };
 
     const handler = getAccountTransactionHandler(AccountTransactionType.InitContract);
-    const transaction = handler.create(header, payload);
+    const transaction = handler.create(header, payload, metadata.energy);
 
     const signature = await signTransaction(transaction, signer);
     return moduleClient.grpcClient.sendAccountTransaction(transaction, signature);

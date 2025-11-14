@@ -8,6 +8,13 @@
   specififying a sequence number to use for the transaction.
   The function signature has been changed to take "transaction metadata" as an object, which now includes the
   the transaction `sender` and `signer`, in addition to an optional `sequenceNumber`.
+- Renamed `VerificationRequestV1.credentialStatements` to `VerificationRequestV1.subjectClaims`
+- Renamed `VerificationRequestV1.Statement` to `VerificationRequestV1.SubjectClaims`, and correspondingly:
+  - `VerificationRequestV1.IdentityStatement` to `VerificationRequestV1.IdentityClaims`
+- Renamed `VerificationRequestV1.statementBuilder` to `VerificationRequestV1.claimsBuilder`, and corresondingly:
+  - `SubjectClaimsBuilder.addIdentityStatement` to `SubjectClaimsBuilder.addIdentityClaims`
+  - `SubjectClaimsBuilder.addAccountStatement` to `SubjectClaimsBuilder.addAccountClaims`
+  - `SubjectClaimsBuilder.addAccountOrIdentityStatement` to `SubjectClaimsBuilder.addAccountOrIdentityClaims`
 
 ## 11.1.0-alpha.3
 

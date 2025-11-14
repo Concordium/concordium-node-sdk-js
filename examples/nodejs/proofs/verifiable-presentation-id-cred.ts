@@ -120,21 +120,27 @@ const [sender, signer] = parseKeysFile(walletFile);
 // First we generate the verification request.
 //
 // This will normally happen server-side.
-const context = VerificationRequestV1.createSimpleContext(
+const requestContext = VerificationRequestV1.createSimpleContext(
     sha256([Buffer.from(Date.now().toString())]),
     randomUUID(),
     'Example VP'
 );
-const statements = VerificationRequestV1.statementBuilder()
-    .addAccountOrIdentityStatement([new IdentityProviderDID(network, identityProviderIndex)], (b) => {
+const requestClaims = VerificationRequestV1.claimsBuilder()
+    .addAccountOrIdentityClaims([new IdentityProviderDID(network, identityProviderIndex)], (b) => {
         b.addEUResidency();
         b.addMinimumAge(18);
         b.revealAttribute('firstName');
     })
-    .getStatements();
-const verificationRequest = await VerificationRequestV1.createAndAnchor(grpc, { sender, signer }, context, statements, {
-    info: 'Example VP anchor',
-});
+    .getClaims();
+const verificationRequest = await VerificationRequestV1.createAndAnchor(
+    grpc,
+    { sender, signer },
+    requestContext,
+    requestClaims,
+    {
+        info: 'Example VP anchor',
+    }
+);
 
 // simulate sending a response to the client requesting the verification request
 const requestJson = JSONBig.stringify(verificationRequest);
@@ -166,11 +172,11 @@ const requestParsed = VerificationRequestV1.fromJSON(JSONBig.parse(requestJson))
 // From the above, we retreive the secret input which is at the core of creating the verifiable presentation (proof)
 const proofInput = createIdentityCommitmentInputWithHdWallet(idObject, idp, identityIndex, wallet);
 
-// we select the identity to prove the statement for
-const idStatement = requestParsed.credentialStatements.find(
+// we select the identity to prove the claims for
+const idClaims = requestParsed.subjectClaims.find(
     (s) => s.type === 'identity'
-)! as VerificationRequestV1.IdentityStatement; // we unwrap here, as we know the statement exists (we created it just above)
-const claims = VerifiablePresentationV1.createIdentityClaims(network, idp.ipInfo.ipIdentity, idStatement.statement);
+)! as VerificationRequestV1.IdentityClaims; // we unwrap here, as we know the claims exists (we created it just above)
+const proofClaims = VerifiablePresentationV1.createIdentityClaims(network, idp.ipInfo.ipIdentity, idClaims.statements);
 
 console.log(
     'Waiting for verification request anchor transaction to finalize:',
@@ -184,7 +190,7 @@ console.log('Verification request anchor successfully registered.');
 const presentation = await VerifiablePresentationV1.createFromAnchor(
     grpc,
     requestParsed,
-    [claims],
+    [proofClaims],
     [proofInput],
     [{ label: 'ResourceID', context: 'Example VP use-case' }]
 );

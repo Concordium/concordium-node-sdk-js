@@ -568,7 +568,7 @@ export class UpdateCredentialsHandler implements AccountTransactionHandler<Updat
             deserializeCredentialDeploymentValues(serializedPayload, partialData, i);
             console.log(`partialData after populating crdValue at i=${i}:`, partialData);
 
-            deserializeCredentialDeploymentProofs(serializedPayload, partialData, i);
+            deserializeCredentialDeploymentProofs(serializedPayload/*, partialData, i*/);
             console.log(`partialData after populating crdProofs at i=${i}:`, partialData);
         }
         

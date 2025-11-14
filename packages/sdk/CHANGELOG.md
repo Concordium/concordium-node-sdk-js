@@ -4,11 +4,13 @@
 
 ### Added
 
-- deserialize function for DeployModulePayload implemented instead of throwing an exception of not supporting deserialize
-
-- deserialize function for InitContractPayload implemented instead of throwing an exception of not supporting deserialize
-
-- deserialize function for UpdateContractPayload implemented instead of throwing an exception of not supporting deserialize
+- Deserialize function for DeployModulePayload implemented instead of throwing an exception of not supporting deserialize
+- Deserialize function for InitContractPayload implemented instead of throwing an exception of not supporting deserialize
+- Deserialize function for UpdateContractPayload implemented instead of throwing an exception of not supporting deserialize
+- Remove the maxContractExecutionEnergy from UpdateContractPayload. This field actually represent the base energy amount and it must be passed in manually instead of deriving from payload. 
+- Provide a create method for each AccountTransaction type to remove the manual steps of creating a header with elements
+in the header and returning the transaction object to be signed and sent.
+- Remove the maxContractExecutionEnergy from InitContractPayload. This field actually represent the base energy amount and it must be passed in manually instead of deriving from payload. 
 
 ## 11.0.0
 

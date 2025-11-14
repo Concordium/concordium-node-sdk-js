@@ -1,7 +1,5 @@
 import {
     AccountAddress,
-    AccountTransaction,
-    AccountTransactionHeader,
     AccountTransactionType,
     CcdAmount,
     ContractContext,
@@ -17,6 +15,7 @@ import {
     affectedContracts,
     buildAccountSigner,
     deserializeReceiveReturnValue,
+    getAccountTransactionHandler,
     isKnown,
     knownOrError,
     parseWallet,
@@ -90,7 +89,7 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
 
     // #region documentation-snippet-init-contract
 
-    const initHeader: AccountTransactionHeader = {
+    const initHeader = {
         expiry: TransactionExpiry.futureMinutes(60),
         nonce: (await client.getNextAccountNonce(sender)).nonce,
         sender,
@@ -103,14 +102,10 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
         moduleRef: moduleRef,
         initName: contractName,
         param: initParams,
-        maxContractExecutionEnergy: maxCost,
     };
 
-    const initTransaction: AccountTransaction = {
-        header: initHeader,
-        payload: initPayload,
-        type: AccountTransactionType.InitContract,
-    };
+    const handler = getAccountTransactionHandler(AccountTransactionType.InitContract);
+    const initTransaction = handler.create(initHeader, initPayload, maxCost);
 
     const initSignature = await signTransaction(initTransaction, signer);
     const initTrxHash = await client.sendAccountTransaction(initTransaction, initSignature);
@@ -141,7 +136,7 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
 
     // #region documentation-snippet-update-contract
 
-    const updateHeader: AccountTransactionHeader = {
+    const updateHeader = {
         expiry: TransactionExpiry.futureMinutes(60),
         nonce: (await client.getNextAccountNonce(sender)).nonce,
         sender,
@@ -159,14 +154,10 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
         address: unwrap(contractAddress),
         receiveName,
         message: updateParams,
-        maxContractExecutionEnergy: maxCost,
     };
 
-    const updateTransaction: AccountTransaction = {
-        header: updateHeader,
-        payload: updatePayload,
-        type: AccountTransactionType.Update,
-    };
+    const updateHandler = getAccountTransactionHandler(AccountTransactionType.Update);
+    const updateTransaction = updateHandler.create(updateHeader, updatePayload, maxCost); //using maxCost constant here supplied in beginning of function
 
     const updateSignature = await signTransaction(updateTransaction, signer);
     const updateTrxHash = await client.sendAccountTransaction(updateTransaction, updateSignature);

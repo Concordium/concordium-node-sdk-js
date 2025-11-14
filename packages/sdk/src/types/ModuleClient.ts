@@ -1,5 +1,6 @@
 import { ContractTransactionMetadata } from '../GenericContract.js';
 import { ConcordiumGRPCClient } from '../grpc/index.js';
+import { getAccountTransactionHandler } from '../index.js';
 import { AccountSigner, signTransaction } from '../signHelpers.js';
 import { AccountTransactionType, InitContractPayload, VersionedModuleSource } from '../types.js';
 import * as BlockHash from './BlockHash.js';
@@ -131,7 +132,6 @@ export async function createAndSendInitTransaction(
         moduleRef: moduleClient.moduleReference,
         amount: metadata.amount ?? CcdAmount.zero(),
         initName: contractName,
-        maxContractExecutionEnergy: metadata.energy,
         param: parameter,
     };
     const { nonce } = await moduleClient.grpcClient.getNextAccountNonce(metadata.senderAddress);
@@ -140,11 +140,10 @@ export async function createAndSendInitTransaction(
         nonce: nonce,
         sender: metadata.senderAddress,
     };
-    const transaction = {
-        type: AccountTransactionType.InitContract,
-        header,
-        payload,
-    };
+
+    const handler = getAccountTransactionHandler(AccountTransactionType.InitContract);
+    const transaction = handler.create(header, payload, metadata.energy);
+
     const signature = await signTransaction(transaction, signer);
     return moduleClient.grpcClient.sendAccountTransaction(transaction, signature);
 }

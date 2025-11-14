@@ -1,12 +1,11 @@
 import {
     AccountAddress,
-    AccountTransaction,
-    AccountTransactionHeader,
     AccountTransactionSignature,
     AccountTransactionType,
     DeployModulePayload,
     TransactionExpiry,
     buildAccountSigner,
+    getAccountTransactionHandler,
     parseWallet,
     signTransaction,
 } from '@concordium/web-sdk';
@@ -76,17 +75,14 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
         source: wasmModule,
     };
 
-    const header: AccountTransactionHeader = {
+    const header = {
         expiry: TransactionExpiry.futureMinutes(60),
         nonce: (await client.getNextAccountNonce(sender)).nonce,
         sender,
     };
 
-    const deployModuleTransaction: AccountTransaction = {
-        header,
-        payload: deployModule,
-        type: AccountTransactionType.DeployModule,
-    };
+    const handler = getAccountTransactionHandler(AccountTransactionType.DeployModule);
+    const deployModuleTransaction = handler.create(header, deployModule);
 
     // Sign transaction
     const signer = buildAccountSigner(wallet);

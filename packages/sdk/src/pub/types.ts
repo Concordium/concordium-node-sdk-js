@@ -42,7 +42,6 @@ export {
     replaceDateWithTimeStampAttribute,
 } from '../types/VerifiablePresentation.js';
 
-export { deserializeAccountTransaction } from '../deserialization.js';
 export * from '../signHelpers.js';
 export * from '../versionedTypeHelpers.js';
 export * from '../accountHelpers.js';

@@ -1,7 +1,8 @@
 import * as wasm from '@concordium/rust-bindings/wallet';
 
-import { deserializeAccountTransaction, deserializeUint8 } from '../deserialization.js';
+import { deserializeUint8 } from '../deserialization.js';
 import { Cursor } from '../deserializationHelpers.js';
+import { AccountTransactionV0 } from '../transactions/index.js';
 import { BlockItem, BlockItemKind } from '../types.js';
 
 function deserializeCredentialDeployment(serializedDeployment: Cursor) {
@@ -37,7 +38,7 @@ export function deserializeTransaction(serializedTransaction: ArrayBuffer): Bloc
         case BlockItemKind.AccountTransactionKind:
             return {
                 kind: BlockItemKind.AccountTransactionKind,
-                transaction: deserializeAccountTransaction(cursor),
+                transaction: AccountTransactionV0.deserialize(cursor),
             };
         case BlockItemKind.CredentialDeploymentKind:
             return {

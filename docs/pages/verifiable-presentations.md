@@ -17,7 +17,7 @@ This document describes how to create v1 verifiable presentations and how to ver
 The SDK contains a helper to create as set of subject claims about identities, which can
 then be proven.
 
-To do so, use the _presentation request claims builder_, to build a aet of claims:
+To do so, use the _presentation request claims builder_, to build a set of claims:
 
 {@codeblock ~~:nodejs/common/verifiable-credential-claims.ts#documentation-snippet}
 

@@ -2,8 +2,9 @@ import { Buffer } from 'buffer/index.js';
 
 import { Cursor } from './deserializationHelpers.js';
 import { Cbor, TokenId, TokenOperationType } from './plt/index.js';
-import { AccountTransaction, ContractAddress, ContractName, Energy, ModuleReference } from './pub/types.js';
+import { AccountTransaction, ContractAddress, ContractName, CredentialPublicKeys, VerifyKey, Energy, ModuleReference, ChainArData } from './pub/types.js';
 import { serializeCredentialDeploymentInfo } from './serialization.js';
+import { deserializeCredentialDeploymentValues, deserializeCredentialDeploymentProofs, deserializeCredentialsToBeRemoved } from './deserialization.js';
 import {
     encodeDataBlob,
     encodeWord8,
@@ -553,8 +554,33 @@ export class UpdateCredentialsHandler implements AccountTransactionHandler<Updat
         return Buffer.concat([serializedAddedCredentials, serializedRemovedCredIds, serializedThreshold]);
     }
 
-    deserialize(): UpdateCredentialsPayload {
-        throw new Error('deserialize not supported');
+    deserialize(serializedPayload: Cursor): UpdateCredentialsPayload {
+        //using this to as a placeholder to populate the values to be used in the final response
+        const partialData: Partial<UpdateCredentialsPayload> = {};
+
+        const cdiItems = serializedPayload.read(8);
+        partialData.newCredentials = [];
+        //the following for loop is to read the CredentialDeploymentInformation
+        for(let i = 0; i < cdiItems.readUInt8(0); i++) {
+            const index = serializedPayload.read(8).readUInt8(0);            
+            partialData.newCredentials[i].index = index;
+
+            deserializeCredentialDeploymentValues(serializedPayload, partialData, i);
+            console.log(`partialData after populating crdValue at i=${i}:`, partialData);
+
+            deserializeCredentialDeploymentProofs(serializedPayload, partialData, i);
+            console.log(`partialData after populating crdProofs at i=${i}:`, partialData);
+        }
+        
+        deserializeCredentialsToBeRemoved(serializedPayload, partialData);
+
+        return {
+            newCredentials: partialData.newCredentials,
+            removeCredentialIds: partialData.removeCredentialIds ?? [],
+            threshold: partialData.threshold ?? 0,
+            //TODO: This is not from payload, looks like a call to getAccountInfo?
+            currentNumberOfCredentials: partialData.currentNumberOfCredentials ?? 0n, 
+        }
     }
 
     toJSON(updateCredentials: UpdateCredentialsPayload): UpdateCredentialsPayload {
@@ -909,7 +935,7 @@ export function getAccountTransactionHandler(
         case AccountTransactionType.Update:
             return new UpdateContractHandler();
         case AccountTransactionType.UpdateCredentials:
-            return new UpdateCredentialsHandler(); //TODO:
+            return new UpdateCredentialsHandler();
         case AccountTransactionType.RegisterData:
             return new RegisterDataHandler();
         case AccountTransactionType.ConfigureDelegation:

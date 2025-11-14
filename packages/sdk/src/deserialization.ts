@@ -108,7 +108,7 @@ export function deserializeCredentialDeploymentValues(serializedPayload: Cursor,
     const revocationThreshold = serializedPayload.read(1).readUInt8(0);
 
     //CredentialDeploymentValues.arData
-    const arDataCount = serializedPayload.read(1).readUInt8(0);
+    /*const arDataCount = */serializedPayload.read(1).readUInt8(0);
     const arData = deserializeArDataEntry(serializedPayload);
 
     //CredentialDeploymentValues.policy section
@@ -227,16 +227,16 @@ export function deserializeCredentialVerifyKey(serializedPayload: Cursor): Crede
     }
 }
 
-export function deserializeCredentialDeploymentProofs(serializedPayload: Cursor, data: Partial<UpdateCredentialsPayload>, currentLocation: number) {
+export function deserializeCredentialDeploymentProofs(serializedPayload: Cursor/*, data: Partial<UpdateCredentialsPayload>, currentLocation: number*/) {
 
     //CredentialDeploymentProofs.idProofs
     //  IdOwnershipProofs.sig
-    const blindedSignature = serializedPayload.read(96);
+    /*const blindedSignature = */ serializedPayload.read(96);
 
     //  IdOwnershipProofs.commitments
-    const prf = serializedPayload.read(48);
-    const credCounter = serializedPayload.read(48);
-    const maxAccounts = serializedPayload.read(48);
+    /* const prf = */serializedPayload.read(48);
+    /* const credCounter = */serializedPayload.read(48);
+    /* const maxAccounts = */serializedPayload.read(48);
     
     const attributeCommitmentRecords: Record<any, any> = {};
     const lengthAttributes = serializedPayload.read(2).readUInt16BE(0);
@@ -253,22 +253,22 @@ export function deserializeCredentialDeploymentProofs(serializedPayload: Cursor,
     }
 
     //  IdOwnershipProofs.challenge
-    const challenge = serializedPayload.read(32);
+    /*const challenge = */serializedPayload.read(32);
 
     //  IdOwnershipProofs.proofIdCredPub
     const proofIdCredPubLength = serializedPayload.read(4).readUInt32BE(0);
     for(let a = 0; a < proofIdCredPubLength; a++) {
-        const arIdentity = serializedPayload.read(4);
-        const comEncEqResponse = serializedPayload.read(96);
+        /*const arIdentity = */serializedPayload.read(4);
+        /*const comEncEqResponse = */serializedPayload.read(96);
     }
 
     //  start of IdOwnershipProofs.proofIpSig
-    const responseRho = serializedPayload.read(32);
+    /*const responseRho = */serializedPayload.read(32);
     const proofLength = serializedPayload.read(4).readUInt32BE(0);
     //length x (F, F)
     for(let a = 0; a < proofLength; a++) {
-        const firstF = serializedPayload.read(32);
-        const secondF = serializedPayload.read(32);
+        /*const firstF = */serializedPayload.read(32);
+        /*const secondF = */serializedPayload.read(32);
     }
     //  end of IdOwnershipProofs.proofIpSig
 
@@ -292,8 +292,8 @@ export function deserializeCredentialDeploymentProofs(serializedPayload: Cursor,
 
     for(let a = 0; a < numberOfSignatures; a++) {
         //AccountOwnershipProofEntry
-        const index = serializedPayload.read(1);
-        const sig = serializedPayload.read(64);
+        /*const index = */serializedPayload.read(1);
+        /*const sig = */serializedPayload.read(64);
     }
 
     //populate placeholder, if any can be populated, and go back to the for loop in deserialize() and read next CredentialDeploymentInformation, if any    

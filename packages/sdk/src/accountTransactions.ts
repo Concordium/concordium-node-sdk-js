@@ -129,7 +129,7 @@ export class SimpleTransferHandler
                 nonce: nonce,
                 expiry: expiry,
                 executionEnergyAmount: Energy.create(this.getBaseEnergyCost()),
-                payloadSize: this.serialize(payload).length, //derive the payload size from the Buffer
+                payloadSize: this.serialize(payload).length + 1, //derive the payload size from the Buffer, plus 1 for payload type byte
             },
             payload: payload,
         };
@@ -191,7 +191,7 @@ export class SimpleTransferWithMemoHandler
                 nonce: nonce,
                 expiry: expiry,
                 executionEnergyAmount: Energy.create(this.getBaseEnergyCost()),
-                payloadSize: this.serialize(payload).length, //derive the payload size from the Buffer
+                payloadSize: this.serialize(payload).length + 1, //derive the payload size from the Buffer, plus 1 for payload type byte
             },
             payload: payload,
         };
@@ -257,7 +257,7 @@ export class DeployModuleHandler implements AccountTransactionHandler<DeployModu
                 nonce: nonce,
                 expiry: expiry,
                 executionEnergyAmount: Energy.create(this.getBaseEnergyCost(payload)),
-                payloadSize: this.serialize(payload).length, //derive the payload size from the Buffer
+                payloadSize: this.serialize(payload).length + 1, //derive the payload size from the Buffer, plus 1 for payload type byte
             },
             payload: payload,
         };
@@ -322,14 +322,17 @@ export interface InitContractPayloadJSON {
     moduleRef: HexString;
     initName: string;
     param: HexString;
-    maxContractExecutionEnergy: bigint;
 }
 
 export class InitContractHandler implements AccountTransactionHandler<InitContractPayload, InitContractPayloadJSON> {
     create(
         metadata: TransactionMetadata,
-        payload: InitContractPayload
+        payload: InitContractPayload,
+        givenEnergy?: Energy.Type
     ): AccountTransaction<AccountTransactionType.InitContract, InitContractPayload> {
+        if (givenEnergy === undefined) {
+            throw new Error('InitContractHandler requires the givenEnergy parameter to be provided.');
+        }
         const { sender, nonce, expiry } = metadata;
 
         // construct the transaction, deriving the payload size.
@@ -339,15 +342,16 @@ export class InitContractHandler implements AccountTransactionHandler<InitContra
                 sender: sender,
                 nonce: nonce,
                 expiry: expiry,
-                executionEnergyAmount: Energy.create(this.getBaseEnergyCost(payload)),
-                payloadSize: this.serialize(payload).length, //derive the payload size from the Buffer
+                executionEnergyAmount: givenEnergy,
+                payloadSize: this.serialize(payload).length + 1, //derive the payload size from the Buffer, plus 1 for payload type byte
             },
             payload: payload,
         };
     }
 
     getBaseEnergyCost(payload: InitContractPayload): bigint {
-        return payload.maxContractExecutionEnergy.value;
+        void payload;
+        return 0n;
     }
 
     serialize(payload: InitContractPayload): Buffer {
@@ -377,8 +381,6 @@ export class InitContractHandler implements AccountTransactionHandler<InitContra
             moduleRef: ModuleReference.fromBuffer(moduleRef),
             initName: ContractName.fromInitName(initNameAfterConversion),
             param: paramBuffer,
-            //The execution energy cannot be recovered as it is not part of the payload serialization
-            maxContractExecutionEnergy: Energy.create(0n),
         };
     }
 
@@ -388,7 +390,6 @@ export class InitContractHandler implements AccountTransactionHandler<InitContra
             moduleRef: payload.moduleRef.toJSON(),
             initName: payload.initName.toJSON(),
             param: payload.param.toJSON(),
-            maxContractExecutionEnergy: payload.maxContractExecutionEnergy.value,
         };
     }
 
@@ -398,7 +399,6 @@ export class InitContractHandler implements AccountTransactionHandler<InitContra
             moduleRef: ModuleReference.fromJSON(json.moduleRef),
             initName: ContractName.fromJSON(json.initName),
             param: Parameter.fromJSON(json.param),
-            maxContractExecutionEnergy: Energy.create(json.maxContractExecutionEnergy),
         };
     }
 }
@@ -434,7 +434,7 @@ export class UpdateContractHandler
                 nonce: nonce,
                 expiry: expiry,
                 executionEnergyAmount: givenEnergy,
-                payloadSize: this.serialize(payload).length, //derive the payload size from the Buffer
+                payloadSize: this.serialize(payload).length + 1, //derive the payload size from the Buffer, plus 1 for payload type byte
             },
             payload: payload,
         };
@@ -519,7 +519,7 @@ export class UpdateCredentialsHandler implements AccountTransactionHandler<Updat
                 nonce: nonce,
                 expiry: expiry,
                 executionEnergyAmount: Energy.create(this.getBaseEnergyCost(payload)),
-                payloadSize: this.serialize(payload).length, //derive the payload size from the Buffer
+                payloadSize: this.serialize(payload).length + 1, //derive the payload size from the Buffer, plus 1 for payload type byte
             },
             payload: payload,
         };
@@ -829,7 +829,7 @@ export class RegisterDataHandler implements AccountTransactionHandler<RegisterDa
                 nonce: nonce,
                 expiry: expiry,
                 executionEnergyAmount: Energy.create(this.getBaseEnergyCost()),
-                payloadSize: this.serialize(payload).length, //derive the payload size from the Buffer
+                payloadSize: this.serialize(payload).length + 1, //derive the payload size from the Buffer, plus 1 for payload type byte
             },
             payload: payload,
         };
@@ -892,7 +892,7 @@ export class ConfigureBakerHandler
                 nonce: nonce,
                 expiry: expiry,
                 executionEnergyAmount: Energy.create(this.getBaseEnergyCost(payload)),
-                payloadSize: this.serialize(payload).length, //derive the payload size from the Buffer
+                payloadSize: this.serialize(payload).length + 1, //derive the payload size from the Buffer, plus 1 for payload type byte
             },
             payload: payload,
         };
@@ -959,7 +959,7 @@ export class ConfigureDelegationHandler
                 nonce: nonce,
                 expiry: expiry,
                 executionEnergyAmount: Energy.create(this.getBaseEnergyCost()),
-                payloadSize: this.serialize(payload).length, //derive the payload size from the Buffer
+                payloadSize: this.serialize(payload).length + 1, //derive the payload size from the Buffer, plus 1 for payload type byte
             },
             payload: payload,
         };
@@ -1022,7 +1022,7 @@ export class TokenUpdateHandler implements AccountTransactionHandler<TokenUpdate
                 nonce: nonce,
                 expiry: expiry,
                 executionEnergyAmount: Energy.create(this.getBaseEnergyCost(payload)),
-                payloadSize: this.serialize(payload).length, //derive the payload size from the Buffer
+                payloadSize: this.serialize(payload).length + 1, //derive the payload size from the Buffer, plus 1 for payload type byte
             },
             payload: payload,
         };

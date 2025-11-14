@@ -133,7 +133,7 @@ export function deserializeCredentialDeploymentValues(serializedPayload: Cursor,
             revocationThreshold: revocationThreshold,
             arData: arData,
 
-            //TODO: Still looking for this
+            //TODO: Still looking for this, not in serialize() but on the bluepaper
             commitments: {
                 cmmPrf: '',
                 cmmCredCounter: '',
@@ -141,7 +141,7 @@ export function deserializeCredentialDeploymentValues(serializedPayload: Cursor,
                 cmmAttributes: {},
                 cmmMaxAccounts: '',
             },
-            //TODO: still looking for this
+            //TODO: still looking for this, not on bluepaper, but this looks to be part of serialize() but how do i generate this back for deserialize?
             proofs: '',
 
             ipIdentity: ipId,
@@ -227,7 +227,7 @@ export function deserializeCredentialVerifyKey(serializedPayload: Cursor): Crede
     }
 }
 
-export function deserializeCredentialDeploymentProofs(serializedPayload: Cursor/*, data: Partial<UpdateCredentialsPayload>, currentLocation: number*/) {
+export function deserializeCredentialDeploymentProofs(serializedPayload: Cursor, data: Partial<UpdateCredentialsPayload>, currentLocation: number) {
 
     //CredentialDeploymentProofs.idProofs
     //  IdOwnershipProofs.sig
@@ -235,7 +235,7 @@ export function deserializeCredentialDeploymentProofs(serializedPayload: Cursor/
 
     //  IdOwnershipProofs.commitments
     /* const prf = */serializedPayload.read(48);
-    /* const credCounter = */serializedPayload.read(48);
+    const credCounter = serializedPayload.read(48);
     /* const maxAccounts = */serializedPayload.read(48);
     
     const attributeCommitmentRecords: Record<any, any> = {};
@@ -297,6 +297,10 @@ export function deserializeCredentialDeploymentProofs(serializedPayload: Cursor/
     }
 
     //populate placeholder, if any can be populated, and go back to the for loop in deserialize() and read next CredentialDeploymentInformation, if any    
+    if(data.newCredentials) {
+        //TODO: is cmmCredCounter the same as bluepaper.credCounter inside CredentialDeploymentCommitments
+        data.newCredentials[currentLocation].cdi.commitments.cmmCredCounter = credCounter.toString(); 
+    }
 }
 
 export function deserializeCredentialsToBeRemoved(serializedPayload: Cursor, data: Partial<UpdateCredentialsPayload>) {

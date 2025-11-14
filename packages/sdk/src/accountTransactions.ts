@@ -578,7 +578,8 @@ export class UpdateCredentialsHandler implements AccountTransactionHandler<Updat
             newCredentials: partialData.newCredentials,
             removeCredentialIds: partialData.removeCredentialIds ?? [],
             threshold: partialData.threshold ?? 0,
-            currentNumberOfCredentials: partialData.currentNumberOfCredentials ?? 0n,
+            //TODO: This is not from payload, looks like a call to getAccountInfo?
+            currentNumberOfCredentials: partialData.currentNumberOfCredentials ?? 0n, 
         }
     }
 

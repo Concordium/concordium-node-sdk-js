@@ -1,5 +1,6 @@
 import { getAccountTransactionHandler } from './accountTransactions.js';
 import { Cursor } from './deserializationHelpers.js';
+import { serializeVerifyKey } from './serializationHelpers.ts';
 import {
     AccountTransaction,
     AccountTransactionHeader,
@@ -95,25 +96,30 @@ export function deserializeAccountTransaction(serializedTransaction: Cursor): {
 
 export function deserializeCredentialDeploymentValues(serializedPayload: Cursor, data: Partial<UpdateCredentialsPayload>, currentLocation: number) {
 
+    //CredentialDeploymentValues.publicKeys
     const publicKeys = deserializeCredentialPublicKeys(serializedPayload);
     
+    //CredentialDeploymentValues.credId
     const credId = serializedPayload.read(48);
 
+    //CredentialDeploymentValues.ipId
     const ipId = serializedPayload.read(4).readUInt32BE(0);
 
+    //CredentialDeploymentValues.revocationThreshold
     const revocationThreshold = serializedPayload.read(1).readUInt8(0);
 
+    //CredentialDeploymentValues.arData
     const arDataCount = serializedPayload.read(1).readUInt8(0);
-
     const arData = deserializeArDataEntry(serializedPayload);
 
-    //policy section
+    //CredentialDeploymentValues.policy section
     const validTo = serializedPayload.read(3);
     const createdAt = serializedPayload.read(3);
     const countAtrributes = serializedPayload.read(2).readUInt16BE(0);
 
     const revealedAttributes: Partial<Record<any,any>> = {}; 
     for(let a = 0; a < countAtrributes; a++) {
+        //AttributeEntry
         const attributeTag = serializedPayload.read(1);
         const countAttributeValue = serializedPayload.read(1).readUInt8(0);
         const attributeValue = serializedPayload.read(countAttributeValue);
@@ -153,12 +159,14 @@ export function deserializeCredentialDeploymentValues(serializedPayload: Cursor,
 export function deserializeArDataEntry(serializedPayload: Cursor): Record<any, any> {
 
     const result:Record<any, any> = {};
-    
+    //ArData.count
     const count = serializedPayload.read(1).readUInt8(0);
     
     for(let i = 0; i < count; i++) {
+        //ArData.ArDataEntry
+        //          .arIdentity
         const arIdentity = serializedPayload.read(4);
-
+        //          .data
         const data = deserializeChainArData(serializedPayload);
 
         result[arIdentity.toString()] = data;
@@ -168,6 +176,7 @@ export function deserializeArDataEntry(serializedPayload: Cursor): Record<any, a
 }
 
 export function deserializeChainArData(serializedPayload: Cursor): ChainArData {
+    //ChainArData.idCredPubShare
     const idCredPubShare = serializedPayload.read(96);
 
     return {
@@ -176,14 +185,17 @@ export function deserializeChainArData(serializedPayload: Cursor): ChainArData {
 }
 
 export function deserializeCredentialPublicKeys(serializedPayload: Cursor): CredentialPublicKeys {
+    //CredentialPublicKeys.count
     const count = serializedPayload.read(1).readUInt8(0);
 
+    //CredentialPublicKeys.keys: count x CredentialVerifyKeyEntry
     const keys: Record<any, any> = {};
     for(let i = 0; i < count; i++) {
-        const credentialVerifyKey = deserializeCredentialVerifyKey(serializedPayload);
-        keys[i] = credentialVerifyKey;
+        const credentialVerifyKeyEntry = deserializeCredentialVerifyKey(serializedPayload);
+        keys[credentialVerifyKeyEntry.index] = credentialVerifyKeyEntry.key;
     }
 
+    //CredentialPublicKeys.threshold
     const threshold = serializedPayload.read(1).readUInt8(0);
 
     return {
@@ -192,22 +204,37 @@ export function deserializeCredentialPublicKeys(serializedPayload: Cursor): Cred
     }
 }
 
-export function deserializeCredentialVerifyKey(serializedPayload: Cursor): VerifyKey {
+interface CredentialVerifyKeyEntry {
+    index: number;
+    key: VerifyKey;
+}
+
+export function deserializeCredentialVerifyKey(serializedPayload: Cursor): CredentialVerifyKeyEntry {
+    //CredentialVerifyKeyEntry.index
+    const index = serializedPayload.read(1).readUInt8(0);
+
+    //CredentialVerifyKeyEntry.key
     const scheme = serializedPayload.read(1).readUInt8(0);
     const verifyKey = serializedPayload.read(32);
 
-    return {
+    const verifyKeyObject: VerifyKey = {
         schemeId: scheme.toString(),
         verifyKey: verifyKey.toString('hex'),
+    }
+
+    return {
+        index: index,
+        key: verifyKeyObject,
     }
 }
 
 export function deserializeCredentialDeploymentProofs(serializedPayload: Cursor, data: Partial<UpdateCredentialsPayload>, currentLocation: number) {
 
-    //IdOwnershipProofs.sig
+    //CredentialDeploymentProofs.idProofs
+    //  IdOwnershipProofs.sig
     const blindedSignature = serializedPayload.read(96);
 
-    //IdOwnershipProofs.commitments
+    //  IdOwnershipProofs.commitments
     const prf = serializedPayload.read(48);
     const credCounter = serializedPayload.read(48);
     const maxAccounts = serializedPayload.read(48);
@@ -215,22 +242,28 @@ export function deserializeCredentialDeploymentProofs(serializedPayload: Cursor,
     const attributeCommitmentRecords: Record<any, any> = {};
     const lengthAttributes = serializedPayload.read(2).readUInt16BE(0);
     for(let a = 0; a < lengthAttributes; a++) {
+        //AttributeCommitment
         const attributeTag = serializedPayload.read(1).readUInt8(0);
         const attributeCommitment = serializedPayload.read(48);
         attributeCommitmentRecords[attributeTag] = attributeCommitment;
     }
+    
+    const sharingCoeffsLength = serializedPayload.read(8).readBigUInt64BE(0);
+    for(let a = 0; a < sharingCoeffsLength; a++) {
+        serializedPayload.read(48); //sharingCoeffs being read, not stored anywhere
+    }
 
-    //IdOwnership.challenge
+    //  IdOwnershipProofs.challenge
     const challenge = serializedPayload.read(32);
 
-    //IdOwnership.proofIdCredPub
+    //  IdOwnershipProofs.proofIdCredPub
     const proofIdCredPubLength = serializedPayload.read(4).readUInt32BE(0);
     for(let a = 0; a < proofIdCredPubLength; a++) {
         const arIdentity = serializedPayload.read(4);
         const comEncEqResponse = serializedPayload.read(96);
     }
 
-    //IdOwnership.proofIpSig
+    //  start of IdOwnershipProofs.proofIpSig
     const responseRho = serializedPayload.read(32);
     const proofLength = serializedPayload.read(4).readUInt32BE(0);
     //length x (F, F)
@@ -238,11 +271,12 @@ export function deserializeCredentialDeploymentProofs(serializedPayload: Cursor,
         const firstF = serializedPayload.read(32);
         const secondF = serializedPayload.read(32);
     }
+    //  end of IdOwnershipProofs.proofIpSig
 
-    //IdOwnership.proofRegId
+    //IdOwnershipProofs.proofRegId
     serializedPayload.read(160);
 
-    //IdOwnership.proofCredCounter
+    //IdOwnershipProofs.proofCredCounter
     serializedPayload.read(48*4); //4 times 48, g1Elements
     serializedPayload.read(32*3); //3 times 32, scalars1
     
@@ -259,22 +293,20 @@ export function deserializeCredentialDeploymentProofs(serializedPayload: Cursor,
 
     for(let a = 0; a < numberOfSignatures; a++) {
         //AccountOwnershipProofEntry
-        const index = serializedPayload.read(0);
+        const index = serializedPayload.read(1);
         const sig = serializedPayload.read(64);
     }
 
-    //populate placeholder and go back to the for loop in deserialize() and read next CredentialDeploymentInformation, if any
-    if(data.newCredentials) {
-        const currentNewCred = data.newCredentials[currentLocation];
-        currentNewCred.cdi.proofs
-    }
+    //populate placeholder, if any can be populated, and go back to the for loop in deserialize() and read next CredentialDeploymentInformation, if any    
 }
 
 export function deserializeCredentialsToBeRemoved(serializedPayload: Cursor, data: Partial<UpdateCredentialsPayload>) {
     
+    //TransactionPayload.UpdateCredentials.removeLength
     //number of credentials to be removed
     const removeLength = serializedPayload.read(1).readUInt8(0);
 
+    //TransactionPayload.UpdateCredentials.CredIds
     const removeCredIds: string[] = [];
     //the credential IDs of the credentials to be removed, based on the removeLength value
     for(let a = 0; a < removeLength; a++) {
@@ -282,6 +314,7 @@ export function deserializeCredentialsToBeRemoved(serializedPayload: Cursor, dat
         removeCredIds[a] = credentialRegistrationId.toString();
     }
 
+    //TransactionPayload.UpdateCredentials.newThresholdd
     //AccountThreshold
     const newThreshold = serializedPayload.read(1).readUInt8(0);
 
@@ -289,7 +322,7 @@ export function deserializeCredentialsToBeRemoved(serializedPayload: Cursor, dat
     data.removeCredentialIds = removeCredIds;
     data.threshold = newThreshold;
 
-    //This is not part of the transaction model, so no value to deserialize, will be passing an empty value for now
+    //TODO:This is not part of the transaction model, so no value to deserialize, will be passing an empty value for now
     data.currentNumberOfCredentials = undefined;
 
     //now need to construct the UpdateCredentialsPayload based on the partial data, so we return our way upwards to the deserialize() function

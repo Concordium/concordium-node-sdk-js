@@ -1,13 +1,10 @@
 import {
     AccountAddress,
-    AccountTransactionSignature,
-    AccountTransactionType,
     DeployModulePayload,
+    Transaction,
     TransactionExpiry,
     buildAccountSigner,
-    getAccountTransactionHandler,
     parseWallet,
-    signTransaction,
 } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
@@ -81,14 +78,12 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
         sender,
     };
 
-    const handler = getAccountTransactionHandler(AccountTransactionType.DeployModule);
-    const deployModuleTransaction = handler.create(header, deployModule);
+    const deployModuleTransaction = Transaction.deployModule(header, deployModule);
 
     // Sign transaction
     const signer = buildAccountSigner(wallet);
-    const signature: AccountTransactionSignature = await signTransaction(deployModuleTransaction, signer);
-
-    const transactionHash = await client.sendAccountTransaction(deployModuleTransaction, signature);
+    const signedTransaction = await Transaction.sign(deployModuleTransaction, signer);
+    const transactionHash = await client.sendSignedTransaction(signedTransaction);
 
     console.log('Transaction submitted, waiting for finalization...');
 

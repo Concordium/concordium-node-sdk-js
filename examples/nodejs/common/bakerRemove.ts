@@ -1,13 +1,11 @@
 import {
     AccountAddress,
-    AccountTransactionType,
     CcdAmount,
     ConfigureBakerPayload,
+    Transaction,
     TransactionExpiry,
     buildAccountSigner,
-    getAccountTransactionHandler,
     parseWallet,
-    signTransaction,
 } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
@@ -70,13 +68,9 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
         stake: CcdAmount.zero(),
     };
 
-    const handler = getAccountTransactionHandler(AccountTransactionType.ConfigureBaker);
-    const configureBakerAccountTransaction = handler.create(header, configureBakerPayload);
-
-    // Sign transaction
-    const signature = await signTransaction(configureBakerAccountTransaction, signer);
-
-    const transactionHash = await client.sendAccountTransaction(configureBakerAccountTransaction, signature);
+    const transaction = Transaction.configureValidator(header, configureBakerPayload);
+    const signed = await Transaction.sign(transaction, signer);
+    const transactionHash = await client.sendSignedTransaction(signed);
 
     console.log('Transaction submitted, waiting for finalization...');
 

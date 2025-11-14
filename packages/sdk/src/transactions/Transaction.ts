@@ -30,13 +30,22 @@ import { AccountTransactionV0 } from './index.js';
 
 // --- Core types ---
 
+/**
+ * Transaction header type alias for account transaction metadata.
+ */
 export type Header = AccountTransactionHeader;
 
+/**
+ * Generic transaction type with parameterized transaction type and payload.
+ */
 type Transaction<
     T extends AccountTransactionType = AccountTransactionType,
     P extends AccountTransactionPayload = AccountTransactionPayload,
 > = AccountTransaction<T, P>;
 
+/**
+ * Exported generic transaction type alias.
+ */
 export type Type<
     T extends AccountTransactionType = AccountTransactionType,
     P extends AccountTransactionPayload = AccountTransactionPayload,
@@ -44,16 +53,38 @@ export type Type<
 
 // --- Transaction construction ---
 
+/**
+ * Base metadata input with optional expiry field.
+ */
 type MetadataInput = MakeOptional<Header, 'expiry'>;
 
+/**
+ * Metadata for non-contract transactions (without executionEnergyAmount).
+ */
 export type NormalMetadata = Omit<MetadataInput, 'executionEnergyAmount'>;
+/**
+ * Metadata for contract transactions (includes executionEnergyAmount).
+ */
 export type ContractMetadata = MetadataInput;
 
+/**
+ * Creates a simple transfer transaction
+ * @param metadata transaction metadata including sender, nonce, and optional expiry (defaults to 5 minutes)
+ * @param payload the transfer payload containing recipient and amount
+ * @returns a transfer transaction
+ */
 export function transfer(
     { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: NormalMetadata,
     payload: SimpleTransferPayload
 ): Transaction<AccountTransactionType.Transfer, SimpleTransferPayload>;
 
+/**
+ * Creates a transfer transaction with a memo.
+ * @param metadata transaction metadata including sender, nonce, and optional expiry (defaults to 5 minutes)
+ * @param payload the transfer payload containing recipient and amount
+ * @param memo the data blob memo to attach to the transfer
+ * @returns a transfer with memo transaction
+ */
 export function transfer(
     { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: NormalMetadata,
     payload: SimpleTransferPayload,
@@ -62,7 +93,7 @@ export function transfer(
 
 export function transfer(
     { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: NormalMetadata,
-    payload: SimpleTransferPayload,
+    payload: SimpleTransferPayload | SimpleTransferWithMemoPayload,
     memo?: DataBlob
 ):
     | Transaction<AccountTransactionType.Transfer, SimpleTransferPayload>
@@ -90,6 +121,12 @@ export function transfer(
     };
 }
 
+/**
+ * Creates a transaction to update account credentials.
+ * @param metadata transaction metadata including sender, nonce, and optional expiry (defaults to 5 minutes)
+ * @param payload the credentials update payload
+ * @returns an update credentials transaction
+ */
 export function updateCredentials(
     { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: NormalMetadata,
     payload: UpdateCredentialsPayload
@@ -107,6 +144,12 @@ export function updateCredentials(
     };
 }
 
+/**
+ * Creates a transaction to configure a validator (baker).
+ * @param metadata transaction metadata including sender, nonce, and optional expiry (defaults to 5 minutes)
+ * @param payload the validator configuration payload
+ * @returns a configure baker transaction
+ */
 export function configureValidator(
     { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: NormalMetadata,
     payload: ConfigureBakerPayload
@@ -124,6 +167,12 @@ export function configureValidator(
     };
 }
 
+/**
+ * Creates a transaction to configure account delegation.
+ * @param metadata transaction metadata including sender, nonce, and optional expiry (defaults to 5 minutes)
+ * @param payload the delegation configuration payload
+ * @returns a configure delegation transaction
+ */
 export function configureDelegation(
     { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: NormalMetadata,
     payload: ConfigureDelegationPayload
@@ -141,6 +190,12 @@ export function configureDelegation(
     };
 }
 
+/**
+ * Creates a transaction to update token parameters on chain.
+ * @param metadata transaction metadata including sender, nonce, and optional expiry (defaults to 5 minutes)
+ * @param payload the token update payload
+ * @returns a token update transaction
+ */
 export function tokenUpdate(
     { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: NormalMetadata,
     payload: TokenUpdatePayload
@@ -158,6 +213,12 @@ export function tokenUpdate(
     };
 }
 
+/**
+ * Creates a transaction to deploy a smart contract module.
+ * @param metadata transaction metadata including sender, nonce, and optional expiry (defaults to 5 minutes)
+ * @param payload the module deployment payload containing the wasm module
+ * @returns a deploy module transaction
+ */
 export function deployModule(
     { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: NormalMetadata,
     payload: DeployModulePayload
@@ -175,6 +236,12 @@ export function deployModule(
     };
 }
 
+/**
+ * Creates a transaction to register arbitrary data on chain.
+ * @param metadata transaction metadata including sender, nonce, and optional expiry (defaults to 5 minutes)
+ * @param payload the data registration payload
+ * @returns a register data transaction
+ */
 export function registerData(
     { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: NormalMetadata,
     payload: RegisterDataPayload
@@ -192,6 +259,12 @@ export function registerData(
     };
 }
 
+/**
+ * Creates a transaction to initialize a smart contract instance.
+ * @param metadata transaction metadata including sender, nonce, executionEnergyAmount, and optional expiry (defaults to 5 minutes)
+ * @param payload the contract initialization payload
+ * @returns an init contract transaction
+ */
 export function initContract(
     { sender, nonce, expiry = TransactionExpiry.futureMinutes(5), executionEnergyAmount }: ContractMetadata,
     payload: InitContractPayload
@@ -208,6 +281,12 @@ export function initContract(
     };
 }
 
+/**
+ * Creates a transaction to invoke an existing smart contract.
+ * @param metadata transaction metadata including sender, nonce, executionEnergyAmount, and optional expiry (defaults to 5 minutes)
+ * @param payload the contract update payload specifying the contract and receive function
+ * @returns an update contract transaction
+ */
 export function updateContract(
     { sender, nonce, expiry = TransactionExpiry.futureMinutes(5), executionEnergyAmount }: ContractMetadata,
     payload: UpdateContractPayload
@@ -226,9 +305,17 @@ export function updateContract(
 
 // --- Transaction signing ---
 
+/**
+ * A signed version 0 account transaction.
+ */
 export type Signed = Readonly<AccountTransactionV0.Type>;
 
-// TODO: extend to include v1 transactions when added
+/**
+ * Signs a transaction using the provided signer, calculating total energy cost and creating a version 0 signed transaction.
+ * @param transaction the unsigned transaction to sign
+ * @param signer the account signer containing keys and signature logic
+ * @returns a promise resolving to the signed transaction
+ */
 export async function sign(transaction: Transaction, signer: AccountSigner): Promise<Signed> {
     const { expiry, sender, nonce, executionEnergyAmount } = transaction.header;
     const payloadSize = serializeAccountTransactionPayload(transaction).length;

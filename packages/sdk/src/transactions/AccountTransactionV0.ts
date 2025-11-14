@@ -6,6 +6,9 @@ import { AccountSigner } from '../signHelpers.ts';
 import { AccountTransactionPayload, AccountTransactionSignature, AccountTransactionType } from '../types.js';
 import { AccountAddress, Energy, SequenceNumber, TransactionExpiry } from '../types/index.js';
 
+/**
+ * Header metadata for a version 0 account transaction.
+ */
 export type Header = {
     /** account address that is source of this transaction */
     sender: AccountAddress.Type;
@@ -25,8 +28,14 @@ export type Header = {
     payloadSize: number;
 };
 
+/**
+ * Signature type for account transactions.
+ */
 export type Signature = AccountTransactionSignature;
 
+/**
+ * A complete version 0 account transaction with header, type, payload, and signature.
+ */
 type Transaction = {
     /**
      * The transaction header containing metadata for the transaction
@@ -46,8 +55,16 @@ type Transaction = {
     signature: Signature;
 };
 
+/**
+ * A complete version 0 account transaction with header, type, payload, and signature.
+ */
 export type Type = Transaction;
 
+/**
+ * Serializes a version 0 transaction header to bytes.
+ * @param header the transaction header to serialize
+ * @returns the serialized header as a byte array
+ */
 function serializeHeader(header: Header): Uint8Array {
     const sender = AccountAddress.toBuffer(header.sender);
     const nonce = encodeWord64(header.nonce.value);
@@ -82,6 +99,9 @@ export function calculateEnergyCost(
     );
 }
 
+/**
+ * An unsigned version 0 account transaction (without signature).
+ */
 export type Unsigned = Omit<Transaction, 'signature'>;
 
 /**
@@ -95,6 +115,12 @@ export function signDigest(transaction: Unsigned): Uint8Array {
     return sha256([serializedHeader, serializedPayload]);
 }
 
+/**
+ * Signs an unsigned version 0 account transaction using the provided signer.
+ * @param transaction the unsigned transaction to sign
+ * @param signer the account signer to use for signing
+ * @returns a promise resolving to the signed transaction
+ */
 export async function sign(transaction: Unsigned, signer: AccountSigner): Promise<Transaction> {
     const signature = await signer.sign(signDigest(transaction));
     return { ...transaction, signature };

@@ -1,6 +1,7 @@
 import {
     AccountSigner,
     AccountTransaction,
+    AccountTransactionEnergyPayload,
     AccountTransactionHeader,
     AccountTransactionPayload,
     AccountTransactionType,
@@ -61,6 +62,52 @@ export type Type<
  * Base metadata input with optional expiry field.
  */
 export type Metadata = Omit<MakeOptional<Header, 'expiry'>, 'executionEnergyAmount'>;
+
+/**
+ * Dynamic `Transaction` creation based on the given transaction `type`.
+ * If the transaction type is known, use the specialized creation functions per transaction type
+ * instead.
+ *
+ * @param type - the transaction type.
+ * @param metadata - transaction metadata to put into the transaction header.
+ * @param payload - a transaction payload matching the transaction type. If these do not match,
+ * this will fail.
+ *
+ * @returns The corresponding transaction
+ *
+ * @throws if transaction type is not currently supported.
+ * @throws if transaction cannot be created due to mismatch between `type` and `payload`.
+ */
+export function create(
+    type: AccountTransactionType,
+    metadata: Metadata,
+    payload: AccountTransactionEnergyPayload
+): Transaction {
+    switch (type) {
+        case AccountTransactionType.Transfer:
+            return transfer(metadata, payload as SimpleTransferPayload);
+        case AccountTransactionType.TransferWithMemo:
+            return transfer(metadata, payload as SimpleTransferWithMemoPayload);
+        case AccountTransactionType.DeployModule:
+            return deployModule(metadata, payload as DeployModulePayload);
+        case AccountTransactionType.InitContract:
+            return initContract(metadata, payload as InitContractPayloadWithEnergy);
+        case AccountTransactionType.Update:
+            return updateContract(metadata, payload as UpdateContractPayloadWithEnergy);
+        case AccountTransactionType.UpdateCredentials:
+            return updateCredentials(metadata, payload as UpdateCredentialsPayload);
+        case AccountTransactionType.RegisterData:
+            return registerData(metadata, payload as RegisterDataPayload);
+        case AccountTransactionType.ConfigureDelegation:
+            return configureDelegation(metadata, payload as ConfigureDelegationPayload);
+        case AccountTransactionType.ConfigureBaker:
+            return configureValidator(metadata, payload as ConfigureBakerPayload);
+        case AccountTransactionType.TokenUpdate:
+            return tokenUpdate(metadata, payload as TokenUpdatePayload);
+        default:
+            throw new Error('The provided type does not have a handler: ' + type);
+    }
+}
 
 const isMemoPayload = (
     payload: SimpleTransferPayload | SimpleTransferWithMemoPayload

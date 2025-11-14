@@ -3,6 +3,7 @@ import { Buffer } from 'buffer/index.js';
 import { Cursor } from './deserializationHelpers.js';
 import { Cbor, TokenId, TokenOperationType } from './plt/index.js';
 import {
+    AccountTransactionEnergyPayload,
     ContractAddress,
     ContractName,
     InitContractPayloadWithEnergy,
@@ -55,9 +56,9 @@ import * as ReceiveName from './types/ReceiveName.js';
  * A handler for a specific {@linkcode AccountTransactionType}.
  */
 export interface AccountTransactionHandler<
-    PayloadType extends AccountTransactionPayload = AccountTransactionPayload,
-    JSONType = PayloadType,
-    WithEnergyPayload = PayloadType,
+    Payload extends AccountTransactionPayload,
+    JSONPayload,
+    EnergyPayload extends AccountTransactionEnergyPayload,
 > {
     /**
      * Serializes the payload to a buffer.
@@ -67,7 +68,7 @@ export interface AccountTransactionHandler<
      * @returns The serialized payload.
      * @throws If serializing the type was not possible.
      */
-    serialize: (payload: PayloadType) => Buffer;
+    serialize: (payload: Payload) => Buffer;
 
     /**
      * Deserializes the serialized payload into the payload type.
@@ -75,28 +76,28 @@ export interface AccountTransactionHandler<
      * @returns The deserialized payload.
      * @throws If deserializing the type was not possible.
      */
-    deserialize: (serializedPayload: Cursor) => PayloadType;
+    deserialize: (serializedPayload: Cursor) => Payload;
 
     /**
      * Gets the base energy cost for the given payload.
      * @param payload - The payload for which to get the base energy cost.
      * @returns The base energy cost for the payload.
      */
-    getBaseEnergyCost: (payload: WithEnergyPayload) => bigint;
+    getBaseEnergyCost: (payload: EnergyPayload) => bigint;
 
     /**
      * Converts the payload into JSON format.
      * @param payload - The payload to be converted into JSON.
      * @returns The payload in JSON format.
      */
-    toJSON: (payload: PayloadType) => JSONType;
+    toJSON: (payload: Payload) => JSONPayload;
 
     /**
      * Converts a JSON-serialized payload into the payload type.
      * @param json - The JSON to be converted back into the payload.
      * @returns The payload obtained from the JSON.
      */
-    fromJSON: (json: JSONType) => PayloadType;
+    fromJSON: (json: JSONPayload) => Payload;
 }
 
 export interface SimpleTransferPayloadJSON {
@@ -105,7 +106,7 @@ export interface SimpleTransferPayloadJSON {
 }
 
 export class SimpleTransferHandler
-    implements AccountTransactionHandler<SimpleTransferPayload, SimpleTransferPayloadJSON>
+    implements AccountTransactionHandler<SimpleTransferPayload, SimpleTransferPayloadJSON, SimpleTransferPayload>
 {
     getBaseEnergyCost(): bigint {
         return 300n;
@@ -146,7 +147,12 @@ export interface SimpleTransferWithMemoPayloadJSON extends SimpleTransferPayload
 }
 
 export class SimpleTransferWithMemoHandler
-    implements AccountTransactionHandler<SimpleTransferWithMemoPayload, SimpleTransferWithMemoPayloadJSON>
+    implements
+        AccountTransactionHandler<
+            SimpleTransferWithMemoPayload,
+            SimpleTransferWithMemoPayloadJSON,
+            SimpleTransferWithMemoPayload
+        >
 {
     getBaseEnergyCost(): bigint {
         return 300n;
@@ -193,7 +199,9 @@ export interface DeployModulePayloadJSON {
     version?: number;
 }
 
-export class DeployModuleHandler implements AccountTransactionHandler<DeployModulePayload, DeployModulePayloadJSON> {
+export class DeployModuleHandler
+    implements AccountTransactionHandler<DeployModulePayload, DeployModulePayloadJSON, DeployModulePayload>
+{
     getBaseEnergyCost(payload: DeployModulePayload): bigint {
         let length = payload.source.byteLength;
         if (payload.version === undefined) {
@@ -387,7 +395,9 @@ export class UpdateContractHandler
         };
     }
 }
-export class UpdateCredentialsHandler implements AccountTransactionHandler<UpdateCredentialsPayload> {
+export class UpdateCredentialsHandler
+    implements AccountTransactionHandler<UpdateCredentialsPayload, UpdateCredentialsPayload, UpdateCredentialsPayload>
+{
     getBaseEnergyCost(updateCredentials: UpdateCredentialsPayload): bigint {
         const newCredentialsCost = updateCredentials.newCredentials
             .map((credential) => {
@@ -450,7 +460,9 @@ export interface RegisterDataPayloadJSON {
     data: HexString;
 }
 
-export class RegisterDataHandler implements AccountTransactionHandler<RegisterDataPayload, RegisterDataPayloadJSON> {
+export class RegisterDataHandler
+    implements AccountTransactionHandler<RegisterDataPayload, RegisterDataPayloadJSON, RegisterDataPayload>
+{
     getBaseEnergyCost(): bigint {
         return 300n;
     }
@@ -492,7 +504,7 @@ export interface ConfigureBakerPayloadJSON {
 }
 
 export class ConfigureBakerHandler
-    implements AccountTransactionHandler<ConfigureBakerPayload, ConfigureBakerPayloadJSON>
+    implements AccountTransactionHandler<ConfigureBakerPayload, ConfigureBakerPayloadJSON, ConfigureBakerPayload>
 {
     getBaseEnergyCost(payload: ConfigureBakerPayload): bigint {
         if (payload.keys) {
@@ -539,7 +551,12 @@ export interface ConfigureDelegationPayloadJSON {
 }
 
 export class ConfigureDelegationHandler
-    implements AccountTransactionHandler<ConfigureDelegationPayload, ConfigureDelegationPayloadJSON>
+    implements
+        AccountTransactionHandler<
+            ConfigureDelegationPayload,
+            ConfigureDelegationPayloadJSON,
+            ConfigureDelegationPayload
+        >
 {
     getBaseEnergyCost(): bigint {
         return 300n;
@@ -583,7 +600,9 @@ export type TokenUpdatePayloadJSON = {
     operations: Cbor.JSON;
 };
 
-export class TokenUpdateHandler implements AccountTransactionHandler<TokenUpdatePayload, TokenUpdatePayloadJSON> {
+export class TokenUpdateHandler
+    implements AccountTransactionHandler<TokenUpdatePayload, TokenUpdatePayloadJSON, TokenUpdatePayload>
+{
     serialize(payload: TokenUpdatePayload): Buffer {
         const tokenId = packBufferWithWord8Length(TokenId.toBytes(payload.tokenId));
         const ops = packBufferWithWord32Length(payload.operations.bytes);
@@ -676,7 +695,7 @@ export function getAccountTransactionHandler(type: AccountTransactionType.Config
 export function getAccountTransactionHandler(type: AccountTransactionType.TokenUpdate): TokenUpdateHandler;
 export function getAccountTransactionHandler(
     type: AccountTransactionType
-): AccountTransactionHandler<AccountTransactionPayload, AccountTransactionPayloadJSON>;
+): AccountTransactionHandler<AccountTransactionPayload, AccountTransactionPayloadJSON, AccountTransactionEnergyPayload>;
 export function getAccountTransactionHandler(
     type: AccountTransactionType
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

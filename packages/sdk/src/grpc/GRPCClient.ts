@@ -8,7 +8,6 @@ import { GrpcWebFetchTransport, GrpcWebOptions } from '@protobuf-ts/grpcweb-tran
 import type { RpcError, RpcTransport } from '@protobuf-ts/runtime-rpc';
 import { Buffer } from 'buffer/index.js';
 
-import { getAccountTransactionHandler } from '../accountTransactions.js';
 import { DEFAULT_INVOKE_ENERGY } from '../constants.js';
 import { calculateEnergyCost } from '../energyCost.js';
 import { HealthClient } from '../grpc-api/v2/concordium/health.client.js';
@@ -18,6 +17,7 @@ import * as GRPC from '../grpc-api/v2/concordium/types.js';
 import * as PLT from '../plt/index.js';
 import { RawModuleSchema } from '../schemaTypes.js';
 import { serializeAccountTransactionPayload } from '../serialization.js';
+import { Transaction } from '../transactions/index.js';
 import * as SDK from '../types.js';
 import { HexString, isRpcError } from '../types.js';
 import * as AccountAddress from '../types/AccountAddress.js';
@@ -279,6 +279,30 @@ export class ConcordiumGRPCClient {
     }
 
     /**
+     * Serializes and sends a signed account transaction to the node to be
+     * put in a block on the chain.
+     *
+     * Note that a transaction can still fail even if it was accepted by the node.
+     * To keep track of the transaction use getTransactionStatus.
+     *
+     * {@codeblock ~~:nodejs/common/simpleTransfer.ts#documentation-snippet}
+     *
+     * @param transaction the transaction to send to the node
+     * @returns The transaction hash as a hex-encoded string
+     */
+    async sendSignedTransaction(transaction: Transaction.Signed): Promise<TransactionHash.Type> {
+        const rawPayload = Transaction.serializePayload(transaction);
+        return this.sendRawAccountTransaction(
+            transaction.header,
+            transaction.header.energyAmount,
+            rawPayload,
+            transaction.signature
+        );
+    }
+
+    /**
+     * @deprecated Use {@linkcode sendSignedTransaction} instead
+     *
      * Serializes and sends an account transaction to the node to be
      * put in a block on the chain.
      *
@@ -295,14 +319,12 @@ export class ConcordiumGRPCClient {
         transaction: SDK.AccountTransaction,
         signature: SDK.AccountTransactionSignature
     ): Promise<TransactionHash.Type> {
-        const accountTransactionHandler = getAccountTransactionHandler(transaction.type);
-
         const rawPayload = serializeAccountTransactionPayload(transaction);
-
-        // Energy cost
-        const baseEnergyCost = accountTransactionHandler.getBaseEnergyCost(transaction.payload);
-
-        const energyCost = calculateEnergyCost(countSignatures(signature), BigInt(rawPayload.length), baseEnergyCost);
+        const energyCost = calculateEnergyCost(
+            countSignatures(signature),
+            BigInt(rawPayload.length),
+            transaction.header.executionEnergyAmount.value
+        );
 
         return this.sendRawAccountTransaction(transaction.header, energyCost, rawPayload, signature);
     }
@@ -314,7 +336,7 @@ export class ConcordiumGRPCClient {
      * Note that a transaction can still fail even if it was accepted by the node.
      * To keep track of the transaction use getTransactionStatus.
      *
-     * In general, { @link ConcordiumGRPCClient.sendAccountTransaction } is the recommended
+     * In general, { @link ConcordiumGRPCClient.sendSignedTransaction } is the recommended
      * method to send account transactions, as this does not require the caller to serialize the payload themselves.
      *
      * @param header the transactionheader to send to the node
@@ -324,7 +346,7 @@ export class ConcordiumGRPCClient {
      * @returns The transaction hash as a byte array
      */
     async sendRawAccountTransaction(
-        header: SDK.AccountTransactionHeader,
+        header: Omit<SDK.AccountTransactionHeader, 'executionEnergyAmount'>,
         energyAmount: Energy.Type,
         payload: Uint8Array,
         signature: SDK.AccountTransactionSignature

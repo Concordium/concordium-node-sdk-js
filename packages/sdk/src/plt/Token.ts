@@ -387,7 +387,7 @@ export async function sendRaw(
 
     const transaction = Transaction.tokenUpdate(header, payload);
     const signed = await Transaction.sign(transaction, signer);
-    return token.grpc.sendAccountTransaction(transaction, signed.signature);
+    return token.grpc.sendSignedTransaction(signed);
 }
 
 /**

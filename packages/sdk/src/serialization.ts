@@ -157,11 +157,13 @@ export function getAccountTransactionHash(
  * @returns the sha256 hash on the serialized header, type and payload
  */
 export function getAccountTransactionSignDigest(accountTransaction: AccountTransaction, signatureCount = 1n): Buffer {
-    const accountTransactionHandler = getAccountTransactionHandler(accountTransaction.type);
     const serializedPayload = serializeAccountTransactionPayload(accountTransaction);
 
-    const baseEnergyCost = accountTransactionHandler.getBaseEnergyCost(accountTransaction.payload);
-    const energyCost = calculateEnergyCost(signatureCount, BigInt(serializedPayload.length), baseEnergyCost);
+    const energyCost = calculateEnergyCost(
+        signatureCount,
+        BigInt(serializedPayload.length),
+        accountTransaction.header.executionEnergyAmount.value
+    );
     const serializedHeader = serializeAccountTransactionHeader(
         accountTransaction.header,
         serializedPayload.length,

@@ -146,5 +146,5 @@ export async function createAndSendInitTransaction(
         { ...payload, maxContractExecutionEnergy: metadata.energy }
     );
     const signed = await Transaction.sign(transaction, signer);
-    return moduleClient.grpcClient.sendAccountTransaction(transaction, signed.signature); // TODO: revise GRPC interface to accept signed transactions
+    return moduleClient.grpcClient.sendSignedTransaction(signed);
 }

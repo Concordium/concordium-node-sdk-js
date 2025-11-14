@@ -1558,6 +1558,11 @@ export type AccountTransactionPayload =
     | ConfigureDelegationPayload
     | TokenUpdatePayload;
 
+export type AccountTransactionEnergyPayload =
+    | Exclude<AccountTransactionPayload, InitContractPayload | UpdateContractPayload>
+    | InitContractPayloadWithEnergy
+    | UpdateContractPayloadWithEnergy;
+
 export interface AccountTransaction<
     T extends AccountTransactionType = AccountTransactionType,
     P extends AccountTransactionPayload = AccountTransactionPayload,

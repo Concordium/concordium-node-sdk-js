@@ -8,14 +8,11 @@ import * as v1 from '../../src/index.js';
 import {
     BlockHash,
     buildBasicAccountSigner,
-    calculateEnergyCost,
     createCredentialDeploymentPayload,
-    getAccountTransactionHandler,
     getCredentialDeploymentSignDigest,
     serializeAccountTransaction,
     serializeAccountTransactionPayload,
     sha256,
-    signTransaction,
     streamToList,
 } from '../../src/index.js';
 import { getModuleBuffer } from '../../src/nodejs/index.js';
@@ -264,9 +261,9 @@ test.each(clients)('sendBlockItem', async (client) => {
 
     // Sign transaction
     const signer = buildBasicAccountSigner(privateKey);
-    const signature: v1.AccountTransactionSignature = await signTransaction(accountTransaction, signer);
+    const signed = await Transaction.sign(accountTransaction, signer);
 
-    expect(client.sendAccountTransaction(accountTransaction, signature)).rejects.toThrow('costs');
+    expect(client.sendSignedTransaction(signed)).rejects.toThrow('costs');
 });
 
 test.each(clients)('transactionHash', async (client) => {
@@ -288,20 +285,15 @@ test.each(clients)('transactionHash', async (client) => {
     const transaction = Transaction.transfer(headerLocal, simpleTransfer);
     const rawPayload = serializeAccountTransactionPayload(transaction);
 
-    // Energy cost
-    const accountTransactionHandler = getAccountTransactionHandler(transaction.type);
-    const baseEnergyCost = accountTransactionHandler.getBaseEnergyCost();
-    const energyCost = calculateEnergyCost(1n, BigInt(rawPayload.length), baseEnergyCost);
-
     // Sign transaction
     const signer = buildBasicAccountSigner(privateKey);
-    const signature: v1.AccountTransactionSignature = await signTransaction(transaction, signer);
+    const signed = await Transaction.sign(transaction, signer);
 
     // Put together sendBlockItemRequest
     const header: v2.AccountTransactionHeader = {
         sender: AccountAddress.toProto(transaction.header.sender),
         sequenceNumber: SequenceNumber.toProto(transaction.header.nonce),
-        energyAmount: Energy.toProto(energyCost),
+        energyAmount: Energy.toProto(signed.header.energyAmount),
         expiry: { value: transaction.header.expiry.expiryEpochSeconds },
     };
     const accountTransaction: v2.PreAccountTransaction = {
@@ -311,7 +303,7 @@ test.each(clients)('transactionHash', async (client) => {
         },
     };
 
-    const serializedAccountTransaction = serializeAccountTransaction(transaction, signature).slice(71);
+    const serializedAccountTransaction = serializeAccountTransaction(transaction, signed.signature).slice(71);
     const localHash = Buffer.from(sha256([serializedAccountTransaction])).toString('hex');
 
     const queries: QueriesClient = (client as any).client;

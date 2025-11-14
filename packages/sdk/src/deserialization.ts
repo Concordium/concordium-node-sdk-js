@@ -1,6 +1,5 @@
 import { getAccountTransactionHandler } from './accountTransactions.js';
 import { Cursor } from './deserializationHelpers.js';
-import { serializeVerifyKey } from './serializationHelpers.ts';
 import {
     AccountTransaction,
     AccountTransactionHeader,

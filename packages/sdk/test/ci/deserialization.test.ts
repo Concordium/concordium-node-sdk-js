@@ -2,7 +2,6 @@ import {
     AccountAddress,
     AccountTransaction,
     AccountTransactionSignature,
-    AccountTransactionType,
     BlockItemKind,
     CIS2,
     Cbor,
@@ -13,11 +12,7 @@ import {
     DeployModulePayload,
     Energy,
     InitContractPayload,
-    InitUpdatePayload,
-    InitUpdateType,
     ModuleReference,
-    OtherPayload,
-    OtherType,
     Parameter,
     ReceiveName,
     RegisterDataPayload,
@@ -43,36 +38,15 @@ function deserializeAccountTransactionBase(transaction: AccountTransaction) {
         },
     };
 
-    let deserialized;
-    if (
-        transaction.type === AccountTransactionType.InitContract ||
-        transaction.type === AccountTransactionType.Update
-    ) {
-        //Hardcoding the energy here and will assume the given energy here is actually passed in by some calculation before submitting here
-        deserialized = deserializeTransaction(
-            serializeAccountTransactionForSubmission(
-                transaction as AccountTransaction<InitUpdateType, InitUpdatePayload>,
-                signatures,
-                Energy.create(30000n)
-            )
-        );
-    } else {
-        deserialized = deserializeTransaction(
-            serializeAccountTransactionForSubmission(
-                transaction as AccountTransaction<OtherType, OtherPayload>,
-                signatures
-            )
-        );
-    }
+    const deserialized = deserializeTransaction(serializeAccountTransactionForSubmission(transaction, signatures));
 
     if (deserialized.kind !== BlockItemKind.AccountTransactionKind) {
         throw new Error('Incorrect BlockItemKind');
     }
-
     expect(deserialized.transaction.payload).toEqual(transaction.payload);
 }
 
-const metadata: Transaction.NormalMetadata = {
+const metadata: Transaction.Metadata = {
     nonce: SequenceNumber.create(1),
     sender: AccountAddress.fromBase58('3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'),
 };
@@ -129,7 +103,7 @@ test('test deserialize InitContract ', () => {
     };
 
     const givenEnergy = Energy.create(30000);
-    const transaction = Transaction.initContract({ ...metadata, executionEnergyAmount: givenEnergy }, payload);
+    const transaction = Transaction.initContract(metadata, { ...payload, maxContractExecutionEnergy: givenEnergy });
     deserializeAccountTransactionBase(transaction);
 });
 
@@ -142,7 +116,7 @@ test('test deserialize UpdateContract ', () => {
     };
 
     const givenEnergy = Energy.create(3000);
-    const transaction = Transaction.updateContract({ ...metadata, executionEnergyAmount: givenEnergy }, payload);
+    const transaction = Transaction.updateContract(metadata, { ...payload, maxContractExecutionEnergy: givenEnergy });
 
     deserializeAccountTransactionBase(transaction);
 });

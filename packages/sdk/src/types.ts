@@ -1381,29 +1381,35 @@ export interface VersionedModuleSource {
 export interface InitContractPayload {
     /** CCD amount to transfer */
     amount: CcdAmount.Type;
-
     /** Hash of the module on chain */
     moduleRef: ModuleReference.Type;
-
     /** Name of the contract */
     initName: ContractName.Type;
-
     /** Parameters for the init function */
     param: Parameter.Type;
+}
+
+export interface InitContractPayloadWithEnergy extends InitContractPayload {
+    /** The amount of energy that can be used for contract execution.
+    The base energy amount for transaction verification will be added to this cost.*/
+    maxContractExecutionEnergy: Energy.Type;
 }
 
 export interface UpdateContractPayload {
     /** CCD amount to transfer */
     amount: CcdAmount.Type;
-
     /** Address of contract instance consisting of an index and a subindex */
     address: ContractAddress.Type;
-
     /** Name of receive function including <contractName>. prefix */
     receiveName: ReceiveName.Type;
-
     /** Parameters for the update function */
     message: Parameter.Type;
+}
+
+export interface UpdateContractPayloadWithEnergy extends UpdateContractPayload {
+    /** The amount of energy that can be used for contract execution.
+    The base energy amount for transaction verification will be added to this cost.*/
+    maxContractExecutionEnergy: Energy.Type;
 }
 
 /**
@@ -1551,14 +1557,6 @@ export type AccountTransactionPayload =
     | ConfigureBakerPayload
     | ConfigureDelegationPayload
     | TokenUpdatePayload;
-
-// For Overload 1 (Energy will need to be supplied manually)
-export type InitUpdateType = AccountTransactionType.InitContract | AccountTransactionType.Update;
-export type InitUpdatePayload = InitContractPayload | UpdateContractPayload;
-
-// For Overload 2 (Energy will use some automatic calculations)
-export type OtherType = Exclude<AccountTransactionType, InitUpdateType>;
-export type OtherPayload = Exclude<AccountTransactionPayload, InitUpdatePayload>;
 
 export interface AccountTransaction<
     T extends AccountTransactionType = AccountTransactionType,

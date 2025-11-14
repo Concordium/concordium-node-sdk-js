@@ -10,7 +10,9 @@ import {
     ConfigureDelegationPayload,
     DeployModuleHandler,
     DeployModulePayload,
+    InitContractHandler,
     InitContractPayload,
+    InitContractPayloadWithEnergy,
     MakeOptional,
     RegisterDataHandler,
     RegisterDataPayload,
@@ -20,7 +22,9 @@ import {
     SimpleTransferWithMemoPayload,
     TokenUpdateHandler,
     TokenUpdatePayload,
+    UpdateContractHandler,
     UpdateContractPayload,
+    UpdateContractPayloadWithEnergy,
     UpdateCredentialsHandler,
     UpdateCredentialsPayload,
     serializeAccountTransactionPayload,
@@ -56,16 +60,7 @@ export type Type<
 /**
  * Base metadata input with optional expiry field.
  */
-type MetadataInput = MakeOptional<Header, 'expiry'>;
-
-/**
- * Metadata for non-contract transactions (without executionEnergyAmount).
- */
-export type NormalMetadata = Omit<MetadataInput, 'executionEnergyAmount'>;
-/**
- * Metadata for contract transactions (includes executionEnergyAmount).
- */
-export type ContractMetadata = MetadataInput;
+export type Metadata = Omit<MakeOptional<Header, 'expiry'>, 'executionEnergyAmount'>;
 
 const isMemoPayload = (
     payload: SimpleTransferPayload | SimpleTransferWithMemoPayload
@@ -78,7 +73,7 @@ const isMemoPayload = (
  * @returns a transfer transaction
  */
 export function transfer(
-    { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: NormalMetadata,
+    { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: Metadata,
     payload: SimpleTransferPayload
 ): Transaction<AccountTransactionType.Transfer, SimpleTransferPayload>;
 
@@ -89,12 +84,12 @@ export function transfer(
  * @returns a transfer with memo transaction
  */
 export function transfer(
-    { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: NormalMetadata,
+    { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: Metadata,
     payload: SimpleTransferWithMemoPayload
 ): Transaction<AccountTransactionType.TransferWithMemo, SimpleTransferWithMemoPayload>;
 
 export function transfer(
-    { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: NormalMetadata,
+    { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: Metadata,
     payload: SimpleTransferPayload | SimpleTransferWithMemoPayload
 ):
     | Transaction<AccountTransactionType.Transfer, SimpleTransferPayload>
@@ -129,7 +124,7 @@ export function transfer(
  * @returns an update credentials transaction
  */
 export function updateCredentials(
-    { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: NormalMetadata,
+    { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: Metadata,
     payload: UpdateCredentialsPayload
 ): Transaction<AccountTransactionType.UpdateCredentials, UpdateCredentialsPayload> {
     const handler = new UpdateCredentialsHandler();
@@ -152,7 +147,7 @@ export function updateCredentials(
  * @returns a configure baker transaction
  */
 export function configureValidator(
-    { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: NormalMetadata,
+    { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: Metadata,
     payload: ConfigureBakerPayload
 ): Transaction<AccountTransactionType.ConfigureBaker, ConfigureBakerPayload> {
     const handler = new ConfigureBakerHandler();
@@ -175,7 +170,7 @@ export function configureValidator(
  * @returns a configure delegation transaction
  */
 export function configureDelegation(
-    { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: NormalMetadata,
+    { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: Metadata,
     payload: ConfigureDelegationPayload
 ): Transaction<AccountTransactionType.ConfigureDelegation, ConfigureDelegationPayload> {
     const handler = new ConfigureDelegationHandler();
@@ -198,7 +193,7 @@ export function configureDelegation(
  * @returns a token update transaction
  */
 export function tokenUpdate(
-    { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: NormalMetadata,
+    { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: Metadata,
     payload: TokenUpdatePayload
 ): Transaction<AccountTransactionType.TokenUpdate, TokenUpdatePayload> {
     const handler = new TokenUpdateHandler();
@@ -221,7 +216,7 @@ export function tokenUpdate(
  * @returns a deploy module transaction
  */
 export function deployModule(
-    { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: NormalMetadata,
+    { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: Metadata,
     payload: DeployModulePayload
 ): Transaction<AccountTransactionType.DeployModule, DeployModulePayload> {
     const handler = new DeployModuleHandler();
@@ -244,7 +239,7 @@ export function deployModule(
  * @returns a register data transaction
  */
 export function registerData(
-    { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: NormalMetadata,
+    { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: Metadata,
     payload: RegisterDataPayload
 ): Transaction<AccountTransactionType.RegisterData, RegisterDataPayload> {
     const handler = new RegisterDataHandler();
@@ -262,21 +257,22 @@ export function registerData(
 
 /**
  * Creates a transaction to initialize a smart contract instance.
- * @param metadata transaction metadata including sender, nonce, executionEnergyAmount, and optional expiry (defaults to 5 minutes)
- * @param payload the contract initialization payload
+ * @param metadata transaction metadata including sender, nonce, and optional expiry (defaults to 5 minutes)
+ * @param payload the contract initialization payload with specified execution energy limit
  * @returns an init contract transaction
  */
 export function initContract(
-    { sender, nonce, expiry = TransactionExpiry.futureMinutes(5), executionEnergyAmount }: ContractMetadata,
-    payload: InitContractPayload
+    { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: Metadata,
+    { maxContractExecutionEnergy, ...payload }: InitContractPayloadWithEnergy
 ): Transaction<AccountTransactionType.InitContract, InitContractPayload> {
+    const handler = new InitContractHandler();
     return {
         type: AccountTransactionType.InitContract,
         header: {
             sender: sender,
             nonce: nonce,
             expiry: expiry,
-            executionEnergyAmount,
+            executionEnergyAmount: Energy.create(handler.getBaseEnergyCost({ maxContractExecutionEnergy, ...payload })),
         },
         payload,
     };
@@ -284,23 +280,24 @@ export function initContract(
 
 /**
  * Creates a transaction to invoke an existing smart contract.
- * @param metadata transaction metadata including sender, nonce, executionEnergyAmount, and optional expiry (defaults to 5 minutes)
- * @param payload the contract update payload specifying the contract and receive function
+ * @param metadata transaction metadata including sender, nonce, and optional expiry (defaults to 5 minutes)
+ * @param payload the contract update payload specifying the contract and receive function with specified execution energy limit
  * @returns an update contract transaction
  */
 export function updateContract(
-    { sender, nonce, expiry = TransactionExpiry.futureMinutes(5), executionEnergyAmount }: ContractMetadata,
-    payload: UpdateContractPayload
+    { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: Metadata,
+    { maxContractExecutionEnergy, ...payload }: UpdateContractPayloadWithEnergy
 ): Transaction<AccountTransactionType.Update, UpdateContractPayload> {
+    const handler = new UpdateContractHandler();
     return {
         type: AccountTransactionType.Update,
         header: {
             sender: sender,
             nonce: nonce,
             expiry: expiry,
-            executionEnergyAmount,
+            executionEnergyAmount: Energy.create(handler.getBaseEnergyCost({ maxContractExecutionEnergy, ...payload })),
         },
-        payload: payload,
+        payload,
     };
 }
 

@@ -97,7 +97,7 @@ test('Init contract serializes init name correctly', async () => {
     };
 
     const givenEnergyAmount = Energy.create(30000);
-    const transaction = Transaction.initContract({ ...header, executionEnergyAmount: givenEnergyAmount }, payload);
+    const transaction = Transaction.initContract(header, { ...payload, maxContractExecutionEnergy: givenEnergyAmount });
     const serializedTransaction = serializeAccountTransactionPayload(transaction);
 
     // Slice out the init name part of the serialized transaction.

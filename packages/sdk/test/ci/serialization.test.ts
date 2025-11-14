@@ -4,13 +4,7 @@ import {
     serializeAccountTransactionForSubmission,
     serializeAccountTransactionSignature,
 } from '../../src/serialization.js';
-import {
-    AccountTransaction,
-    AccountTransactionSignature,
-    OtherPayload,
-    OtherType,
-    SimpleTransferPayload,
-} from '../../src/types.js';
+import { AccountTransactionSignature, SimpleTransferPayload } from '../../src/types.js';
 
 test('fail account transaction serialization if no signatures', () => {
     const simpleTransferPayload: SimpleTransferPayload = {
@@ -26,12 +20,7 @@ test('fail account transaction serialization if no signatures', () => {
 
     const simpleTransferAccountTransaction = Transaction.transfer(header, simpleTransferPayload);
 
-    expect(() =>
-        serializeAccountTransactionForSubmission(
-            simpleTransferAccountTransaction as AccountTransaction<OtherType, OtherPayload>,
-            {}
-        )
-    ).toThrow();
+    expect(() => serializeAccountTransactionForSubmission(simpleTransferAccountTransaction, {})).toThrow();
 });
 
 test('serialization of an account signature with two credentials', () => {

@@ -2,7 +2,13 @@ import { Buffer } from 'buffer/index.js';
 
 import { Cursor } from './deserializationHelpers.js';
 import { Cbor, TokenId, TokenOperationType } from './plt/index.js';
-import { ContractAddress, ContractName, ModuleReference } from './pub/types.js';
+import {
+    ContractAddress,
+    ContractName,
+    InitContractPayloadWithEnergy,
+    ModuleReference,
+    UpdateContractPayloadWithEnergy,
+} from './pub/types.js';
 import { serializeCredentialDeploymentInfo } from './serialization.js';
 import {
     encodeDataBlob,
@@ -51,6 +57,7 @@ import * as ReceiveName from './types/ReceiveName.js';
 export interface AccountTransactionHandler<
     PayloadType extends AccountTransactionPayload = AccountTransactionPayload,
     JSONType = PayloadType,
+    WithEnergyPayload = PayloadType,
 > {
     /**
      * Serializes the payload to a buffer.
@@ -75,7 +82,7 @@ export interface AccountTransactionHandler<
      * @param payload - The payload for which to get the base energy cost.
      * @returns The base energy cost for the payload.
      */
-    getBaseEnergyCost: (payload: PayloadType) => bigint;
+    getBaseEnergyCost: (payload: WithEnergyPayload) => bigint;
 
     /**
      * Converts the payload into JSON format.
@@ -248,10 +255,11 @@ export interface InitContractPayloadJSON {
     param: HexString;
 }
 
-export class InitContractHandler implements AccountTransactionHandler<InitContractPayload, InitContractPayloadJSON> {
-    getBaseEnergyCost(payload: InitContractPayload): bigint {
-        void payload;
-        return 0n;
+export class InitContractHandler
+    implements AccountTransactionHandler<InitContractPayload, InitContractPayloadJSON, InitContractPayloadWithEnergy>
+{
+    getBaseEnergyCost(payload: InitContractPayloadWithEnergy): bigint {
+        return payload.maxContractExecutionEnergy.value;
     }
 
     serialize(payload: InitContractPayload): Buffer {
@@ -313,11 +321,11 @@ export interface UpdateContractPayloadJSON {
 export type TransactionMetadata = Pick<AccountTransactionHeader, 'sender' | 'nonce' | 'expiry'>;
 
 export class UpdateContractHandler
-    implements AccountTransactionHandler<UpdateContractPayload, UpdateContractPayloadJSON>
+    implements
+        AccountTransactionHandler<UpdateContractPayload, UpdateContractPayloadJSON, UpdateContractPayloadWithEnergy>
 {
-    getBaseEnergyCost(payload: UpdateContractPayload): bigint {
-        void payload;
-        return 0n;
+    getBaseEnergyCost(payload: UpdateContractPayloadWithEnergy): bigint {
+        return payload.maxContractExecutionEnergy.value;
     }
 
     serialize(payload: UpdateContractPayload): Buffer {

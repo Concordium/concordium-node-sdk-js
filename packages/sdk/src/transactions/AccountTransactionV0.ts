@@ -148,6 +148,16 @@ export function calculateEnergyCost(
 }
 
 /**
+ * Gets the transaction hash that is used to look up the status of a transaction.
+ * @param transaction the transaction to hash
+ * @returns the sha256 hash of the serialized block item kind, signatures, header, type and payload
+ */
+export function getAccountTransactionHash(transaction: Transaction): Uint8Array {
+    const serializedAccountTransaction = serialize(transaction);
+    return sha256([serializedAccountTransaction]);
+}
+
+/**
  * An unsigned version 0 account transaction (without signature).
  */
 export type Unsigned = Omit<Transaction, 'signature'>;

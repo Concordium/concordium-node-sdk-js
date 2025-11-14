@@ -29,6 +29,7 @@ import {
     UpdateCredentialsHandler,
     UpdateCredentialsPayload,
     serializeAccountTransactionPayload,
+    sha256,
 } from '../index.js';
 import { Energy, TransactionExpiry } from '../types/index.js';
 import { AccountTransactionV0 } from './index.js';
@@ -390,4 +391,14 @@ export async function sign(transaction: Transaction, signer: AccountSigner): Pro
         payload: transaction.payload,
     };
     return await AccountTransactionV0.sign(unsigned, signer);
+}
+
+/**
+ * Gets the transaction hash that is used to look up the status of a transaction.
+ * @param signedTransaction the transaction to hash
+ * @returns the sha256 hash of the serialized block item kind, signatures, header, type and payload
+ */
+export function getAccountTransactionHash(signedTransaction: Signed): Uint8Array {
+    const serializedAccountTransaction = AccountTransactionV0.serialize(signedTransaction);
+    return sha256([serializedAccountTransaction]);
 }

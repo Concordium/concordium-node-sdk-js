@@ -10,8 +10,12 @@ import {
     ConcordiumGRPCClient,
     HexString,
     RegisterDataPayload,
+    TransactionKindString,
+    TransactionStatusEnum,
+    TransactionSummaryType,
     cborDecode,
     cborEncode,
+    isKnown,
     signTransaction,
 } from '../../index.js';
 import { DataBlob, SequenceNumber, TransactionExpiry, TransactionHash } from '../../types/index.js';
@@ -176,6 +180,42 @@ export function decodeAnchor(cbor: Uint8Array): Anchor {
     // optional fields
     if ('public' in value && typeof value.public !== 'object') throw new Error('Expected "public" to be an object');
     return value as Anchor;
+}
+
+/**
+ * Verifies that a verification request's anchor has been properly registered on-chain.
+ *
+ * This function checks that:
+ * 1. The transaction referenced in the request is finalized
+ * 2. The transaction is a RegisterData transaction
+ * 3. The registered anchor hash matches the computed hash of the request
+ *
+ * @param verificationRequest - The verification request containing the transaction reference
+ * @param grpc - The gRPC client for blockchain queries
+ * @returns The transaction outcome if verification succeeds
+ * @throws Error if the transaction is not finalized, has wrong type, or hash mismatch
+ */
+export async function verifyAnchor(verificationRequest: VerificationRequestV1, grpc: ConcordiumGRPCClient) {
+    const transaction = await grpc.getBlockItemStatus(verificationRequest.transactionRef);
+    if (transaction.status !== TransactionStatusEnum.Finalized) {
+        throw new Error('presentation request anchor transaction not finalized');
+    }
+    const { summary } = transaction.outcome;
+    if (
+        !isKnown(summary) ||
+        summary.type !== TransactionSummaryType.AccountTransaction ||
+        summary.transactionType !== TransactionKindString.RegisterData
+    ) {
+        throw new Error('Unexpected transaction type found for presentation request anchor transaction');
+    }
+
+    const expectedAnchorHash = computeAnchorHash(verificationRequest.context, verificationRequest.subjectClaims);
+    const transactionAnchor = decodeAnchor(Buffer.from(summary.dataRegistered.data, 'hex'));
+    if (Buffer.from(expectedAnchorHash).toString('hex') !== Buffer.from(transactionAnchor.hash).toString('hex')) {
+        throw new Error('presentation anchor verification failed.');
+    }
+
+    return transaction.outcome;
 }
 
 /**

@@ -453,3 +453,14 @@ pub fn create_verification_audit_v1_anchor(raw_input: JsonString) -> JsResult<Ve
     let anchor = input.record.to_anchor(public.map(|p| p.0));
     cbor_encode(&anchor).map_err(to_js_error)
 }
+
+/// Computes the hash of a verification audit v1 anchor.
+/// Takes a JSON string containing the audit record and optional public info,
+/// creates the anchor structure, and returns the anchor's hash bytes.
+#[wasm_bindgen(js_name = computeVerificationAuditV1AnchorHash)]
+pub fn compute_verification_audit_v1_anchor_hash(raw_input: JsonString) -> JsResult<Vec<u8>> {
+    let input: VerificationAuditV1Input = serde_json::from_str(&raw_input)?;
+    let public = input.public_info.clone();
+    let anchor = input.record.to_anchor(public.map(|p| p.0));
+    Ok(anchor.hash.bytes.to_vec())
+}

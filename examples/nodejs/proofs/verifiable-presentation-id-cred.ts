@@ -202,24 +202,19 @@ const presentationJson = JSONBig.stringify(presentation);
 const presentationParsed = VerifiablePresentationV1.fromJSON(JSONBig.parse(presentationJson));
 
 // Finally, the entity requesting the proof stores the audit report and registers a pulic version on chain
-const result = await VerificationAuditRecordV1.createChecked(
+const registration = await VerificationAuditRecordV1.createAndAnchor(
     randomUUID(),
     verificationRequest,
     presentationParsed,
     grpc,
-    network
+    { metadata: { sender, signer } },
+    { network }
 );
 
-if (result.type === 'failed') throw new Error(`Failed to verify presentation: ${result.error}`);
-const auditTransaction = await VerificationAuditRecordV1.registerAnchor(
-    result.result,
-    grpc,
-    { sender, signer },
-    {
-        info: 'Some public info',
-    }
-);
+if (registration.type === 'failed') throw new Error(`Failed to verify presentation: ${registration.error}`);
 
-console.log('Waiting for verification audit report registration to finalize:', auditTransaction.toString());
-await grpc.waitForTransactionFinalization(auditTransaction);
+const { anchorTransactionRef } = registration.result;
+
+console.log('Waiting for verification audit report registration to finalize:', anchorTransactionRef.toString());
+await grpc.waitForTransactionFinalization(anchorTransactionRef);
 console.log('Verification audit anchor successfully registered.');

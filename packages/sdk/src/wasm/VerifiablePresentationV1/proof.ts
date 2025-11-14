@@ -1,5 +1,4 @@
 import * as wasm from '@concordium/rust-bindings/wallet';
-import { Buffer } from 'buffer/index.js';
 import _JB from 'json-bigint';
 
 import {
@@ -9,10 +8,6 @@ import {
     CredentialRegistrationId,
     CryptographicParameters,
     Network,
-    TransactionKindString,
-    TransactionStatusEnum,
-    TransactionSummaryType,
-    isKnown,
 } from '../../index.js';
 import { bail } from '../../util.js';
 import {
@@ -282,27 +277,7 @@ export async function createFromAnchor(
     additionalContext: GivenContext[]
 ): Promise<VerifiablePresentationV1> {
     const globalContext = await grpc.getCryptographicParameters();
-    const transaction = await grpc.getBlockItemStatus(verificationRequest.transactionRef);
-    if (transaction.status !== TransactionStatusEnum.Finalized) {
-        throw new Error('presentation request anchor transaction not finalized');
-    }
-    const { summary, blockHash } = transaction.outcome;
-    if (
-        !isKnown(summary) ||
-        summary.type !== TransactionSummaryType.AccountTransaction ||
-        summary.transactionType !== TransactionKindString.RegisterData
-    ) {
-        throw new Error('Unexpected transaction type found for presentation request anchor transaction');
-    }
-
-    const expectedAnchorHash = VerificationRequestV1.computeAnchorHash(
-        verificationRequest.context,
-        verificationRequest.subjectClaims
-    );
-    const transactionAnchor = VerificationRequestV1.decodeAnchor(Buffer.from(summary.dataRegistered.data, 'hex'));
-    if (Buffer.from(expectedAnchorHash).toString('hex') !== Buffer.from(transactionAnchor.hash).toString('hex')) {
-        throw new Error('presentation anchor verification failed.');
-    }
+    const { blockHash } = await VerificationRequestV1.verifyAnchor(verificationRequest, grpc);
 
     const blockContext: GivenContext = { label: 'BlockHash', context: blockHash };
     const proofContext = createContext(verificationRequest.context, [...additionalContext, blockContext]);

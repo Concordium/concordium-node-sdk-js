@@ -18,11 +18,20 @@
   - `SubjectClaimsBuilder.addAccountStatement` to `SubjectClaimsBuilder.addAccountClaims`
   - `SubjectClaimsBuilder.addAccountOrIdentityStatement` to `SubjectClaimsBuilder.addAccountOrIdentityClaims`
 
+### Added
+
+- `VerificationAuditRecordV1.createAndAnchor` convenience function both creates a check audit record and registers
+  the corresponding anchor on-chain.
+- `VerificationAuditRecordV1.verifyAnchor` function which verifies that a given transaction corresponds to an anchor
+  registration of a given audit record.
+- `VerificationRequestV1.verifyAnchor` function which verifies that the transaction ref of a given verification request
+  corresponds to an anchor registration of the internal data.
+
 ## 11.1.0-alpha.3
 
 ### Fixed
 
-- Typo in function name `VerificationRequest.createAndAchor`, is now `VerificationRequest.createAndAnchor`.
+- Typo in function name `VerificationRequestV1.createAndAchor`, is now `VerificationRequestV1.createAndAnchor`.
 - Update the `@concordium/rust-bindings` version to `4.0.0`.
 
 ## 11.1.0-alpha.2

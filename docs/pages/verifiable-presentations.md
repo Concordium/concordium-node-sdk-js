@@ -247,8 +247,14 @@ and the anchor should be registered on chain. The transacton hash of the anchor 
 
 ```ts
 const uuid: string = ...;
-// Verify the presentation in the context of the verification request and create the audit record.
-const record = VerificationAuditRecordV1.createChecked(uuid, verificationRequest, presentation, grpcClient, network);
-// Register the verification audit anchor on the chain
-const anchorTransactionHash = await VerificationAuditRecordV1.registerAnchor(record, grpcClient, { sender, signer });
+// Verify the presentation in the context of the verification request and create the audit record and register the audit
+// anchor.
+const record = VerificationAuditRecordV1.createAndAnchor(
+    uuid,
+    verificationRequest,
+    presentation,
+    grpcClient,
+    { metadata: { sender, signer } },
+    { network }
+);
 ```

@@ -4,7 +4,7 @@ import { Cursor } from './deserializationHelpers.js';
 import { Cbor, TokenId, TokenOperationType } from './plt/index.js';
 import { AccountTransaction, ContractAddress, ContractName, CredentialPublicKeys, VerifyKey, Energy, ModuleReference, ChainArData } from './pub/types.js';
 import { serializeCredentialDeploymentInfo } from './serialization.js';
-import { deserializeCredentialDeploymentValues, deserializeCredentialDeploymentProofs, deserializeCredentialsToBeRemoved } from './deserialization.ts';
+import { deserializeCredentialDeploymentValues, deserializeCredentialDeploymentProofs, deserializeCredentialsToBeRemoved } from './deserialization.js';
 import {
     encodeDataBlob,
     encodeWord8,

@@ -1405,24 +1405,22 @@ export interface UpdateContractPayload {
     message: Parameter.Type;
 }
 
+/**
+ * This describes a "pre-transaction" header, meaning the parts of a transaction header
+ * required to build the transaction header sent to chain.
+ */
 export interface AccountTransactionHeader {
     /** account address that is source of this transaction */
     sender: AccountAddress.Type;
-
     /**
      * the nonce for the transaction, usually acquired by
      * getting the next account nonce from the node
      */
     nonce: SequenceNumber.Type;
-
     /** expiration of the transaction */
     expiry: TransactionExpiry.Type;
-
     /** a base energy amount, this amount excludes transaction size and signature costs */
     executionEnergyAmount: Energy.Type;
-
-    /** payload size */
-    payloadSize: number;
 }
 
 export interface SimpleTransferPayload {

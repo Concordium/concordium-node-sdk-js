@@ -128,7 +128,6 @@ export class SimpleTransferHandler
                 nonce: nonce,
                 expiry: expiry,
                 executionEnergyAmount: Energy.create(this.getBaseEnergyCost()),
-                payloadSize: this.serialize(payload).length + 1, //derive the payload size from the Buffer, plus 1 for payload type byte
             },
             payload: payload,
         };
@@ -190,7 +189,6 @@ export class SimpleTransferWithMemoHandler
                 nonce: nonce,
                 expiry: expiry,
                 executionEnergyAmount: Energy.create(this.getBaseEnergyCost()),
-                payloadSize: this.serialize(payload).length + 1, //derive the payload size from the Buffer, plus 1 for payload type byte
             },
             payload: payload,
         };
@@ -256,7 +254,6 @@ export class DeployModuleHandler implements AccountTransactionHandler<DeployModu
                 nonce: nonce,
                 expiry: expiry,
                 executionEnergyAmount: Energy.create(this.getBaseEnergyCost(payload)),
-                payloadSize: this.serialize(payload).length + 1, //derive the payload size from the Buffer, plus 1 for payload type byte
             },
             payload: payload,
         };
@@ -342,7 +339,6 @@ export class InitContractHandler implements AccountTransactionHandler<InitContra
                 nonce: nonce,
                 expiry: expiry,
                 executionEnergyAmount: givenEnergy,
-                payloadSize: this.serialize(payload).length + 1, //derive the payload size from the Buffer, plus 1 for payload type byte
             },
             payload: payload,
         };
@@ -433,7 +429,6 @@ export class UpdateContractHandler
                 nonce: nonce,
                 expiry: expiry,
                 executionEnergyAmount: givenEnergy,
-                payloadSize: this.serialize(payload).length + 1, //derive the payload size from the Buffer, plus 1 for payload type byte
             },
             payload: payload,
         };
@@ -518,7 +513,6 @@ export class UpdateCredentialsHandler implements AccountTransactionHandler<Updat
                 nonce: nonce,
                 expiry: expiry,
                 executionEnergyAmount: Energy.create(this.getBaseEnergyCost(payload)),
-                payloadSize: this.serialize(payload).length + 1, //derive the payload size from the Buffer, plus 1 for payload type byte
             },
             payload: payload,
         };
@@ -601,7 +595,6 @@ export class RegisterDataHandler implements AccountTransactionHandler<RegisterDa
                 nonce: nonce,
                 expiry: expiry,
                 executionEnergyAmount: Energy.create(this.getBaseEnergyCost()),
-                payloadSize: this.serialize(payload).length + 1, //derive the payload size from the Buffer, plus 1 for payload type byte
             },
             payload: payload,
         };
@@ -664,7 +657,6 @@ export class ConfigureBakerHandler
                 nonce: nonce,
                 expiry: expiry,
                 executionEnergyAmount: Energy.create(this.getBaseEnergyCost(payload)),
-                payloadSize: this.serialize(payload).length + 1, //derive the payload size from the Buffer, plus 1 for payload type byte
             },
             payload: payload,
         };
@@ -731,7 +723,6 @@ export class ConfigureDelegationHandler
                 nonce: nonce,
                 expiry: expiry,
                 executionEnergyAmount: Energy.create(this.getBaseEnergyCost()),
-                payloadSize: this.serialize(payload).length + 1, //derive the payload size from the Buffer, plus 1 for payload type byte
             },
             payload: payload,
         };
@@ -794,7 +785,6 @@ export class TokenUpdateHandler implements AccountTransactionHandler<TokenUpdate
                 nonce: nonce,
                 expiry: expiry,
                 executionEnergyAmount: Energy.create(this.getBaseEnergyCost(payload)),
-                payloadSize: this.serialize(payload).length + 1, //derive the payload size from the Buffer, plus 1 for payload type byte
             },
             payload: payload,
         };

@@ -1,3 +1,4 @@
 import * as AccountTransactionV0 from './AccountTransactionV0.js';
+import * as Transaction from './Transaction.js';
 
-export { AccountTransactionV0 };
+export { Transaction, AccountTransactionV0 };

@@ -4,7 +4,6 @@ import JSONBig from 'json-bigint';
 import path from 'path';
 
 import {
-    AccountTransactionType,
     CcdAmount,
     ConfigureBakerHandler,
     ConfigureBakerPayload,
@@ -35,11 +34,11 @@ import {
     UpdateContractPayload,
     UpdateCredentialsHandler,
     UpdateCredentialsPayload,
-    getAccountTransactionHandler,
     getAccountTransactionSignDigest,
     serializeAccountTransactionPayload,
 } from '../../src/index.js';
 import { AccountAddress, TransactionExpiry } from '../../src/pub/types.js';
+import { Transaction } from '../../src/transactions/index.ts';
 
 const senderAccountAddress = '4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M';
 const expiry = TransactionExpiry.fromDate(new Date(1675872215));
@@ -75,9 +74,7 @@ test('configureBaker is serialized correctly', async () => {
         finalizationRewardCommission: 1,
     };
 
-    const handler = getAccountTransactionHandler(AccountTransactionType.ConfigureBaker);
-    const transaction = handler.create(header, payload);
-
+    const transaction = Transaction.configureValidator(header, payload);
     const signDigest = getAccountTransactionSignDigest(transaction);
 
     expect(signDigest.toString('hex')).toBe(expectedDigest);
@@ -100,9 +97,7 @@ test('Init contract serializes init name correctly', async () => {
     };
 
     const givenEnergyAmount = Energy.create(30000);
-    const handler = getAccountTransactionHandler(AccountTransactionType.InitContract);
-    const transaction = handler.create(header, payload, givenEnergyAmount);
-
+    const transaction = Transaction.initContract({ ...header, executionEnergyAmount: givenEnergyAmount }, payload);
     const serializedTransaction = serializeAccountTransactionPayload(transaction);
 
     // Slice out the init name part of the serialized transaction.

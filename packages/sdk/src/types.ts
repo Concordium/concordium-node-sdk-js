@@ -4,6 +4,7 @@
 import type { Known, Upward } from './grpc/index.js';
 import type { Cbor, TokenId } from './plt/index.js';
 import type { TokenAccountInfo } from './plt/types.js';
+import { AccountTransactionV0 } from './transactions/index.js';
 import type * as AccountAddress from './types/AccountAddress.js';
 import type * as BlockHash from './types/BlockHash.js';
 import type * as CcdAmount from './types/CcdAmount.js';
@@ -2021,10 +2022,7 @@ export type HealthCheckResponse =
 export type BlockItem =
     | {
           kind: BlockItemKind.AccountTransactionKind;
-          transaction: {
-              accountTransaction: AccountTransaction;
-              signatures: AccountTransactionSignature;
-          };
+          transaction: AccountTransactionV0.Type;
       }
     | {
           kind: BlockItemKind.CredentialDeploymentKind;

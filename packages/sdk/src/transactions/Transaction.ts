@@ -25,7 +25,7 @@ import {
     UpdateCredentialsPayload,
     serializeAccountTransactionPayload,
 } from '../index.js';
-import { type DataBlob, Energy, TransactionExpiry } from '../types/index.js';
+import { Energy, TransactionExpiry } from '../types/index.js';
 import { AccountTransactionV0 } from './index.js';
 
 // --- Core types ---
@@ -67,6 +67,10 @@ export type NormalMetadata = Omit<MetadataInput, 'executionEnergyAmount'>;
  */
 export type ContractMetadata = MetadataInput;
 
+const isMemoPayload = (
+    payload: SimpleTransferPayload | SimpleTransferWithMemoPayload
+): payload is SimpleTransferWithMemoPayload => (payload as SimpleTransferWithMemoPayload).memo !== undefined;
+
 /**
  * Creates a simple transfer transaction
  * @param metadata transaction metadata including sender, nonce, and optional expiry (defaults to 5 minutes)
@@ -82,19 +86,16 @@ export function transfer(
  * Creates a transfer transaction with a memo.
  * @param metadata transaction metadata including sender, nonce, and optional expiry (defaults to 5 minutes)
  * @param payload the transfer payload containing recipient and amount
- * @param memo the data blob memo to attach to the transfer
  * @returns a transfer with memo transaction
  */
 export function transfer(
     { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: NormalMetadata,
-    payload: SimpleTransferPayload,
-    memo: DataBlob
+    payload: SimpleTransferWithMemoPayload
 ): Transaction<AccountTransactionType.TransferWithMemo, SimpleTransferWithMemoPayload>;
 
 export function transfer(
     { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: NormalMetadata,
-    payload: SimpleTransferPayload | SimpleTransferWithMemoPayload,
-    memo?: DataBlob
+    payload: SimpleTransferPayload | SimpleTransferWithMemoPayload
 ):
     | Transaction<AccountTransactionType.Transfer, SimpleTransferPayload>
     | Transaction<AccountTransactionType.TransferWithMemo, SimpleTransferWithMemoPayload> {
@@ -104,7 +105,7 @@ export function transfer(
         expiry: expiry,
     };
 
-    if (memo === undefined) {
+    if (!isMemoPayload(payload)) {
         const handler = new SimpleTransferHandler();
         return {
             type: AccountTransactionType.Transfer,
@@ -117,7 +118,7 @@ export function transfer(
     return {
         type: AccountTransactionType.TransferWithMemo,
         header: { ...header, executionEnergyAmount: Energy.create(handler.getBaseEnergyCost()) },
-        payload: { ...payload, memo },
+        payload: { ...payload },
     };
 }
 

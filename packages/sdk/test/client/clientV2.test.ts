@@ -19,6 +19,7 @@ import {
     streamToList,
 } from '../../src/index.js';
 import { getModuleBuffer } from '../../src/nodejs/index.js';
+import { Transaction } from '../../src/transactions/index.ts';
 import * as AccountAddress from '../../src/types/AccountAddress.js';
 import * as Energy from '../../src/types/Energy.js';
 import * as SequenceNumber from '../../src/types/SequenceNumber.js';
@@ -259,8 +260,7 @@ test.each(clients)('sendBlockItem', async (client) => {
         toAddress: testAccount,
     };
 
-    const handler = getAccountTransactionHandler(v1.AccountTransactionType.Transfer);
-    const accountTransaction = handler.create(header, simpleTransfer);
+    const accountTransaction = Transaction.transfer(header, simpleTransfer);
 
     // Sign transaction
     const signer = buildBasicAccountSigner(privateKey);
@@ -285,8 +285,7 @@ test.each(clients)('transactionHash', async (client) => {
         toAddress: testAccount,
     };
 
-    const handler = getAccountTransactionHandler(v1.AccountTransactionType.Transfer);
-    const transaction = handler.create(headerLocal, simpleTransfer);
+    const transaction = Transaction.transfer(headerLocal, simpleTransfer);
 
     const rawPayload = serializeAccountTransactionPayload(transaction);
 

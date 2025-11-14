@@ -1,9 +1,16 @@
-import { constantA, constantB } from '../energyCost.ts';
-import { sha256 } from '../hash.ts';
-import { serializeAccountTransactionPayload } from '../serialization.js';
-import { encodeWord32, encodeWord64 } from '../serializationHelpers.ts';
-import { AccountSigner } from '../signHelpers.ts';
-import { AccountTransactionPayload, AccountTransactionSignature, AccountTransactionType } from '../types.js';
+import { deserializeAccountTransactionPayload, deserializeAccountTransactionSignature } from '../deserialization.js';
+import { Cursor } from '../deserializationHelpers.js';
+import { constantA, constantB } from '../energyCost.js';
+import { sha256 } from '../hash.js';
+import { serializeAccountTransactionPayload, serializeAccountTransactionSignature } from '../serialization.js';
+import { encodeWord8, encodeWord32, encodeWord64 } from '../serializationHelpers.js';
+import { AccountSigner } from '../signHelpers.js';
+import {
+    AccountTransactionPayload,
+    AccountTransactionSignature,
+    AccountTransactionType,
+    BlockItemKind,
+} from '../types.js';
 import { AccountAddress, Energy, SequenceNumber, TransactionExpiry } from '../types/index.js';
 
 /**
@@ -72,6 +79,47 @@ function serializeHeader(header: Header): Uint8Array {
     const payloadSize = encodeWord32(header.payloadSize);
     const expiry = encodeWord64(header.expiry.expiryEpochSeconds);
     return Buffer.concat([sender, nonce, energyAmount, payloadSize, expiry]);
+}
+
+function deserializeHeader(value: Cursor): Header {
+    const sender = AccountAddress.fromBuffer(value.read(32));
+    const nonce = SequenceNumber.create(value.read(8).readBigUInt64BE(0));
+    const energyAmount = Energy.create(value.read(8).readBigUInt64BE(0));
+    const payloadSize = value.read(4).readUInt32BE(0);
+    const expiry = TransactionExpiry.fromEpochSeconds(value.read(8).readBigUInt64BE(0));
+    return {
+        sender,
+        nonce,
+        expiry,
+        energyAmount,
+        payloadSize,
+    };
+}
+
+export function serialize(transaction: Transaction): Uint8Array {
+    const signature = serializeAccountTransactionSignature(transaction.signature);
+    const payload = serializeAccountTransactionPayload(transaction);
+    const header = serializeHeader(transaction.header);
+    return Buffer.concat([signature, header, payload]);
+}
+
+export function deserialize(value: Cursor | ArrayBuffer): Transaction {
+    const isRawBuffer = value instanceof Cursor;
+    const cursor = isRawBuffer ? value : Cursor.fromBuffer(value);
+
+    const signature = deserializeAccountTransactionSignature(cursor);
+    const header = deserializeHeader(cursor);
+    const { type, payload } = deserializeAccountTransactionPayload(cursor);
+
+    if (isRawBuffer && cursor.remainingBytes.length !== 0)
+        throw new Error('Deserializing the transaction did not exhaust the buffer');
+
+    return { signature, header, type, payload };
+}
+
+export function serializeBlockItem(transaction: Transaction): Uint8Array {
+    const blockItemKind = encodeWord8(BlockItemKind.AccountTransactionKind);
+    return Buffer.concat([blockItemKind, serialize(transaction)]);
 }
 
 // Account address (32 bytes), nonce (8 bytes), energy (8 bytes), payload size (4 bytes), expiry (8 bytes);

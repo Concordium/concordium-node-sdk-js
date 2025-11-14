@@ -1,10 +1,5 @@
-import {
-    AccountAddress,
-    CcdAmount,
-    SequenceNumber,
-    TransactionExpiry,
-    getAccountTransactionHandler,
-} from '../../src/pub/types.js';
+import { Transaction } from '../../src/pub/transactions.ts';
+import { AccountAddress, CcdAmount, SequenceNumber, TransactionExpiry } from '../../src/pub/types.js';
 import {
     serializeAccountTransactionForSubmission,
     serializeAccountTransactionSignature,
@@ -12,7 +7,6 @@ import {
 import {
     AccountTransaction,
     AccountTransactionSignature,
-    AccountTransactionType,
     OtherPayload,
     OtherType,
     SimpleTransferPayload,
@@ -30,8 +24,7 @@ test('fail account transaction serialization if no signatures', () => {
         sender: AccountAddress.fromBase58('3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'),
     };
 
-    const handler = getAccountTransactionHandler(AccountTransactionType.Transfer);
-    const simpleTransferAccountTransaction = handler.create(header, simpleTransferPayload);
+    const simpleTransferAccountTransaction = Transaction.transfer(header, simpleTransferPayload);
 
     expect(() =>
         serializeAccountTransactionForSubmission(

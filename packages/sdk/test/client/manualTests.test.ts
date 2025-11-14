@@ -1,7 +1,8 @@
 import { QueriesClient } from '../../src/grpc-api/v2/concordium/service.client.ts';
 import * as v2 from '../../src/grpc-api/v2/concordium/types.js';
 import * as v1 from '../../src/index.js';
-import { buildBasicAccountSigner, getAccountTransactionHandler, signTransaction } from '../../src/index.js';
+import { buildBasicAccountSigner, signTransaction } from '../../src/index.js';
+import { Transaction } from '../../src/pub/transactions.ts';
 import { getNodeClientV2 as getNodeClient } from './testHelpers.js';
 
 const client = getNodeClient();
@@ -27,8 +28,7 @@ describe.skip('Manual test suite', () => {
             toAddress: testAccount,
         };
 
-        const handler = getAccountTransactionHandler(v1.AccountTransactionType.Transfer);
-        const accountTransaction = handler.create(header, simpleTransfer);
+        const accountTransaction = Transaction.transfer(header, simpleTransfer);
 
         // Sign transaction
         const signer = buildBasicAccountSigner(senderAccountPrivateKey);

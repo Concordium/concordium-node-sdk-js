@@ -291,7 +291,7 @@ export class ConcordiumGRPCClient {
      * @returns The transaction hash as a hex-encoded string
      */
     async sendSignedTransaction(transaction: Transaction.Signed): Promise<TransactionHash.Type> {
-        const rawPayload = Transaction.serializePayload(transaction);
+        const rawPayload = serializeAccountTransactionPayload(transaction);
         return this.sendRawAccountTransaction(
             transaction.header,
             transaction.header.energyAmount,

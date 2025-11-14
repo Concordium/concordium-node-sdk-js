@@ -348,13 +348,9 @@ export function updateContract(
     };
 }
 
-export function serializePayload(payload: Omit<Transaction, 'header'>): Uint8Array {
-    return serializeAccountTransactionPayload(payload);
-}
-
 // TODO: factor in v1 transaction
 export function getEnergyCost({ header, ...payload }: Transaction, numSignatures: bigint | number = 1n): Energy.Type {
-    const size = serializePayload(payload).length;
+    const size = serializeAccountTransactionPayload(payload).length;
     return AccountTransactionV0.calculateEnergyCost(BigInt(numSignatures), BigInt(size), header.executionEnergyAmount);
 }
 

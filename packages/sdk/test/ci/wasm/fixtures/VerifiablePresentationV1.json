@@ -32,12 +32,12 @@
             "type": ["VerifiableCredential", "ConcordiumVerifiableCredentialV1", "ConcordiumIdBasedCredential"],
             "proof": {
                 "type": "ConcordiumZKProofV4",
-                "createdAt": "2025-10-17T13:14:14.292Z",
+                "created": "2025-10-17T13:14:14.292Z",
                 "proofValue": "01020102010201020102010201020102010201020102010201020102010201020102010201020102010201020102010201020102010201020102010201020102"
             },
-            "issuer": "ccd:testnet:idp:0",
+            "issuer": "did:ccd:testnet:idp:0",
             "validFrom": "2000-01-01T00:00:00.000Z",
-            "validTo": "2030-01-01T00:00:00.000Z",
+            "validUntil": "2030-01-01T00:00:00.000Z",
             "credentialSubject": {
                 "statement": [
                     {
@@ -51,13 +51,13 @@
                         "type": "RevealAttribute"
                     }
                 ],
-                "id": "123456123456123456123456123456123456123456123456"
+                "id": "did:ccd:testnet:encidcred:123456123456123456123456123456123456123456123456"
             }
         }
     ],
     "proof": {
         "created": "2025-10-17T13:14:14.290Z",
-        "proofValue": [],
+        "proofValue": "",
         "type": "ConcordiumWeakLinkingProofV1"
     }
 }

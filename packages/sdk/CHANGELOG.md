@@ -2,18 +2,36 @@
 
 ## Unreleased
 
+## 11.1.0-alpha.4
+
 ### Breaking changes
 
 - `VerificationRequestV1.createAndAnchor` and `VerificationAuditRecordV1.registerAnchor` now also allows for 
   specififying a sequence number to use for the transaction.
   The function signature has been changed to take "transaction metadata" as an object, which now includes the
   the transaction `sender` and `signer`, in addition to an optional `sequenceNumber`.
+- Renamed `VerificationRequestV1.credentialStatements` to `VerificationRequestV1.subjectClaims`
+- Renamed `VerificationRequestV1.Statement` to `VerificationRequestV1.SubjectClaims`, and correspondingly:
+  - `VerificationRequestV1.IdentityStatement` to `VerificationRequestV1.IdentityClaims`
+- Renamed `VerificationRequestV1.statementBuilder` to `VerificationRequestV1.claimsBuilder`, and corresondingly:
+  - `SubjectClaimsBuilder.addIdentityStatement` to `SubjectClaimsBuilder.addIdentityClaims`
+  - `SubjectClaimsBuilder.addAccountStatement` to `SubjectClaimsBuilder.addAccountClaims`
+  - `SubjectClaimsBuilder.addAccountOrIdentityStatement` to `SubjectClaimsBuilder.addAccountOrIdentityClaims`
+
+### Added
+
+- `VerificationAuditRecordV1.createAndAnchor` convenience function both creates a check audit record and registers
+  the corresponding anchor on-chain.
+- `VerificationAuditRecordV1.verifyAnchor` function which verifies that a given transaction corresponds to an anchor
+  registration of a given audit record.
+- `VerificationRequestV1.verifyAnchor` function which verifies that the transaction ref of a given verification request
+  corresponds to an anchor registration of the internal data.
 
 ## 11.1.0-alpha.3
 
 ### Fixed
 
-- Typo in function name `VerificationRequest.createAndAchor`, is now `VerificationRequest.createAndAnchor`.
+- Typo in function name `VerificationRequestV1.createAndAchor`, is now `VerificationRequestV1.createAndAnchor`.
 - Update the `@concordium/rust-bindings` version to `4.0.0`.
 
 ## 11.1.0-alpha.2

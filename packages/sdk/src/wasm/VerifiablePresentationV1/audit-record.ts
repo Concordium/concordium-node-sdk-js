@@ -1,9 +1,16 @@
+import * as wasm from '@concordium/rust-bindings/wallet';
 import { Buffer } from 'buffer/index.js';
 import _JB from 'json-bigint';
 
-import { ConcordiumGRPCClient } from '../../grpc/index.js';
-import { sha256 } from '../../hash.js';
-import { AtomicStatementV2, CredentialStatus, attributeTypeEquals } from '../../index.js';
+import { ConcordiumGRPCClient, isKnown } from '../../grpc/index.js';
+import {
+    AtomicStatementV2,
+    CredentialStatus,
+    HexString,
+    TransactionKindString,
+    TransactionSummaryType,
+    attributeTypeEquals,
+} from '../../index.js';
 import { signTransaction } from '../../signHelpers.js';
 import {
     AccountTransaction,
@@ -25,7 +32,7 @@ import {
 import { bail } from '../../util.js';
 import { VerifiablePresentationV1, VerificationRequestV1 } from './index.js';
 import { AnchorTransactionMetadata, contextEquals } from './internal.js';
-import { AccountClaims, IdentityClaims, VerificationResult, isAccountClaims } from './proof.js';
+import { VerificationResult, isAccountClaims } from './proof.js';
 
 const JSONBig = _JB({ alwaysParseAsBig: true, useNativeBigInt: true });
 
@@ -225,10 +232,10 @@ function verifyAtomicStatements<A>(a: AtomicStatementV2<A>[], b: AtomicStatement
 }
 
 /**
- * Verifies account claims against a verification request statement.
+ * Verifies verifiable presentation account claims against a verification request identity claims.
  *
- * @param claims - Account claims from the verifiable presentation
- * @param statement - Verification request statement to validate against
+ * @param vpClaims - Account claims from the verifiable presentation
+ * @param vrClaims - Verification request claims to validate against
  * @param grpc - gRPC client for querying account information
  *
  * @throws Error if:
@@ -238,20 +245,20 @@ function verifyAtomicStatements<A>(a: AtomicStatementV2<A>[], b: AtomicStatement
  * - issuer is not valid
  */
 async function verifyAccountClaims(
-    claims: AccountClaims,
-    statement: VerificationRequestV1.Statement,
+    vpClaims: VerifiablePresentationV1.AccountClaims,
+    vrClaims: VerificationRequestV1.IdentityClaims,
     grpc: ConcordiumGRPCClient
 ) {
-    if (statement.type !== 'identity')
-        throw new Error(`Request statement of type ${statement.type} does not match account claims`);
-    if (!statement.source.includes('accountCredential'))
+    if (vrClaims.type !== 'identity')
+        throw new Error(`Request statement of type ${vrClaims.type} does not match account claims`);
+    if (!vrClaims.source.includes('accountCredential'))
         throw new Error(`Request statement does not include "account" source`);
 
-    verifyAtomicStatements(statement.statement, claims.statement);
+    verifyAtomicStatements(vrClaims.statements, vpClaims.statement);
 
     // check that the selected credential for the claim is issued by a valid IDP
-    const validIdpIndices = statement.issuers.map((i) => i.index);
-    const [, credId] = claims.id.split(':cred:');
+    const validIdpIndices = vrClaims.issuers.map((i) => i.index);
+    const [, credId] = vpClaims.id.split(':cred:');
     const ai = await grpc.getAccountInfo(CredentialRegistrationId.fromHexString(credId));
     const cred = Object.values(ai.accountCredentials).find(
         (c) => c.value.type === 'normal' && c.value.contents.credId === credId
@@ -263,10 +270,10 @@ async function verifyAccountClaims(
 }
 
 /**
- * Verifies identity claims against a verification request statement.
+ * Verifies verificable presenation identity claims against a verification request identity claims.
  *
- * @param claims - Identity claims from the verifiable presentation
- * @param statement - Verification request statement to validate against
+ * @param vpClaims - Identity claims from the verifiable presentation
+ * @param vrClaims - Verification request claims to validate against
  *
  * @throws Error if:
  * - statement type is not 'identity';
@@ -274,17 +281,20 @@ async function verifyAccountClaims(
  * - atomic statements mismatch;
  * - issuer is not valid
  */
-function verifyIdentityClaims(claims: IdentityClaims, statement: VerificationRequestV1.Statement) {
-    if (statement.type !== 'identity')
-        throw new Error(`Request statement of type ${statement.type} does not match account claims`);
-    if (!statement.source.includes('identityCredential'))
+function verifyIdentityClaims(
+    vpClaims: VerifiablePresentationV1.IdentityClaims,
+    vrClaims: VerificationRequestV1.IdentityClaims
+) {
+    if (vrClaims.type !== 'identity')
+        throw new Error(`Request statement of type ${vrClaims.type} does not match account claims`);
+    if (!vrClaims.source.includes('identityCredential'))
         throw new Error(`Request statement does not include "identity" source`);
 
-    verifyAtomicStatements(statement.statement, claims.statement);
+    verifyAtomicStatements(vrClaims.statements, vpClaims.statement);
 
     // check that the selected credential for the claim is issued by a valid IDP
-    const validIdpIndices = statement.issuers.map((i) => i.index);
-    const [, idpIndex] = claims.issuer.split(':idp:');
+    const validIdpIndices = vrClaims.issuers.map((i) => i.index);
+    const [, idpIndex] = vpClaims.issuer.split(':idp:');
 
     if (!validIdpIndices.includes(Number(idpIndex)))
         throw new Error('Credential selected is not issued by a valid identity provider.');
@@ -293,45 +303,45 @@ function verifyIdentityClaims(claims: IdentityClaims, statement: VerificationReq
 /**
  * Verifies subject claims against a verification request statement.
  *
- * @param statement - Verification request statement to validate against
- * @param claims - Subject claims from the verifiable presentation (account or identity)
+ * @param vpClaims - Subject claims from the verifiable presentation request (account or identity)
+ * @param vrClaims - Verification request subject claims to validate against
  * @param grpc - gRPC client for querying account information
  *
  * @throws Error if claims do not match the statement requirements
  */
 async function verifyClaims(
-    statement: VerificationRequestV1.Statement,
-    claims: VerifiablePresentationV1.SubjectClaims,
+    vpClaims: VerifiablePresentationV1.SubjectClaims,
+    vrClaims: VerificationRequestV1.SubjectClaims,
     grpc: ConcordiumGRPCClient
 ) {
-    if (isAccountClaims(claims)) {
-        await verifyAccountClaims(claims, statement, grpc);
+    if (isAccountClaims(vpClaims)) {
+        await verifyAccountClaims(vpClaims, vrClaims, grpc);
     } else {
-        verifyIdentityClaims(claims, statement);
+        verifyIdentityClaims(vpClaims, vrClaims);
     }
 }
 
 /**
  * Verifies that a presentation request matches the verification request.
  *
- * @param verificationRequest - Original verification request with credential statements
  * @param presentationRequest - Presentation request containing subject claims
+ * @param verificationRequest - Original verification request with credential statements
  * @param grpc - gRPC client for querying account information
  *
  * @throws Error if number of statements/claims mismatch or any individual claim verification fails
  */
 async function verifyPresentationRequest(
-    verificationRequest: VerificationRequestV1.Type,
     presentationRequest: VerifiablePresentationV1.Request,
+    verificationRequest: VerificationRequestV1.Type,
     grpc: ConcordiumGRPCClient
 ) {
-    verificationRequest.credentialStatements.length === presentationRequest.subjectClaims.length ||
+    verificationRequest.subjectClaims.length === presentationRequest.subjectClaims.length ||
         bail(
-            `Mismatch in number of statements/claims: ${verificationRequest.credentialStatements.length} request statements found, ${presentationRequest.subjectClaims.length} presentation claims found`
+            `Mismatch in number of statements/claims: ${verificationRequest.subjectClaims.length} request statements found, ${presentationRequest.subjectClaims.length} presentation claims found`
         );
 
-    for (let i = 0; i < verificationRequest.credentialStatements.length; i++) {
-        await verifyClaims(verificationRequest.credentialStatements[i], presentationRequest.subjectClaims[i], grpc);
+    for (let i = 0; i < verificationRequest.subjectClaims.length; i++) {
+        await verifyClaims(presentationRequest.subjectClaims[i], verificationRequest.subjectClaims[i], grpc);
     }
 }
 
@@ -352,6 +362,7 @@ async function verifyPresentationRequest(
  * 1. Compares contexts between request and presentation
  * 2. Verifies cryptographic integrity of the presentation with public on-chain data
  * 3. Checks that all credentials are active
+ * 4. Checks that the verification request anchor corresponding to the `request` has been registered on-chain
  * 4. Validates presentation claims against request statements
  */
 export async function createChecked(
@@ -374,11 +385,21 @@ export async function createChecked(
     if (verification.type === 'failed') return verification;
 
     // 3. Checck that none of the credentials have expired
-    verification.result.credentialsStatus.every((cs) => cs === CredentialStatus.Active) ||
-        bail('One or more credentials included in the presentation is not active.');
+    if (!verification.result.credentialsStatus.every((cs) => cs === CredentialStatus.Active))
+        return {
+            type: 'failed',
+            error: new Error('One or more credentials included in the presentation is not active.'),
+        };
 
-    // 4. check the claims in presentation request in the context of the request statements
-    verifyPresentationRequest(request, verification.result.request, grpc);
+    try {
+        // 4. Check that the verification request anchor has been registered on chain
+        await VerificationRequestV1.verifyAnchor(request, grpc);
+
+        // 5. check the claims in presentation request in the context of the request statements
+        verifyPresentationRequest(verification.result.request, request, grpc);
+    } catch (e) {
+        return { type: 'failed', error: e as Error };
+    }
 
     return { type: 'success', result: create(id, request, presentation) };
 }
@@ -400,7 +421,7 @@ export function fromJSON(json: JSON): VerificationAuditRecordV1 {
 /**
  * Describes the verification audit anchor data registered on chain.
  */
-export type AnchorData = {
+export type Anchor = {
     /** Type identifier for _Concordium Verification Audit Anchor_ */
     type: 'CCDVAA';
     /** Version of the anchor data format */
@@ -409,6 +430,11 @@ export type AnchorData = {
     hash: Uint8Array;
     /** Optional public information that can be included in the anchor */
     public?: Record<string, any>;
+};
+
+type VerificationAuditV1Input = {
+    record: VerificationAuditRecordV1;
+    publicInfo?: Record<string, HexString>;
 };
 
 /**
@@ -424,10 +450,16 @@ export type AnchorData = {
  * @returns The anchor encoding corresponding to the audit record
  */
 export function createAnchor(record: VerificationAuditRecordV1, info?: Record<string, any>): Uint8Array {
-    const message = Buffer.from(JSONBig.stringify(record)); // TODO: replace this with proper hashing.. properly from @concordium/rust-bindings
-    const hash = Uint8Array.from(sha256([message]));
-    let anchor: AnchorData = { hash: hash, version: VERSION, type: 'CCDVAA', public: info };
-    return cborEncode(anchor);
+    const input: VerificationAuditV1Input = {
+        record: record,
+    };
+    if (info !== undefined) {
+        input.publicInfo = Object.entries(info).reduce<Record<string, HexString>>(
+            (acc, [k, v]) => ({ ...acc, [k]: Buffer.from(cborEncode(v)).toString('hex') }),
+            {}
+        );
+    }
+    return wasm.createVerificationAuditV1Anchor(JSONBig.stringify(input));
 }
 
 /**
@@ -441,7 +473,7 @@ export function createAnchor(record: VerificationAuditRecordV1, info?: Record<st
  * @returns The decoded anchor data structure
  * @throws Error if the CBOR data is invalid or doesn't match expected format
  */
-export function decodeAnchor(cbor: Uint8Array): AnchorData {
+export function decodeAnchor(cbor: Uint8Array): Anchor {
     const value = cborDecode(cbor);
     if (typeof value !== 'object' || value === null) throw new Error('Expected a cbor encoded object');
     // required fields
@@ -451,7 +483,127 @@ export function decodeAnchor(cbor: Uint8Array): AnchorData {
         throw new Error('Expected "hash" to be a Uint8Array');
     // optional fields
     if ('public' in value && typeof value.public !== 'object') throw new Error('Expected "public" to be an object');
-    return value as AnchorData;
+    return value as Anchor;
+}
+
+/**
+ * Computes a hash of the audit record.
+ *
+ * This hash is used to create a tamper-evident anchor that can be stored
+ * on-chain to prove the request was made at a specific time and with
+ * specific parameters.
+ *
+ * @param record - The audit record to compute the hash of
+ *
+ * @returns SHA-256 hash of the serialized audit record
+ */
+export function computeAnchorHash(record: VerificationAuditRecordV1, info?: Record<string, any>): Uint8Array {
+    const input: VerificationAuditV1Input = {
+        record: record,
+    };
+    if (info !== undefined) {
+        input.publicInfo = Object.entries(info).reduce<Record<string, HexString>>(
+            (acc, [k, v]) => ({ ...acc, [k]: Buffer.from(cborEncode(v)).toString('hex') }),
+            {}
+        );
+    }
+    return wasm.computeVerificationAuditV1AnchorHash(JSONBig.stringify(input));
+}
+
+/**
+ * Verifies that an audit record's anchor has been properly registered on-chain.
+ *
+ * This function checks that:
+ * 1. The transaction is finalized
+ * 2. The transaction is a RegisterData transaction
+ * 3. The registered anchor hash matches the computed hash of the audit record
+ *
+ * @param auditRecord - The audit record to verify
+ * @param anchorTransactionRef - The transaction hash of the anchor registration
+ * @param grpc - The gRPC client for blockchain queries
+ *
+ * @returns The transaction outcome if verification succeeds
+ * @throws Error if the transaction is not finalized, has wrong type, or hash mismatch
+ */
+export async function verifyAnchor(
+    auditRecord: VerificationAuditRecordV1,
+    anchorTransactionRef: TransactionHash.Type,
+    grpc: ConcordiumGRPCClient
+) {
+    const transaction = await grpc.getBlockItemStatus(anchorTransactionRef);
+    if (transaction.status !== TransactionStatusEnum.Finalized) {
+        throw new Error('presentation request anchor transaction not finalized');
+    }
+    const { summary } = transaction.outcome;
+    if (
+        !isKnown(summary) ||
+        summary.type !== TransactionSummaryType.AccountTransaction ||
+        summary.transactionType !== TransactionKindString.RegisterData
+    ) {
+        throw new Error('Unexpected transaction type found for presentation request anchor transaction');
+    }
+
+    const expectedAnchorHash = computeAnchorHash(auditRecord);
+    const transactionAnchor = decodeAnchor(Buffer.from(summary.dataRegistered.data, 'hex'));
+    if (Buffer.from(expectedAnchorHash).toString('hex') !== Buffer.from(transactionAnchor.hash).toString('hex')) {
+        throw new Error('presentation anchor verification failed.');
+    }
+
+    return transaction.outcome;
+}
+
+type AnchorData = {
+    /**
+     * Transaction metadata for the anchor registration (sender, nonce)
+     */
+    metadata: AnchorTransactionMetadata;
+    /**
+     * Optional public metadata to include in the anchor
+     */
+    info?: Record<string, any>;
+};
+
+type VerificationData = {
+    /**
+     * The chain network identifier
+     */
+    network: Network;
+    /**
+     * Optional block hash for querying public info for presentation verification
+     */
+    blockHash?: BlockHash.Type;
+};
+
+/**
+ * Creates a verification audit record and anchors it on-chain in a single operation.
+ *
+ * This is a convenience function that:
+ * 1. Creates and validates an audit record using `createChecked`
+ * 2. Registers the audit record anchor on-chain using `registerAnchor`
+ *
+ * @param id - Unique identifier for the audit record
+ * @param request - The verification request being audited
+ * @param presentation - The verifiable presentation being verified
+ * @param grpc - The gRPC client for blockchain queries and transactions
+ * @param anchorData - Transaction metadata for the anchor registration (sender, nonce) + public info
+ * @param verificationData - The network identifier and optional block hash to query information at.
+ *
+ * @returns A verification result containing the audit record and anchor transaction hash
+ */
+export async function createAndAnchor(
+    id: string,
+    request: VerificationRequestV1.Type,
+    presentation: VerifiablePresentationV1.Type,
+    grpc: ConcordiumGRPCClient,
+    { metadata, info }: AnchorData,
+    { network, blockHash }: VerificationData
+): Promise<VerificationResult<{ record: VerificationAuditRecordV1; anchorTransactionRef: TransactionHash.Type }>> {
+    const result = await createChecked(id, request, presentation, grpc, network, blockHash);
+    if (result.type === 'failed') return result;
+
+    const record = result.result;
+    const anchorTransactionRef = await registerAnchor(record, grpc, metadata, info);
+    return { type: 'success', result: { record, anchorTransactionRef } };
 }
 
 /**

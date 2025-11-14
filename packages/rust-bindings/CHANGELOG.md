@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 4.0.0-alpha.1
+
+### Added
+
+- `create_verification_request_v1_anchor` for creating verification request anchors.
+- `compute_verification_request_v1_anchor_hash` for computing the hash included in a verification request anchor.
+- `create_verification_audit_v1_anchor` for creating verification audit anchors.
+
 ## 4.0.0-alpha.0
 
 ### Breaking changes

@@ -1,13 +1,21 @@
-import { sha256 } from '../../hash.js';
+import * as wasm from '@concordium/rust-bindings/wallet';
+import { Buffer } from 'buffer/index.js';
+import JSONBig from 'json-bigint';
+
 import {
     AccountTransaction,
     AccountTransactionHeader,
     AccountTransactionType,
     AttributeKey,
     ConcordiumGRPCClient,
+    HexString,
     RegisterDataPayload,
+    TransactionKindString,
+    TransactionStatusEnum,
+    TransactionSummaryType,
     cborDecode,
     cborEncode,
+    isKnown,
     signTransaction,
 } from '../../index.js';
 import { DataBlob, SequenceNumber, TransactionExpiry, TransactionHash } from '../../types/index.js';
@@ -82,6 +90,22 @@ export type Anchor = {
     public?: Record<string, any>;
 };
 
+type ContextJSON = Pick<Context, 'type' | 'requested'> & { given: GivenContextJSON[] };
+
+function requestContextToJSON(context: Context): ContextJSON {
+    return {
+        type: context.type,
+        given: context.given.map(givenContextToJSON),
+        requested: context.requested,
+    };
+}
+
+type RequestAnchorInput = {
+    context: ContextJSON;
+    subjectClaims: SubjectClaims[];
+    publicInfo?: Record<string, HexString>;
+};
+
 /**
  * Creates a CBOR-encoded anchor for a verification request.
  *
@@ -91,19 +115,27 @@ export type Anchor = {
  * public metadata.
  *
  * @param context - The context information for the request
- * @param credentialStatements - The credential statements being requested
+ * @param subjectClaims - The credential subject claims being requested
  * @param publicInfo - Optional public information to include in the anchor
  *
  * @returns CBOR-encoded anchor data suitable for blockchain storage
  */
 export function createAnchor(
     context: Context,
-    credentialStatements: Statement[],
+    subjectClaims: SubjectClaims[],
     publicInfo?: Record<string, any>
 ): Uint8Array {
-    const hash = computeAnchorHash(context, credentialStatements);
-    const data: Anchor = { type: 'CCDVRA', version: VERSION, hash, public: publicInfo };
-    return cborEncode(data);
+    let input: RequestAnchorInput = {
+        context: requestContextToJSON(context),
+        subjectClaims,
+    };
+    if (publicInfo !== undefined) {
+        input.publicInfo = Object.entries(publicInfo).reduce<Record<string, HexString>>(
+            (acc, [k, v]) => ({ ...acc, [k]: Buffer.from(cborEncode(v)).toString('hex') }),
+            {}
+        );
+    }
+    return wasm.createVerificationRequestV1Anchor(JSONBig.stringify(input));
 }
 
 /**
@@ -114,27 +146,16 @@ export function createAnchor(
  * specific parameters.
  *
  * @param context - The context information for the request
- * @param credentialStatements - The credential statements being requested
+ * @param subjectClaims - The credential subject claims being requested
  *
  * @returns SHA-256 hash of the serialized request data
  */
-export function computeAnchorHash(context: Context, credentialStatements: Statement[]): Uint8Array {
-    // TODO: this is a quick and dirty anchor implementation that needs to be replaced with
-    // proper serialization, which is TBD.
-    const sanitizedContext: Context = {
-        ...context,
-        given: context.given.map(
-            (c) =>
-                ({
-                    ...c,
-                    // convert any potential `Buffer` instances to raw Uint8Array to avoid discrepancies when decoding
-                    context: c.context instanceof Uint8Array ? Uint8Array.from(c.context) : c.context,
-                }) as GivenContext
-        ),
+export function computeAnchorHash(context: Context, subjectClaims: SubjectClaims[]): Uint8Array {
+    const input: RequestAnchorInput = {
+        context: requestContextToJSON(context),
+        subjectClaims,
     };
-    const contextDigest = cborEncode(sanitizedContext);
-    const statementsDigest = cborEncode(credentialStatements);
-    return Uint8Array.from(sha256([contextDigest, statementsDigest]));
+    return wasm.computeVerificationRequestV1AnchorHash(JSONBig.stringify(input));
 }
 
 /**
@@ -162,6 +183,42 @@ export function decodeAnchor(cbor: Uint8Array): Anchor {
 }
 
 /**
+ * Verifies that a verification request's anchor has been properly registered on-chain.
+ *
+ * This function checks that:
+ * 1. The transaction referenced in the request is finalized
+ * 2. The transaction is a RegisterData transaction
+ * 3. The registered anchor hash matches the computed hash of the request
+ *
+ * @param verificationRequest - The verification request containing the transaction reference
+ * @param grpc - The gRPC client for blockchain queries
+ * @returns The transaction outcome if verification succeeds
+ * @throws Error if the transaction is not finalized, has wrong type, or hash mismatch
+ */
+export async function verifyAnchor(verificationRequest: VerificationRequestV1, grpc: ConcordiumGRPCClient) {
+    const transaction = await grpc.getBlockItemStatus(verificationRequest.transactionRef);
+    if (transaction.status !== TransactionStatusEnum.Finalized) {
+        throw new Error('presentation request anchor transaction not finalized');
+    }
+    const { summary } = transaction.outcome;
+    if (
+        !isKnown(summary) ||
+        summary.type !== TransactionSummaryType.AccountTransaction ||
+        summary.transactionType !== TransactionKindString.RegisterData
+    ) {
+        throw new Error('Unexpected transaction type found for presentation request anchor transaction');
+    }
+
+    const expectedAnchorHash = computeAnchorHash(verificationRequest.context, verificationRequest.subjectClaims);
+    const transactionAnchor = decodeAnchor(Buffer.from(summary.dataRegistered.data, 'hex'));
+    if (Buffer.from(expectedAnchorHash).toString('hex') !== Buffer.from(transactionAnchor.hash).toString('hex')) {
+        throw new Error('presentation anchor verification failed.');
+    }
+
+    return transaction.outcome;
+}
+
+/**
  * JSON representation of a verification request.
  * Used for serialization and network transmission of request data.
  */
@@ -169,8 +226,8 @@ export type JSON = {
     type: 'ConcordiumVerificationRequestV1';
     /** The request context with serialized given contexts */
     context: Pick<Context, 'type' | 'requested'> & { given: GivenContextJSON[] };
-    /** The credential statements being requested */
-    credentialStatements: StatementJSON[];
+    /** The credential subject claims being requested */
+    subjectClaims: SubjectClaimsJSON[];
     /** Reference to the blockchain transaction containing the request anchor */
     transactionRef: TransactionHash.JSON;
 };
@@ -184,13 +241,13 @@ type IdentityCredType = 'identityCredential' | 'accountCredential';
  * Statement requesting proofs from identity credentials issued by identity providers.
  * Can specify whether to accept proofs from identity credentials, account credentials, or both.
  */
-export type IdentityStatement = {
+export type IdentityClaims = {
     /** Type discriminator for identity statements */
     type: 'identity';
     /** Source types accepted for this statement (identity credential, account credential, or both) */
     source: IdentityCredType[];
     /** Atomic statements about identity attributes to prove */
-    statement: AtomicStatementV2<AttributeKey>[];
+    statements: AtomicStatementV2<AttributeKey>[];
     /** Valid identity provider issuers for this statement */
     issuers: IdentityProviderDID[];
 };
@@ -198,64 +255,64 @@ export type IdentityStatement = {
 /**
  * Union type representing all supported statement types in a verification request.
  */
-export type Statement = IdentityStatement;
+export type SubjectClaims = IdentityClaims;
 
 /**
  * JSON representation of statements with issuer DIDs serialized as strings.
  */
-type StatementJSON = Omit<IdentityStatement, 'issuers'> & {
+type SubjectClaimsJSON = Omit<IdentityClaims, 'issuers'> & {
     issuers: DIDString[];
 };
 
 /**
- * Builder class for constructing credential statement requests.
- * Provides methods to add different types of credential statements with their requirements.
+ * Builder class for constructing credential subject claims.
+ * Provides methods to add different types of subject claims with their requirements.
  */
-class StatementBuilder {
-    /** Array of credential statements being built. */
-    private statements: Statement[] = [];
+class SubjectClaimsBuilder {
+    /** Array of claims being built. */
+    private claims: SubjectClaims[] = [];
 
     /**
-     * Add statements for identity credentials.
+     * Add claims for identity credentials.
      *
      * @param validIdentityProviders Array of identity provider identifyers that are valid issuers
      * @param builderCallback Callback function to build the statements using the provided identity builder
      *
      * @returns The updated builder instance
      */
-    addIdentityStatement(
+    addIdentityClaims(
         validIdentityProviders: IdentityProviderDID[],
         builderCallback: (builder: AccountStatementBuild) => void
-    ): StatementBuilder {
+    ): SubjectClaimsBuilder {
         const builder = new AccountStatementBuild(IDENTITY_SUBJECT_SCHEMA);
         builderCallback(builder);
-        this.statements.push({
+        this.claims.push({
             type: 'identity',
             source: ['identityCredential'],
-            statement: builder.getStatement(),
+            statements: builder.getStatement(),
             issuers: validIdentityProviders,
         });
         return this;
     }
 
     /**
-     * Add statements for account credentials.
+     * Add claims for account credentials.
      *
      * @param validIdentityProviders Array of identity provider identifyers that are valid issuers
      * @param builderCallback Callback function to build the statements using the provided identity builder
      *
      * @returns The updated builder instance
      */
-    addAccountStatement(
+    addAccountClaims(
         validIdentityProviders: IdentityProviderDID[],
         builderCallback: (builder: AccountStatementBuild) => void
-    ): StatementBuilder {
+    ): SubjectClaimsBuilder {
         const builder = new AccountStatementBuild(IDENTITY_SUBJECT_SCHEMA);
         builderCallback(builder);
-        this.statements.push({
+        this.claims.push({
             type: 'identity',
             source: ['accountCredential'],
-            statement: builder.getStatement(),
+            statements: builder.getStatement(),
             issuers: validIdentityProviders,
         });
         return this;
@@ -269,16 +326,16 @@ class StatementBuilder {
      *
      * @returns The updated builder instance
      */
-    addAccountOrIdentityStatement(
+    addAccountOrIdentityClaims(
         validIdentityProviders: IdentityProviderDID[],
         builderCallback: (builder: AccountStatementBuild) => void
-    ): StatementBuilder {
+    ): SubjectClaimsBuilder {
         const builder = new AccountStatementBuild(IDENTITY_SUBJECT_SCHEMA);
         builderCallback(builder);
-        this.statements.push({
+        this.claims.push({
             type: 'identity',
             source: ['accountCredential', 'identityCredential'],
-            statement: builder.getStatement(),
+            statements: builder.getStatement(),
             issuers: validIdentityProviders,
         });
         return this;
@@ -288,24 +345,24 @@ class StatementBuilder {
      * Get the built credential statements.
      * @returns Array of credential statements
      */
-    getStatements(): Statement[] {
-        return this.statements;
+    getClaims(): SubjectClaims[] {
+        return this.claims;
     }
 }
 
 /**
- * Creates a new statement builder for constructing credential requests.
+ * Creates a new subject claims builder for constructing credential requests.
  *
  * @returns A new statement builder instance
  */
-export function statementBuilder(): StatementBuilder {
-    return new StatementBuilder();
+export function claimsBuilder(): SubjectClaimsBuilder {
+    return new SubjectClaimsBuilder();
 }
 
 /**
  * A verification request that specifies what credentials and proofs
  * are being requested from a credential holder. This class encapsulates the
- * request context, the specific credential statements needed, and a reference
+ * request context, the specific credential subject claims needed, and a reference
  * to the blockchain transaction that anchors the request.
  */
 class VerificationRequestV1 {
@@ -313,12 +370,12 @@ class VerificationRequestV1 {
      * Creates a new verification request.
      *
      * @param context - The context information for this request
-     * @param credentialStatements - The specific credential statements being requested
+     * @param subjectClaims - The specific credential subject claims being requested
      * @param transactionRef - Reference to the blockchain transaction anchoring this request
      */
     constructor(
         public readonly context: Context,
-        public readonly credentialStatements: Statement[],
+        public readonly subjectClaims: SubjectClaims[],
         public readonly transactionRef: TransactionHash.Type
     ) {}
 
@@ -328,14 +385,14 @@ class VerificationRequestV1 {
      * @returns The JSON representation of this presentation request
      */
     public toJSON(): JSON {
-        const credentialStatements = this.credentialStatements.map((statement) => ({
+        const subjectClaims = this.subjectClaims.map((statement) => ({
             ...statement,
             issuers: statement.issuers.map((i) => i.toJSON()),
         }));
         return {
             type: 'ConcordiumVerificationRequestV1',
-            context: { ...this.context, given: this.context.given.map(givenContextToJSON) },
-            credentialStatements,
+            context: requestContextToJSON(this.context),
+            subjectClaims,
             transactionRef: this.transactionRef.toJSON(),
         };
     }
@@ -361,7 +418,7 @@ export type Type = VerificationRequestV1;
  */
 export function fromJSON(json: JSON): VerificationRequestV1 {
     const requestContext = { ...json.context, given: json.context.given.map(givenContextFromJSON) };
-    const statements: Statement[] = json.credentialStatements.map((statement) => {
+    const statements: SubjectClaims[] = json.subjectClaims.map((statement) => {
         switch (statement.type) {
             case 'identity':
                 return {
@@ -396,7 +453,7 @@ export async function createAndAnchor(
     grpc: ConcordiumGRPCClient,
     { sender, sequenceNumber, signer }: AnchorTransactionMetadata,
     context: Omit<Context, 'type'>,
-    credentialStatements: Statement[],
+    credentialStatements: SubjectClaims[],
     anchorPublicInfo?: Record<string, any>
 ): Promise<VerificationRequestV1> {
     const requestContext = createContext(context);
@@ -434,7 +491,7 @@ export async function createAndAnchor(
  */
 export function create(
     context: Context,
-    credentialStatements: Statement[],
+    credentialStatements: SubjectClaims[],
     transactionRef: TransactionHash.Type
 ): VerificationRequestV1 {
     return new VerificationRequestV1(context, credentialStatements, transactionRef);

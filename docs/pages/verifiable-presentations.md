@@ -4,38 +4,38 @@ This document describes how to create v1 verifiable presentations and how to ver
 
 **Table of Contents:**
 <!--toc:start-->
-- [Build Statement](#build-statement)
-  - [Identity/account credential statements](#identityaccount-credential-statements)
+- [Build Subject Claims](#build-subject-claims)
+  - [Identity/account credential claims](#identityaccount-credential-claims)
 - [JSON representation](#json-representation)
 - [Verification Request](#verification-request)
 - [Verifiable Presentation](#verifiable-presentation)
 - [Verifiable Audit Record](#verifiable-audit-record)
 <!--toc:end-->
 
-## Build Statement
+## Build Subject claims
 
-The SDK contains a helper to create statements about identities, which can
+The SDK contains a helper to create as set of subject claims about identities, which can
 then be proven.
 
-To do so, use the _presentation request statement builder_, to build a statement:
+To do so, use the _presentation request claims builder_, to build a set of claims:
 
-{@codeblock ~~:nodejs/common/verifiable-credential-statements.ts#documentation-snippet}
+{@codeblock ~~:nodejs/common/verifiable-credential-claims.ts#documentation-snippet}
 
-### Identity/account credential statements
+### Identity/account credential claims
 
-To build a statement against an identity credential, the builder has two different entrypoints, which
+To build a set of claims against an identity credential, the builder has two different entrypoints, which
 have an identical function signature, which consists of
 
 1. A list of identity providers that the identity must be created from
-2. A callback function which should be used to add statements for the credential
+2. A callback function which should be used to add claims for the credential
 
 ```ts
 // used for proofs tied to an account created from the identity credential.
-builder.addAccountStatement([0,2].map(idp => new IdentityProviderDID('Testnet', idp)), (build) => ...)
+builder.addAccountClaims([0,2].map(idp => new IdentityProviderDID('Testnet', idp)), (build) => ...)
 // used for proofs which are not tied to a specific account
-builder.addIdentityStatement([0,2].map(idp => new IdentityProviderDID('Testnet', idp)), (build) => ...)
+builder.addIdentityClaims([0,2].map(idp => new IdentityProviderDID('Testnet', idp)), (build) => ...)
 // alternatively let the application producing the proof decide
-builder.addAccountOrIdentityStatement([0,2].map(idp => new IdentityProviderDID('Testnet', idp)), (build) => ...)
+builder.addAccountOrIdentityClaims([0,2].map(idp => new IdentityProviderDID('Testnet', idp)), (build) => ...)
 ```
 
 Below are a set of functions accessible for the `build` object passed in the callback
@@ -158,7 +158,7 @@ sequence:
   d. a set of requested context values, identified by their labels. For now the defaults here are: the block hash of the
      anchor transaction and the resource ID (i.e. an identifier of the requester, e.g. a url of the website). The
      requested context is filled out by the application creating the proof.
-2. [Build the statement](#build-statement) to be proven by the user
+2. [Build the claims](#build-subject-claims) to be proven by the user
 
 Once this is done, the request must be _anchored_ on chain with a transaction. This can be achieved by calling
 
@@ -168,7 +168,7 @@ const connectionID = ... // e.g. a wallet-connect ID
 const contextString = 'My compliant web3 wine shop'
 const context = VerificationRequestV1.createSimpleContext(nonce, connectionID, contextString)
 
-const statement = new VerificationRequestV1.statementBuilder()...
+const statement = new VerificationRequestV1.claimsBuilder()...
 
 // a GRPC client connected a node on the network the anchor should be registered on
 const grpcClient: ConcordiumGRPCClient = ...;
@@ -191,9 +191,10 @@ const verificationRequest = await VerificationRequestV1.createAndAnchor(
 Computing a _verifiable presentation_ from a _verifiable presentation request_ is a process of the following sequence
 for each credential statement in the request:
 
-1. Identify valid credentials for the statement by looking at the ID qualifier of the `VerificationRequestV1.Statement`.
-2. Validate the attributes of the credential in the context of the statement.
-3. Construct a `VerifiablePresentationV1.Statement` corresponding to the credential. This is is _not_ the same as the
+1. Identify valid credentials for the statement by looking at the ID qualifier of the
+   `VerificationRequestV1.SubjectClaims`.
+2. Validate the attributes of the credential in the context of the set of claims.
+3. Construct a `VerifiablePresentationV1.SubjectClaims` corresponding to the credential. This is is _not_ the same as the
    `VerificationRequestV1.Statement` we built for the `VerificationRequestV1` previously; here we're working with
    a specific credential, e.g. from the users wallet.
     a. for `VerificationRequestV1.IdentityStatement`s, the `source` also needs to be taken into account. This
@@ -212,10 +213,10 @@ _request context_ of the request, specifying values for each requested context v
 // request.
 const contextValues: GivenContext[] = [{label: 'ResourceID', context: ...}];
 
-// The application goes through each statement in the verification request, and constructs a corresponding statement
-// used as input to the presentation. The difference between the two statement types boil down to the presence of an ID
-// qualifier vs. an ID (selected by the application based on the id qualifier).
-const statements: VerifiablePresentationV1.SubjectClaims[] = verificationRequest.credentialStatements.map((entry) => {
+// The application goes through each set of claims in the verification request, and constructs a corresponding set of
+// claims used as input to the presentation. The difference between the two statement types boil down to the presence
+// of an ID qualifier vs. an ID (selected by the application based on the id qualifier).
+const statements: VerifiablePresentationV1.SubjectClaims[] = verificationRequest.subjectClaims.map((entry) => {
     // prioritize creating identity based proofs, as these are more privacy-preserving
     if (entry.source.includes('identity'))
         return VerifiablePresentationV1.createIdentityClaims(..., entry.statement);
@@ -223,7 +224,7 @@ const statements: VerifiablePresentationV1.SubjectClaims[] = verificationRequest
 });
 
 // the inputs for the credential owned by the user, i.e. credential attribute values. For each
-// `SpecifiedCredentialStatement`, there should be a corresponding input
+// `VerifiablePresentationV1.SubjectClaims`, there should be a corresponding input
 const inputs: CommitmentInput[] = [
     createIdentityCommitmentInputWithHdWallet(...),
     createAccountCommitmentInputWithHdWallet(...),
@@ -246,8 +247,14 @@ and the anchor should be registered on chain. The transacton hash of the anchor 
 
 ```ts
 const uuid: string = ...;
-// Verify the presentation in the context of the verification request and create the audit record.
-const record = VerificationAuditRecordV1.createChecked(uuid, verificationRequest, presentation, grpcClient, network);
-// Register the verification audit anchor on the chain
-const anchorTransactionHash = await VerificationAuditRecordV1.registerAnchor(record, grpcClient, { sender, signer });
+// Verify the presentation in the context of the verification request and create the audit record and register the audit
+// anchor.
+const record = VerificationAuditRecordV1.createAndAnchor(
+    uuid,
+    verificationRequest,
+    presentation,
+    grpcClient,
+    { metadata: { sender, signer } },
+    { network }
+);
 ```

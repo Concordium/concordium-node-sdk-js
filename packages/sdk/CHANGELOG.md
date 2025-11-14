@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 11.1.0-alpha.4
+
 ### Breaking changes
 
 - `VerificationRequestV1.createAndAnchor` and `VerificationAuditRecordV1.registerAnchor` now also allows for 

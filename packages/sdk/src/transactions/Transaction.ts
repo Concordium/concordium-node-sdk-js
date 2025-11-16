@@ -12,6 +12,7 @@ import {
     DeployModulePayload,
     InitContractHandler,
     InitContractInput,
+    InitContractPayload,
     MakeOptional,
     RegisterDataHandler,
     RegisterDataPayload,
@@ -23,11 +24,13 @@ import {
     TokenUpdatePayload,
     UpdateContractHandler,
     UpdateContractInput,
+    UpdateContractPayload,
     UpdateCredentialsHandler,
     UpdateCredentialsPayload,
     sha256,
 } from '../index.js';
-import { Energy, TransactionExpiry } from '../types/index.js';
+import { DataBlob, Energy, TransactionExpiry } from '../types/index.js';
+import { TransferWithMemo } from './Payload.ts';
 import { AccountTransactionV0, Payload } from './index.js';
 
 // --- Core types ---
@@ -42,7 +45,24 @@ export type Header = AccountTransactionHeader & {
     numSignatures?: bigint;
 };
 
-type Transaction<P extends Payload.Type = Payload.Type> = { header: Header; payload: P };
+type Transaction<P extends Payload.Type = Payload.Type> = {
+    /**
+     * The transaction input header.
+     */
+    header: Header;
+    /**
+     * The transaction payload, defining the transaction type and type specific data.
+     */
+    payload: P;
+};
+
+/**
+ * Describes an account transaction in its unprocessed form, i.e. defining the input required
+ * to create a transaction which can be signed
+ */
+export type Type = Transaction;
+
+// --- Transaction construction ---
 
 class TransactionBuilder<P extends Payload.Type = Payload.Type> implements Transaction<P> {
     private _header: Header;
@@ -65,13 +85,6 @@ class TransactionBuilder<P extends Payload.Type = Payload.Type> implements Trans
 }
 
 /**
- * Exported generic transaction type alias.
- */
-export type Type = Transaction;
-
-// --- Transaction construction ---
-
-/**
  * Base metadata input with optional expiry field.
  */
 export type Metadata = Omit<MakeOptional<Header, 'expiry'>, 'executionEnergyAmount'>;
@@ -81,7 +94,7 @@ export type Metadata = Omit<MakeOptional<Header, 'expiry'>, 'executionEnergyAmou
  * If the transaction type is known, use the specialized creation functions per transaction type
  * instead.
  *
- * @param type - the transaction type.
+ * @param type - transaction type
  * @param metadata - transaction metadata to put into the transaction header.
  * @param payload - a transaction payload matching the transaction type. If these do not match,
  * this will fail.
@@ -104,9 +117,11 @@ export function create(
         case AccountTransactionType.DeployModule:
             return deployModule(metadata, payload as DeployModulePayload);
         case AccountTransactionType.InitContract:
-            return initContract(metadata, payload as InitContractInput);
+            const { maxContractExecutionEnergy: initEnergy, ...initPayload } = payload as InitContractInput;
+            return initContract(metadata, initPayload, initEnergy);
         case AccountTransactionType.Update:
-            return updateContract(metadata, payload as UpdateContractInput);
+            const { maxContractExecutionEnergy: updateEnergy, ...updatePayload } = payload as UpdateContractInput;
+            return updateContract(metadata, updatePayload, updateEnergy);
         case AccountTransactionType.UpdateCredentials:
             return updateCredentials(metadata, payload as UpdateCredentialsPayload);
         case AccountTransactionType.RegisterData:
@@ -118,17 +133,19 @@ export function create(
         case AccountTransactionType.TokenUpdate:
             return tokenUpdate(metadata, payload as TokenUpdatePayload);
         default:
-            throw new Error('The provided type does not have a handler: ' + type);
+            throw new Error('The provided type is not supported: ' + type);
     }
 }
 
+/**
+ * Crates a {@linkcode Transaction} builder object from the legacy `AccountTransaction` format.
+ *
+ * @param transaction - The {@linkcode AccountTransaction} to convert.
+ * @returns a corresonding transaction builder object.
+ */
 export function fromLegacyAccountTransaction({ type, header, payload }: AccountTransaction): TransactionBuilder {
     return create(type, header, payload);
 }
-
-const isMemoPayload = (
-    payload: SimpleTransferPayload | SimpleTransferWithMemoPayload
-): payload is SimpleTransferWithMemoPayload => (payload as SimpleTransferWithMemoPayload).memo !== undefined;
 
 /**
  * Creates a simple transfer transaction
@@ -138,15 +155,22 @@ const isMemoPayload = (
  */
 export function transfer(
     { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: Metadata,
-    payload: SimpleTransferPayload
+    payload: SimpleTransferPayload | Payload.Transfer
 ): TransactionBuilder<Payload.Transfer>;
 
 /**
  * Creates a transfer transaction with a memo.
  * @param metadata transaction metadata including sender, nonce, and optional expiry (defaults to 5 minutes)
  * @param payload the transfer payload containing recipient and amount
+ * @param memo the transfer memo to include
  * @returns a transfer with memo transaction
  */
+export function transfer(
+    { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: Metadata,
+    payload: SimpleTransferPayload,
+    memo: DataBlob
+): TransactionBuilder<Payload.TransferWithMemo>;
+
 export function transfer(
     { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: Metadata,
     payload: SimpleTransferWithMemoPayload
@@ -154,27 +178,38 @@ export function transfer(
 
 export function transfer(
     { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: Metadata,
-    payload: SimpleTransferPayload | SimpleTransferWithMemoPayload
+    payload: Payload.TransferWithMemo
+): TransactionBuilder<Payload.TransferWithMemo>;
+
+export function transfer(
+    metadata: Metadata,
+    payload: SimpleTransferPayload | SimpleTransferWithMemoPayload | Payload.Transfer | Payload.TransferWithMemo,
+    memo?: DataBlob
 ): TransactionBuilder<Payload.Transfer> | TransactionBuilder<Payload.TransferWithMemo> {
+    const { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) } = metadata;
     const header = {
         sender: sender,
         nonce: nonce,
         expiry: expiry,
     };
 
-    if (!isMemoPayload(payload)) {
+    if (payload instanceof Payload.Transfer) {
         const handler = new SimpleTransferHandler();
         return new TransactionBuilder<Payload.Transfer>(
             { ...header, executionEnergyAmount: Energy.create(handler.getBaseEnergyCost()) },
-            Payload.transfer(payload)
+            payload
+        );
+    } else if (payload instanceof Payload.TransferWithMemo) {
+        const handler = new SimpleTransferWithMemoHandler();
+        return new TransactionBuilder<TransferWithMemo>(
+            { ...header, executionEnergyAmount: Energy.create(handler.getBaseEnergyCost()) },
+            payload
         );
     }
 
-    const handler = new SimpleTransferWithMemoHandler();
-    return new TransactionBuilder(
-        { ...header, executionEnergyAmount: Energy.create(handler.getBaseEnergyCost()) },
-        Payload.transfer(payload)
-    );
+    // a little hacky, but at this point, the we don't care if the memo is defined or not, as the
+    // Payload.transfer fuction will take care of the different cases here
+    return transfer(metadata, Payload.transfer(payload, memo as any));
 }
 
 /**
@@ -184,18 +219,22 @@ export function transfer(
  * @returns an update credentials transaction
  */
 export function updateCredentials(
-    { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: Metadata,
-    payload: UpdateCredentialsPayload
+    metadata: Metadata,
+    payload: UpdateCredentialsPayload | Payload.UpdateCredentials
 ): TransactionBuilder<Payload.UpdateCredentials> {
+    if (!(payload instanceof Payload.UpdateCredentials))
+        return updateCredentials(metadata, Payload.updateCredentials(payload));
+
+    const { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) } = metadata;
     const handler = new UpdateCredentialsHandler();
     return new TransactionBuilder(
         {
             sender: sender,
             nonce: nonce,
             expiry: expiry,
-            executionEnergyAmount: Energy.create(handler.getBaseEnergyCost(payload)),
+            executionEnergyAmount: Energy.create(handler.getBaseEnergyCost(payload.value)),
         },
-        Payload.updateCredentials(payload)
+        payload
     );
 }
 
@@ -206,18 +245,22 @@ export function updateCredentials(
  * @returns a configure baker transaction
  */
 export function configureValidator(
-    { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: Metadata,
-    payload: ConfigureBakerPayload
+    metadata: Metadata,
+    payload: ConfigureBakerPayload | Payload.ConfigureValidator
 ): TransactionBuilder<Payload.ConfigureValidator> {
+    if (!(payload instanceof Payload.ConfigureValidator))
+        return configureValidator(metadata, Payload.configureValidator(payload));
+
+    const { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) } = metadata;
     const handler = new ConfigureBakerHandler();
     return new TransactionBuilder(
         {
             sender: sender,
             nonce: nonce,
             expiry: expiry,
-            executionEnergyAmount: Energy.create(handler.getBaseEnergyCost(payload)),
+            executionEnergyAmount: Energy.create(handler.getBaseEnergyCost(payload.value)),
         },
-        Payload.configureValidator(payload)
+        payload
     );
 }
 
@@ -228,9 +271,13 @@ export function configureValidator(
  * @returns a configure delegation transaction
  */
 export function configureDelegation(
-    { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: Metadata,
-    payload: ConfigureDelegationPayload
+    metadata: Metadata,
+    payload: ConfigureDelegationPayload | Payload.ConfigureDelegation
 ): TransactionBuilder<Payload.ConfigureDelegation> {
+    if (!(payload instanceof Payload.ConfigureDelegation))
+        return configureDelegation(metadata, Payload.configureDelegation(payload));
+
+    const { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) } = metadata;
     const handler = new ConfigureDelegationHandler();
     return new TransactionBuilder(
         {
@@ -239,7 +286,7 @@ export function configureDelegation(
             expiry: expiry,
             executionEnergyAmount: Energy.create(handler.getBaseEnergyCost()),
         },
-        Payload.configureDelegation(payload)
+        payload
     );
 }
 
@@ -250,18 +297,21 @@ export function configureDelegation(
  * @returns a token update transaction
  */
 export function tokenUpdate(
-    { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: Metadata,
-    payload: TokenUpdatePayload
+    metadata: Metadata,
+    payload: TokenUpdatePayload | Payload.TokenUpdate
 ): TransactionBuilder<Payload.TokenUpdate> {
+    if (!(payload instanceof Payload.TokenUpdate)) return tokenUpdate(metadata, Payload.tokenUpdate(payload));
+
+    const { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) } = metadata;
     const handler = new TokenUpdateHandler();
     return new TransactionBuilder(
         {
             sender: sender,
             nonce: nonce,
             expiry: expiry,
-            executionEnergyAmount: Energy.create(handler.getBaseEnergyCost(payload)),
+            executionEnergyAmount: Energy.create(handler.getBaseEnergyCost(payload.value)),
         },
-        Payload.tokenUpdate(payload)
+        payload
     );
 }
 
@@ -272,18 +322,21 @@ export function tokenUpdate(
  * @returns a deploy module transaction
  */
 export function deployModule(
-    { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: Metadata,
-    payload: DeployModulePayload
+    metadata: Metadata,
+    payload: DeployModulePayload | Payload.DeployModule
 ): TransactionBuilder<Payload.DeployModule> {
+    if (!(payload instanceof Payload.DeployModule)) return deployModule(metadata, Payload.deployModule(payload));
+
+    const { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) } = metadata;
     const handler = new DeployModuleHandler();
     return new TransactionBuilder(
         {
             sender: sender,
             nonce: nonce,
             expiry: expiry,
-            executionEnergyAmount: Energy.create(handler.getBaseEnergyCost(payload)),
+            executionEnergyAmount: Energy.create(handler.getBaseEnergyCost(payload.value)),
         },
-        Payload.deployModule(payload)
+        payload
     );
 }
 
@@ -294,9 +347,12 @@ export function deployModule(
  * @returns a register data transaction
  */
 export function registerData(
-    { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: Metadata,
-    payload: RegisterDataPayload
+    metadata: Metadata,
+    payload: RegisterDataPayload | Payload.RegisterData
 ): TransactionBuilder<Payload.RegisterData> {
+    if (!(payload instanceof Payload.RegisterData)) return registerData(metadata, Payload.registerData(payload));
+
+    const { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) } = metadata;
     const handler = new RegisterDataHandler();
     return new TransactionBuilder(
         {
@@ -305,7 +361,7 @@ export function registerData(
             expiry: expiry,
             executionEnergyAmount: Energy.create(handler.getBaseEnergyCost()),
         },
-        Payload.registerData(payload)
+        payload
     );
 }
 
@@ -313,21 +369,30 @@ export function registerData(
  * Creates a transaction to initialize a smart contract instance.
  * @param metadata transaction metadata including sender, nonce, and optional expiry (defaults to 5 minutes)
  * @param payload the contract initialization payload with specified execution energy limit
+ * @param maxContractExecutionEnergy the maximum amount of energy to spend on initializing the contract instance
+ *
  * @returns an init contract transaction
  */
 export function initContract(
-    { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: Metadata,
-    { maxContractExecutionEnergy, ...payload }: InitContractInput
+    metadata: Metadata,
+    payload: InitContractPayload | Payload.InitContract,
+    maxContractExecutionEnergy: Energy.Type
 ): TransactionBuilder<Payload.InitContract> {
+    if (!(payload instanceof Payload.InitContract))
+        return initContract(metadata, Payload.initContract(payload), maxContractExecutionEnergy);
+
+    const { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) } = metadata;
     const handler = new InitContractHandler();
     return new TransactionBuilder(
         {
             sender: sender,
             nonce: nonce,
             expiry: expiry,
-            executionEnergyAmount: Energy.create(handler.getBaseEnergyCost({ ...payload, maxContractExecutionEnergy })),
+            executionEnergyAmount: Energy.create(
+                handler.getBaseEnergyCost({ ...payload.value, maxContractExecutionEnergy })
+            ),
         },
-        Payload.initContract(payload)
+        payload
     );
 }
 
@@ -335,28 +400,39 @@ export function initContract(
  * Creates a transaction to invoke an existing smart contract.
  * @param metadata transaction metadata including sender, nonce, and optional expiry (defaults to 5 minutes)
  * @param payload the contract update payload specifying the contract and receive function with specified execution energy limit
+ * @param maxContractExecutionEnergy the maximum amount of energy to spend on updating the contract instance
+ *
  * @returns an update contract transaction
  */
 export function updateContract(
-    { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: Metadata,
-    { maxContractExecutionEnergy, ...payload }: UpdateContractInput
+    metadata: Metadata,
+    payload: UpdateContractPayload | Payload.UpdateContract,
+    maxContractExecutionEnergy: Energy.Type
 ): TransactionBuilder<Payload.UpdateContract> {
+    if (!(payload instanceof Payload.UpdateContract))
+        return updateContract(metadata, Payload.updateContract(payload), maxContractExecutionEnergy);
+
+    const { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) } = metadata;
     const handler = new UpdateContractHandler();
     return new TransactionBuilder(
         {
             sender: sender,
             nonce: nonce,
             expiry: expiry,
-            executionEnergyAmount: Energy.create(handler.getBaseEnergyCost({ ...payload, maxContractExecutionEnergy })),
+            executionEnergyAmount: Energy.create(
+                handler.getBaseEnergyCost({ ...payload.value, maxContractExecutionEnergy })
+            ),
         },
-        Payload.updateContract(payload)
+        payload
     );
 }
 
 // TODO: factor in v1 transaction
-export function getEnergyCost({ header, payload }: Transaction, numSignatures: bigint | number = 1n): Energy.Type {
-    const size = Payload.serialize(payload).length;
-    return AccountTransactionV0.calculateEnergyCost(BigInt(numSignatures), BigInt(size), header.executionEnergyAmount);
+export function getEnergyCost({
+    header: { numSignatures = 1n, executionEnergyAmount },
+    payload,
+}: Transaction): Energy.Type {
+    return AccountTransactionV0.calculateEnergyCost(BigInt(numSignatures), payload, executionEnergyAmount);
 }
 
 // --- Transaction signing ---
@@ -382,17 +458,21 @@ export async function sign(transaction: Transaction, signer: AccountSigner): Pro
         executionEnergyAmount,
         numSignatures = signer.getSignatureCount(),
     } = transaction.header;
-    const payloadSize = Payload.serialize(transaction.payload).length;
-    const energyAmount = AccountTransactionV0.calculateEnergyCost(numSignatures, payloadSize, executionEnergyAmount);
+    const energyAmount = AccountTransactionV0.calculateEnergyCost(
+        numSignatures,
+        transaction.payload,
+        executionEnergyAmount
+    );
 
     const header: AccountTransactionV0.Header = {
         expiry,
         sender,
         nonce,
-        payloadSize,
+        payloadSize: Payload.sizeOf(transaction.payload),
         energyAmount,
     };
     const unsigned: AccountTransactionV0.Unsigned = {
+        version: 0,
         header,
         payload: transaction.payload,
     };
@@ -407,4 +487,8 @@ export async function sign(transaction: Transaction, signer: AccountSigner): Pro
 export function getAccountTransactionHash(signedTransaction: Signed): Uint8Array {
     const serializedAccountTransaction = AccountTransactionV0.serialize(signedTransaction);
     return sha256([serializedAccountTransaction]);
+}
+
+export function serializeBlockItem(signedTransaction: Signed): Uint8Array {
+    return AccountTransactionV0.serializeBlockItem(signedTransaction);
 }

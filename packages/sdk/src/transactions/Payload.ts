@@ -1,9 +1,11 @@
 import { deserializeUint8 } from '../deserialization.js';
 import { Cursor } from '../deserializationHelpers.js';
 import {
+    AccountTransactionPayload,
     AccountTransactionType,
     ConfigureBakerPayload,
     ConfigureDelegationPayload,
+    DataBlob,
     DeployModulePayload,
     InitContractPayload,
     RegisterDataPayload,
@@ -26,14 +28,14 @@ export class TransferWithMemo {
     constructor(public readonly value: SimpleTransferWithMemoPayload) {}
 }
 
-const isMemoPayload = (
-    payload: SimpleTransferPayload | SimpleTransferWithMemoPayload
-): payload is SimpleTransferWithMemoPayload => (payload as SimpleTransferWithMemoPayload).memo !== undefined;
-
 export function transfer(payload: SimpleTransferPayload): Transfer;
+export function transfer(payload: SimpleTransferPayload, memo: DataBlob): TransferWithMemo;
 export function transfer(payload: SimpleTransferWithMemoPayload): TransferWithMemo;
-export function transfer(payload: SimpleTransferPayload | SimpleTransferWithMemoPayload): Transfer | TransferWithMemo {
-    return isMemoPayload(payload) ? new TransferWithMemo(payload) : new Transfer(payload);
+export function transfer(
+    payload: SimpleTransferPayload | SimpleTransferWithMemoPayload,
+    memo: DataBlob = (payload as SimpleTransferWithMemoPayload).memo
+): Transfer | TransferWithMemo {
+    return memo !== undefined ? new TransferWithMemo({ ...payload, memo }) : new Transfer(payload);
 }
 
 export class DeployModule {
@@ -122,6 +124,33 @@ type Payload =
 
 export type Type = Payload;
 
+export function create(type: AccountTransactionType, payload: AccountTransactionPayload): Payload {
+    switch (type) {
+        case AccountTransactionType.Transfer:
+            return new Transfer(payload as SimpleTransferPayload);
+        case AccountTransactionType.TransferWithMemo:
+            return new TransferWithMemo(payload as SimpleTransferWithMemoPayload);
+        case AccountTransactionType.DeployModule:
+            return new DeployModule(payload as DeployModulePayload);
+        case AccountTransactionType.InitContract:
+            return new InitContract(payload as InitContractPayload);
+        case AccountTransactionType.Update:
+            return new UpdateContract(payload as UpdateContractPayload);
+        case AccountTransactionType.UpdateCredentials:
+            return new UpdateCredentials(payload as UpdateCredentialsPayload);
+        case AccountTransactionType.RegisterData:
+            return new RegisterData(payload as RegisterDataPayload);
+        case AccountTransactionType.ConfigureDelegation:
+            return new ConfigureDelegation(payload as ConfigureDelegationPayload);
+        case AccountTransactionType.ConfigureBaker:
+            return new ConfigureValidator(payload as ConfigureBakerPayload);
+        case AccountTransactionType.TokenUpdate:
+            return new TokenUpdate(payload as TokenUpdatePayload);
+        default:
+            throw new Error('The provided transaction type is not supported: ' + type);
+    }
+}
+
 /**
  * Serializes a transaction payload.
  * @param accountTransaction the transaction which payload is to be serialized
@@ -134,6 +163,10 @@ export function serialize(payload: Payload): Buffer {
     const serializedPayload = accountTransactionHandler.serialize(payload.value);
 
     return Buffer.concat([serializedType, serializedPayload]);
+}
+
+export function sizeOf(payload: Payload): number {
+    return serialize(payload).length;
 }
 
 /**

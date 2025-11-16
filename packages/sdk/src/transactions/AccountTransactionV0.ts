@@ -41,6 +41,10 @@ export type Signature = AccountTransactionSignature;
  */
 type Transaction = {
     /**
+     * Transaction version discriminant;
+     */
+    version: 0;
+    /**
      * The transaction header containing metadata for the transaction
      */
     header: Header;
@@ -106,7 +110,7 @@ export function deserialize(value: Cursor | ArrayBuffer): Transaction {
     if (isRawBuffer && cursor.remainingBytes.length !== 0)
         throw new Error('Deserializing the transaction did not exhaust the buffer');
 
-    return { signature, header, payload };
+    return { version: 0, signature, header, payload };
 }
 
 export function serializeBlockItem(transaction: Transaction): Uint8Array {
@@ -123,18 +127,18 @@ const ACCOUNT_TRANSACTION_HEADER_SIZE = BigInt(32 + 8 + 8 + 4 + 8);
  *
  * The transaction specific cost can be found at https://github.com/Concordium/concordium-base/blob/main/haskell-src/Concordium/Cost.hs.
  * @param signatureCount number of signatures for the transaction
- * @param payloadSize size of the payload in bytes
+ * @param payload the transaction payload
  * @param transactionSpecificCost a transaction specific cost
  * @returns the energy cost for the transaction, to be set in the transaction header
  */
 export function calculateEnergyCost(
     signatureCount: bigint,
-    payloadSize: bigint | number,
+    payload: Payload.Type,
     transactionSpecificCost: Energy.Type
 ): Energy.Type {
     return Energy.create(
         constantA * signatureCount +
-            constantB * (ACCOUNT_TRANSACTION_HEADER_SIZE + BigInt(payloadSize)) +
+            constantB * (ACCOUNT_TRANSACTION_HEADER_SIZE + BigInt(Payload.sizeOf(payload))) +
             transactionSpecificCost.value
     );
 }

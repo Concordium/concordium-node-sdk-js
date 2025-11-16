@@ -32,7 +32,7 @@ import * as AccountAddress from './types/AccountAddress.js';
 import * as Energy from './types/Energy.js';
 import { countSignatures } from './util.js';
 
-function serializeAccountTransactionType(type: AccountTransactionType): Buffer {
+export function serializeAccountTransactionType(type: AccountTransactionType): Buffer {
     return Buffer.from(Uint8Array.of(type));
 }
 
@@ -100,13 +100,10 @@ export function serializeAccountTransaction(
     const serializedAccountTransactionSignatures = serializeAccountTransactionSignature(signatures);
     const serializedPayload = serializeAccountTransactionPayload(accountTransaction);
 
-    let baseEnergyCost = accountTransaction.header.executionEnergyAmount.value;
-
-    const energyCost = calculateEnergyCost(
-        countSignatures(signatures),
-        BigInt(serializedPayload.length),
-        baseEnergyCost
+    const baseEnergy = getAccountTransactionHandler(accountTransaction.type).getBaseEnergyCost(
+        accountTransaction.payload
     );
+    const energyCost = calculateEnergyCost(countSignatures(signatures), BigInt(serializedPayload.length), baseEnergy);
     const serializedHeader = serializeAccountTransactionHeader(
         accountTransaction.header,
         serializedPayload.length,
@@ -158,12 +155,11 @@ export function getAccountTransactionHash(
  */
 export function getAccountTransactionSignDigest(accountTransaction: AccountTransaction, signatureCount = 1n): Buffer {
     const serializedPayload = serializeAccountTransactionPayload(accountTransaction);
-
-    const energyCost = calculateEnergyCost(
-        signatureCount,
-        BigInt(serializedPayload.length),
-        accountTransaction.header.executionEnergyAmount.value
+    const baseEnergy = getAccountTransactionHandler(accountTransaction.type).getBaseEnergyCost(
+        accountTransaction.payload
     );
+
+    const energyCost = calculateEnergyCost(signatureCount, BigInt(serializedPayload.length), baseEnergy);
     const serializedHeader = serializeAccountTransactionHeader(
         accountTransaction.header,
         serializedPayload.length,

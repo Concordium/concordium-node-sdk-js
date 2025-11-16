@@ -3,12 +3,12 @@ import { Buffer } from 'buffer/index.js';
 import { Cursor } from './deserializationHelpers.js';
 import { Cbor, TokenId, TokenOperationType } from './plt/index.js';
 import {
-    AccountTransactionEnergyPayload,
+    AccountTransactionInput,
     ContractAddress,
     ContractName,
-    InitContractPayloadWithEnergy,
+    InitContractInput,
     ModuleReference,
-    UpdateContractPayloadWithEnergy,
+    UpdateContractInput,
 } from './pub/types.js';
 import { serializeCredentialDeploymentInfo } from './serialization.js';
 import {
@@ -51,6 +51,7 @@ import { DataBlob } from './types/DataBlob.js';
 import * as InitName from './types/InitName.js';
 import * as Parameter from './types/Parameter.js';
 import * as ReceiveName from './types/ReceiveName.js';
+import { Energy } from './types/index.ts';
 
 /**
  * A handler for a specific {@linkcode AccountTransactionType}.
@@ -58,7 +59,7 @@ import * as ReceiveName from './types/ReceiveName.js';
 export interface AccountTransactionHandler<
     Payload extends AccountTransactionPayload,
     JSONPayload,
-    EnergyPayload extends AccountTransactionEnergyPayload,
+    Input extends AccountTransactionInput,
 > {
     /**
      * Serializes the payload to a buffer.
@@ -80,24 +81,24 @@ export interface AccountTransactionHandler<
 
     /**
      * Gets the base energy cost for the given payload.
-     * @param payload - The payload for which to get the base energy cost.
+     * @param input - The transction input for which to get the base energy cost.
      * @returns The base energy cost for the payload.
      */
-    getBaseEnergyCost: (payload: EnergyPayload) => bigint;
+    getBaseEnergyCost: (input: Input) => bigint;
 
     /**
      * Converts the payload into JSON format.
      * @param payload - The payload to be converted into JSON.
      * @returns The payload in JSON format.
      */
-    toJSON: (payload: Payload) => JSONPayload;
+    toJSON: (payload: Payload | Input) => JSONPayload;
 
     /**
      * Converts a JSON-serialized payload into the payload type.
      * @param json - The JSON to be converted back into the payload.
      * @returns The payload obtained from the JSON.
      */
-    fromJSON: (json: JSONPayload) => Payload;
+    fromJSON: (json: JSONPayload) => Payload | Input;
 }
 
 export interface SimpleTransferPayloadJSON {
@@ -256,6 +257,16 @@ export class DeployModuleHandler
     }
 }
 
+function hasEnergy(v: InitContractPayloadJSON): v is InitContractInputJSON;
+function hasEnergy(v: UpdateContractPayloadJSON): v is UpdateContractInputJSON;
+function hasEnergy(v: InitContractPayload): v is InitContractInput;
+function hasEnergy(v: UpdateContractPayload): v is UpdateContractInput;
+function hasEnergy(
+    v: object
+): v is UpdateContractInputJSON | UpdateContractInputJSON | UpdateContractInput | InitContractInput {
+    return 'maxContractExecutionEnergy' in v;
+}
+
 export interface InitContractPayloadJSON {
     amount: string;
     moduleRef: HexString;
@@ -263,10 +274,18 @@ export interface InitContractPayloadJSON {
     param: HexString;
 }
 
+export interface InitContractInputJSON {
+    amount: string;
+    moduleRef: HexString;
+    initName: string;
+    param: HexString;
+    maxContractExecutionEnergy: bigint;
+}
+
 export class InitContractHandler
-    implements AccountTransactionHandler<InitContractPayload, InitContractPayloadJSON, InitContractPayloadWithEnergy>
+    implements AccountTransactionHandler<InitContractPayload, InitContractPayloadJSON, InitContractInput>
 {
-    getBaseEnergyCost(payload: InitContractPayloadWithEnergy): bigint {
+    getBaseEnergyCost(payload: InitContractInput): bigint {
         return payload.maxContractExecutionEnergy.value;
     }
 
@@ -300,22 +319,35 @@ export class InitContractHandler
         };
     }
 
-    toJSON(payload: InitContractPayload): InitContractPayloadJSON {
-        return {
+    toJSON(payload: InitContractPayload): InitContractPayloadJSON;
+    toJSON(payload: InitContractInput): InitContractInputJSON;
+    toJSON(payload: InitContractPayload | InitContractInput): InitContractPayloadJSON | InitContractInputJSON {
+        const json: InitContractPayloadJSON = {
             amount: payload.amount.toJSON(),
             moduleRef: payload.moduleRef.toJSON(),
             initName: payload.initName.toJSON(),
             param: payload.param.toJSON(),
         };
+        if (hasEnergy(payload)) {
+            (json as InitContractInputJSON).maxContractExecutionEnergy = payload.maxContractExecutionEnergy.value;
+        }
+        return json;
     }
 
-    fromJSON(json: InitContractPayloadJSON): InitContractPayload {
-        return {
+    fromJSON(json: InitContractPayloadJSON): InitContractPayload;
+    fromJSON(json: InitContractInputJSON): InitContractInput;
+    fromJSON(json: InitContractPayloadJSON | InitContractInputJSON): InitContractPayload | InitContractInput {
+        const payload: InitContractPayload = {
             amount: CcdAmount.fromJSON(json.amount),
             moduleRef: ModuleReference.fromJSON(json.moduleRef),
             initName: ContractName.fromJSON(json.initName),
             param: Parameter.fromJSON(json.param),
         };
+
+        if (hasEnergy(json)) {
+            (payload as InitContractInput).maxContractExecutionEnergy = Energy.create(json.maxContractExecutionEnergy);
+        }
+        return payload;
     }
 }
 
@@ -326,13 +358,20 @@ export interface UpdateContractPayloadJSON {
     message: HexString;
 }
 
+export interface UpdateContractInputJSON {
+    amount: string;
+    address: ContractAddress.SchemaValue;
+    receiveName: string;
+    message: HexString;
+    maxContractExecutionEnergy: bigint;
+}
+
 export type TransactionMetadata = Pick<AccountTransactionHeader, 'sender' | 'nonce' | 'expiry'>;
 
 export class UpdateContractHandler
-    implements
-        AccountTransactionHandler<UpdateContractPayload, UpdateContractPayloadJSON, UpdateContractPayloadWithEnergy>
+    implements AccountTransactionHandler<UpdateContractPayload, UpdateContractPayloadJSON, UpdateContractInput>
 {
-    getBaseEnergyCost(payload: UpdateContractPayloadWithEnergy): bigint {
+    getBaseEnergyCost(payload: UpdateContractInput): bigint {
         return payload.maxContractExecutionEnergy.value;
     }
 
@@ -377,24 +416,40 @@ export class UpdateContractHandler
         };
     }
 
-    toJSON(payload: UpdateContractPayload): UpdateContractPayloadJSON {
-        return {
+    toJSON(payload: UpdateContractPayload): UpdateContractPayloadJSON;
+    toJSON(payload: UpdateContractInput): UpdateContractInputJSON;
+    toJSON(payload: UpdateContractPayload | UpdateContractInput): UpdateContractPayloadJSON | UpdateContractInputJSON {
+        const json: UpdateContractPayloadJSON = {
             amount: payload.amount.toJSON(),
             address: ContractAddress.toSchemaValue(payload.address),
             receiveName: payload.receiveName.toJSON(),
             message: payload.message.toJSON(),
         };
+        if (hasEnergy(payload)) {
+            (json as UpdateContractInputJSON).maxContractExecutionEnergy = payload.maxContractExecutionEnergy.value;
+        }
+        return json;
     }
 
-    fromJSON(json: UpdateContractPayloadJSON): UpdateContractPayload {
-        return {
+    fromJSON(json: UpdateContractPayloadJSON): UpdateContractPayload;
+    fromJSON(json: UpdateContractInputJSON): UpdateContractInput;
+    fromJSON(json: UpdateContractPayloadJSON | UpdateContractInputJSON): UpdateContractPayload | UpdateContractInput {
+        const payload: UpdateContractPayload = {
             amount: CcdAmount.fromJSON(json.amount),
             address: ContractAddress.fromSchemaValue(json.address),
             receiveName: ReceiveName.fromJSON(json.receiveName),
             message: Parameter.fromJSON(json.message),
         };
+
+        if (hasEnergy(json)) {
+            (payload as UpdateContractInput).maxContractExecutionEnergy = Energy.create(
+                json.maxContractExecutionEnergy
+            );
+        }
+        return payload;
     }
 }
+
 export class UpdateCredentialsHandler
     implements AccountTransactionHandler<UpdateCredentialsPayload, UpdateCredentialsPayload, UpdateCredentialsPayload>
 {
@@ -695,7 +750,7 @@ export function getAccountTransactionHandler(type: AccountTransactionType.Config
 export function getAccountTransactionHandler(type: AccountTransactionType.TokenUpdate): TokenUpdateHandler;
 export function getAccountTransactionHandler(
     type: AccountTransactionType
-): AccountTransactionHandler<AccountTransactionPayload, AccountTransactionPayloadJSON, AccountTransactionEnergyPayload>;
+): AccountTransactionHandler<AccountTransactionPayload, AccountTransactionPayloadJSON, AccountTransactionInput>;
 export function getAccountTransactionHandler(
     type: AccountTransactionType
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

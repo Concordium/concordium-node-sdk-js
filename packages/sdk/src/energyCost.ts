@@ -1,13 +1,7 @@
 import { getAccountTransactionHandler } from './accountTransactions.js';
 import { getUpdatePayloadSize } from './contractHelpers.js';
 import { ConcordiumGRPCClient } from './grpc/GRPCClient.js';
-import {
-    AccountAddress,
-    AccountTransactionEnergyPayload,
-    ContractAddress,
-    Parameter,
-    ReceiveName,
-} from './pub/types.js';
+import { AccountAddress, AccountTransactionInput, ContractAddress, Parameter, ReceiveName } from './pub/types.js';
 import { collapseRatio, multiplyRatio } from './ratioHelpers.js';
 import { serializeAccountTransactionPayload } from './serialization.js';
 import { AccountTransactionType, ChainParameters, Ratio } from './types.js';
@@ -54,7 +48,7 @@ export function calculateEnergyCost(
  */
 export function getEnergyCost(
     transactionType: AccountTransactionType,
-    payload: AccountTransactionEnergyPayload,
+    payload: AccountTransactionInput,
     signatureCount = 1n
 ): Energy.Type {
     const size = serializeAccountTransactionPayload({ payload, type: transactionType }).length;

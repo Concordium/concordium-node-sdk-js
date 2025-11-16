@@ -1389,7 +1389,7 @@ export interface InitContractPayload {
     param: Parameter.Type;
 }
 
-export interface InitContractPayloadWithEnergy extends InitContractPayload {
+export interface InitContractInput extends InitContractPayload {
     /** The amount of energy that can be used for contract execution.
     The base energy amount for transaction verification will be added to this cost.*/
     maxContractExecutionEnergy: Energy.Type;
@@ -1406,7 +1406,7 @@ export interface UpdateContractPayload {
     message: Parameter.Type;
 }
 
-export interface UpdateContractPayloadWithEnergy extends UpdateContractPayload {
+export interface UpdateContractInput extends UpdateContractPayload {
     /** The amount of energy that can be used for contract execution.
     The base energy amount for transaction verification will be added to this cost.*/
     maxContractExecutionEnergy: Energy.Type;
@@ -1426,8 +1426,6 @@ export interface AccountTransactionHeader {
     nonce: SequenceNumber.Type;
     /** expiration of the transaction */
     expiry: TransactionExpiry.Type;
-    /** a base energy amount, this amount excludes transaction size and signature costs */
-    executionEnergyAmount: Energy.Type;
 }
 
 export interface SimpleTransferPayload {
@@ -1558,14 +1556,14 @@ export type AccountTransactionPayload =
     | ConfigureDelegationPayload
     | TokenUpdatePayload;
 
-export type AccountTransactionEnergyPayload =
+export type AccountTransactionInput =
     | Exclude<AccountTransactionPayload, InitContractPayload | UpdateContractPayload>
-    | InitContractPayloadWithEnergy
-    | UpdateContractPayloadWithEnergy;
+    | InitContractInput
+    | UpdateContractInput;
 
 export interface AccountTransaction<
     T extends AccountTransactionType = AccountTransactionType,
-    P extends AccountTransactionPayload = AccountTransactionPayload,
+    P extends AccountTransactionInput = AccountTransactionInput,
 > {
     type: T;
     header: AccountTransactionHeader;

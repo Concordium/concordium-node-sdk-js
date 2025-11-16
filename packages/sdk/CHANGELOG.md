@@ -8,11 +8,14 @@
 - Deserialize function for `InitContractPayload` implemented instead of throwing an exception of not supporting deserialize
 - Deserialize function for `UpdateContractPayload` implemented instead of throwing an exception of not supporting deserialize
 - Remove the `maxContractExecutionEnergy` from `UpdateContractPayload`. This field actually represent the base energy amount and it must be passed in manually instead of deriving from payload. 
-  - A corresponding replacement type `UpdateContractPayloadWithEnergy` has been added, which can be used in place of the
+  - A corresponding replacement type `UpdateContractInput` has been added, which can be used in place of the
     old type definition.
 - Remove the `maxContractExecutionEnergy` from `InitContractPayload`. This field actually represent the base energy amount and it must be passed in manually instead of deriving from payload. 
-  - A corresponding replacement type `InitContractPayloadWithEnergy` has been added, which can be used in place of the
+  - A corresponding replacement type `InitContractInput` has been added, which can be used in place of the
     old type definition.
+- `AccountTransactionPayload` now describes the actual transaction payloads instead of the input required to construct
+  transactions of a type.
+- `AccountTransactionInput` replaces the previous definition of `AccountTransactionPayload`.
 
 ## 11.0.0
 

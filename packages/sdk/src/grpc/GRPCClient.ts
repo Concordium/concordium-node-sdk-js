@@ -14,10 +14,11 @@ import { HealthClient } from '../grpc-api/v2/concordium/health.client.js';
 import * as GRPCKernel from '../grpc-api/v2/concordium/kernel.js';
 import { QueriesClient } from '../grpc-api/v2/concordium/service.client.js';
 import * as GRPC from '../grpc-api/v2/concordium/types.js';
+import { getAccountTransactionHandler } from '../index.ts';
 import * as PLT from '../plt/index.js';
 import { RawModuleSchema } from '../schemaTypes.js';
 import { serializeAccountTransactionPayload } from '../serialization.js';
-import { Transaction } from '../transactions/index.js';
+import { Payload, Transaction } from '../transactions/index.js';
 import * as SDK from '../types.js';
 import { HexString, isRpcError } from '../types.js';
 import * as AccountAddress from '../types/AccountAddress.js';
@@ -291,7 +292,7 @@ export class ConcordiumGRPCClient {
      * @returns The transaction hash as a hex-encoded string
      */
     async sendSignedTransaction(transaction: Transaction.Signed): Promise<TransactionHash.Type> {
-        const rawPayload = serializeAccountTransactionPayload(transaction);
+        const rawPayload = Payload.serialize(transaction.payload);
         return this.sendRawAccountTransaction(
             transaction.header,
             transaction.header.energyAmount,
@@ -320,11 +321,8 @@ export class ConcordiumGRPCClient {
         signature: SDK.AccountTransactionSignature
     ): Promise<TransactionHash.Type> {
         const rawPayload = serializeAccountTransactionPayload(transaction);
-        const energyCost = calculateEnergyCost(
-            countSignatures(signature),
-            BigInt(rawPayload.length),
-            transaction.header.executionEnergyAmount.value
-        );
+        const baseEnergy = getAccountTransactionHandler(transaction.type).getBaseEnergyCost(transaction.payload);
+        const energyCost = calculateEnergyCost(countSignatures(signature), BigInt(rawPayload.length), baseEnergy);
 
         return this.sendRawAccountTransaction(transaction.header, energyCost, rawPayload, signature);
     }
@@ -346,7 +344,7 @@ export class ConcordiumGRPCClient {
      * @returns The transaction hash as a byte array
      */
     async sendRawAccountTransaction(
-        header: Omit<SDK.AccountTransactionHeader, 'executionEnergyAmount'>,
+        header: SDK.AccountTransactionHeader,
         energyAmount: Energy.Type,
         payload: Uint8Array,
         signature: SDK.AccountTransactionSignature

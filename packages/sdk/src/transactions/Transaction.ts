@@ -1,9 +1,8 @@
 import {
     AccountSigner,
     AccountTransaction,
-    AccountTransactionEnergyPayload,
     AccountTransactionHeader,
-    AccountTransactionPayload,
+    AccountTransactionInput,
     AccountTransactionType,
     ConfigureBakerHandler,
     ConfigureBakerPayload,
@@ -12,8 +11,7 @@ import {
     DeployModuleHandler,
     DeployModulePayload,
     InitContractHandler,
-    InitContractPayload,
-    InitContractPayloadWithEnergy,
+    InitContractInput,
     MakeOptional,
     RegisterDataHandler,
     RegisterDataPayload,
@@ -24,38 +22,52 @@ import {
     TokenUpdateHandler,
     TokenUpdatePayload,
     UpdateContractHandler,
-    UpdateContractPayload,
-    UpdateContractPayloadWithEnergy,
+    UpdateContractInput,
     UpdateCredentialsHandler,
     UpdateCredentialsPayload,
-    serializeAccountTransactionPayload,
     sha256,
 } from '../index.js';
 import { Energy, TransactionExpiry } from '../types/index.js';
-import { AccountTransactionV0 } from './index.js';
+import { AccountTransactionV0, Payload } from './index.js';
 
 // --- Core types ---
 
 /**
  * Transaction header type alias for account transaction metadata.
  */
-export type Header = AccountTransactionHeader;
+export type Header = AccountTransactionHeader & {
+    /** a base energy amount, this amount excludes transaction size and signature costs */
+    executionEnergyAmount: Energy.Type;
+    /** The number of signatures the transaction can hold. If `undefined`, this will be defined at the time of signing. */
+    numSignatures?: bigint;
+};
 
-/**
- * Generic transaction type with parameterized transaction type and payload.
- */
-type Transaction<
-    T extends AccountTransactionType = AccountTransactionType,
-    P extends AccountTransactionPayload = AccountTransactionPayload,
-> = AccountTransaction<T, P>;
+type Transaction<P extends Payload.Type = Payload.Type> = { header: Header; payload: P };
+
+class TransactionBuilder<P extends Payload.Type = Payload.Type> implements Transaction<P> {
+    private _header: Header;
+
+    constructor(
+        header: Header,
+        public readonly payload: P
+    ) {
+        this._header = header;
+    }
+
+    public get header(): Readonly<Header> {
+        return this._header;
+    }
+
+    public multiSig(numSignatures: number | bigint): this {
+        this._header.numSignatures = BigInt(numSignatures);
+        return this;
+    }
+}
 
 /**
  * Exported generic transaction type alias.
  */
-export type Type<
-    T extends AccountTransactionType = AccountTransactionType,
-    P extends AccountTransactionPayload = AccountTransactionPayload,
-> = Transaction<T, P>;
+export type Type = Transaction;
 
 // --- Transaction construction ---
 
@@ -82,8 +94,8 @@ export type Metadata = Omit<MakeOptional<Header, 'expiry'>, 'executionEnergyAmou
 export function create(
     type: AccountTransactionType,
     metadata: Metadata,
-    payload: AccountTransactionEnergyPayload
-): Transaction {
+    payload: AccountTransactionInput
+): TransactionBuilder {
     switch (type) {
         case AccountTransactionType.Transfer:
             return transfer(metadata, payload as SimpleTransferPayload);
@@ -92,9 +104,9 @@ export function create(
         case AccountTransactionType.DeployModule:
             return deployModule(metadata, payload as DeployModulePayload);
         case AccountTransactionType.InitContract:
-            return initContract(metadata, payload as InitContractPayloadWithEnergy);
+            return initContract(metadata, payload as InitContractInput);
         case AccountTransactionType.Update:
-            return updateContract(metadata, payload as UpdateContractPayloadWithEnergy);
+            return updateContract(metadata, payload as UpdateContractInput);
         case AccountTransactionType.UpdateCredentials:
             return updateCredentials(metadata, payload as UpdateCredentialsPayload);
         case AccountTransactionType.RegisterData:
@@ -110,6 +122,10 @@ export function create(
     }
 }
 
+export function fromLegacyAccountTransaction({ type, header, payload }: AccountTransaction): TransactionBuilder {
+    return create(type, header, payload);
+}
+
 const isMemoPayload = (
     payload: SimpleTransferPayload | SimpleTransferWithMemoPayload
 ): payload is SimpleTransferWithMemoPayload => (payload as SimpleTransferWithMemoPayload).memo !== undefined;
@@ -123,7 +139,7 @@ const isMemoPayload = (
 export function transfer(
     { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: Metadata,
     payload: SimpleTransferPayload
-): Transaction<AccountTransactionType.Transfer, SimpleTransferPayload>;
+): TransactionBuilder<Payload.Transfer>;
 
 /**
  * Creates a transfer transaction with a memo.
@@ -134,14 +150,12 @@ export function transfer(
 export function transfer(
     { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: Metadata,
     payload: SimpleTransferWithMemoPayload
-): Transaction<AccountTransactionType.TransferWithMemo, SimpleTransferWithMemoPayload>;
+): TransactionBuilder<Payload.TransferWithMemo>;
 
 export function transfer(
     { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: Metadata,
     payload: SimpleTransferPayload | SimpleTransferWithMemoPayload
-):
-    | Transaction<AccountTransactionType.Transfer, SimpleTransferPayload>
-    | Transaction<AccountTransactionType.TransferWithMemo, SimpleTransferWithMemoPayload> {
+): TransactionBuilder<Payload.Transfer> | TransactionBuilder<Payload.TransferWithMemo> {
     const header = {
         sender: sender,
         nonce: nonce,
@@ -150,19 +164,17 @@ export function transfer(
 
     if (!isMemoPayload(payload)) {
         const handler = new SimpleTransferHandler();
-        return {
-            type: AccountTransactionType.Transfer,
-            header: { ...header, executionEnergyAmount: Energy.create(handler.getBaseEnergyCost()) },
-            payload,
-        };
+        return new TransactionBuilder<Payload.Transfer>(
+            { ...header, executionEnergyAmount: Energy.create(handler.getBaseEnergyCost()) },
+            Payload.transfer(payload)
+        );
     }
 
     const handler = new SimpleTransferWithMemoHandler();
-    return {
-        type: AccountTransactionType.TransferWithMemo,
-        header: { ...header, executionEnergyAmount: Energy.create(handler.getBaseEnergyCost()) },
-        payload: { ...payload },
-    };
+    return new TransactionBuilder(
+        { ...header, executionEnergyAmount: Energy.create(handler.getBaseEnergyCost()) },
+        Payload.transfer(payload)
+    );
 }
 
 /**
@@ -174,18 +186,17 @@ export function transfer(
 export function updateCredentials(
     { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: Metadata,
     payload: UpdateCredentialsPayload
-): Transaction<AccountTransactionType.UpdateCredentials, UpdateCredentialsPayload> {
+): TransactionBuilder<Payload.UpdateCredentials> {
     const handler = new UpdateCredentialsHandler();
-    return {
-        type: AccountTransactionType.UpdateCredentials,
-        header: {
+    return new TransactionBuilder(
+        {
             sender: sender,
             nonce: nonce,
             expiry: expiry,
             executionEnergyAmount: Energy.create(handler.getBaseEnergyCost(payload)),
         },
-        payload,
-    };
+        Payload.updateCredentials(payload)
+    );
 }
 
 /**
@@ -197,18 +208,17 @@ export function updateCredentials(
 export function configureValidator(
     { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: Metadata,
     payload: ConfigureBakerPayload
-): Transaction<AccountTransactionType.ConfigureBaker, ConfigureBakerPayload> {
+): TransactionBuilder<Payload.ConfigureValidator> {
     const handler = new ConfigureBakerHandler();
-    return {
-        type: AccountTransactionType.ConfigureBaker,
-        header: {
+    return new TransactionBuilder(
+        {
             sender: sender,
             nonce: nonce,
             expiry: expiry,
             executionEnergyAmount: Energy.create(handler.getBaseEnergyCost(payload)),
         },
-        payload,
-    };
+        Payload.configureValidator(payload)
+    );
 }
 
 /**
@@ -220,18 +230,17 @@ export function configureValidator(
 export function configureDelegation(
     { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: Metadata,
     payload: ConfigureDelegationPayload
-): Transaction<AccountTransactionType.ConfigureDelegation, ConfigureDelegationPayload> {
+): TransactionBuilder<Payload.ConfigureDelegation> {
     const handler = new ConfigureDelegationHandler();
-    return {
-        type: AccountTransactionType.ConfigureDelegation,
-        header: {
+    return new TransactionBuilder(
+        {
             sender: sender,
             nonce: nonce,
             expiry: expiry,
             executionEnergyAmount: Energy.create(handler.getBaseEnergyCost()),
         },
-        payload,
-    };
+        Payload.configureDelegation(payload)
+    );
 }
 
 /**
@@ -243,18 +252,17 @@ export function configureDelegation(
 export function tokenUpdate(
     { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: Metadata,
     payload: TokenUpdatePayload
-): Transaction<AccountTransactionType.TokenUpdate, TokenUpdatePayload> {
+): TransactionBuilder<Payload.TokenUpdate> {
     const handler = new TokenUpdateHandler();
-    return {
-        type: AccountTransactionType.TokenUpdate,
-        header: {
+    return new TransactionBuilder(
+        {
             sender: sender,
             nonce: nonce,
             expiry: expiry,
             executionEnergyAmount: Energy.create(handler.getBaseEnergyCost(payload)),
         },
-        payload,
-    };
+        Payload.tokenUpdate(payload)
+    );
 }
 
 /**
@@ -266,18 +274,17 @@ export function tokenUpdate(
 export function deployModule(
     { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: Metadata,
     payload: DeployModulePayload
-): Transaction<AccountTransactionType.DeployModule, DeployModulePayload> {
+): TransactionBuilder<Payload.DeployModule> {
     const handler = new DeployModuleHandler();
-    return {
-        type: AccountTransactionType.DeployModule,
-        header: {
+    return new TransactionBuilder(
+        {
             sender: sender,
             nonce: nonce,
             expiry: expiry,
             executionEnergyAmount: Energy.create(handler.getBaseEnergyCost(payload)),
         },
-        payload,
-    };
+        Payload.deployModule(payload)
+    );
 }
 
 /**
@@ -289,18 +296,17 @@ export function deployModule(
 export function registerData(
     { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: Metadata,
     payload: RegisterDataPayload
-): Transaction<AccountTransactionType.RegisterData, RegisterDataPayload> {
+): TransactionBuilder<Payload.RegisterData> {
     const handler = new RegisterDataHandler();
-    return {
-        type: AccountTransactionType.RegisterData,
-        header: {
+    return new TransactionBuilder(
+        {
             sender: sender,
             nonce: nonce,
             expiry: expiry,
             executionEnergyAmount: Energy.create(handler.getBaseEnergyCost()),
         },
-        payload,
-    };
+        Payload.registerData(payload)
+    );
 }
 
 /**
@@ -311,19 +317,18 @@ export function registerData(
  */
 export function initContract(
     { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: Metadata,
-    { maxContractExecutionEnergy, ...payload }: InitContractPayloadWithEnergy
-): Transaction<AccountTransactionType.InitContract, InitContractPayload> {
+    { maxContractExecutionEnergy, ...payload }: InitContractInput
+): TransactionBuilder<Payload.InitContract> {
     const handler = new InitContractHandler();
-    return {
-        type: AccountTransactionType.InitContract,
-        header: {
+    return new TransactionBuilder(
+        {
             sender: sender,
             nonce: nonce,
             expiry: expiry,
-            executionEnergyAmount: Energy.create(handler.getBaseEnergyCost({ maxContractExecutionEnergy, ...payload })),
+            executionEnergyAmount: Energy.create(handler.getBaseEnergyCost({ ...payload, maxContractExecutionEnergy })),
         },
-        payload,
-    };
+        Payload.initContract(payload)
+    );
 }
 
 /**
@@ -334,24 +339,23 @@ export function initContract(
  */
 export function updateContract(
     { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: Metadata,
-    { maxContractExecutionEnergy, ...payload }: UpdateContractPayloadWithEnergy
-): Transaction<AccountTransactionType.Update, UpdateContractPayload> {
+    { maxContractExecutionEnergy, ...payload }: UpdateContractInput
+): TransactionBuilder<Payload.UpdateContract> {
     const handler = new UpdateContractHandler();
-    return {
-        type: AccountTransactionType.Update,
-        header: {
+    return new TransactionBuilder(
+        {
             sender: sender,
             nonce: nonce,
             expiry: expiry,
-            executionEnergyAmount: Energy.create(handler.getBaseEnergyCost({ maxContractExecutionEnergy, ...payload })),
+            executionEnergyAmount: Energy.create(handler.getBaseEnergyCost({ ...payload, maxContractExecutionEnergy })),
         },
-        payload,
-    };
+        Payload.updateContract(payload)
+    );
 }
 
 // TODO: factor in v1 transaction
-export function getEnergyCost({ header, ...payload }: Transaction, numSignatures: bigint | number = 1n): Energy.Type {
-    const size = serializeAccountTransactionPayload(payload).length;
+export function getEnergyCost({ header, payload }: Transaction, numSignatures: bigint | number = 1n): Energy.Type {
+    const size = Payload.serialize(payload).length;
     return AccountTransactionV0.calculateEnergyCost(BigInt(numSignatures), BigInt(size), header.executionEnergyAmount);
 }
 
@@ -360,6 +364,7 @@ export function getEnergyCost({ header, ...payload }: Transaction, numSignatures
 /**
  * A signed version 0 account transaction.
  */
+// TODO: factor in v1 transaction
 export type Signed = Readonly<AccountTransactionV0.Type>;
 
 /**
@@ -370,13 +375,15 @@ export type Signed = Readonly<AccountTransactionV0.Type>;
  */
 // TODO: factor in v1 transaction
 export async function sign(transaction: Transaction, signer: AccountSigner): Promise<Signed> {
-    const { expiry, sender, nonce, executionEnergyAmount } = transaction.header;
-    const payloadSize = serializeAccountTransactionPayload(transaction).length;
-    const energyAmount = AccountTransactionV0.calculateEnergyCost(
-        signer.getSignatureCount(),
-        payloadSize,
-        executionEnergyAmount
-    );
+    const {
+        expiry,
+        sender,
+        nonce,
+        executionEnergyAmount,
+        numSignatures = signer.getSignatureCount(),
+    } = transaction.header;
+    const payloadSize = Payload.serialize(transaction.payload).length;
+    const energyAmount = AccountTransactionV0.calculateEnergyCost(numSignatures, payloadSize, executionEnergyAmount);
 
     const header: AccountTransactionV0.Header = {
         expiry,
@@ -387,7 +394,6 @@ export async function sign(transaction: Transaction, signer: AccountSigner): Pro
     };
     const unsigned: AccountTransactionV0.Unsigned = {
         header,
-        type: transaction.type,
         payload: transaction.payload,
     };
     return await AccountTransactionV0.sign(unsigned, signer);

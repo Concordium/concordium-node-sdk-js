@@ -10,8 +10,6 @@ import {
     buildBasicAccountSigner,
     createCredentialDeploymentPayload,
     getCredentialDeploymentSignDigest,
-    serializeAccountTransaction,
-    serializeAccountTransactionPayload,
     sha256,
     streamToList,
 } from '../../src/index.js';
@@ -283,17 +281,17 @@ test.each(clients)('transactionHash', async (client) => {
     };
 
     const transaction = Transaction.transfer(headerLocal, simpleTransfer);
-    const rawPayload = serializeAccountTransactionPayload(transaction);
+    const rawPayload = v1.Payload.serialize(transaction.payload);
 
     // Sign transaction
     const signer = buildBasicAccountSigner(privateKey);
-    const signed = await Transaction.sign(transaction, signer);
+    const signedTransction = await Transaction.sign(transaction, signer);
 
     // Put together sendBlockItemRequest
     const header: v2.AccountTransactionHeader = {
         sender: AccountAddress.toProto(transaction.header.sender),
         sequenceNumber: SequenceNumber.toProto(transaction.header.nonce),
-        energyAmount: Energy.toProto(signed.header.energyAmount),
+        energyAmount: Energy.toProto(signedTransction.header.energyAmount),
         expiry: { value: transaction.header.expiry.expiryEpochSeconds },
     };
     const accountTransaction: v2.PreAccountTransaction = {
@@ -303,7 +301,7 @@ test.each(clients)('transactionHash', async (client) => {
         },
     };
 
-    const serializedAccountTransaction = serializeAccountTransaction(transaction, signed.signature).slice(71);
+    const serializedAccountTransaction = v1.AccountTransactionV0.serialize(signedTransction).slice(71);
     const localHash = Buffer.from(sha256([serializedAccountTransaction])).toString('hex');
 
     const queries: QueriesClient = (client as any).client;

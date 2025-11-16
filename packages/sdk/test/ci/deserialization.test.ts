@@ -1,7 +1,12 @@
+import assert from 'assert';
+
 import {
     AccountAddress,
     AccountTransaction,
+    AccountTransactionHeader,
     AccountTransactionSignature,
+    AccountTransactionType,
+    AccountTransactionV0,
     BlockItemKind,
     CIS2,
     Cbor,
@@ -11,7 +16,7 @@ import {
     DataBlob,
     DeployModulePayload,
     Energy,
-    InitContractPayload,
+    InitContractInput,
     ModuleReference,
     Parameter,
     ReceiveName,
@@ -23,13 +28,17 @@ import {
     TokenOperation,
     TokenUpdatePayload,
     TransactionExpiry,
-    UpdateContractPayload,
+    UpdateContractInput,
+    calculateEnergyCost,
+    deserializeTransaction,
+    getAccountTransactionHandler,
     tokenAddressFromBase58,
     tokenAddressToBase58,
 } from '../../src/index.js';
-import { serializeAccountTransactionForSubmission } from '../../src/serialization.js';
-import { Transaction } from '../../src/transactions/index.ts';
-import { deserializeTransaction } from '../../src/wasm/deserialization.js';
+import {
+    serializeAccountTransactionForSubmission,
+    serializeAccountTransactionPayload,
+} from '../../src/serialization.js';
 
 function deserializeAccountTransactionBase(transaction: AccountTransaction) {
     const signatures: AccountTransactionSignature = {
@@ -39,16 +48,31 @@ function deserializeAccountTransactionBase(transaction: AccountTransaction) {
     };
 
     const deserialized = deserializeTransaction(serializeAccountTransactionForSubmission(transaction, signatures));
+    assert(deserialized.kind === BlockItemKind.AccountTransactionKind, 'Expected account transaction');
+    const payloadSize = serializeAccountTransactionPayload(transaction).length;
+    const baseEnergy = getAccountTransactionHandler(transaction.type).getBaseEnergyCost(transaction.payload);
+    const energyAmount = calculateEnergyCost(1n, BigInt(payloadSize), baseEnergy);
 
-    if (deserialized.kind !== BlockItemKind.AccountTransactionKind) {
-        throw new Error('Incorrect BlockItemKind');
-    }
-    expect(deserialized.transaction.payload).toEqual(transaction.payload);
+    const expectedHeader: AccountTransactionV0.Header = {
+        sender: transaction.header.sender,
+        nonce: transaction.header.nonce,
+        expiry: transaction.header.expiry,
+        payloadSize,
+        energyAmount,
+    };
+    // Filter out input values, as they will not be included in deserialized values
+    const { maxContractExecutionEnergy, ...expectedPayload } = transaction.payload as any;
+
+    expect(deserialized.transaction.signature).toEqual(signatures);
+    expect(deserialized.transaction.header).toEqual(expectedHeader);
+    expect(deserialized.transaction.payload.type).toEqual(transaction.type);
+    expect(deserialized.transaction.payload.value).toEqual(expectedPayload);
 }
 
-const metadata: Transaction.Metadata = {
+const header: AccountTransactionHeader = {
     nonce: SequenceNumber.create(1),
     sender: AccountAddress.fromBase58('3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'),
+    expiry: TransactionExpiry.futureMinutes(5),
 };
 
 test('test deserialize simpleTransfer ', () => {
@@ -57,7 +81,11 @@ test('test deserialize simpleTransfer ', () => {
         toAddress: AccountAddress.fromBase58('3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'),
     };
 
-    const transaction = Transaction.transfer(metadata, payload);
+    const transaction: AccountTransaction = {
+        header,
+        type: AccountTransactionType.Transfer,
+        payload,
+    };
     deserializeAccountTransactionBase(transaction);
 });
 
@@ -68,7 +96,11 @@ test('test deserialize simpleTransfer with memo ', () => {
         memo: new DataBlob(Buffer.from('00', 'hex')),
     };
 
-    const transaction = Transaction.transfer(metadata, payload);
+    const transaction: AccountTransaction = {
+        header,
+        type: AccountTransactionType.TransferWithMemo,
+        payload,
+    };
     deserializeAccountTransactionBase(transaction);
 });
 
@@ -77,7 +109,11 @@ test('test deserialize registerData ', () => {
         data: new DataBlob(Buffer.from('00AB5303926810EE', 'hex')),
     };
 
-    const transaction = Transaction.registerData(metadata, payload);
+    const transaction: AccountTransaction = {
+        header,
+        type: AccountTransactionType.RegisterData,
+        payload,
+    };
     deserializeAccountTransactionBase(transaction);
 });
 
@@ -87,7 +123,11 @@ test('test deserialize DeployModule ', () => {
         source: new Uint8Array([0x00, 0xab, 0x53, 0x03, 0x92, 0x68, 0x10, 0xee]),
     };
 
-    const transaction = Transaction.deployModule(metadata, payload);
+    const transaction: AccountTransaction = {
+        header,
+        type: AccountTransactionType.DeployModule,
+        payload,
+    };
     deserializeAccountTransactionBase(transaction);
 });
 
@@ -95,29 +135,36 @@ test('test deserialize InitContract ', () => {
     const moduleRef = ModuleReference.fromHexString('44434352ddba724930d6b1b09cd58bd1fba6ad9714cf519566d5fe72d80da0d1');
     const contractName = ContractName.fromStringUnchecked('weather');
 
-    const payload: InitContractPayload = {
+    const payload: InitContractInput = {
         amount: CcdAmount.zero(),
         moduleRef: moduleRef,
         initName: contractName,
         param: Parameter.fromHexString('0a'),
+        maxContractExecutionEnergy: Energy.create(30000),
     };
 
-    const givenEnergy = Energy.create(30000);
-    const transaction = Transaction.initContract(metadata, { ...payload, maxContractExecutionEnergy: givenEnergy });
+    const transaction: AccountTransaction = {
+        header,
+        type: AccountTransactionType.InitContract,
+        payload,
+    };
     deserializeAccountTransactionBase(transaction);
 });
 
 test('test deserialize UpdateContract ', () => {
-    const payload: UpdateContractPayload = {
+    const payload: UpdateContractInput = {
         amount: CcdAmount.zero(),
         address: ContractAddress.create(0, 1),
         receiveName: ReceiveName.fromString('method.abc'),
         message: Parameter.fromHexString('0a'),
+        maxContractExecutionEnergy: Energy.create(3000),
     };
 
-    const givenEnergy = Energy.create(3000);
-    const transaction = Transaction.updateContract(metadata, { ...payload, maxContractExecutionEnergy: givenEnergy });
-
+    const transaction: AccountTransaction = {
+        header,
+        type: AccountTransactionType.Update,
+        payload,
+    };
     deserializeAccountTransactionBase(transaction);
 });
 
@@ -130,7 +177,11 @@ test('test deserialize TokenUpdate ', () => {
         operations: Cbor.encode([pauseOperation]),
     };
 
-    const transaction = Transaction.tokenUpdate(metadata, payload);
+    const transaction: AccountTransaction = {
+        header,
+        type: AccountTransactionType.TokenUpdate,
+        payload,
+    };
     deserializeAccountTransactionBase(transaction);
 });
 
@@ -140,10 +191,11 @@ test('Expired transactions can be deserialized', () => {
         toAddress: AccountAddress.fromBase58('3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'),
     };
 
-    const transaction = Transaction.transfer(
-        { ...metadata, expiry: TransactionExpiry.fromDate(new Date(2000, 1)) },
-        payload
-    );
+    const transaction: AccountTransaction = {
+        header,
+        type: AccountTransactionType.Transfer,
+        payload,
+    };
     deserializeAccountTransactionBase(transaction);
 });
 

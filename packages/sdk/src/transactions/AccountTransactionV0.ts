@@ -1,16 +1,12 @@
-import { deserializeAccountTransactionPayload, deserializeAccountTransactionSignature } from '../deserialization.js';
+import { deserializeAccountTransactionSignature } from '../deserialization.js';
 import { Cursor } from '../deserializationHelpers.js';
 import { constantA, constantB } from '../energyCost.js';
 import { sha256 } from '../hash.js';
-import { serializeAccountTransactionPayload, serializeAccountTransactionSignature } from '../serialization.js';
+import { Payload, Transaction } from '../index.js';
+import { serializeAccountTransactionSignature } from '../serialization.js';
 import { encodeWord8, encodeWord32, encodeWord64 } from '../serializationHelpers.js';
 import { AccountSigner } from '../signHelpers.js';
-import {
-    AccountTransactionPayload,
-    AccountTransactionSignature,
-    AccountTransactionType,
-    BlockItemKind,
-} from '../types.js';
+import { AccountTransactionSignature, BlockItemKind } from '../types.js';
 import { AccountAddress, Energy, SequenceNumber, TransactionExpiry } from '../types/index.js';
 
 /**
@@ -49,13 +45,9 @@ type Transaction = {
      */
     header: Header;
     /**
-     * The transaction type to execute
+     * The transaction payload.
      */
-    type: AccountTransactionType;
-    /**
-     * The transaction payload corresponding to the `type` declared
-     */
-    payload: AccountTransactionPayload;
+    payload: Payload.Type;
     /**
      * The signature by the transaction sender on the transaction
      */
@@ -98,7 +90,7 @@ function deserializeHeader(value: Cursor): Header {
 
 export function serialize(transaction: Transaction): Uint8Array {
     const signature = serializeAccountTransactionSignature(transaction.signature);
-    const payload = serializeAccountTransactionPayload(transaction);
+    const payload = Payload.serialize(transaction.payload);
     const header = serializeHeader(transaction.header);
     return Buffer.concat([signature, header, payload]);
 }
@@ -109,12 +101,12 @@ export function deserialize(value: Cursor | ArrayBuffer): Transaction {
 
     const signature = deserializeAccountTransactionSignature(cursor);
     const header = deserializeHeader(cursor);
-    const { type, payload } = deserializeAccountTransactionPayload(cursor);
+    const payload = Payload.deserialize(cursor);
 
     if (isRawBuffer && cursor.remainingBytes.length !== 0)
         throw new Error('Deserializing the transaction did not exhaust the buffer');
 
-    return { signature, header, type, payload };
+    return { signature, header, payload };
 }
 
 export function serializeBlockItem(transaction: Transaction): Uint8Array {
@@ -168,8 +160,8 @@ export type Unsigned = Omit<Transaction, 'signature'>;
  * @returns the sha256 hash on the serialized header, type and payload
  */
 export function signDigest(transaction: Unsigned): Uint8Array {
-    const serializedPayload = serializeAccountTransactionPayload(transaction);
     const serializedHeader = serializeHeader(transaction.header);
+    const serializedPayload = Payload.serialize(transaction.payload);
     return sha256([serializedHeader, serializedPayload]);
 }
 

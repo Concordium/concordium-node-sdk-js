@@ -51,7 +51,7 @@ import { DataBlob } from './types/DataBlob.js';
 import * as InitName from './types/InitName.js';
 import * as Parameter from './types/Parameter.js';
 import * as ReceiveName from './types/ReceiveName.js';
-import { Energy } from './types/index.ts';
+import { Energy } from './types/index.js';
 
 /**
  * A handler for a specific {@linkcode AccountTransactionType}.

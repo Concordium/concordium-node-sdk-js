@@ -5,13 +5,12 @@ import {
     ContractName,
     Energy,
     EntrypointName,
-    InitContractPayload,
     ModuleReference,
+    Payload,
     ReceiveName,
     ReturnValue,
     Transaction,
     TransactionExpiry,
-    UpdateContractPayload,
     affectedContracts,
     buildAccountSigner,
     deserializeReceiveReturnValue,
@@ -87,7 +86,7 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
 
     // #region documentation-snippet-init-contract
 
-    const initHeader = {
+    const initHeader: Transaction.Metadata = {
         expiry: TransactionExpiry.futureMinutes(60),
         nonce: (await client.getNextAccountNonce(sender)).nonce,
         sender,
@@ -95,17 +94,14 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
 
     const initParams = serializeInitContractParameters(contractName, sunnyWeather, schema!.buffer);
 
-    const initPayload: InitContractPayload = {
+    const initPayload = Payload.initContract({
         amount: CcdAmount.zero(),
         moduleRef: moduleRef,
         initName: contractName,
         param: initParams,
-    };
-
-    const initTransaction = Transaction.initContract(initHeader, {
-        ...initPayload,
-        maxContractExecutionEnergy: maxCost,
     });
+
+    const initTransaction = Transaction.initContract(initHeader, initPayload, maxCost);
 
     // Sign transaction
     const signedInit = await Transaction.sign(initTransaction, signer);
@@ -137,7 +133,7 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
 
     // #region documentation-snippet-update-contract
 
-    const updateHeader = {
+    const updateHeader: Transaction.Metadata = {
         expiry: TransactionExpiry.futureMinutes(60),
         nonce: (await client.getNextAccountNonce(sender)).nonce,
         sender,
@@ -150,17 +146,14 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
         schema!.buffer
     );
 
-    const updatePayload: UpdateContractPayload = {
+    const updatePayload = Payload.updateContract({
         amount: CcdAmount.zero(),
         address: unwrap(contractAddress),
         receiveName,
         message: updateParams,
-    };
-
-    const updateTransaction = Transaction.updateContract(updateHeader, {
-        ...updatePayload,
-        maxContractExecutionEnergy: maxCost,
     });
+
+    const updateTransaction = Transaction.updateContract(updateHeader, updatePayload, maxCost);
 
     // Sign transaction
     const signedUpdate = await Transaction.sign(updateTransaction, signer);

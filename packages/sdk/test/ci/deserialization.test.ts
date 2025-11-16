@@ -62,11 +62,12 @@ function deserializeAccountTransactionBase(transaction: AccountTransaction) {
     };
     // Filter out input values, as they will not be included in deserialized values
     const { maxContractExecutionEnergy, ...expectedPayload } = transaction.payload as any;
+    const { type, ...payload } = deserialized.transaction.payload;
 
     expect(deserialized.transaction.signature).toEqual(signatures);
     expect(deserialized.transaction.header).toEqual(expectedHeader);
     expect(deserialized.transaction.payload.type).toEqual(transaction.type);
-    expect(deserialized.transaction.payload.value).toEqual(expectedPayload);
+    expect(payload).toEqual(expectedPayload);
 }
 
 const header: AccountTransactionHeader = {

@@ -30,7 +30,7 @@ import {
     sha256,
 } from '../index.js';
 import { DataBlob, Energy, TransactionExpiry } from '../types/index.js';
-import { TransferWithMemo } from './Payload.ts';
+import { TransferWithMemo } from './Payload.js';
 import { AccountTransactionV0, Payload } from './index.js';
 
 // --- Core types ---
@@ -148,15 +148,26 @@ export function fromLegacyAccountTransaction({ type, header, payload }: AccountT
 }
 
 /**
- * Creates a simple transfer transaction
+ * Creates a transfer transaction
  * @param metadata transaction metadata including sender, nonce, and optional expiry (defaults to 5 minutes)
  * @param payload the transfer payload containing recipient and amount
  * @returns a transfer transaction
  */
 export function transfer(
-    { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: Metadata,
+    metadata: Metadata,
     payload: SimpleTransferPayload | Payload.Transfer
 ): TransactionBuilder<Payload.Transfer>;
+
+/**
+ * Creates a transfer transaction with memo
+ * @param metadata transaction metadata including sender, nonce, and optional expiry (defaults to 5 minutes)
+ * @param payload the transfer payload containing recipient and amount and memo
+ * @returns a transfer with memo transaction
+ */
+export function transfer(
+    metadata: Metadata,
+    payload: SimpleTransferWithMemoPayload | Payload.TransferWithMemo
+): TransactionBuilder<Payload.TransferWithMemo>;
 
 /**
  * Creates a transfer transaction with a memo.
@@ -166,19 +177,9 @@ export function transfer(
  * @returns a transfer with memo transaction
  */
 export function transfer(
-    { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: Metadata,
+    metadata: Metadata,
     payload: SimpleTransferPayload,
     memo: DataBlob
-): TransactionBuilder<Payload.TransferWithMemo>;
-
-export function transfer(
-    { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: Metadata,
-    payload: SimpleTransferWithMemoPayload
-): TransactionBuilder<Payload.TransferWithMemo>;
-
-export function transfer(
-    { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: Metadata,
-    payload: Payload.TransferWithMemo
 ): TransactionBuilder<Payload.TransferWithMemo>;
 
 export function transfer(
@@ -232,7 +233,7 @@ export function updateCredentials(
             sender: sender,
             nonce: nonce,
             expiry: expiry,
-            executionEnergyAmount: Energy.create(handler.getBaseEnergyCost(payload.value)),
+            executionEnergyAmount: Energy.create(handler.getBaseEnergyCost(payload)),
         },
         payload
     );
@@ -258,7 +259,7 @@ export function configureValidator(
             sender: sender,
             nonce: nonce,
             expiry: expiry,
-            executionEnergyAmount: Energy.create(handler.getBaseEnergyCost(payload.value)),
+            executionEnergyAmount: Energy.create(handler.getBaseEnergyCost(payload)),
         },
         payload
     );
@@ -309,7 +310,7 @@ export function tokenUpdate(
             sender: sender,
             nonce: nonce,
             expiry: expiry,
-            executionEnergyAmount: Energy.create(handler.getBaseEnergyCost(payload.value)),
+            executionEnergyAmount: Energy.create(handler.getBaseEnergyCost(payload)),
         },
         payload
     );
@@ -334,7 +335,7 @@ export function deployModule(
             sender: sender,
             nonce: nonce,
             expiry: expiry,
-            executionEnergyAmount: Energy.create(handler.getBaseEnergyCost(payload.value)),
+            executionEnergyAmount: Energy.create(handler.getBaseEnergyCost(payload)),
         },
         payload
     );
@@ -388,9 +389,7 @@ export function initContract(
             sender: sender,
             nonce: nonce,
             expiry: expiry,
-            executionEnergyAmount: Energy.create(
-                handler.getBaseEnergyCost({ ...payload.value, maxContractExecutionEnergy })
-            ),
+            executionEnergyAmount: Energy.create(handler.getBaseEnergyCost({ ...payload, maxContractExecutionEnergy })),
         },
         payload
     );
@@ -419,9 +418,7 @@ export function updateContract(
             sender: sender,
             nonce: nonce,
             expiry: expiry,
-            executionEnergyAmount: Energy.create(
-                handler.getBaseEnergyCost({ ...payload.value, maxContractExecutionEnergy })
-            ),
+            executionEnergyAmount: Energy.create(handler.getBaseEnergyCost({ ...payload, maxContractExecutionEnergy })),
         },
         payload
     );
@@ -486,7 +483,7 @@ export async function sign(transaction: Transaction, signer: AccountSigner): Pro
  */
 export function getAccountTransactionHash(signedTransaction: Signed): Uint8Array {
     const serializedAccountTransaction = AccountTransactionV0.serialize(signedTransaction);
-    return sha256([serializedAccountTransaction]);
+    return Uint8Array.from(sha256([serializedAccountTransaction]));
 }
 
 export function serializeBlockItem(signedTransaction: Signed): Uint8Array {

@@ -412,7 +412,7 @@ class ContractBase<E extends string = string, V extends string = string> {
             sender: senderAddress,
         };
 
-        const transaction = Transaction.updateContract(header, { ...payload, maxContractExecutionEnergy: energy });
+        const transaction = Transaction.updateContract(header, payload, energy);
         const signed = await Transaction.sign(transaction, signer);
         return this.grpcClient.sendSignedTransaction(signed);
     }

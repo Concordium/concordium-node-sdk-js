@@ -96,7 +96,7 @@ export function serialize(transaction: Transaction): Uint8Array {
     const signature = serializeAccountTransactionSignature(transaction.signature);
     const payload = Payload.serialize(transaction.payload);
     const header = serializeHeader(transaction.header);
-    return Buffer.concat([signature, header, payload]);
+    return Uint8Array.from(Buffer.concat([signature, header, payload]));
 }
 
 export function deserialize(value: Cursor | ArrayBuffer): Transaction {
@@ -115,7 +115,7 @@ export function deserialize(value: Cursor | ArrayBuffer): Transaction {
 
 export function serializeBlockItem(transaction: Transaction): Uint8Array {
     const blockItemKind = encodeWord8(BlockItemKind.AccountTransactionKind);
-    return Buffer.concat([blockItemKind, serialize(transaction)]);
+    return Uint8Array.from(Buffer.concat([blockItemKind, serialize(transaction)]));
 }
 
 // Account address (32 bytes), nonce (8 bytes), energy (8 bytes), payload size (4 bytes), expiry (8 bytes);
@@ -150,7 +150,7 @@ export function calculateEnergyCost(
  */
 export function getAccountTransactionHash(transaction: Transaction): Uint8Array {
     const serializedAccountTransaction = serialize(transaction);
-    return sha256([serializedAccountTransaction]);
+    return Uint8Array.from(sha256([serializedAccountTransaction]));
 }
 
 /**
@@ -166,7 +166,7 @@ export type Unsigned = Omit<Transaction, 'signature'>;
 export function signDigest(transaction: Unsigned): Uint8Array {
     const serializedHeader = serializeHeader(transaction.header);
     const serializedPayload = Payload.serialize(transaction.payload);
-    return sha256([serializedHeader, serializedPayload]);
+    return Uint8Array.from(sha256([serializedHeader, serializedPayload]));
 }
 
 /**

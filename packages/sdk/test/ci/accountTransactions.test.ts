@@ -141,7 +141,7 @@ test('SimpleTransferWithMemoPayload serializes to JSON correctly', async () => {
 test('DeployModulePayload serializes to JSON correctly', async () => {
     let payload: DeployModulePayload = {
         version: 1,
-        source: Buffer.from('test', 'utf8'),
+        source: Uint8Array.from(Buffer.from('test', 'utf8')),
     };
     const handler = new DeployModuleHandler();
     let json = handler.toJSON(payload);
@@ -155,7 +155,7 @@ test('DeployModulePayload serializes to JSON correctly', async () => {
 
     // Test no version
     payload = {
-        source: Buffer.from('test2', 'utf8'),
+        source: Uint8Array.from(Buffer.from('test2', 'utf8')),
     };
     json = handler.toJSON(payload);
     expect(handler.fromJSON(JSONBig.parse(JSONBig.stringify(json)))).toEqual(payload);

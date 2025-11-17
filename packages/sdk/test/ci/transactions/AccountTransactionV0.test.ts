@@ -43,6 +43,14 @@ describe('AccountTransactionV0', () => {
             const deserialized = AccountTransactionV0.deserialize(serialized);
             expect(deserialized).toEqual(transaction);
         });
+
+        test('serialize produces fixed hex output', () => {
+            const serialized = AccountTransactionV0.serialize(transaction);
+            const hex = Buffer.from(serialized).toString('hex');
+            expect(hex).toBe(
+                '010001000080000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000049176df18432686c93c61ca89dafbe1cb383bfe6eb3a301ef8907f852643d98d000000000000000100000000000001f400000029000000006553f10003d46bbc5fbbbbabb07752d4acb86892d7a2479856d414182f703e21065dad046d00000000000f4240'
+            );
+        });
     });
 
     describe('toJSON/fromJSON', () => {
@@ -66,6 +74,12 @@ describe('AccountTransactionV0', () => {
         test('produces 32-byte hash', () => {
             const hash = AccountTransactionV0.getAccountTransactionHash(transaction);
             expect(hash.length).toBe(32);
+        });
+
+        test('produces fixed hash output', () => {
+            const hash = AccountTransactionV0.getAccountTransactionHash(transaction);
+            const hex = Buffer.from(hash).toString('hex');
+            expect(hex).toBe('a147330fb4636aa5727cb7228e921ace5a2aa95dfeecc633a08e7f90fd67035a');
         });
 
         test('same transaction produces same hash', () => {
@@ -109,6 +123,12 @@ describe('AccountTransactionV0', () => {
         test('produces 32-byte digest', () => {
             const digest = AccountTransactionV0.signDigest(unsigned);
             expect(digest.length).toBe(32);
+        });
+
+        test('produces fixed digest output', () => {
+            const digest = AccountTransactionV0.signDigest(unsigned);
+            const hex = Buffer.from(digest).toString('hex');
+            expect(hex).toBe('ffd5ec061468af0dac205c22beb6de634f0cefaf1259d5198958b20d467449e4');
         });
 
         test('same unsigned transaction produces same digest', () => {

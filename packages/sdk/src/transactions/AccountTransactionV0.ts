@@ -2,7 +2,7 @@ import { deserializeAccountTransactionSignature } from '../deserialization.js';
 import { Cursor } from '../deserializationHelpers.js';
 import { constantA, constantB } from '../energyCost.js';
 import { sha256 } from '../hash.js';
-import { Payload, Transaction } from '../index.js';
+import { Base58String, Payload, Transaction } from '../index.js';
 import { serializeAccountTransactionSignature } from '../serialization.js';
 import { encodeWord8, encodeWord32, encodeWord64 } from '../serializationHelpers.js';
 import { AccountSigner } from '../signHelpers.js';
@@ -14,22 +14,50 @@ import { AccountAddress, Energy, SequenceNumber, TransactionExpiry } from '../ty
  */
 export type Header = {
     /** account address that is source of this transaction */
-    sender: AccountAddress.Type;
+    readonly sender: AccountAddress.Type;
     /**
      * the nonce for the transaction, usually acquired by
      * getting the next account nonce from the node
      */
-    nonce: SequenceNumber.Type;
+    readonly nonce: SequenceNumber.Type;
     /** expiration of the transaction */
-    expiry: TransactionExpiry.Type;
+    readonly expiry: TransactionExpiry.Type;
     /**
      * The energy limit for the transaction, including energy spent on signature verification, parsing
      * the header, and transaction execution.
      */
-    energyAmount: Energy.Type;
+    readonly energyAmount: Energy.Type;
     /** payload size */
-    payloadSize: number;
+    readonly payloadSize: number;
 };
+
+type HeaderJSON = {
+    readonly sender: Base58String;
+    readonly nonce: bigint;
+    readonly expiry: number;
+    readonly energyAmount: bigint;
+    readonly payloadSize: number;
+};
+
+function headerToJSON(header: Header): HeaderJSON {
+    return {
+        sender: header.sender.toJSON(),
+        nonce: header.nonce.toJSON(),
+        expiry: header.expiry.toJSON(),
+        energyAmount: header.energyAmount.value,
+        payloadSize: header.payloadSize,
+    };
+}
+
+function headerFromJSON(json: HeaderJSON): Header {
+    return {
+        sender: AccountAddress.fromBase58(json.sender),
+        nonce: SequenceNumber.fromJSON(json.nonce),
+        expiry: TransactionExpiry.fromJSON(json.expiry),
+        energyAmount: Energy.create(json.energyAmount),
+        payloadSize: json.payloadSize,
+    };
+}
 
 /**
  * Signature type for account transactions.
@@ -63,8 +91,37 @@ type Transaction = {
  */
 export type Type = Transaction;
 
+export type JSON = {
+    readonly version: 0;
+    readonly header: HeaderJSON;
+    readonly payload: Payload.JSON;
+    readonly signature: Signature;
+};
+
 /**
- * Serializes a version 0 transaction header to bytes.
+ * Converts a version 0 account transaction to its intermediary JSON serializable representation.
+ *
+ * @param transaction the transaction to convert
+ * @returns the JSON representation of the transaction
+ */
+export function toJSON(transaction: Transaction): JSON {
+    return { ...transaction, header: headerToJSON(transaction.header), payload: Payload.toJSON(transaction.payload) };
+}
+
+/**
+ * Converts a intermediary JSON serializable representation created with {@linkcode toJSON} back to a
+ * version 0 account transaction.
+ *
+ * @param json the JSON to convert
+ * @returns the transaction
+ */
+export function fromJSON(json: JSON): Transaction {
+    return { ...json, header: headerFromJSON(json.header), payload: Payload.fromJSON(json.payload) };
+}
+
+/**
+ * Serializes a version 0 transaction header to the encoding expected by concordium nodes.
+ *
  * @param header the transaction header to serialize
  * @returns the serialized header as a byte array
  */
@@ -92,6 +149,12 @@ function deserializeHeader(value: Cursor): Header {
     };
 }
 
+/**
+ * Serializes a version 0 account transaction to the encoding expected by concordium nodes.
+ *
+ * @param transaction the transaction to serialize
+ * @returns the serialized transaction as a byte array
+ */
 export function serialize(transaction: Transaction): Uint8Array {
     const signature = serializeAccountTransactionSignature(transaction.signature);
     const payload = Payload.serialize(transaction.payload);
@@ -99,6 +162,14 @@ export function serialize(transaction: Transaction): Uint8Array {
     return Uint8Array.from(Buffer.concat([signature, header, payload]));
 }
 
+/**
+ * Deserializes a version 0 account transaction from the encoding expected by concordium nodes.
+ *
+ * @param value the bytes to deserialize, either as a Cursor or ArrayBuffer
+ *
+ * @returns the deserialized transaction
+ * @throws if the buffer is not fully consumed during deserialization
+ */
 export function deserialize(value: Cursor | ArrayBuffer): Transaction {
     const isRawBuffer = value instanceof Cursor;
     const cursor = isRawBuffer ? value : Cursor.fromBuffer(value);
@@ -113,6 +184,12 @@ export function deserialize(value: Cursor | ArrayBuffer): Transaction {
     return { version: 0, signature, header, payload };
 }
 
+/**
+ * Serializes a version 0 account transaction as a block item for submission to the chain.
+ *
+ * @param transaction the transaction to serialize
+ * @returns the serialized block item as a byte array with block item kind prefix
+ */
 export function serializeBlockItem(transaction: Transaction): Uint8Array {
     const blockItemKind = encodeWord8(BlockItemKind.AccountTransactionKind);
     return Uint8Array.from(Buffer.concat([blockItemKind, serialize(transaction)]));
@@ -126,9 +203,11 @@ const ACCOUNT_TRANSACTION_HEADER_SIZE = BigInt(32 + 8 + 8 + 4 + 8);
  * A * signatureCount + B * size + C_t, where C_t is a transaction specific cost.
  *
  * The transaction specific cost can be found at https://github.com/Concordium/concordium-base/blob/main/haskell-src/Concordium/Cost.hs.
+ *
  * @param signatureCount number of signatures for the transaction
  * @param payload the transaction payload
  * @param transactionSpecificCost a transaction specific cost
+ *
  * @returns the energy cost for the transaction, to be set in the transaction header
  */
 export function calculateEnergyCost(
@@ -145,6 +224,7 @@ export function calculateEnergyCost(
 
 /**
  * Gets the transaction hash that is used to look up the status of a transaction.
+ *
  * @param transaction the transaction to hash
  * @returns the sha256 hash of the serialized block item kind, signatures, header, type and payload
  */
@@ -160,6 +240,7 @@ export type Unsigned = Omit<Transaction, 'signature'>;
 
 /**
  * Returns the digest of the transaction that has to be signed.
+ *
  * @param transaction the transaction to hash
  * @returns the sha256 hash on the serialized header, type and payload
  */
@@ -173,6 +254,7 @@ export function signDigest(transaction: Unsigned): Uint8Array {
  * Signs an unsigned version 0 account transaction using the provided signer.
  * @param transaction the unsigned transaction to sign
  * @param signer the account signer to use for signing
+ *
  * @returns a promise resolving to the signed transaction
  */
 export async function sign(transaction: Unsigned, signer: AccountSigner): Promise<Transaction> {

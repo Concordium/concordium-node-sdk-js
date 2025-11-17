@@ -85,7 +85,7 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
         nonce: nextNonce.nonce,
         sender,
     };
-    const amount = CcdAmount.fromMicroCcd(cli.flags.amount);
+    const amount = CcdAmount.fromCcd(cli.flags.amount);
     const payload: SimpleTransferPayload | SimpleTransferWithMemoPayload = cli.flags.memo
         ? { memo: new DataBlob(Buffer.from(cli.flags.memo, 'hex')), amount, toAddress }
         : { toAddress, amount };

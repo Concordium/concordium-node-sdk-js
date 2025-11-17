@@ -77,6 +77,17 @@ function headerFromJSON(json: HeaderJSON): Header {
     );
 }
 
+/**
+ * Creates a transaction header.
+ *
+ * @param sender the account address of the sender
+ * @param nonce the account nonce
+ * @param expiry the transaction expiry
+ * @param executionEnergyAmount the base energy amount for transaction execution
+ * @param numSignatures optional number of signatures
+ *
+ * @returns a transaction header
+ */
 export function header(
     sender: AccountAddress.Type,
     nonce: SequenceNumber.Type,
@@ -122,14 +133,30 @@ class TransactionBuilder<P extends Payload.Type = Payload.Type> implements Trans
     }
 }
 
+/**
+ * Creates a transaction builder from an existing transaction.
+ * @param transaction the transaction to wrap
+ * @returns a transaction builder
+ */
 export function builder<P extends Payload.Type = Payload.Type>(transaction: Transaction<P>): TransactionBuilder<P> {
     return new TransactionBuilder(transaction.header, transaction.payload);
 }
 
+/**
+ * Converts a transaction to its intermediary JSON serializable representation.
+ * @param header the transaction header
+ * @param payload the transaction payload
+ * @returns the JSON representation
+ */
 export function toJSON({ header, payload }: Transaction) {
     return { header: headerToJSON(header), payload: Payload.toJSON(payload) };
 }
 
+/**
+ * Converts an intermediary JSON serializable representation created with {@linkcode toJSON} to a transaction.
+ * @param json the JSON to convert
+ * @returns the transaction
+ */
 export function fromJSON(json: ReturnType<typeof toJSON>): Transaction {
     return { header: headerFromJSON(json.header), payload: Payload.fromJSON(json.payload) };
 }
@@ -440,6 +467,12 @@ export function updateContract(
 }
 
 // TODO: factor in v1 transaction
+/**
+ * Calculates the total energy cost for a transaction including signature and size costs.
+ * @param header the transaction header with execution energy and number of signatures
+ * @param payload the transaction payload
+ * @returns the total energy cost
+ */
 export function getEnergyCost({
     header: { numSignatures = 1n, executionEnergyAmount },
     payload,
@@ -501,6 +534,11 @@ export function getAccountTransactionHash(signedTransaction: Signed): Uint8Array
     return Uint8Array.from(sha256([serializedAccountTransaction]));
 }
 
+/**
+ * Serializes a signed transaction as a block item for submission to the chain.
+ * @param signedTransaction the signed transaction to serialize
+ * @returns the serialized block item as a byte array
+ */
 export function serializeBlockItem(signedTransaction: Signed): Uint8Array {
     return AccountTransactionV0.serializeBlockItem(signedTransaction);
 }

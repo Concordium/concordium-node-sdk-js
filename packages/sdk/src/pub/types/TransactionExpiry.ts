@@ -7,6 +7,7 @@ export {
     toTypedJSON,
     fromJSON,
     toUnwrappedJSON,
+    fromUnwrappedJSON,
     fromTypedJSON,
     futureMinutes,
     fromSerializable,

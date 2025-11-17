@@ -61,6 +61,15 @@ export function toUnwrappedJSON(value: Type): bigint {
 }
 
 /**
+ * Converts the intermediary representation created from {@linkcode toUnwrappedJSON} to a typed instance.
+ * @param json - The JSON value to parse
+ * @returns The corresponding typed instance
+ */
+export function fromUnwrappedJSON(json: bigint | string | number): TransactionExpiry {
+    return fromJSON(json);
+}
+
+/**
  * Representation of a transaction expiry date.
  */
 export type Type = TransactionExpiry;

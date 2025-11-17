@@ -29,17 +29,42 @@ import {
 } from '../index.js';
 import { serializeAccountTransactionType } from '../serialization.js';
 
+/**
+ * A simple transfer transaction payload.
+ */
 export type Transfer = SimpleTransferPayload & {
     readonly type: AccountTransactionType.Transfer;
 };
 
+/**
+ * A transfer transaction payload with a memo.
+ */
 export type TransferWithMemo = SimpleTransferWithMemoPayload & {
     readonly type: AccountTransactionType.TransferWithMemo;
 };
 
+/**
+ * Creates a transfer payload.
+ * @param payload the transfer payload
+ * @returns a transfer payload
+ */
 export function transfer(payload: SimpleTransferPayload): Transfer;
+
+/**
+ * Creates a transfer payload with memo.
+ * @param payload the transfer payload
+ * @param memo the memo to attach
+ * @returns a transfer with memo payload
+ */
 export function transfer(payload: SimpleTransferPayload, memo: DataBlob): TransferWithMemo;
+
+/**
+ * Creates a transfer payload with memo.
+ * @param payload the transfer with memo payload
+ * @returns a transfer with memo payload
+ */
 export function transfer(payload: SimpleTransferWithMemoPayload): TransferWithMemo;
+
 export function transfer(
     payload: SimpleTransferPayload | SimpleTransferWithMemoPayload,
     memo: DataBlob = (payload as SimpleTransferWithMemoPayload).memo
@@ -69,10 +94,18 @@ function transferWithMemoFromJSON(json: ReturnType<typeof transferWithMemoToJSON
     return { type: AccountTransactionType.TransferWithMemo, ...handler.fromJSON(json) };
 }
 
+/**
+ * A deploy module transaction payload.
+ */
 export type DeployModule = DeployModulePayload & {
     readonly type: AccountTransactionType.DeployModule;
 };
 
+/**
+ * Creates a deploy module payload.
+ * @param payload the module deployment payload
+ * @returns a deploy module payload
+ */
 export function deployModule(payload: DeployModulePayload): DeployModule {
     return { type: AccountTransactionType.DeployModule, ...payload };
 }
@@ -87,10 +120,18 @@ function deployModuleFromJSON(json: ReturnType<typeof deployModuleToJSON>): Depl
     return { type: AccountTransactionType.DeployModule, ...handler.fromJSON(json) };
 }
 
+/**
+ * An init contract transaction payload.
+ */
 export type InitContract = InitContractPayload & {
     readonly type: AccountTransactionType.InitContract;
 };
 
+/**
+ * Creates an init contract payload.
+ * @param payload the contract initialization payload
+ * @returns an init contract payload
+ */
 export function initContract(payload: InitContractPayload): InitContract {
     return { type: AccountTransactionType.InitContract, ...payload };
 }
@@ -105,10 +146,18 @@ function initContractFromJSON(json: ReturnType<typeof initContractToJSON>): Init
     return { type: AccountTransactionType.InitContract, ...handler.fromJSON(json) };
 }
 
+/**
+ * An update contract transaction payload.
+ */
 export type UpdateContract = UpdateContractPayload & {
     readonly type: AccountTransactionType.Update;
 };
 
+/**
+ * Creates an update contract payload.
+ * @param payload the contract update payload
+ * @returns an update contract payload
+ */
 export function updateContract(payload: UpdateContractPayload): UpdateContract {
     return { type: AccountTransactionType.Update, ...payload };
 }
@@ -123,10 +172,18 @@ function updateContractFromJSON(json: ReturnType<typeof updateContractToJSON>): 
     return { type: AccountTransactionType.Update, ...handler.fromJSON(json) };
 }
 
+/**
+ * An update credentials transaction payload.
+ */
 export type UpdateCredentials = UpdateCredentialsPayload & {
     readonly type: AccountTransactionType.UpdateCredentials;
 };
 
+/**
+ * Creates an update credentials payload.
+ * @param payload the credentials update payload
+ * @returns an update credentials payload
+ */
 export function updateCredentials(payload: UpdateCredentialsPayload): UpdateCredentials {
     return { type: AccountTransactionType.UpdateCredentials, ...payload };
 }
@@ -141,10 +198,18 @@ function updateCredentialsFromJSON(json: ReturnType<typeof updateCredentialsToJS
     return { type: AccountTransactionType.UpdateCredentials, ...handler.fromJSON(json) };
 }
 
+/**
+ * A register data transaction payload.
+ */
 export type RegisterData = RegisterDataPayload & {
     readonly type: AccountTransactionType.RegisterData;
 };
 
+/**
+ * Creates a register data payload.
+ * @param payload the data registration payload
+ * @returns a register data payload
+ */
 export function registerData(payload: RegisterDataPayload): RegisterData {
     return { type: AccountTransactionType.RegisterData, ...payload };
 }
@@ -159,10 +224,18 @@ function registerDataFromJSON(json: ReturnType<typeof registerDataToJSON>): Regi
     return { type: AccountTransactionType.RegisterData, ...handler.fromJSON(json) };
 }
 
+/**
+ * A configure delegation transaction payload.
+ */
 export type ConfigureDelegation = ConfigureDelegationPayload & {
     readonly type: AccountTransactionType.ConfigureDelegation;
 };
 
+/**
+ * Creates a configure delegation payload.
+ * @param payload the delegation configuration payload
+ * @returns a configure delegation payload
+ */
 export function configureDelegation(payload: ConfigureDelegationPayload): ConfigureDelegation {
     return { type: AccountTransactionType.ConfigureDelegation, ...payload };
 }
@@ -177,10 +250,18 @@ function configureDelegationFromJSON(json: ReturnType<typeof configureDelegation
     return { type: AccountTransactionType.ConfigureDelegation, ...handler.fromJSON(json) };
 }
 
+/**
+ * A configure validator (baker) transaction payload.
+ */
 export type ConfigureValidator = ConfigureBakerPayload & {
     readonly type: AccountTransactionType.ConfigureBaker;
 };
 
+/**
+ * Creates a configure validator (baker) payload.
+ * @param payload the validator configuration payload
+ * @returns a configure validator payload
+ */
 export function configureValidator(payload: ConfigureBakerPayload): ConfigureValidator {
     return { type: AccountTransactionType.ConfigureBaker, ...payload };
 }
@@ -195,10 +276,18 @@ function configureValidatorFromJSON(json: ReturnType<typeof configureValidatorTo
     return { type: AccountTransactionType.ConfigureBaker, ...handler.fromJSON(json) };
 }
 
+/**
+ * A token update transaction payload.
+ */
 export type TokenUpdate = TokenUpdatePayload & {
     readonly type: AccountTransactionType.TokenUpdate;
 };
 
+/**
+ * Creates a token update payload.
+ * @param payload the token update payload
+ * @returns a token update payload
+ */
 export function tokenUpdate(payload: TokenUpdatePayload): TokenUpdate {
     return { type: AccountTransactionType.TokenUpdate, ...payload };
 }
@@ -225,8 +314,23 @@ type Payload =
     | ConfigureValidator
     | TokenUpdate;
 
+/**
+ * Union type of all supported transaction payloads.
+ */
 export type Type = Payload;
 
+/**
+ * JSON representation of a transaction payload.
+ */
+export type JSON = ReturnType<typeof toJSON>;
+
+/**
+ * Creates a typed transaction payload from a transaction type and raw payload data.
+ * @param type the transaction type
+ * @param payload the raw transaction payload
+ * @returns the typed transaction payload
+ * @throws if the transaction type is not supported
+ */
 export function create(type: AccountTransactionType, payload: AccountTransactionPayload): Payload {
     switch (type) {
         case AccountTransactionType.Transfer:
@@ -254,6 +358,16 @@ export function create(type: AccountTransactionType, payload: AccountTransaction
     }
 }
 
+/**
+ * Converts a transaction payload to its intermediary JSON representation.
+ *
+ * Please note that `bigint`s are used internally, and representing these must be handled by the caller
+ * e.g. by using a tool such as `json-bigint`.
+ *
+ * @param payload the payload to convert
+ * @returns the JSON representation
+ * @throws if the transaction type is not supported
+ */
 export function toJSON(payload: Payload) {
     switch (payload.type) {
         case AccountTransactionType.Transfer:
@@ -281,6 +395,13 @@ export function toJSON(payload: Payload) {
     }
 }
 
+/**
+ * Converts a intermediary JSON representation created from {@linkcode toJSON} to a transaction payload.
+ *
+ * @param json the JSON to convert
+ * @returns the transaction payload
+ * @throws if the JSON is invalid or the transaction type is not supported
+ */
 export function fromJSON(json: unknown): Payload {
     if (typeof json !== 'object' || json === null) throw new Error('Expected object');
     if (!('type' in json) || typeof json.type !== 'number' || !isAccountTransactionType(json.type))
@@ -312,6 +433,11 @@ export function fromJSON(json: unknown): Payload {
     }
 }
 
+/**
+ * Serializes a transaction payload to the encoding expected by concordium nodes.
+ * @param payload the payload to serialize
+ * @returns the serialized payload as a byte array
+ */
 export function serialize(payload: Payload): Uint8Array {
     const serializedType = serializeAccountTransactionType(payload.type);
 
@@ -321,10 +447,21 @@ export function serialize(payload: Payload): Uint8Array {
     return Uint8Array.from(Buffer.concat([serializedType, serializedPayload]));
 }
 
+/**
+ * Returns the size in bytes of a serialized transaction payload.
+ * @param payload the payload to measure
+ * @returns the size in bytes
+ */
 export function sizeOf(payload: Payload): number {
     return serialize(payload).length;
 }
 
+/**
+ * Deserializes a transaction payload from the byte encoding used by concordium nodes.
+ * @param value the bytes to deserialize, either as a Cursor or ArrayBuffer
+ * @returns the deserialized payload
+ * @throws if the transaction type is invalid or buffer is not fully consumed
+ */
 export function deserialize(value: Cursor | ArrayBuffer): Payload {
     const isRawBuffer = value instanceof Cursor;
     const cursor = isRawBuffer ? value : Cursor.fromBuffer(value);

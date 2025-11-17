@@ -224,6 +224,37 @@ export function fromLegacyAccountTransaction({ type, header, payload }: AccountT
     return create(type, header, payload);
 }
 
+/**
+ * Converts a {@linkcode Transaction} to the legacy format.
+ *
+ * @param transaction - the transaction details to convert
+ * @returns the legacy {@linkcode AccountTransaction} format
+ */
+export function toLegacyAccountTransaction(transaction: Transaction): AccountTransaction {
+    const {
+        header: { numSignatures, executionEnergyAmount, ...header },
+        payload: { type, ...payload },
+    } = transaction;
+
+    switch (type) {
+        case AccountTransactionType.InitContract:
+        case AccountTransactionType.Update:
+            return {
+                header,
+                type,
+                payload: { ...payload, maxContractExecutionEnergy: executionEnergyAmount },
+            } as AccountTransaction<
+                AccountTransactionType.Update | AccountTransactionType.InitContract,
+                InitContractInput | UpdateContractInput
+            >;
+        default:
+            return { header, type, payload } as AccountTransaction<
+                Exclude<AccountTransactionType, AccountTransactionType.Update | AccountTransactionType.InitContract>,
+                Exclude<AccountTransactionInput, InitContractInput | UpdateContractInput>
+            >;
+    }
+}
+
 const isPayloadWithType = <P extends Payload.Type>(payload: P | Omit<P, 'type'>): payload is P =>
     (payload as P).type !== undefined;
 

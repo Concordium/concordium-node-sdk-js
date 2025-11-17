@@ -56,17 +56,26 @@ describe('AccountTransactionV0', () => {
     describe('toJSON/fromJSON', () => {
         test('roundtrip for transfer transaction', () => {
             const json = AccountTransactionV0.toJSON(transaction);
-            const jsonString = JSONBig.stringify(json);
-            const parsed = JSONBig.parse(jsonString);
-            const deserialized = AccountTransactionV0.fromJSON(parsed);
-            expect(deserialized).toEqual(transaction);
+            const expectedHeader = {
+                sender: '3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt',
+                nonce: 1n,
+                expiry: 1700000000,
+                energyAmount: 500n,
+                payloadSize: Payload.sizeOf(transferPayload),
+            };
+            expect(json.header).toEqual(expectedHeader);
+
+            const roundtrip = AccountTransactionV0.fromJSON(JSONBig.parse(JSONBig.stringify(json)));
+            expect(roundtrip).toEqual(transaction);
         });
     });
 
     describe('serializeBlockItem', () => {
         test('produces serialized block item with correct prefix', () => {
             const blockItem = AccountTransactionV0.serializeBlockItem(transaction);
-            expect(blockItem[0]).toBe(0);
+            expect(Buffer.from(blockItem).toString('hex')).toBe(
+                '00010001000080000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000049176df18432686c93c61ca89dafbe1cb383bfe6eb3a301ef8907f852643d98d000000000000000100000000000001f400000029000000006553f10003d46bbc5fbbbbabb07752d4acb86892d7a2479856d414182f703e21065dad046d00000000000f4240'
+            );
         });
     });
 

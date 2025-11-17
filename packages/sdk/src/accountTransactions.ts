@@ -251,7 +251,7 @@ export class DeployModuleHandler
 
     fromJSON(json: DeployModulePayloadJSON): DeployModulePayload {
         return {
-            source: Buffer.from(json.source, 'hex'),
+            source: Uint8Array.from(Buffer.from(json.source, 'hex')),
             version: json.version !== undefined ? Number(json.version) : undefined,
         };
     }

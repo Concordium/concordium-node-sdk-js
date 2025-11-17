@@ -113,13 +113,7 @@ describe('Payload', () => {
             const jsonString = jsonBig.stringify(json);
             const parsed = jsonBig.parse(jsonString);
             const deserialized = Payload.fromJSON(parsed);
-            expect(deserialized.type).toEqual(deployModulePayload.type);
-            if ('version' in deserialized && 'version' in deployModulePayload) {
-                expect(deserialized.version).toEqual(deployModulePayload.version);
-            }
-            if ('source' in deserialized && 'source' in deployModulePayload) {
-                expect(Buffer.from(deserialized.source).equals(Buffer.from(deployModulePayload.source))).toBe(true);
-            }
+            expect(deserialized).toEqual(deployModulePayload);
         });
 
         test('serialize produces fixed hex output', () => {

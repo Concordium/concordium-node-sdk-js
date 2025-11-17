@@ -385,11 +385,14 @@ describe('Transaction', () => {
             }).multiSig(3);
 
             const json = Transaction.toJSON(tx);
-            expect(typeof json.header.sender).toBe('string');
-            expect(typeof json.header.nonce).toBe('bigint');
-            expect(typeof json.header.expiry).toBe('number');
-            expect(typeof json.header.executionEnergyAmount).toBe('bigint');
-            expect(typeof json.header.numSignatures).toBe('number');
+            const expectedHeader = {
+                sender: '3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt',
+                nonce: 1n,
+                expiry: 1700000000,
+                executionEnergyAmount: 300n,
+                numSignatures: 3,
+            };
+            expect(json.header).toEqual(expectedHeader);
         });
     });
 });

@@ -5,6 +5,7 @@ export {
     JSON_DISCRIMINATOR,
     Serializable,
     toTypedJSON,
+    fromJSON,
     toUnwrappedJSON,
     fromTypedJSON,
     futureMinutes,

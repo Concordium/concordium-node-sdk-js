@@ -43,6 +43,15 @@ class TransactionExpiry {
 }
 
 /**
+ * Converts a JSON representation of a transaction expiry
+ * @param value - JSON representation to convert
+ * @returns Transaction expiry
+ */
+export function fromJSON(value: number | bigint | string): TransactionExpiry {
+    return new TransactionExpiry(BigInt(value));
+}
+
+/**
  * Unwraps {@linkcode Type} value
  * @param value value to unwrap.
  * @returns the unwrapped {@linkcode bigint} value

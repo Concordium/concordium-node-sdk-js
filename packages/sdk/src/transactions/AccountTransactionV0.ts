@@ -43,19 +43,19 @@ type Transaction = {
     /**
      * Transaction version discriminant;
      */
-    version: 0;
+    readonly version: 0;
     /**
      * The transaction header containing metadata for the transaction
      */
-    header: Header;
+    readonly header: Header;
     /**
      * The transaction payload.
      */
-    payload: Payload.Type;
+    readonly payload: Payload.Type;
     /**
      * The signature by the transaction sender on the transaction
      */
-    signature: Signature;
+    readonly signature: Signature;
 };
 
 /**

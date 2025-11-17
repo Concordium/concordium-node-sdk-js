@@ -18,6 +18,8 @@
 - `ConcordiumGRPCClient.sendSignedTransaction` to support submitting transactions created with the new `Transaction`
   API.
   - Deprecated `ConcordiumGRPCClient.sendAccountTransaction`.
+- Deprecated `AccountTransactionHandler` implementations and the dynamic `getAccountTransactionHandler` function in
+  favor of the new `Transaction` API.
 
 ### Breaking changes
 

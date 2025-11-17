@@ -4,15 +4,17 @@ import {
     SendTransactionUpdateContractPayload,
 } from '@concordium/browser-wallet-api-helpers';
 import {
-    AccountTransactionPayload,
+    AccountTransactionInput,
     AccountTransactionSignature,
     AccountTransactionType,
     BigintFormatType,
     ContractName,
     CredentialStatements,
     EntrypointName,
+    InitContractInput,
     InitContractPayload,
     Parameter,
+    UpdateContractInput,
     UpdateContractPayload,
     VerifiablePresentation,
     getTransactionKindString,
@@ -163,7 +165,7 @@ function isSignAndSendTransactionError(obj: any): obj is SignAndSendTransactionE
     return 'code' in obj && 'message' in obj;
 }
 
-function accountTransactionPayloadToJson(data: AccountTransactionPayload) {
+function accountTransactionPayloadToJson(data: AccountTransactionInput) {
     return jsonUnwrapStringify(data, BigintFormatType.Integer, (_key, value) => {
         if (value?.type === 'Buffer') {
             // Buffer has already been transformed by its 'toJSON' method.
@@ -253,7 +255,7 @@ function serializePayloadParameters(
     type: AccountTransactionType,
     payload: SendTransactionPayload,
     typedParams: TypedSmartContractParameters | undefined
-): AccountTransactionPayload {
+): AccountTransactionInput {
     switch (type) {
         case AccountTransactionType.InitContract: {
             const initContractPayload = payload as InitContractPayload;
@@ -263,7 +265,7 @@ function serializePayloadParameters(
             return {
                 ...payload,
                 param: serializeInitContractParam(initContractPayload.initName, typedParams),
-            } as InitContractPayload;
+            } as InitContractInput;
         }
         case AccountTransactionType.Update: {
             const updateContractPayload = payload as UpdateContractPayload;
@@ -278,7 +280,7 @@ function serializePayloadParameters(
                     EntrypointName.fromString(entrypointName),
                     typedParams
                 ),
-            } as UpdateContractPayload;
+            } as UpdateContractInput;
         }
         default: {
             if (typedParams) {

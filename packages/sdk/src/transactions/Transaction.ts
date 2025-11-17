@@ -496,19 +496,9 @@ export type Signed = AccountTransactionV0.Type;
  */
 // TODO: factor in v1 transaction
 export async function sign(transaction: Transaction, signer: AccountSigner): Promise<Signed> {
-    const {
-        expiry,
-        sender,
-        nonce,
-        executionEnergyAmount,
-        numSignatures = signer.getSignatureCount(),
-    } = transaction.header;
-    const energyAmount = AccountTransactionV0.calculateEnergyCost(
-        numSignatures,
-        transaction.payload,
-        executionEnergyAmount
-    );
+    const { expiry, sender, nonce, numSignatures = signer.getSignatureCount() } = transaction.header;
 
+    const energyAmount = getEnergyCost({ ...transaction, header: { ...transaction.header, numSignatures } });
     const header: AccountTransactionV0.Header = {
         expiry,
         sender,

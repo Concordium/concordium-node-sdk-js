@@ -263,17 +263,6 @@ const isWithMemo = (
 ): payload is SimpleTransferWithMemoPayload => (payload as SimpleTransferWithMemoPayload).memo !== undefined;
 
 /**
- * Creates a transfer transaction
- * @param metadata transaction metadata including sender, nonce, and optional expiry (defaults to 5 minutes)
- * @param payload the transfer payload containing recipient and amount
- * @returns a transfer transaction
- */
-export function transfer(
-    metadata: Metadata,
-    payload: SimpleTransferPayload | Payload.Transfer
-): TransactionBuilder<Payload.Transfer>;
-
-/**
  * Creates a transfer transaction with memo
  * @param metadata transaction metadata including sender, nonce, and optional expiry (defaults to 5 minutes)
  * @param payload the transfer payload containing recipient and amount and memo
@@ -296,6 +285,17 @@ export function transfer(
     payload: SimpleTransferPayload,
     memo: DataBlob
 ): TransactionBuilder<Payload.TransferWithMemo>;
+
+/**
+ * Creates a transfer transaction
+ * @param metadata transaction metadata including sender, nonce, and optional expiry (defaults to 5 minutes)
+ * @param payload the transfer payload containing recipient and amount
+ * @returns a transfer transaction
+ */
+export function transfer(
+    metadata: Metadata,
+    payload: SimpleTransferPayload | Payload.Transfer
+): TransactionBuilder<Payload.Transfer>;
 
 export function transfer(
     metadata: Metadata,

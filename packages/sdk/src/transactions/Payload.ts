@@ -57,11 +57,11 @@ export type TransferWithMemo = SimpleTransferWithMemoPayload & {
 };
 
 /**
- * Creates a transfer payload.
- * @param payload the transfer payload
- * @returns a transfer payload
+ * Creates a transfer payload with memo.
+ * @param payload the transfer with memo payload
+ * @returns a transfer with memo payload
  */
-export function transfer(payload: SimpleTransferPayload): Transfer;
+export function transfer(payload: SimpleTransferWithMemoPayload): TransferWithMemo;
 
 /**
  * Creates a transfer payload with memo.
@@ -72,11 +72,11 @@ export function transfer(payload: SimpleTransferPayload): Transfer;
 export function transfer(payload: SimpleTransferPayload, memo: DataBlob): TransferWithMemo;
 
 /**
- * Creates a transfer payload with memo.
- * @param payload the transfer with memo payload
- * @returns a transfer with memo payload
+ * Creates a transfer payload.
+ * @param payload the transfer payload
+ * @returns a transfer payload
  */
-export function transfer(payload: SimpleTransferWithMemoPayload): TransferWithMemo;
+export function transfer(payload: SimpleTransferPayload): Transfer;
 
 export function transfer(
     payload: SimpleTransferPayload | SimpleTransferWithMemoPayload,
@@ -110,7 +110,7 @@ function transferWithMemoToJSON({
 
 function transferWithMemoFromJSON({ type, ...json }: ReturnType<typeof transferWithMemoToJSON>): TransferWithMemo {
     const handler = new SimpleTransferWithMemoHandler();
-    return { type: AccountTransactionType.TransferWithMemo, ...handler.fromJSON(json) };
+    return transfer(handler.fromJSON(json));
 }
 
 /**
@@ -139,7 +139,7 @@ function deployModuleToJSON({
 
 function deployModuleFromJSON({ type, ...json }: ReturnType<typeof deployModuleToJSON>): DeployModule {
     const handler = new DeployModuleHandler();
-    return { type: AccountTransactionType.DeployModule, ...handler.fromJSON(json) };
+    return deployModule(handler.fromJSON(json));
 }
 
 /**
@@ -168,7 +168,7 @@ function initContractToJSON({
 
 function initContractFromJSON({ type, ...json }: ReturnType<typeof initContractToJSON>): InitContract {
     const handler = new InitContractHandler();
-    return { type: AccountTransactionType.InitContract, ...handler.fromJSON(json) };
+    return initContract(handler.fromJSON(json));
 }
 
 /**
@@ -197,7 +197,7 @@ function updateContractToJSON({
 
 function updateContractFromJSON({ type, ...json }: ReturnType<typeof updateContractToJSON>): UpdateContract {
     const handler = new UpdateContractHandler();
-    return { type: AccountTransactionType.Update, ...handler.fromJSON(json) };
+    return updateContract(handler.fromJSON(json));
 }
 
 /**
@@ -226,7 +226,7 @@ function updateCredentialsToJSON({
 
 function updateCredentialsFromJSON({ type, ...json }: ReturnType<typeof updateCredentialsToJSON>): UpdateCredentials {
     const handler = new UpdateCredentialsHandler();
-    return { type: AccountTransactionType.UpdateCredentials, ...handler.fromJSON(json) };
+    return updateCredentials(handler.fromJSON(json));
 }
 
 /**
@@ -255,7 +255,7 @@ function registerDataToJSON({
 
 function registerDataFromJSON({ type, ...json }: ReturnType<typeof registerDataToJSON>): RegisterData {
     const handler = new RegisterDataHandler();
-    return { type: AccountTransactionType.RegisterData, ...handler.fromJSON(json) };
+    return registerData(handler.fromJSON(json));
 }
 
 /**
@@ -287,7 +287,7 @@ function configureDelegationFromJSON({
     ...json
 }: ReturnType<typeof configureDelegationToJSON>): ConfigureDelegation {
     const handler = new ConfigureDelegationHandler();
-    return { type: AccountTransactionType.ConfigureDelegation, ...handler.fromJSON(json) };
+    return configureDelegation(handler.fromJSON(json));
 }
 
 /**
@@ -319,7 +319,7 @@ function configureValidatorFromJSON({
     ...json
 }: ReturnType<typeof configureValidatorToJSON>): ConfigureValidator {
     const handler = new ConfigureBakerHandler();
-    return { type: AccountTransactionType.ConfigureBaker, ...handler.fromJSON(json) };
+    return configureValidator(handler.fromJSON(json));
 }
 
 /**
@@ -348,7 +348,7 @@ function tokenUpdateToJSON({
 
 function tokenUpdateFromJSON({ type, ...json }: ReturnType<typeof tokenUpdateToJSON>): TokenUpdate {
     const handler = new TokenUpdateHandler();
-    return { type: AccountTransactionType.TokenUpdate, ...handler.fromJSON(json) };
+    return tokenUpdate(handler.fromJSON(json));
 }
 
 type Payload =

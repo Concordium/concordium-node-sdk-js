@@ -1389,6 +1389,9 @@ export interface InitContractPayload {
     param: Parameter.Type;
 }
 
+/**
+ * Describes the input required to create a transaction with a {@linkcode InitContractPayload}.
+ */
 export interface InitContractInput extends InitContractPayload {
     /** The amount of energy that can be used for contract execution.
     The base energy amount for transaction verification will be added to this cost.*/
@@ -1406,6 +1409,9 @@ export interface UpdateContractPayload {
     message: Parameter.Type;
 }
 
+/**
+ * Describes the input required to create a transaction with a {@linkcode UpdateContractPayload}.
+ */
 export interface UpdateContractInput extends UpdateContractPayload {
     /** The amount of energy that can be used for contract execution.
     The base energy amount for transaction verification will be added to this cost.*/
@@ -1561,12 +1567,26 @@ export type AccountTransactionInput =
     | InitContractInput
     | UpdateContractInput;
 
+/**
+ * Describes account transactions. This does _not_ describe the transaction format that is serialized
+ * and submitted to chain, but rather a "pre-transaction format", i.e. the input required to create and
+ * sign a transaction to be submitted to chain.
+ */
 export interface AccountTransaction<
     T extends AccountTransactionType = AccountTransactionType,
     P extends AccountTransactionInput = AccountTransactionInput,
 > {
+    /**
+     * The transaction type
+     */
     type: T;
+    /**
+     * The header data to be processed with the payload to form the complete transaction header.
+     */
     header: AccountTransactionHeader;
+    /**
+     * The input specific to creating a transaction of `type`.
+     */
     payload: P;
 }
 

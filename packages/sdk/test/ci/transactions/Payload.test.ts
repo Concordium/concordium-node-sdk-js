@@ -11,6 +11,7 @@ import {
     OpenStatus,
     Parameter,
     ReceiveName,
+    TransactionKindString,
 } from '../../../src/index.js';
 import { AccountAddress } from '../../../src/pub/types.js';
 import { Payload } from '../../../src/transactions/index.js';
@@ -48,7 +49,7 @@ describe('Payload', () => {
         test('toJSON produces fixed JSON output', () => {
             const json = Payload.toJSON(transferPayload);
             expect(json).toEqual({
-                type: 3,
+                type: TransactionKindString.Transfer,
                 amount: '1000000',
                 toAddress: '3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt',
             });
@@ -88,7 +89,7 @@ describe('Payload', () => {
         test('toJSON produces fixed JSON output', () => {
             const json = Payload.toJSON(transferWithMemoPayload);
             expect(json).toEqual({
-                type: 22,
+                type: TransactionKindString.TransferWithMemo,
                 amount: '2000000',
                 toAddress: '4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M',
                 memo: '0003abcdef',
@@ -124,7 +125,7 @@ describe('Payload', () => {
         test('toJSON produces fixed JSON output', () => {
             const json = Payload.toJSON(deployModulePayload);
             expect(json).toEqual({
-                type: 0,
+                type: TransactionKindString.DeployModule,
                 version: 1,
                 source: '0061736d01000000',
             });
@@ -165,7 +166,7 @@ describe('Payload', () => {
         test('toJSON produces fixed JSON output', () => {
             const json = Payload.toJSON(initContractPayload);
             expect(json).toEqual({
-                type: 1,
+                type: TransactionKindString.InitContract,
                 amount: '0',
                 initName: 'my_contract',
                 moduleRef: '00000020aabbccddaabbccddaabbccddaabbccddaabbccddaabbccddaabbccddaabbccdd',
@@ -206,7 +207,7 @@ describe('Payload', () => {
         test('toJSON produces fixed JSON output', () => {
             const json = Payload.toJSON(updateContractPayload);
             expect(json).toEqual({
-                type: 2,
+                type: TransactionKindString.Update,
                 amount: '100',
                 address: { index: 0n, subindex: 0n },
                 receiveName: 'my_contract.receive',
@@ -242,7 +243,7 @@ describe('Payload', () => {
         test('toJSON produces fixed JSON output', () => {
             const json = Payload.toJSON(registerDataPayload);
             expect(json).toEqual({
-                type: 21,
+                type: TransactionKindString.RegisterData,
                 data: '0004deadbeef',
             });
         });
@@ -278,7 +279,7 @@ describe('Payload', () => {
         test('toJSON produces fixed JSON output', () => {
             const json = Payload.toJSON(configureDelegationPayload);
             expect(json).toEqual({
-                type: 26,
+                type: TransactionKindString.ConfigureDelegation,
                 stake: '5000000000',
                 restakeEarnings: true,
                 delegationTarget: { delegateType: 'Passive' },
@@ -332,7 +333,7 @@ describe('Payload', () => {
         test('toJSON produces fixed JSON output', () => {
             const json = Payload.toJSON(configureValidatorPayload);
             expect(json).toEqual({
-                type: 25,
+                type: TransactionKindString.ConfigureBaker,
                 stake: '10000000000',
                 restakeEarnings: false,
                 openForDelegation: 2,

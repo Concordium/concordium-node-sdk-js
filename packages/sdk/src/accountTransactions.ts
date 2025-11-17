@@ -53,9 +53,6 @@ import * as Parameter from './types/Parameter.js';
 import * as ReceiveName from './types/ReceiveName.js';
 import { Energy } from './types/index.js';
 
-/**
- * A handler for a specific {@linkcode AccountTransactionType}.
- */
 export interface AccountTransactionHandler<
     Payload extends AccountTransactionPayload,
     JSONPayload,
@@ -106,6 +103,9 @@ export interface SimpleTransferPayloadJSON {
     amount: string;
 }
 
+/**
+ * @deprecated use `Transaction.transfer` and `Payload.transfer` APIs instead.
+ */
 export class SimpleTransferHandler
     implements AccountTransactionHandler<SimpleTransferPayload, SimpleTransferPayloadJSON, SimpleTransferPayload>
 {
@@ -147,6 +147,9 @@ export interface SimpleTransferWithMemoPayloadJSON extends SimpleTransferPayload
     memo: HexString;
 }
 
+/**
+ * @deprecated use `Transaction.transfer` and `Payload.transfer` APIs instead.
+ */
 export class SimpleTransferWithMemoHandler
     implements
         AccountTransactionHandler<
@@ -200,6 +203,9 @@ export interface DeployModulePayloadJSON {
     version?: number;
 }
 
+/**
+ * @deprecated use `Transaction.deployModule` and `Payload.deployModule` APIs instead.
+ */
 export class DeployModuleHandler
     implements AccountTransactionHandler<DeployModulePayload, DeployModulePayloadJSON, DeployModulePayload>
 {
@@ -282,6 +288,9 @@ export interface InitContractInputJSON {
     maxContractExecutionEnergy: bigint;
 }
 
+/**
+ * @deprecated use `Transaction.initContract` and `Payload.initContract` APIs instead.
+ */
 export class InitContractHandler
     implements AccountTransactionHandler<InitContractPayload, InitContractPayloadJSON, InitContractInput>
 {
@@ -368,6 +377,9 @@ export interface UpdateContractInputJSON {
 
 export type TransactionMetadata = Pick<AccountTransactionHeader, 'sender' | 'nonce' | 'expiry'>;
 
+/**
+ * @deprecated use `Transaction.updateContract` and `Payload.updateContract` APIs instead.
+ */
 export class UpdateContractHandler
     implements AccountTransactionHandler<UpdateContractPayload, UpdateContractPayloadJSON, UpdateContractInput>
 {
@@ -450,6 +462,9 @@ export class UpdateContractHandler
     }
 }
 
+/**
+ * @deprecated use `Transaction.updateCredentials` and `Payload.updateCredentials` APIs instead.
+ */
 export class UpdateCredentialsHandler
     implements AccountTransactionHandler<UpdateCredentialsPayload, UpdateCredentialsPayload, UpdateCredentialsPayload>
 {
@@ -515,6 +530,9 @@ export interface RegisterDataPayloadJSON {
     data: HexString;
 }
 
+/**
+ * @deprecated use `Transaction.registerData` and `Payload.registerData` APIs instead.
+ */
 export class RegisterDataHandler
     implements AccountTransactionHandler<RegisterDataPayload, RegisterDataPayloadJSON, RegisterDataPayload>
 {
@@ -558,6 +576,9 @@ export interface ConfigureBakerPayloadJSON {
     finalizationRewardCommission?: number;
 }
 
+/**
+ * @deprecated use `Transaction.configureValidator` and `Payload.configureValidator` APIs instead.
+ */
 export class ConfigureBakerHandler
     implements AccountTransactionHandler<ConfigureBakerPayload, ConfigureBakerPayloadJSON, ConfigureBakerPayload>
 {
@@ -605,6 +626,9 @@ export interface ConfigureDelegationPayloadJSON {
     delegationTarget?: DelegationTarget;
 }
 
+/**
+ * @deprecated use `Transaction.configureDelegation` and `Payload.configureDelegation` APIs instead.
+ */
 export class ConfigureDelegationHandler
     implements
         AccountTransactionHandler<
@@ -655,6 +679,9 @@ export type TokenUpdatePayloadJSON = {
     operations: Cbor.JSON;
 };
 
+/**
+ * @deprecated use `Transaction.tokenUpdate` and `Payload.tokenUpdate` APIs instead.
+ */
 export class TokenUpdateHandler
     implements AccountTransactionHandler<TokenUpdatePayload, TokenUpdatePayloadJSON, TokenUpdatePayload>
 {
@@ -734,6 +761,9 @@ export type AccountTransactionPayloadJSON =
     | ConfigureBakerPayloadJSON
     | TokenUpdatePayloadJSON;
 
+/**
+ * @deprecated use `Transaction` and `Payload` APIs instead.
+ */
 export function getAccountTransactionHandler(type: AccountTransactionType.Transfer): SimpleTransferHandler;
 export function getAccountTransactionHandler(
     type: AccountTransactionType.TransferWithMemo

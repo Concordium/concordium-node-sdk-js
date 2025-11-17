@@ -2,32 +2,45 @@ import { deserializeUint8 } from '../deserialization.js';
 import { Cursor } from '../deserializationHelpers.js';
 import {
     type AccountTransactionPayload,
+    AccountTransactionPayloadJSON,
     AccountTransactionType,
     ConfigureBakerHandler,
     type ConfigureBakerPayload,
+    ConfigureBakerPayloadJSON,
     ConfigureDelegationHandler,
     type ConfigureDelegationPayload,
+    ConfigureDelegationPayloadJSON,
     type DataBlob,
     DeployModuleHandler,
     type DeployModulePayload,
+    DeployModulePayloadJSON,
     InitContractHandler,
     type InitContractPayload,
+    InitContractPayloadJSON,
     RegisterDataHandler,
     type RegisterDataPayload,
+    RegisterDataPayloadJSON,
     SimpleTransferHandler,
     type SimpleTransferPayload,
+    SimpleTransferPayloadJSON,
     SimpleTransferWithMemoHandler,
     type SimpleTransferWithMemoPayload,
+    SimpleTransferWithMemoPayloadJSON,
     TokenUpdateHandler,
     type TokenUpdatePayload,
+    TokenUpdatePayloadJSON,
+    TransactionKindString,
     UpdateContractHandler,
     type UpdateContractPayload,
+    UpdateContractPayloadJSON,
     UpdateCredentialsHandler,
     type UpdateCredentialsPayload,
     getAccountTransactionHandler,
-    isAccountTransactionType,
+    getTransactionKindString,
 } from '../index.js';
 import { serializeAccountTransactionType } from '../serialization.js';
+
+type GenJSON<T extends TransactionKindString, P extends AccountTransactionPayloadJSON> = { type: T } & P;
 
 /**
  * A simple transfer transaction payload.
@@ -74,22 +87,28 @@ export function transfer(
         : { type: AccountTransactionType.Transfer, ...payload };
 }
 
-function transferToJSON(transfer: Transfer) {
+function transferToJSON({
+    type,
+    ...transfer
+}: Transfer): GenJSON<TransactionKindString.Transfer, SimpleTransferPayloadJSON> {
     const handler = new SimpleTransferHandler();
-    return { type: transfer.type, ...handler.toJSON(transfer) };
+    return { type: TransactionKindString.Transfer, ...handler.toJSON(transfer) };
 }
 
-function transferFromJSON(json: ReturnType<typeof transferToJSON>): Transfer {
+function transferFromJSON({ type, ...json }: ReturnType<typeof transferToJSON>): Transfer {
     const handler = new SimpleTransferHandler();
     return transfer(handler.fromJSON(json));
 }
 
-function transferWithMemoToJSON(transferWithMemo: TransferWithMemo) {
+function transferWithMemoToJSON({
+    type,
+    ...transferWithMemo
+}: TransferWithMemo): GenJSON<TransactionKindString.TransferWithMemo, SimpleTransferWithMemoPayloadJSON> {
     const handler = new SimpleTransferWithMemoHandler();
-    return { type: transferWithMemo.type, ...handler.toJSON(transferWithMemo) };
+    return { type: TransactionKindString.TransferWithMemo, ...handler.toJSON(transferWithMemo) };
 }
 
-function transferWithMemoFromJSON(json: ReturnType<typeof transferWithMemoToJSON>): TransferWithMemo {
+function transferWithMemoFromJSON({ type, ...json }: ReturnType<typeof transferWithMemoToJSON>): TransferWithMemo {
     const handler = new SimpleTransferWithMemoHandler();
     return { type: AccountTransactionType.TransferWithMemo, ...handler.fromJSON(json) };
 }
@@ -110,12 +129,15 @@ export function deployModule(payload: DeployModulePayload): DeployModule {
     return { type: AccountTransactionType.DeployModule, ...payload };
 }
 
-function deployModuleToJSON(value: DeployModule) {
+function deployModuleToJSON({
+    type,
+    ...value
+}: DeployModule): GenJSON<TransactionKindString.DeployModule, DeployModulePayloadJSON> {
     const handler = new DeployModuleHandler();
-    return { type: value.type, ...handler.toJSON(value) };
+    return { type: TransactionKindString.DeployModule, ...handler.toJSON(value) };
 }
 
-function deployModuleFromJSON(json: ReturnType<typeof deployModuleToJSON>): DeployModule {
+function deployModuleFromJSON({ type, ...json }: ReturnType<typeof deployModuleToJSON>): DeployModule {
     const handler = new DeployModuleHandler();
     return { type: AccountTransactionType.DeployModule, ...handler.fromJSON(json) };
 }
@@ -136,12 +158,15 @@ export function initContract(payload: InitContractPayload): InitContract {
     return { type: AccountTransactionType.InitContract, ...payload };
 }
 
-function initContractToJSON(value: InitContract) {
+function initContractToJSON({
+    type,
+    ...value
+}: InitContract): GenJSON<TransactionKindString.InitContract, InitContractPayloadJSON> {
     const handler = new InitContractHandler();
-    return { type: value.type, ...handler.toJSON(value) };
+    return { type: TransactionKindString.InitContract, ...handler.toJSON(value) };
 }
 
-function initContractFromJSON(json: ReturnType<typeof initContractToJSON>): InitContract {
+function initContractFromJSON({ type, ...json }: ReturnType<typeof initContractToJSON>): InitContract {
     const handler = new InitContractHandler();
     return { type: AccountTransactionType.InitContract, ...handler.fromJSON(json) };
 }
@@ -162,12 +187,15 @@ export function updateContract(payload: UpdateContractPayload): UpdateContract {
     return { type: AccountTransactionType.Update, ...payload };
 }
 
-function updateContractToJSON(value: UpdateContract) {
+function updateContractToJSON({
+    type,
+    ...value
+}: UpdateContract): GenJSON<TransactionKindString.Update, UpdateContractPayloadJSON> {
     const handler = new UpdateContractHandler();
-    return { type: value.type, ...handler.toJSON(value) };
+    return { type: TransactionKindString.Update, ...handler.toJSON(value) };
 }
 
-function updateContractFromJSON(json: ReturnType<typeof updateContractToJSON>): UpdateContract {
+function updateContractFromJSON({ type, ...json }: ReturnType<typeof updateContractToJSON>): UpdateContract {
     const handler = new UpdateContractHandler();
     return { type: AccountTransactionType.Update, ...handler.fromJSON(json) };
 }
@@ -188,12 +216,15 @@ export function updateCredentials(payload: UpdateCredentialsPayload): UpdateCred
     return { type: AccountTransactionType.UpdateCredentials, ...payload };
 }
 
-function updateCredentialsToJSON(value: UpdateCredentials) {
+function updateCredentialsToJSON({
+    type,
+    ...value
+}: UpdateCredentials): GenJSON<TransactionKindString.UpdateCredentials, UpdateCredentialsPayload> {
     const handler = new UpdateCredentialsHandler();
-    return { type: value.type, ...handler.toJSON(value) };
+    return { type: TransactionKindString.UpdateCredentials, ...handler.toJSON(value) };
 }
 
-function updateCredentialsFromJSON(json: ReturnType<typeof updateCredentialsToJSON>): UpdateCredentials {
+function updateCredentialsFromJSON({ type, ...json }: ReturnType<typeof updateCredentialsToJSON>): UpdateCredentials {
     const handler = new UpdateCredentialsHandler();
     return { type: AccountTransactionType.UpdateCredentials, ...handler.fromJSON(json) };
 }
@@ -214,12 +245,15 @@ export function registerData(payload: RegisterDataPayload): RegisterData {
     return { type: AccountTransactionType.RegisterData, ...payload };
 }
 
-function registerDataToJSON(value: RegisterData) {
+function registerDataToJSON({
+    type,
+    ...value
+}: RegisterData): GenJSON<TransactionKindString.RegisterData, RegisterDataPayloadJSON> {
     const handler = new RegisterDataHandler();
-    return { type: value.type, ...handler.toJSON(value) };
+    return { type: TransactionKindString.RegisterData, ...handler.toJSON(value) };
 }
 
-function registerDataFromJSON(json: ReturnType<typeof registerDataToJSON>): RegisterData {
+function registerDataFromJSON({ type, ...json }: ReturnType<typeof registerDataToJSON>): RegisterData {
     const handler = new RegisterDataHandler();
     return { type: AccountTransactionType.RegisterData, ...handler.fromJSON(json) };
 }
@@ -240,12 +274,18 @@ export function configureDelegation(payload: ConfigureDelegationPayload): Config
     return { type: AccountTransactionType.ConfigureDelegation, ...payload };
 }
 
-function configureDelegationToJSON(value: ConfigureDelegation) {
+function configureDelegationToJSON({
+    type,
+    ...value
+}: ConfigureDelegation): GenJSON<TransactionKindString.ConfigureDelegation, ConfigureDelegationPayloadJSON> {
     const handler = new ConfigureDelegationHandler();
-    return { type: value.type, ...handler.toJSON(value) };
+    return { type: TransactionKindString.ConfigureDelegation, ...handler.toJSON(value) };
 }
 
-function configureDelegationFromJSON(json: ReturnType<typeof configureDelegationToJSON>): ConfigureDelegation {
+function configureDelegationFromJSON({
+    type,
+    ...json
+}: ReturnType<typeof configureDelegationToJSON>): ConfigureDelegation {
     const handler = new ConfigureDelegationHandler();
     return { type: AccountTransactionType.ConfigureDelegation, ...handler.fromJSON(json) };
 }
@@ -266,12 +306,18 @@ export function configureValidator(payload: ConfigureBakerPayload): ConfigureVal
     return { type: AccountTransactionType.ConfigureBaker, ...payload };
 }
 
-function configureValidatorToJSON(value: ConfigureValidator) {
+function configureValidatorToJSON({
+    type,
+    ...value
+}: ConfigureValidator): GenJSON<TransactionKindString.ConfigureBaker, ConfigureBakerPayloadJSON> {
     const handler = new ConfigureBakerHandler();
-    return { type: value.type, ...handler.toJSON(value) };
+    return { type: TransactionKindString.ConfigureBaker, ...handler.toJSON(value) };
 }
 
-function configureValidatorFromJSON(json: ReturnType<typeof configureValidatorToJSON>): ConfigureValidator {
+function configureValidatorFromJSON({
+    type,
+    ...json
+}: ReturnType<typeof configureValidatorToJSON>): ConfigureValidator {
     const handler = new ConfigureBakerHandler();
     return { type: AccountTransactionType.ConfigureBaker, ...handler.fromJSON(json) };
 }
@@ -292,12 +338,15 @@ export function tokenUpdate(payload: TokenUpdatePayload): TokenUpdate {
     return { type: AccountTransactionType.TokenUpdate, ...payload };
 }
 
-function tokenUpdateToJSON(value: TokenUpdate) {
+function tokenUpdateToJSON({
+    type,
+    ...value
+}: TokenUpdate): GenJSON<TransactionKindString.TokenUpdate, TokenUpdatePayloadJSON> {
     const handler = new TokenUpdateHandler();
-    return { type: value.type, ...handler.toJSON(value) };
+    return { type: TransactionKindString.TokenUpdate, ...handler.toJSON(value) };
 }
 
-function tokenUpdateFromJSON(json: ReturnType<typeof tokenUpdateToJSON>): TokenUpdate {
+function tokenUpdateFromJSON({ type, ...json }: ReturnType<typeof tokenUpdateToJSON>): TokenUpdate {
     const handler = new TokenUpdateHandler();
     return { type: AccountTransactionType.TokenUpdate, ...handler.fromJSON(json) };
 }
@@ -404,29 +453,28 @@ export function toJSON(payload: Payload) {
  */
 export function fromJSON(json: unknown): Payload {
     if (typeof json !== 'object' || json === null) throw new Error('Expected object');
-    if (!('type' in json) || typeof json.type !== 'number' || !isAccountTransactionType(json.type))
-        throw new Error('invalid transction type');
+    if (!('type' in json) || typeof json.type !== 'string') throw new Error('invalid transction type');
 
     switch (json.type) {
-        case AccountTransactionType.Transfer:
-            return transferFromJSON(json as any as any);
-        case AccountTransactionType.TransferWithMemo:
+        case getTransactionKindString(AccountTransactionType.Transfer):
+            return transferFromJSON(json as any);
+        case getTransactionKindString(AccountTransactionType.TransferWithMemo):
             return transferWithMemoFromJSON(json as any);
-        case AccountTransactionType.DeployModule:
+        case getTransactionKindString(AccountTransactionType.DeployModule):
             return deployModuleFromJSON(json as any);
-        case AccountTransactionType.InitContract:
+        case getTransactionKindString(AccountTransactionType.InitContract):
             return initContractFromJSON(json as any);
-        case AccountTransactionType.Update:
+        case getTransactionKindString(AccountTransactionType.Update):
             return updateContractFromJSON(json as any);
-        case AccountTransactionType.UpdateCredentials:
+        case getTransactionKindString(AccountTransactionType.UpdateCredentials):
             return updateCredentialsFromJSON(json as any);
-        case AccountTransactionType.RegisterData:
+        case getTransactionKindString(AccountTransactionType.RegisterData):
             return registerDataFromJSON(json as any);
-        case AccountTransactionType.ConfigureDelegation:
+        case getTransactionKindString(AccountTransactionType.ConfigureDelegation):
             return configureDelegationFromJSON(json as any);
-        case AccountTransactionType.ConfigureBaker:
+        case getTransactionKindString(AccountTransactionType.ConfigureBaker):
             return configureValidatorFromJSON(json as any);
-        case AccountTransactionType.TokenUpdate:
+        case getTransactionKindString(AccountTransactionType.TokenUpdate):
             return tokenUpdateFromJSON(json as any);
         default:
             throw new Error('The provided transaction type is not supported: ' + json.type);

@@ -20,7 +20,6 @@ export class Cursor {
      * Constructs a `Cursor` from hex encoded data.
      *
      * @param {HexString} data - the (hex encoded) data
-     *
      * @returns {Cursor} a Cursor wrapping the data
      */
     public static fromHex(data: HexString): Cursor {
@@ -31,7 +30,6 @@ export class Cursor {
      * Constructs a `Cursor` from a buffer of bytes.
      *
      * @param {ArrayBuffer} buffer - the buffer containing bytes.
-     *
      * @returns {Cursor} a Cursor wrapping the data.
      */
     public static fromBuffer(buffer: ArrayBuffer): Cursor {
@@ -42,9 +40,7 @@ export class Cursor {
      * Read a number of bytes from the cursor.
      *
      * @param {number} [numBytes=this.remainingBytes.length] - The number of bytes to read. Defaults to the remaining bytes from the cursor position.
-     *
      * @throws If the buffer contains fewer bytes than being read.
-     *
      * @returns {Buffer} A buffer containing the number of bytes specified from the cursor position
      */
     public read(numBytes: number = this.remainingBytes.length): Buffer {
@@ -55,6 +51,20 @@ export class Cursor {
         const data = Buffer.from(this.data.subarray(this.cursor, end));
         this.cursor += numBytes;
         return data;
+    }
+
+    /**
+     * Skip a number of bytes from the cursor.
+     *
+     * @param {number} [numBytes=this.remainingBytes.length] - The number of bytes to read. Defaults to the remaining bytes from the cursor position.
+     * @throws If the buffer contains fewer bytes than being read.
+     */
+    public skip(numBytes: number = this.remainingBytes.length): void {
+        const end = this.cursor + numBytes;
+        if (this.data.length < end) {
+            throw new Error(`Failed to read ${numBytes} bytes from the cursor.`);
+        }
+        this.cursor += numBytes;
     }
 
     /**

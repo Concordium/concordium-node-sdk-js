@@ -3,11 +3,7 @@ import { Buffer } from 'buffer/index.js';
 import { deserializeAccountTransactionSignature } from '../deserialization.ts';
 import { Cursor } from '../deserializationHelpers.js';
 import { AccountTransactionV0, Payload } from '../index.ts';
-import {
-    serializeAccountTransactionHeader,
-    serializeAccountTransactionPayload,
-    serializeAccountTransactionSignature,
-} from '../serialization.js';
+import { serializeAccountTransactionPayload, serializeAccountTransactionSignature } from '../serialization.js';
 import {
     SerializationSpec,
     encodeWord8,
@@ -117,9 +113,10 @@ export const serializePayload = serializeAccountTransactionPayload;
  * @returns The fully serialized transaction as a Uint8Array.
  */
 export function serialize(transaction: AccountTransactionV1): Uint8Array {
+    const signatures = serializeSignatures(transaction.signatures);
     const header = serializeHeader(transaction.header);
     const payload = Payload.serialize(transaction.payload);
-    return Buffer.concat([header, payload]);
+    return Buffer.concat([signatures, header, payload]);
 }
 
 const SPONSOR_MASK = 0x0001;
@@ -134,7 +131,7 @@ function deserializeBitmap(cursor: Cursor): number {
 function deserializeHeaderOptions(cursor: Cursor, bitmap: number): HeaderOptionals {
     const optionals: HeaderOptionals = {};
 
-    const hasSponsor = Boolean(bitmap & SPONSOR_MASK);
+    const hasSponsor = (bitmap & SPONSOR_MASK) !== 0;
     if (hasSponsor) optionals.sponsor = AccountAddress.fromBuffer(cursor.read(32));
 
     return optionals;
@@ -148,8 +145,8 @@ function deserializeHeaderOptions(cursor: Cursor, bitmap: number): HeaderOptiona
  * @throws {Error} If the invoked with a buffer which is not fully consumed during deserialization.
  */
 export function deserializeHeader(value: Cursor | ArrayBuffer): Header {
-    const isRawBuffer = value instanceof Cursor;
-    const cursor = isRawBuffer ? value : Cursor.fromBuffer(value);
+    const isRawBuffer = !(value instanceof Cursor);
+    const cursor = isRawBuffer ? Cursor.fromBuffer(value) : value;
 
     const bitmap = deserializeBitmap(cursor);
     const v0Header = AccountTransactionV0.deserializeHeader(cursor);
@@ -169,12 +166,18 @@ export function deserializeHeader(value: Cursor | ArrayBuffer): Header {
  * @throws {Error} If the invoked with a buffer which is not fully consumed during deserialization.
  */
 export function deserializeSignatures(value: Cursor | ArrayBuffer): Signatures {
-    const isRawBuffer = value instanceof Cursor;
-    const cursor = isRawBuffer ? value : Cursor.fromBuffer(value);
+    const isRawBuffer = !(value instanceof Cursor);
+    const cursor = isRawBuffer ? Cursor.fromBuffer(value) : value;
 
     const sender = deserializeAccountTransactionSignature(cursor);
     const hasSponsor = Boolean(cursor.peek(1).readUInt8(0));
-    const sponsor = hasSponsor ? deserializeAccountTransactionSignature(cursor) : undefined;
+
+    let sponsor: AccountTransactionSignature | undefined;
+    if (hasSponsor) {
+        sponsor = deserializeAccountTransactionSignature(cursor);
+    } else {
+        cursor.skip(1);
+    }
 
     if (isRawBuffer && cursor.remainingBytes.length !== 0)
         throw new Error('Deserializing the transaction did not exhaust the buffer');
@@ -190,8 +193,8 @@ export function deserializeSignatures(value: Cursor | ArrayBuffer): Signatures {
  * @throws {Error} If the invoked with a buffer which is not fully consumed during deserialization.
  */
 export function deserialize(value: Cursor | ArrayBuffer): AccountTransactionV1 {
-    const isRawBuffer = value instanceof Cursor;
-    const cursor = isRawBuffer ? value : Cursor.fromBuffer(value);
+    const isRawBuffer = !(value instanceof Cursor);
+    const cursor = isRawBuffer ? Cursor.fromBuffer(value) : value;
 
     const signatures = deserializeSignatures(cursor);
     const header = deserializeHeader(cursor);

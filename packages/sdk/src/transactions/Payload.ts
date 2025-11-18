@@ -386,8 +386,13 @@ export type JSON =
 
 /**
  * Creates a typed transaction payload from a transaction type and raw payload data.
+ *
+ * NOTE: this does _not_ check the payload structure, and thus assumes that the `type` and `payload`
+ * given actually match.
+ *
  * @param type the transaction type
  * @param payload the raw transaction payload
+ *
  * @returns the typed transaction payload
  * @throws if the transaction type is not supported
  */

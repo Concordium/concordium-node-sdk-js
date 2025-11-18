@@ -237,13 +237,14 @@ export type Metadata = MakeOptional<AccountTransactionHeader, 'expiry'>;
 
 /**
  * Dynamic `Transaction` creation based on the given transaction `type`.
- * If the transaction type is known, use the specialized creation functions per transaction type
- * instead.
+ *
+ * NOTE: this does _not_ check the payload structure, and thus assumes that the `type` and `payload`
+ * given actually match. If the transaction type is known, use the specialized creation functions
+ * per transaction type instead.
  *
  * @param type - transaction type
  * @param metadata - transaction metadata to put into the transaction header.
- * @param payload - a transaction payload matching the transaction type. If these do not match,
- * this will fail.
+ * @param payload - a transaction payload matching the transaction type.
  *
  * @returns The corresponding transaction
  *

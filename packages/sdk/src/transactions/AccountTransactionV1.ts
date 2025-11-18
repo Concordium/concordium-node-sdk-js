@@ -1,7 +1,8 @@
 import { Buffer } from 'buffer/index.js';
 
-import { deserializeAccountTransactionPayload, deserializeAccountTransactionSignature } from '../deserialization.ts';
+import { deserializeAccountTransactionSignature } from '../deserialization.ts';
 import { Cursor } from '../deserializationHelpers.js';
+import { AccountTransactionV0, Payload } from '../index.ts';
 import {
     serializeAccountTransactionHeader,
     serializeAccountTransactionPayload,
@@ -15,19 +16,8 @@ import {
     orUndefined,
     serializeFromSpec,
 } from '../serializationHelpers.js';
-import {
-    type AccountTransactionHeader,
-    type AccountTransactionPayload,
-    type AccountTransactionSignature,
-    type AccountTransactionType,
-} from '../types.js';
-import { AccountAddress, Energy, SequenceNumber, TransactionExpiry } from '../types/index.js';
-
-// Data that is currently missing on `AccountTransactionHeader`.
-type MissingHeaderData = {
-    payloadSize: number;
-    energyAmount: Energy.Type;
-};
+import { type AccountTransactionSignature } from '../types.js';
+import { AccountAddress } from '../types/index.js';
 
 type HeaderOptionals = {
     /**
@@ -38,10 +28,10 @@ type HeaderOptionals = {
 };
 
 /**
- * Describes the V1 account transaction header, which is an extension of {@linkcode AccountTransactionHeader}
+ * Describes the V1 account transaction header, which is an extension of {@linkcode AccountTransactionV0}s header
  * defining extra optional fields.
  */
-export type Header = AccountTransactionHeader & MissingHeaderData & HeaderOptionals;
+export type Header = AccountTransactionV0.Header & HeaderOptionals;
 
 /**
  * The signatures for {@linkcode AccountTransactionV1}.
@@ -64,18 +54,18 @@ export type Signatures = {
  */
 type AccountTransactionV1 = {
     /**
+     * The signatures for V1 account transactions
+     */
+    signatures: Signatures;
+    /**
      * The transaction header for the transaction which includes metadata required for execution
      * of any account transaction of the v1 format.
      */
     header: Header;
     /**
-     * The transaction type of the account transaction.
+     * The transaction payload.
      */
-    type: AccountTransactionType;
-    /**
-     * The payload corresponding to the transaction `type`.
-     */
-    payload: AccountTransactionPayload;
+    payload: Payload.Type;
 };
 
 /**
@@ -96,7 +86,7 @@ export function serializeHeader({ sponsor, ...v0 }: Header): Uint8Array {
     const options: HeaderOptionals = { sponsor };
 
     const bitmap = encodeWord16(getBitmap(options, ['sponsor']));
-    const v0Header = serializeAccountTransactionHeader(v0, v0.payloadSize, v0.energyAmount);
+    const v0Header = AccountTransactionV0.serializeHeader(v0);
     const extension = serializeFromSpec(headerSerializationSpec)(options);
 
     return Buffer.concat([bitmap, v0Header, extension]);
@@ -128,7 +118,7 @@ export const serializePayload = serializeAccountTransactionPayload;
  */
 export function serialize(transaction: AccountTransactionV1): Uint8Array {
     const header = serializeHeader(transaction.header);
-    const payload = serializePayload(transaction);
+    const payload = Payload.serialize(transaction.payload);
     return Buffer.concat([header, payload]);
 }
 
@@ -139,23 +129,6 @@ function deserializeBitmap(cursor: Cursor): number {
     const bitmap = cursor.read(2).readUInt16BE(0);
     if ((bitmap & VALIDATION_MASK) !== 0) throw new Error('Found unsupported bits in bitmap');
     return bitmap;
-}
-
-// TODO: replace with `deserializeTransactionHeader` when `AccountTransactionHeader` includes the
-// necessary information
-function deserializeV0Header(cursor: Cursor): AccountTransactionHeader & MissingHeaderData {
-    const sender = AccountAddress.fromBuffer(cursor.read(32));
-    const nonce = SequenceNumber.create(cursor.read(8).readBigUInt64BE(0));
-    const energyAmount = Energy.create(cursor.read(8).readBigUInt64BE(0));
-    const payloadSize = cursor.read(4).readUInt32BE(0);
-    const expiry = TransactionExpiry.fromEpochSeconds(cursor.read(8).readBigUInt64BE(0));
-    return {
-        sender,
-        nonce,
-        expiry,
-        energyAmount,
-        payloadSize,
-    };
 }
 
 function deserializeHeaderOptions(cursor: Cursor, bitmap: number): HeaderOptionals {
@@ -179,7 +152,7 @@ export function deserializeHeader(value: Cursor | ArrayBuffer): Header {
     const cursor = isRawBuffer ? value : Cursor.fromBuffer(value);
 
     const bitmap = deserializeBitmap(cursor);
-    const v0Header = deserializeV0Header(cursor);
+    const v0Header = AccountTransactionV0.deserializeHeader(cursor);
     const options = deserializeHeaderOptions(cursor, bitmap);
 
     if (isRawBuffer && cursor.remainingBytes.length !== 0)
@@ -216,19 +189,16 @@ export function deserializeSignatures(value: Cursor | ArrayBuffer): Signatures {
  * @returns An object containing the deserialized signatures and transaction.
  * @throws {Error} If the invoked with a buffer which is not fully consumed during deserialization.
  */
-export function deserialize(value: Cursor | ArrayBuffer): {
-    signatures: Signatures;
-    transaction: AccountTransactionV1;
-} {
+export function deserialize(value: Cursor | ArrayBuffer): AccountTransactionV1 {
     const isRawBuffer = value instanceof Cursor;
     const cursor = isRawBuffer ? value : Cursor.fromBuffer(value);
 
     const signatures = deserializeSignatures(cursor);
     const header = deserializeHeader(cursor);
-    const { type, payload } = deserializeAccountTransactionPayload(cursor);
+    const payload = Payload.deserialize(cursor);
 
     if (isRawBuffer && cursor.remainingBytes.length !== 0)
         throw new Error('Deserializing the transaction did not exhaust the buffer');
 
-    return { signatures, transaction: { header, type, payload } };
+    return { signatures, header, payload };
 }

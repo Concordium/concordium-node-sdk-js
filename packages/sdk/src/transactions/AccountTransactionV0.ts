@@ -2,7 +2,7 @@ import { deserializeAccountTransactionSignature } from '../deserialization.js';
 import { Cursor } from '../deserializationHelpers.js';
 import { constantA, constantB } from '../energyCost.js';
 import { sha256 } from '../hash.js';
-import { Base58String, Payload, Transaction } from '../index.js';
+import { Transaction as AccountTransactionV0, Base58String, Payload } from '../index.js';
 import * as JSONBig from '../json-bigint.js';
 import { serializeAccountTransactionSignature } from '../serialization.js';
 import { encodeWord8, encodeWord32, encodeWord64 } from '../serializationHelpers.js';
@@ -68,7 +68,7 @@ export type Signature = AccountTransactionSignature;
 /**
  * A complete version 0 account transaction with header, type, payload, and signature.
  */
-type Transaction = {
+type AccountTransactionV0 = {
     /**
      * Transaction version discriminant;
      */
@@ -90,7 +90,7 @@ type Transaction = {
 /**
  * A complete version 0 account transaction with header, type, payload, and signature.
  */
-export type Type = Transaction;
+export type Type = AccountTransactionV0;
 
 export type JSON = {
     readonly version: 0;
@@ -111,11 +111,11 @@ export type UnsignedJSON = {
  * @param transaction the transaction to convert
  * @returns the JSON representation of the transaction
  */
-export function toJSON(transaction: Transaction): JSON;
+export function toJSON(transaction: AccountTransactionV0): JSON;
 export function toJSON(transaction: Unsigned): UnsignedJSON;
-export function toJSON(transaction: Transaction | Unsigned): JSON | UnsignedJSON;
+export function toJSON(transaction: AccountTransactionV0 | Unsigned): JSON | UnsignedJSON;
 
-export function toJSON(transaction: Transaction | Unsigned): JSON | UnsignedJSON {
+export function toJSON(transaction: AccountTransactionV0 | Unsigned): JSON | UnsignedJSON {
     const base = {
         version: 0 as const,
         header: headerToJSON(transaction.header),
@@ -132,14 +132,17 @@ export function toJSON(transaction: Transaction | Unsigned): JSON | UnsignedJSON
  * version 0 account transaction.
  *
  * @param json the JSON to convert
- * @param [as] the transaction variant to parse. Defaults to parsing {@linkcode Transaction}.
+ * @param [as] the transaction variant to parse. Defaults to parsing {@linkcode AccountTransactionV0}.
  * @returns the transaction
  */
-export function fromJSON(json: JSON, as?: 'signed'): Transaction;
+export function fromJSON(json: JSON, as?: 'signed'): AccountTransactionV0;
 export function fromJSON(json: UnsignedJSON, as: 'unsigned'): Unsigned;
-export function fromJSON(json: JSON | UnsignedJSON, as?: 'signed' | 'unsigned'): Transaction | Unsigned;
+export function fromJSON(json: JSON | UnsignedJSON, as?: 'signed' | 'unsigned'): AccountTransactionV0 | Unsigned;
 
-export function fromJSON(json: JSON | UnsignedJSON, as: 'signed' | 'unsigned' = 'signed'): Transaction | Unsigned {
+export function fromJSON(
+    json: JSON | UnsignedJSON,
+    as: 'signed' | 'unsigned' = 'signed'
+): AccountTransactionV0 | Unsigned {
     const base = { version: 0 as const, header: headerFromJSON(json.header), payload: Payload.fromJSON(json.payload) };
     if (!('signature' in json)) {
         if (as !== 'unsigned') throw new Error(`Found "unsigned" transaction, failed to parse as "${as}"`);
@@ -151,26 +154,26 @@ export function fromJSON(json: JSON | UnsignedJSON, as: 'signed' | 'unsigned' = 
 }
 
 /**
- * Converts a {@linkcode Transaction} to a JSON string.
+ * Converts a {@linkcode AccountTransactionV0} to a JSON string.
  *
  * @param transaction - the transaction to convert
  * @returns the JSON string
  */
-export function toJSONString(transaction: Transaction | Unsigned): string {
+export function toJSONString(transaction: AccountTransactionV0 | Unsigned): string {
     return JSONBig.stringify(toJSON(transaction));
 }
 /**
- * Converts a JSON string transaction representation to a {@linkcode Transaction}.
+ * Converts a JSON string transaction representation to a {@linkcode AccountTransactionV0}.
  *
  * @param jsonString - the json string to convert
- * @param [as] - the type of transaction to parse. Defaults to parsing {@linkcode Transaction}.
+ * @param [as] - the type of transaction to parse. Defaults to parsing {@linkcode AccountTransactionV0}.
  * @returns the parsed transaction
  */
-export function fromJSONString(jsonString: string, as?: 'signed'): Transaction;
+export function fromJSONString(jsonString: string, as?: 'signed'): AccountTransactionV0;
 export function fromJSONString(jsonString: string, as: 'unsigned'): Unsigned;
-export function fromJSONString(jsonString: string, as?: 'signed' | 'unsigned'): Transaction | Unsigned;
+export function fromJSONString(jsonString: string, as?: 'signed' | 'unsigned'): AccountTransactionV0 | Unsigned;
 
-export function fromJSONString(jsonString: string, as?: 'signed' | 'unsigned'): Transaction | Unsigned {
+export function fromJSONString(jsonString: string, as?: 'signed' | 'unsigned'): AccountTransactionV0 | Unsigned {
     return fromJSON(JSONBig.parse(jsonString), as);
 }
 
@@ -180,7 +183,7 @@ export function fromJSONString(jsonString: string, as?: 'signed' | 'unsigned'): 
  * @param header the transaction header to serialize
  * @returns the serialized header as a byte array
  */
-function serializeHeader(header: Header): Uint8Array {
+export function serializeHeader(header: Header): Uint8Array {
     const sender = AccountAddress.toBuffer(header.sender);
     const nonce = encodeWord64(header.nonce.value);
     const energyAmount = encodeWord64(header.energyAmount.value);
@@ -189,12 +192,26 @@ function serializeHeader(header: Header): Uint8Array {
     return Buffer.concat([sender, nonce, energyAmount, payloadSize, expiry]);
 }
 
-function deserializeHeader(value: Cursor): Header {
-    const sender = AccountAddress.fromBuffer(value.read(32));
-    const nonce = SequenceNumber.create(value.read(8).readBigUInt64BE(0));
-    const energyAmount = Energy.create(value.read(8).readBigUInt64BE(0));
-    const payloadSize = value.read(4).readUInt32BE(0);
-    const expiry = TransactionExpiry.fromEpochSeconds(value.read(8).readBigUInt64BE(0));
+/**
+ * Deserializes a V1 account transaction header from a buffer or cursor.
+ *
+ * @param value - The buffer or cursor containing the serialized header data.
+ * @returns The deserialized V1 transaction header, including base fields and optional extensions.
+ * @throws {Error} If the invoked with a buffer which is not fully consumed during deserialization.
+ */
+export function deserializeHeader(value: Cursor | ArrayBuffer): Header {
+    const isRawBuffer = value instanceof Cursor;
+    const cursor = isRawBuffer ? value : Cursor.fromBuffer(value);
+
+    const sender = AccountAddress.fromBuffer(cursor.read(32));
+    const nonce = SequenceNumber.create(cursor.read(8).readBigUInt64BE(0));
+    const energyAmount = Energy.create(cursor.read(8).readBigUInt64BE(0));
+    const payloadSize = cursor.read(4).readUInt32BE(0);
+    const expiry = TransactionExpiry.fromEpochSeconds(cursor.read(8).readBigUInt64BE(0));
+
+    if (isRawBuffer && cursor.remainingBytes.length !== 0)
+        throw new Error('Deserializing the transaction did not exhaust the buffer');
+
     return {
         sender,
         nonce,
@@ -210,7 +227,7 @@ function deserializeHeader(value: Cursor): Header {
  * @param transaction the transaction to serialize
  * @returns the serialized transaction as a byte array
  */
-export function serialize(transaction: Transaction): Uint8Array {
+export function serialize(transaction: AccountTransactionV0): Uint8Array {
     const signature = serializeAccountTransactionSignature(transaction.signature);
     const payload = Payload.serialize(transaction.payload);
     const header = serializeHeader(transaction.header);
@@ -225,7 +242,7 @@ export function serialize(transaction: Transaction): Uint8Array {
  * @returns the deserialized transaction
  * @throws if the buffer is not fully consumed during deserialization
  */
-export function deserialize(value: Cursor | ArrayBuffer): Transaction {
+export function deserialize(value: Cursor | ArrayBuffer): AccountTransactionV0 {
     const isRawBuffer = value instanceof Cursor;
     const cursor = isRawBuffer ? value : Cursor.fromBuffer(value);
 
@@ -245,7 +262,7 @@ export function deserialize(value: Cursor | ArrayBuffer): Transaction {
  * @param transaction the transaction to serialize
  * @returns the serialized block item as a byte array with block item kind prefix
  */
-export function serializeBlockItem(transaction: Transaction): Uint8Array {
+export function serializeBlockItem(transaction: AccountTransactionV0): Uint8Array {
     const blockItemKind = encodeWord8(BlockItemKind.AccountTransactionKind);
     return Uint8Array.from(Buffer.concat([blockItemKind, serialize(transaction)]));
 }
@@ -283,7 +300,7 @@ export function calculateEnergyCost(
  * @param transaction the transaction to hash
  * @returns the sha256 hash of the serialized block item kind, signatures, header, type and payload
  */
-export function getAccountTransactionHash(transaction: Transaction): Uint8Array {
+export function getAccountTransactionHash(transaction: AccountTransactionV0): Uint8Array {
     const serializedAccountTransaction = serialize(transaction);
     return Uint8Array.from(sha256([serializedAccountTransaction]));
 }
@@ -291,7 +308,7 @@ export function getAccountTransactionHash(transaction: Transaction): Uint8Array 
 /**
  * An unsigned version 0 account transaction (without signature).
  */
-export type Unsigned = Omit<Transaction, 'signature'>;
+export type Unsigned = Omit<AccountTransactionV0, 'signature'>;
 
 /**
  * Returns the digest of the transaction that has to be signed.
@@ -312,7 +329,7 @@ export function signDigest(transaction: Unsigned): Uint8Array {
  *
  * @returns a promise resolving to the signed transaction
  */
-export async function sign(transaction: Unsigned, signer: AccountSigner): Promise<Transaction> {
+export async function sign(transaction: Unsigned, signer: AccountSigner): Promise<AccountTransactionV0> {
     const signature = await signer.sign(signDigest(transaction));
     return { ...transaction, signature };
 }

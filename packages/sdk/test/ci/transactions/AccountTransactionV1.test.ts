@@ -47,6 +47,14 @@ describe('AccountTransactionV1', () => {
                 // Should start with bitmap (0000 for no optional fields) followed by V0 header
                 expect(hex).toMatch(/^0000/);
             });
+
+            test('header serialization produces fixed hex output', () => {
+                const serialized = AccountTransactionV1.serializeHeader(header);
+                const hex = Buffer.from(serialized).toString('hex');
+                expect(hex).toBe(
+                    '000049176df18432686c93c61ca89dafbe1cb383bfe6eb3a301ef8907f852643d98d000000000000000100000000000001f400000029000000006553f100'
+                );
+            });
         });
 
         describe('with sponsor', () => {
@@ -71,6 +79,14 @@ describe('AccountTransactionV1', () => {
                 // Should start with bitmap (0001 for sponsor field) followed by V0 header and sponsor
                 expect(hex).toMatch(/^0001/);
             });
+
+            test('header with sponsor serialization produces fixed hex output', () => {
+                const serialized = AccountTransactionV1.serializeHeader(headerWithSponsor);
+                const hex = Buffer.from(serialized).toString('hex');
+                expect(hex).toBe(
+                    '000149176df18432686c93c61ca89dafbe1cb383bfe6eb3a301ef8907f852643d98d000000000000000100000000000001f400000029000000006553f100d46bbc5fbbbbabb07752d4acb86892d7a2479856d414182f703e21065dad046d'
+                );
+            });
         });
     });
 
@@ -92,6 +108,14 @@ describe('AccountTransactionV1', () => {
                 // Should end with 00 byte indicating no sponsor signatures
                 expect(hex).toMatch(/00$/);
             });
+
+            test('signatures serialization produces fixed hex output', () => {
+                const serialized = AccountTransactionV1.serializeSignatures(signatures);
+                const hex = Buffer.from(serialized).toString('hex');
+                expect(hex).toBe(
+                    '010001000040893f2e4a230bcbeee24675454c4ca95a2f55fd33f328958b626c6fa368341e07902c9ffe7864c3bee23b2b2300ed0922eb814ea41fdee25035be8cddc5c3980f00'
+                );
+            });
         });
 
         describe('sender and sponsor signatures', () => {
@@ -111,6 +135,14 @@ describe('AccountTransactionV1', () => {
                 const hex = Buffer.from(serialized).toString('hex');
                 // Should not end with 00 byte when sponsor signatures are present
                 expect(hex).not.toMatch(/00$/);
+            });
+
+            test('signatures with sponsor serialization produces fixed hex output', () => {
+                const serialized = AccountTransactionV1.serializeSignatures(signaturesWithSponsor);
+                const hex = Buffer.from(serialized).toString('hex');
+                expect(hex).toBe(
+                    '010001000040893f2e4a230bcbeee24675454c4ca95a2f55fd33f328958b626c6fa368341e07902c9ffe7864c3bee23b2b2300ed0922eb814ea41fdee25035be8cddc5c3980f010001000040620d859224c40160c2bb03dbe84e9f57b8ed17f1a5df28b4e21f10658992531ef27655e6b74b8e47923e1ccb0413d563205e8b6c0cd22b3adce5dc7dc1daf603'
+                );
             });
         });
     });
@@ -146,6 +178,14 @@ describe('AccountTransactionV1', () => {
                 const serialized2 = AccountTransactionV1.serialize(transaction);
                 expect(Buffer.from(serialized1).equals(Buffer.from(serialized2))).toBe(true);
             });
+
+            test('complete transaction serialization produces fixed hex output', () => {
+                const serialized = AccountTransactionV1.serialize(transaction);
+                const hex = Buffer.from(serialized).toString('hex');
+                expect(hex).toBe(
+                    '010001000040893f2e4a230bcbeee24675454c4ca95a2f55fd33f328958b626c6fa368341e07902c9ffe7864c3bee23b2b2300ed0922eb814ea41fdee25035be8cddc5c3980f00000049176df18432686c93c61ca89dafbe1cb383bfe6eb3a301ef8907f852643d98d000000000000000100000000000001f400000029000000006553f10003d46bbc5fbbbbabb07752d4acb86892d7a2479856d414182f703e21065dad046d00000000000f4240'
+                );
+            });
         });
 
         describe('transaction with sponsor', () => {
@@ -179,6 +219,14 @@ describe('AccountTransactionV1', () => {
                 const serialized1 = AccountTransactionV1.serialize(transactionWithSponsor);
                 const serialized2 = AccountTransactionV1.serialize(transactionWithSponsor);
                 expect(Buffer.from(serialized1).equals(Buffer.from(serialized2))).toBe(true);
+            });
+
+            test('transaction with sponsor serialization produces fixed hex output', () => {
+                const serialized = AccountTransactionV1.serialize(transactionWithSponsor);
+                const hex = Buffer.from(serialized).toString('hex');
+                expect(hex).toBe(
+                    '010001000040893f2e4a230bcbeee24675454c4ca95a2f55fd33f328958b626c6fa368341e07902c9ffe7864c3bee23b2b2300ed0922eb814ea41fdee25035be8cddc5c3980f010001000040620d859224c40160c2bb03dbe84e9f57b8ed17f1a5df28b4e21f10658992531ef27655e6b74b8e47923e1ccb0413d563205e8b6c0cd22b3adce5dc7dc1daf603000149176df18432686c93c61ca89dafbe1cb383bfe6eb3a301ef8907f852643d98d000000000000000100000000000001f400000029000000006553f100d46bbc5fbbbbabb07752d4acb86892d7a2479856d414182f703e21065dad046d03d46bbc5fbbbbabb07752d4acb86892d7a2479856d414182f703e21065dad046d00000000000f4240'
+                );
             });
 
             test('transaction with sponsor differs from transaction without sponsor', () => {

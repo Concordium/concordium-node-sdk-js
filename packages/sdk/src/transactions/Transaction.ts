@@ -28,6 +28,7 @@ import {
     UpdateContractPayload,
     UpdateCredentialsHandler,
     UpdateCredentialsPayload,
+    UpdateCredentialsInput,
     sha256,
 } from '../index.js';
 import * as JSONBig from '../json-bigint.js';
@@ -253,7 +254,8 @@ export function create(
             const { maxContractExecutionEnergy: updateEnergy, ...updatePayload } = payload as UpdateContractInput;
             return updateContract(metadata, updatePayload, updateEnergy);
         case AccountTransactionType.UpdateCredentials:
-            return updateCredentials(metadata, payload as UpdateCredentialsPayload);
+            const { currentNumberOfCredentials: numberOfCredentials, ...updateCredentialsPayload } = payload as UpdateCredentialsInput;
+            return updateCredentials(metadata, updateCredentialsPayload, numberOfCredentials);
         case AccountTransactionType.RegisterData:
             return registerData(metadata, payload as RegisterDataPayload);
         case AccountTransactionType.ConfigureDelegation:
@@ -386,14 +388,16 @@ export function transfer(
  */
 export function updateCredentials(
     metadata: Metadata,
-    payload: UpdateCredentialsPayload | Payload.UpdateCredentials
+    payload: UpdateCredentialsPayload | Payload.UpdateCredentials,
+    currentNumberOfCredentials: bigint
 ): TransactionBuilder<Payload.UpdateCredentials> {
-    if (!isPayloadWithType(payload)) return updateCredentials(metadata, Payload.updateCredentials(payload));
+    if (!isPayloadWithType(payload)) 
+        return updateCredentials(metadata, Payload.updateCredentials(payload), currentNumberOfCredentials);
 
     const { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) } = metadata;
     const handler = new UpdateCredentialsHandler();
     return new TransactionBuilder(
-        header(sender, nonce, expiry, Energy.create(handler.getBaseEnergyCost(payload))),
+        header(sender, nonce, expiry, Energy.create(handler.getBaseEnergyCost({...payload, currentNumberOfCredentials}))),
         payload
     );
 }

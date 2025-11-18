@@ -1,8 +1,8 @@
 import { Buffer } from 'buffer/index.js';
 
-import { deserializeAccountTransactionSignature } from '../deserialization.ts';
+import { deserializeAccountTransactionSignature } from '../deserialization.js';
 import { Cursor } from '../deserializationHelpers.js';
-import { AccountTransactionV0, Payload } from '../index.ts';
+import { AccountTransactionV0, Payload } from '../index.js';
 import { serializeAccountTransactionPayload, serializeAccountTransactionSignature } from '../serialization.js';
 import {
     SerializationSpec,

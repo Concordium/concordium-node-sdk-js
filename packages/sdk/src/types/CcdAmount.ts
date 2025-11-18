@@ -48,10 +48,10 @@ class CcdAmount {
 
 /**
  * Converts a `bigint` to a CCD amount in micro CCD.
- * @param {string} json The JSON representation of the CCD amount.
+ * @param {string | bigint | number} json The JSON representation of the CCD amount.
  * @returns {CcdAmount} The CCD amount.
  */
-export function fromJSON(json: string): CcdAmount {
+export function fromJSON(json: string | bigint | number): CcdAmount {
     return fromMicroCcd(json);
 }
 

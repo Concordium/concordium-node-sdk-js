@@ -39,6 +39,15 @@ export function toUnwrappedJSON(value: Type): bigint {
     return value.value;
 }
 
+/**
+ * Converts the intermediary representation created from {@linkcode toUnwrappedJSON} to a typed instance.
+ * @param json - The JSON value to parse
+ * @returns The corresponding typed instance
+ */
+export function fromUnwrappedJSON(json: bigint | string | number): Energy {
+    return create(BigInt(json));
+}
+
 /** Energy measure. Used as part of cost calculations for transactions. */
 export type Type = Energy;
 

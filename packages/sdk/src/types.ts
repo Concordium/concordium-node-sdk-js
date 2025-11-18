@@ -4,6 +4,7 @@
 import type { Known, Upward } from './grpc/index.js';
 import type { Cbor, TokenId } from './plt/index.js';
 import type { TokenAccountInfo } from './plt/types.js';
+import { AccountTransactionV0 } from './transactions/index.js';
 import type * as AccountAddress from './types/AccountAddress.js';
 import type * as BlockHash from './types/BlockHash.js';
 import type * as CcdAmount from './types/CcdAmount.js';
@@ -1380,16 +1381,18 @@ export interface VersionedModuleSource {
 export interface InitContractPayload {
     /** CCD amount to transfer */
     amount: CcdAmount.Type;
-
     /** Hash of the module on chain */
     moduleRef: ModuleReference.Type;
-
     /** Name of the contract */
     initName: ContractName.Type;
-
     /** Parameters for the init function */
     param: Parameter.Type;
+}
 
+/**
+ * Describes the input required to create a transaction with a {@linkcode InitContractPayload}.
+ */
+export interface InitContractInput extends InitContractPayload {
     /** The amount of energy that can be used for contract execution.
     The base energy amount for transaction verification will be added to this cost.*/
     maxContractExecutionEnergy: Energy.Type;
@@ -1398,31 +1401,35 @@ export interface InitContractPayload {
 export interface UpdateContractPayload {
     /** CCD amount to transfer */
     amount: CcdAmount.Type;
-
     /** Address of contract instance consisting of an index and a subindex */
     address: ContractAddress.Type;
-
     /** Name of receive function including <contractName>. prefix */
     receiveName: ReceiveName.Type;
-
     /** Parameters for the update function */
     message: Parameter.Type;
+}
 
+/**
+ * Describes the input required to create a transaction with a {@linkcode UpdateContractPayload}.
+ */
+export interface UpdateContractInput extends UpdateContractPayload {
     /** The amount of energy that can be used for contract execution.
     The base energy amount for transaction verification will be added to this cost.*/
     maxContractExecutionEnergy: Energy.Type;
 }
 
+/**
+ * This describes a "pre-transaction" header, meaning the parts of a transaction header
+ * required to build the transaction header sent to chain.
+ */
 export interface AccountTransactionHeader {
     /** account address that is source of this transaction */
     sender: AccountAddress.Type;
-
     /**
      * the nonce for the transaction, usually acquired by
      * getting the next account nonce from the node
      */
     nonce: SequenceNumber.Type;
-
     /** expiration of the transaction */
     expiry: TransactionExpiry.Type;
 }
@@ -1555,10 +1562,32 @@ export type AccountTransactionPayload =
     | ConfigureDelegationPayload
     | TokenUpdatePayload;
 
-export interface AccountTransaction {
-    type: AccountTransactionType;
+export type AccountTransactionInput =
+    | Exclude<AccountTransactionPayload, InitContractPayload | UpdateContractPayload>
+    | InitContractInput
+    | UpdateContractInput;
+
+/**
+ * Describes account transactions. This does _not_ describe the transaction format that is serialized
+ * and submitted to chain, but rather a "pre-transaction format", i.e. the input required to create and
+ * sign a transaction to be submitted to chain.
+ */
+export interface AccountTransaction<
+    T extends AccountTransactionType = AccountTransactionType,
+    P extends AccountTransactionInput = AccountTransactionInput,
+> {
+    /**
+     * The transaction type
+     */
+    type: T;
+    /**
+     * The header data to be processed with the payload to form the complete transaction header.
+     */
     header: AccountTransactionHeader;
-    payload: AccountTransactionPayload;
+    /**
+     * The input specific to creating a transaction of `type`.
+     */
+    payload: P;
 }
 
 export interface InstanceInfoCommon {
@@ -2014,10 +2043,7 @@ export type HealthCheckResponse =
 export type BlockItem =
     | {
           kind: BlockItemKind.AccountTransactionKind;
-          transaction: {
-              accountTransaction: AccountTransaction;
-              signatures: AccountTransactionSignature;
-          };
+          transaction: AccountTransactionV0.Type;
       }
     | {
           kind: BlockItemKind.CredentialDeploymentKind;

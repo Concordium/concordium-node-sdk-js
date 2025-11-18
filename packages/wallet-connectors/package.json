@@ -39,7 +39,7 @@
         "buffer": "^6.0.3"
     },
     "peerDependencies": {
-        "@concordium/web-sdk": ">= 7",
+        "@concordium/web-sdk": ">= 12",
         "@walletconnect/types": "^2.13.1"
     },
     "devDependencies": {

@@ -7,6 +7,7 @@ export {
     Serializable,
     toTypedJSON,
     toUnwrappedJSON,
+    fromUnwrappedJSON,
     fromTypedJSON,
     toSerializable,
     fromSerializable,

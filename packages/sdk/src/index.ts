@@ -10,3 +10,4 @@ export * from './pub/cis4.js';
 export * from './pub/schema.js';
 export * from './pub/web3-id.js';
 export * from './pub/plt.js';
+export * from './pub/transactions.js';

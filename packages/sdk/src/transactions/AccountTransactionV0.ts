@@ -106,51 +106,59 @@ export type UnsignedJSON = {
 };
 
 /**
- * Converts a version 0 account transaction to its intermediary JSON serializable representation.
+ * Converts a _signed_ version 0 account transaction to its intermediary JSON serializable representation.
  *
  * @param transaction the transaction to convert
  * @returns the JSON representation of the transaction
  */
-export function toJSON(transaction: AccountTransactionV0): JSON;
-export function toJSON(transaction: Unsigned): UnsignedJSON;
-export function toJSON(transaction: AccountTransactionV0 | Unsigned): JSON | UnsignedJSON;
+export function toJSON(transaction: AccountTransactionV0): JSON {
+    return {
+        version: 0 as const,
+        header: headerToJSON(transaction.header),
+        payload: Payload.toJSON(transaction.payload),
+        signature: transaction.signature,
+    };
+}
 
-export function toJSON(transaction: AccountTransactionV0 | Unsigned): JSON | UnsignedJSON {
-    const base = {
+/**
+ * Converts an _unsigned_ version 0 account transaction to its intermediary JSON serializable representation.
+ *
+ * @param transaction the transaction to convert
+ * @returns the JSON representation of the transaction
+ */
+export function unsignedToJSON(transaction: Unsigned): UnsignedJSON {
+    return {
         version: 0 as const,
         header: headerToJSON(transaction.header),
         payload: Payload.toJSON(transaction.payload),
     };
-    if (!('signature' in transaction)) {
-        return base;
-    }
-    return { ...base, signature: transaction.signature };
 }
 
 /**
  * Converts a intermediary JSON serializable representation created with {@linkcode toJSON} back to a
- * version 0 account transaction.
+ * _signed_ version 0 account transaction.
  *
  * @param json the JSON to convert
- * @param [as] the transaction variant to parse. Defaults to parsing {@linkcode AccountTransactionV0}.
  * @returns the transaction
  */
-export function fromJSON(json: JSON, as?: 'signed'): AccountTransactionV0;
-export function fromJSON(json: UnsignedJSON, as: 'unsigned'): Unsigned;
-export function fromJSON(json: JSON | UnsignedJSON, as?: 'signed' | 'unsigned'): AccountTransactionV0 | Unsigned;
+export function fromJSON(json: JSON): AccountTransactionV0 {
+    return {
+        version: 0 as const,
+        header: headerFromJSON(json.header),
+        payload: Payload.fromJSON(json.payload),
+        signature: json.signature,
+    };
+}
 
-export function fromJSON(
-    json: JSON | UnsignedJSON,
-    as: 'signed' | 'unsigned' = 'signed'
-): AccountTransactionV0 | Unsigned {
-    const base = { version: 0 as const, header: headerFromJSON(json.header), payload: Payload.fromJSON(json.payload) };
-    if (!('signature' in json)) {
-        if (as !== 'unsigned') throw new Error(`Found "unsigned" transaction, failed to parse as "${as}"`);
-        return base;
-    }
-
-    if (as !== 'signed') throw new Error(`Found "signed" transaction, failed to parse as "${as}"`);
-    return { ...base, signature: json.signature };
+/**
+ * Converts a intermediary JSON serializable representation created with {@linkcode unsignedToJSON} back to an
+ * _unsigned_ version 0 account transaction.
+ *
+ * @param json the JSON to convert
+ * @returns the unsigned transaction
+ */
+export function unsignedFromJSON(json: UnsignedJSON): Unsigned {
+    return { version: 0 as const, header: headerFromJSON(json.header), payload: Payload.fromJSON(json.payload) };
 }
 
 /**
@@ -159,22 +167,38 @@ export function fromJSON(
  * @param transaction - the transaction to convert
  * @returns the JSON string
  */
-export function toJSONString(transaction: AccountTransactionV0 | Unsigned): string {
+export function toJSONString(transaction: AccountTransactionV0): string {
     return JSONBig.stringify(toJSON(transaction));
 }
+
+/**
+ * Converts an {@linkcode Unsigned} to a JSON string.
+ *
+ * @param transaction - the transaction to convert
+ * @returns the JSON string
+ */
+export function unsignedToJSONString(transaction: Unsigned): string {
+    return JSONBig.stringify(unsignedToJSON(transaction));
+}
+
 /**
  * Converts a JSON string transaction representation to a {@linkcode AccountTransactionV0}.
  *
  * @param jsonString - the json string to convert
- * @param [as] - the type of transaction to parse. Defaults to parsing {@linkcode AccountTransactionV0}.
  * @returns the parsed transaction
  */
-export function fromJSONString(jsonString: string, as?: 'signed'): AccountTransactionV0;
-export function fromJSONString(jsonString: string, as: 'unsigned'): Unsigned;
-export function fromJSONString(jsonString: string, as?: 'signed' | 'unsigned'): AccountTransactionV0 | Unsigned;
+export function fromJSONString(jsonString: string): AccountTransactionV0 {
+    return fromJSON(JSONBig.parse(jsonString));
+}
 
-export function fromJSONString(jsonString: string, as?: 'signed' | 'unsigned'): AccountTransactionV0 | Unsigned {
-    return fromJSON(JSONBig.parse(jsonString), as);
+/**
+ * Converts a JSON string _unsigned_ transaction representation to an {@linkcode Unsigned}.
+ *
+ * @param jsonString - the json string to convert
+ * @returns the parsed unsigned transaction
+ */
+export function unsignedFromJSONString(jsonString: string): Unsigned {
+    return unsignedFromJSON(JSONBig.parse(jsonString));
 }
 
 /**

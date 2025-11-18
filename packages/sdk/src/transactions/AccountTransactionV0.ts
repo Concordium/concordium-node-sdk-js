@@ -200,8 +200,8 @@ export function serializeHeader(header: Header): Uint8Array {
  * @throws {Error} If the invoked with a buffer which is not fully consumed during deserialization.
  */
 export function deserializeHeader(value: Cursor | ArrayBuffer): Header {
-    const isRawBuffer = value instanceof Cursor;
-    const cursor = isRawBuffer ? value : Cursor.fromBuffer(value);
+    const isRawBuffer = !(value instanceof Cursor);
+    const cursor = isRawBuffer ? Cursor.fromBuffer(value) : value;
 
     const sender = AccountAddress.fromBuffer(cursor.read(32));
     const nonce = SequenceNumber.create(cursor.read(8).readBigUInt64BE(0));
@@ -243,8 +243,8 @@ export function serialize(transaction: AccountTransactionV0): Uint8Array {
  * @throws if the buffer is not fully consumed during deserialization
  */
 export function deserialize(value: Cursor | ArrayBuffer): AccountTransactionV0 {
-    const isRawBuffer = value instanceof Cursor;
-    const cursor = isRawBuffer ? value : Cursor.fromBuffer(value);
+    const isRawBuffer = !(value instanceof Cursor);
+    const cursor = isRawBuffer ? Cursor.fromBuffer(value) : value;
 
     const signature = deserializeAccountTransactionSignature(cursor);
     const header = deserializeHeader(cursor);

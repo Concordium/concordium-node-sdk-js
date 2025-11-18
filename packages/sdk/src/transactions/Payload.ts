@@ -596,8 +596,8 @@ export function sizeOf(payload: Payload): number {
  * @throws if the transaction type is invalid or buffer is not fully consumed
  */
 export function deserialize(value: Cursor | ArrayBuffer): Payload {
-    const isRawBuffer = value instanceof Cursor;
-    const cursor = isRawBuffer ? value : Cursor.fromBuffer(value);
+    const isRawBuffer = !(value instanceof Cursor);
+    const cursor = isRawBuffer ? Cursor.fromBuffer(value) : value;
 
     const type = deserializeUint8(cursor);
     let payload: Payload;

@@ -1,5 +1,3 @@
-import _JB from 'json-bigint';
-
 import { deserializeUint8 } from '../deserialization.js';
 import { Cursor } from '../deserializationHelpers.js';
 import {
@@ -40,9 +38,8 @@ import {
     getAccountTransactionHandler,
     getTransactionKindString,
 } from '../index.js';
+import * as JSONBig from '../json-bigint.js';
 import { serializeAccountTransactionType } from '../serialization.js';
-
-const JSONBig = _JB({ useNativeBigInt: true, alwaysParseAsBig: true });
 
 type PayloadJSON<T extends TransactionKindString, P extends AccountTransactionPayloadJSON> = { type: T } & P;
 

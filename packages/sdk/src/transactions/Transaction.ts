@@ -1,5 +1,3 @@
-import _JB from 'json-bigint';
-
 import {
     AccountSigner,
     AccountTransaction,
@@ -32,10 +30,9 @@ import {
     UpdateCredentialsPayload,
     sha256,
 } from '../index.js';
+import * as JSONBig from '../json-bigint.js';
 import { AccountAddress, DataBlob, Energy, SequenceNumber, TransactionExpiry } from '../types/index.js';
 import { AccountTransactionV0, Payload } from './index.js';
-
-const JSONBig = _JB({ useNativeBigInt: true, alwaysParseAsBig: true });
 
 // --- Core types ---
 

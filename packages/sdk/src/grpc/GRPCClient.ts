@@ -18,7 +18,7 @@ import { getAccountTransactionHandler } from '../index.js';
 import * as PLT from '../plt/index.js';
 import { RawModuleSchema } from '../schemaTypes.js';
 import { serializeAccountTransactionPayload } from '../serialization.js';
-import { Payload, Transaction } from '../transactions/index.js';
+import { Payload, type Transaction } from '../transactions/index.js';
 import * as SDK from '../types.js';
 import { HexString, isRpcError } from '../types.js';
 import * as AccountAddress from '../types/AccountAddress.js';

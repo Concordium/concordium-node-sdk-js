@@ -4,7 +4,11 @@ import {
     AccountTransactionPayload,
     AccountTransactionSignature,
     AccountTransactionType,
+    ChainArData,
+    CredentialPublicKeys,
     isAccountTransactionType,
+    UpdateCredentialsPayload,
+    VerifyKey,
 } from './types.js';
 
 /**
@@ -69,3 +73,240 @@ export function deserializeAccountTransactionPayload(value: Cursor): {
     const payload = accountTransactionHandler.deserialize(value);
     return { type, payload };
 }
+
+export function deserializeCredentialDeploymentValues(serializedPayload: Cursor, data: Partial<UpdateCredentialsPayload>, currentLocation: number) {
+
+    //CredentialDeploymentValues.publicKeys
+    const publicKeys = deserializeCredentialPublicKeys(serializedPayload);
+
+    //CredentialDeploymentValues.credId
+    const credId = serializedPayload.read(48);
+
+    //CredentialDeploymentValues.ipId
+    const ipId = serializedPayload.read(4).readUInt32BE(0);
+
+    //CredentialDeploymentValues.revocationThreshold
+    const revocationThreshold = serializedPayload.read(1).readUInt8(0);
+
+    //CredentialDeploymentValues.arData
+    /*const arDataCount = */serializedPayload.read(1).readUInt8(0);
+    const arData = deserializeArDataEntry(serializedPayload);
+
+    //CredentialDeploymentValues.policy section
+    const validTo = serializedPayload.read(3);
+    const createdAt = serializedPayload.read(3);
+    const countAtrributes = serializedPayload.read(2).readUInt16BE(0);
+
+    const revealedAttributes: Partial<Record<any,any>> = {}; 
+    for(let a = 0; a < countAtrributes; a++) {
+        //AttributeEntry
+        const attributeTag = serializedPayload.read(1);
+        const countAttributeValue = serializedPayload.read(1).readUInt8(0);
+        const attributeValue = serializedPayload.read(countAttributeValue);
+
+        revealedAttributes[attributeTag.toString()] = attributeValue;
+    }
+    //end of policy section
+
+    if(data.newCredentials) {
+        data.newCredentials[currentLocation].cdi = {
+            credId: credId.toString(),
+            revocationThreshold: revocationThreshold,
+            arData: arData,
+
+            //TODO: Still looking for this, not in serialize() but on the bluepaper
+            commitments: {
+                cmmPrf: '',
+                cmmCredCounter: '',
+                cmmIdCredSecSharingCoeff: [],
+                cmmAttributes: {},
+                cmmMaxAccounts: '',
+            },
+            //TODO: still looking for this, not on bluepaper, but this looks to be part of serialize() but how do i generate this back for deserialize?
+            proofs: '',
+
+            ipIdentity: ipId,
+            credentialPublicKeys: publicKeys,
+            policy: {
+                validTo: validTo.toString(),
+                createdAt: createdAt.toString(),
+                revealedAttributes: revealedAttributes,
+            },
+        }
+    }
+}
+
+export function deserializeArDataEntry(serializedPayload: Cursor): Record<any, any> {
+
+    const result:Record<any, any> = {};
+    //ArData.count
+    const count = serializedPayload.read(1).readUInt8(0);
+
+    for(let i = 0; i < count; i++) {
+        //ArData.ArDataEntry
+        //          .arIdentity
+        const arIdentity = serializedPayload.read(4);
+        //          .data
+        const data = deserializeChainArData(serializedPayload);
+
+        result[arIdentity.toString()] = data;
+    }
+
+    return result;
+}
+
+export function deserializeChainArData(serializedPayload: Cursor): ChainArData {
+    //ChainArData.idCredPubShare
+    const idCredPubShare = serializedPayload.read(96);
+
+    return {
+        encIdCredPubShare: idCredPubShare.toString(),
+    }
+}
+
+export function deserializeCredentialPublicKeys(serializedPayload: Cursor): CredentialPublicKeys {
+    //CredentialPublicKeys.count
+    const count = serializedPayload.read(1).readUInt8(0);
+
+    //CredentialPublicKeys.keys: count x CredentialVerifyKeyEntry
+    const keys: Record<any, any> = {};
+    for(let i = 0; i < count; i++) {
+        const credentialVerifyKeyEntry = deserializeCredentialVerifyKey(serializedPayload);
+        keys[credentialVerifyKeyEntry.index] = credentialVerifyKeyEntry.key;
+    }
+
+    //CredentialPublicKeys.threshold
+    const threshold = serializedPayload.read(1).readUInt8(0);
+
+    return {
+        keys: keys,
+        threshold: threshold,
+    }
+}
+
+interface CredentialVerifyKeyEntry {
+    index: number;
+    key: VerifyKey;
+}
+
+export function deserializeCredentialVerifyKey(serializedPayload: Cursor): CredentialVerifyKeyEntry {
+    //CredentialVerifyKeyEntry.index
+    const index = serializedPayload.read(1).readUInt8(0);
+
+    //CredentialVerifyKeyEntry.key
+    const scheme = serializedPayload.read(1).readUInt8(0);
+    const verifyKey = serializedPayload.read(32);
+
+    const verifyKeyObject: VerifyKey = {
+        schemeId: scheme.toString(),
+        verifyKey: verifyKey.toString('hex'),
+    }
+
+    return {
+        index: index,
+        key: verifyKeyObject,
+    }
+}
+
+export function deserializeCredentialDeploymentProofs(serializedPayload: Cursor, data: Partial<UpdateCredentialsPayload>, currentLocation: number) {
+
+    //CredentialDeploymentProofs.idProofs
+    //  IdOwnershipProofs.sig
+    /*const blindedSignature = */ serializedPayload.read(96);
+
+    //  IdOwnershipProofs.commitments
+    /* const prf = */serializedPayload.read(48);
+    const credCounter = serializedPayload.read(48);
+    /* const maxAccounts = */serializedPayload.read(48);
+
+    const attributeCommitmentRecords: Record<any, any> = {};
+    const lengthAttributes = serializedPayload.read(2).readUInt16BE(0);
+    for(let a = 0; a < lengthAttributes; a++) {
+        //AttributeCommitment
+        const attributeTag = serializedPayload.read(1).readUInt8(0);
+        const attributeCommitment = serializedPayload.read(48);
+        attributeCommitmentRecords[attributeTag] = attributeCommitment;
+    }
+
+    const sharingCoeffsLength = serializedPayload.read(8).readBigUInt64BE(0);
+    for(let a = 0; a < sharingCoeffsLength; a++) {
+        serializedPayload.read(48); //sharingCoeffs being read, not stored anywhere
+    }
+
+    //  IdOwnershipProofs.challenge
+    /*const challenge = */serializedPayload.read(32);
+
+    //  IdOwnershipProofs.proofIdCredPub
+    const proofIdCredPubLength = serializedPayload.read(4).readUInt32BE(0);
+    for(let a = 0; a < proofIdCredPubLength; a++) {
+        /*const arIdentity = */serializedPayload.read(4);
+        /*const comEncEqResponse = */serializedPayload.read(96);
+    }
+
+    //  start of IdOwnershipProofs.proofIpSig
+    /*const responseRho = */serializedPayload.read(32);
+    const proofLength = serializedPayload.read(4).readUInt32BE(0);
+    //length x (F, F)
+    for(let a = 0; a < proofLength; a++) {
+        /*const firstF = */serializedPayload.read(32);
+        /*const secondF = */serializedPayload.read(32);
+    }
+    //  end of IdOwnershipProofs.proofIpSig
+
+    //IdOwnershipProofs.proofRegId
+    serializedPayload.read(160);
+
+    //IdOwnershipProofs.proofCredCounter
+    serializedPayload.read(48*4); //4 times 48, g1Elements
+    serializedPayload.read(32*3); //3 times 32, scalars1
+
+    const groupElementLength = serializedPayload.read(4).readUInt32BE(0);
+    for(let a = 0; a < groupElementLength; a++) {
+        serializedPayload.read(48);
+        serializedPayload.read(48);
+    }
+
+    serializedPayload.read(32*2) //2 times 32, scalars2
+
+    //AccountOwnershipProof
+    const numberOfSignatures = serializedPayload.read(1).readUInt8(0);
+
+    for(let a = 0; a < numberOfSignatures; a++) {
+        //AccountOwnershipProofEntry
+        /*const index = */serializedPayload.read(1);
+        /*const sig = */serializedPayload.read(64);
+    }
+
+    //populate placeholder, if any can be populated, and go back to the for loop in deserialize() and read next CredentialDeploymentInformation, if any    
+    if(data.newCredentials) {
+        //TODO: is cmmCredCounter the same as bluepaper.credCounter inside CredentialDeploymentCommitments
+        data.newCredentials[currentLocation].cdi.commitments.cmmCredCounter = credCounter.toString(); 
+    }
+}
+
+export function deserializeCredentialsToBeRemoved(serializedPayload: Cursor, data: Partial<UpdateCredentialsPayload>) {
+
+    //TransactionPayload.UpdateCredentials.removeLength
+    //number of credentials to be removed
+    const removeLength = serializedPayload.read(1).readUInt8(0);
+
+    //TransactionPayload.UpdateCredentials.CredIds
+    const removeCredIds: string[] = [];
+    //the credential IDs of the credentials to be removed, based on the removeLength value
+    for(let a = 0; a < removeLength; a++) {
+        const credentialRegistrationId = serializedPayload.read(48);
+        removeCredIds[a] = credentialRegistrationId.toString();
+    }
+
+    //TransactionPayload.UpdateCredentials.newThresholdd
+    //AccountThreshold
+    const newThreshold = serializedPayload.read(1).readUInt8(0);
+
+    //populate placeholder
+    data.removeCredentialIds = removeCredIds;
+    data.threshold = newThreshold;
+
+    //now need to construct the UpdateCredentialsPayload based on the partial data, so we return our way upwards to the deserialize() function
+}
+
+

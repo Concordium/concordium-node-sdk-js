@@ -9,6 +9,7 @@ import {
     InitContractInput,
     ModuleReference,
     UpdateContractInput,
+    UpdateCredentialsInput,
 } from './pub/types.js';
 import { serializeCredentialDeploymentInfo } from './serialization.js';
 import {
@@ -52,6 +53,7 @@ import * as InitName from './types/InitName.js';
 import * as Parameter from './types/Parameter.js';
 import * as ReceiveName from './types/ReceiveName.js';
 import { Energy } from './types/index.js';
+import { deserializeCredentialDeploymentValues, deserializeCredentialDeploymentProofs, deserializeCredentialsToBeRemoved } from './deserialization.js';
 
 export interface AccountTransactionHandler<
     Payload extends AccountTransactionPayload,
@@ -463,20 +465,38 @@ export class UpdateContractHandler
 }
 
 /**
+ * {@linkcode UpdateCredentialsPayload} is already JSON serializable.
+ */
+export type UpdateCredentialsPayloadJSON  = UpdateCredentialsPayload;
+
+/**
+ * {@linkcode UpdateCredentialsInput} is already JSON serializable.
+ */
+export type UpdateCredentialsInputJSON = UpdateCredentialsInput;
+
+function hasCurrentNumberOfCredentials(v: UpdateCredentialsPayloadJSON): v is UpdateCredentialsInputJSON;
+function hasCurrentNumberOfCredentials(v: UpdateCredentialsPayload): v is UpdateCredentialsInput;
+function hasCurrentNumberOfCredentials(
+    v: object
+): v is UpdateCredentialsInputJSON | UpdateCredentialsInput {
+    return 'currentNumberOfCredentials' in v;
+}
+
+/**
  * @deprecated use `Transaction.updateCredentials` and `Payload.updateCredentials` APIs instead.
  */
 export class UpdateCredentialsHandler
-    implements AccountTransactionHandler<UpdateCredentialsPayload, UpdateCredentialsPayload, UpdateCredentialsPayload>
+    implements AccountTransactionHandler<UpdateCredentialsPayload, UpdateCredentialsPayload, UpdateCredentialsInput>
 {
-    getBaseEnergyCost(updateCredentials: UpdateCredentialsPayload): bigint {
-        const newCredentialsCost = updateCredentials.newCredentials
+    getBaseEnergyCost(payload: UpdateCredentialsInput): bigint {
+        const newCredentialsCost = payload.newCredentials
             .map((credential) => {
                 const numberOfKeys = BigInt(Object.keys(credential.cdi.credentialPublicKeys.keys).length);
                 return 54000n + 100n * numberOfKeys;
             })
             .reduce((prev, curr) => prev + curr, BigInt(0));
 
-        const currentCredentialsCost = 500n * updateCredentials.currentNumberOfCredentials;
+        const currentCredentialsCost = 500n * payload.currentNumberOfCredentials;
 
         return 500n + currentCredentialsCost + newCredentialsCost;
     }
@@ -497,32 +517,64 @@ export class UpdateCredentialsHandler
         return Buffer.concat([serializedAddedCredentials, serializedRemovedCredIds, serializedThreshold]);
     }
 
-    deserialize(): UpdateCredentialsPayload {
-        throw new Error('deserialize not supported');
+    deserialize(serializedPayload: Cursor): UpdateCredentialsPayload {
+        //using this to as a placeholder to populate the values to be used in the final response
+        const partialData: Partial<UpdateCredentialsPayload> = {};
+
+        const cdiItems = serializedPayload.read(8);
+        partialData.newCredentials = [];
+        //the following for loop is to read the CredentialDeploymentInformation
+        for(let i = 0; i < cdiItems.readUInt8(0); i++) {
+            const index = serializedPayload.read(8).readUInt8(0);            
+            partialData.newCredentials[i].index = index;
+
+            deserializeCredentialDeploymentValues(serializedPayload, partialData, i);
+            console.log(`partialData after populating crdValue at i=${i}:`, partialData);
+
+            deserializeCredentialDeploymentProofs(serializedPayload, partialData, i);
+            console.log(`partialData after populating crdProofs at i=${i}:`, partialData);
+        }
+
+        deserializeCredentialsToBeRemoved(serializedPayload, partialData);
+
+        return {
+            newCredentials: partialData.newCredentials,
+            removeCredentialIds: partialData.removeCredentialIds ?? [],
+            threshold: partialData.threshold ?? 0,
+        }
     }
 
     toJSON(updateCredentials: UpdateCredentialsPayload): UpdateCredentialsPayload {
         return updateCredentials;
     }
 
-    fromJSON(json: UpdateCredentialsPayload): UpdateCredentialsPayload {
-        return {
-            ...json,
-            currentNumberOfCredentials: BigInt(json.currentNumberOfCredentials),
-            threshold: Number(json.threshold),
-            newCredentials: json.newCredentials.map((nc) => ({
-                index: Number(nc.index),
-                cdi: {
-                    ...nc.cdi,
-                    credentialPublicKeys: {
-                        ...nc.cdi.credentialPublicKeys,
-                        threshold: Number(nc.cdi.credentialPublicKeys.threshold),
+    fromJSON(json: UpdateCredentialsInputJSON): UpdateCredentialsInput;
+    fromJSON(json: UpdateCredentialsPayloadJSON): UpdateCredentialsPayload;
+    fromJSON(json: UpdateCredentialsPayloadJSON | UpdateCredentialsInputJSON): UpdateCredentialsPayload | UpdateCredentialsInput {
+        const payload = {
+                ...json,
+                threshold: Number(json.threshold),
+                newCredentials: json.newCredentials.map((nc) => ({
+                    index: Number(nc.index),
+                    cdi: {
+                        ...nc.cdi,
+                        credentialPublicKeys: {
+                            ...nc.cdi.credentialPublicKeys,
+                            threshold: Number(nc.cdi.credentialPublicKeys.threshold),
+                        },
+                        ipIdentity: Number(nc.cdi.ipIdentity),
+                        revocationThreshold: Number(nc.cdi.revocationThreshold),
                     },
-                    ipIdentity: Number(nc.cdi.ipIdentity),
-                    revocationThreshold: Number(nc.cdi.revocationThreshold),
-                },
-            })),
-        };
+                })),
+            };
+
+        if ('currentNumberOfCredentials' in json) {
+            (json as UpdateCredentialsInput).currentNumberOfCredentials = BigInt(json.currentNumberOfCredentials);
+    
+        } 
+
+        return payload;
+        
     }
 }
 

@@ -1469,7 +1469,9 @@ export interface UpdateCredentialsPayload {
 
     /** the new credential threshold required to sign transactions */
     threshold: number;
+}
 
+export interface UpdateCredentialsInput extends UpdateCredentialsPayload {
     /**
      * the current number of credentials on the account. This
      * is required to be able to calculate the energy cost, but

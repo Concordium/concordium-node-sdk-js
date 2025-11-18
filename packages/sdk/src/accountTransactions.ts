@@ -343,8 +343,8 @@ export class InitContractHandler
         return json;
     }
 
-    fromJSON(json: InitContractPayloadJSON): InitContractPayload;
     fromJSON(json: InitContractInputJSON): InitContractInput;
+    fromJSON(json: InitContractPayloadJSON): InitContractPayload;
     fromJSON(json: InitContractPayloadJSON | InitContractInputJSON): InitContractPayload | InitContractInput {
         const payload: InitContractPayload = {
             amount: CcdAmount.fromJSON(json.amount),
@@ -443,8 +443,8 @@ export class UpdateContractHandler
         return json;
     }
 
-    fromJSON(json: UpdateContractPayloadJSON): UpdateContractPayload;
     fromJSON(json: UpdateContractInputJSON): UpdateContractInput;
+    fromJSON(json: UpdateContractPayloadJSON): UpdateContractPayload;
     fromJSON(json: UpdateContractPayloadJSON | UpdateContractInputJSON): UpdateContractPayload | UpdateContractInput {
         const payload: UpdateContractPayload = {
             amount: CcdAmount.fromJSON(json.amount),

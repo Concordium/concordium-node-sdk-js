@@ -1,3 +1,5 @@
+import _JB from 'json-bigint';
+
 import { deserializeUint8 } from '../deserialization.js';
 import { Cursor } from '../deserializationHelpers.js';
 import {
@@ -40,7 +42,9 @@ import {
 } from '../index.js';
 import { serializeAccountTransactionType } from '../serialization.js';
 
-type GenJSON<T extends TransactionKindString, P extends AccountTransactionPayloadJSON> = { type: T } & P;
+const JSONBig = _JB({ useNativeBigInt: true, alwaysParseAsBig: true });
+
+type PayloadJSON<T extends TransactionKindString, P extends AccountTransactionPayloadJSON> = { type: T } & P;
 
 /**
  * A simple transfer transaction payload.
@@ -90,7 +94,7 @@ export function transfer(
 function transferToJSON({
     type,
     ...transfer
-}: Transfer): GenJSON<TransactionKindString.Transfer, SimpleTransferPayloadJSON> {
+}: Transfer): PayloadJSON<TransactionKindString.Transfer, SimpleTransferPayloadJSON> {
     const handler = new SimpleTransferHandler();
     return { type: TransactionKindString.Transfer, ...handler.toJSON(transfer) };
 }
@@ -103,7 +107,7 @@ function transferFromJSON({ type, ...json }: ReturnType<typeof transferToJSON>):
 function transferWithMemoToJSON({
     type,
     ...transferWithMemo
-}: TransferWithMemo): GenJSON<TransactionKindString.TransferWithMemo, SimpleTransferWithMemoPayloadJSON> {
+}: TransferWithMemo): PayloadJSON<TransactionKindString.TransferWithMemo, SimpleTransferWithMemoPayloadJSON> {
     const handler = new SimpleTransferWithMemoHandler();
     return { type: TransactionKindString.TransferWithMemo, ...handler.toJSON(transferWithMemo) };
 }
@@ -132,7 +136,7 @@ export function deployModule(payload: DeployModulePayload): DeployModule {
 function deployModuleToJSON({
     type,
     ...value
-}: DeployModule): GenJSON<TransactionKindString.DeployModule, DeployModulePayloadJSON> {
+}: DeployModule): PayloadJSON<TransactionKindString.DeployModule, DeployModulePayloadJSON> {
     const handler = new DeployModuleHandler();
     return { type: TransactionKindString.DeployModule, ...handler.toJSON(value) };
 }
@@ -161,7 +165,7 @@ export function initContract(payload: InitContractPayload): InitContract {
 function initContractToJSON({
     type,
     ...value
-}: InitContract): GenJSON<TransactionKindString.InitContract, InitContractPayloadJSON> {
+}: InitContract): PayloadJSON<TransactionKindString.InitContract, InitContractPayloadJSON> {
     const handler = new InitContractHandler();
     return { type: TransactionKindString.InitContract, ...handler.toJSON(value) };
 }
@@ -190,7 +194,7 @@ export function updateContract(payload: UpdateContractPayload): UpdateContract {
 function updateContractToJSON({
     type,
     ...value
-}: UpdateContract): GenJSON<TransactionKindString.Update, UpdateContractPayloadJSON> {
+}: UpdateContract): PayloadJSON<TransactionKindString.Update, UpdateContractPayloadJSON> {
     const handler = new UpdateContractHandler();
     return { type: TransactionKindString.Update, ...handler.toJSON(value) };
 }
@@ -219,7 +223,7 @@ export function updateCredentials(payload: UpdateCredentialsPayload): UpdateCred
 function updateCredentialsToJSON({
     type,
     ...value
-}: UpdateCredentials): GenJSON<TransactionKindString.UpdateCredentials, UpdateCredentialsPayload> {
+}: UpdateCredentials): PayloadJSON<TransactionKindString.UpdateCredentials, UpdateCredentialsPayload> {
     const handler = new UpdateCredentialsHandler();
     return { type: TransactionKindString.UpdateCredentials, ...handler.toJSON(value) };
 }
@@ -248,7 +252,7 @@ export function registerData(payload: RegisterDataPayload): RegisterData {
 function registerDataToJSON({
     type,
     ...value
-}: RegisterData): GenJSON<TransactionKindString.RegisterData, RegisterDataPayloadJSON> {
+}: RegisterData): PayloadJSON<TransactionKindString.RegisterData, RegisterDataPayloadJSON> {
     const handler = new RegisterDataHandler();
     return { type: TransactionKindString.RegisterData, ...handler.toJSON(value) };
 }
@@ -277,7 +281,7 @@ export function configureDelegation(payload: ConfigureDelegationPayload): Config
 function configureDelegationToJSON({
     type,
     ...value
-}: ConfigureDelegation): GenJSON<TransactionKindString.ConfigureDelegation, ConfigureDelegationPayloadJSON> {
+}: ConfigureDelegation): PayloadJSON<TransactionKindString.ConfigureDelegation, ConfigureDelegationPayloadJSON> {
     const handler = new ConfigureDelegationHandler();
     return { type: TransactionKindString.ConfigureDelegation, ...handler.toJSON(value) };
 }
@@ -309,7 +313,7 @@ export function configureValidator(payload: ConfigureBakerPayload): ConfigureVal
 function configureValidatorToJSON({
     type,
     ...value
-}: ConfigureValidator): GenJSON<TransactionKindString.ConfigureBaker, ConfigureBakerPayloadJSON> {
+}: ConfigureValidator): PayloadJSON<TransactionKindString.ConfigureBaker, ConfigureBakerPayloadJSON> {
     const handler = new ConfigureBakerHandler();
     return { type: TransactionKindString.ConfigureBaker, ...handler.toJSON(value) };
 }
@@ -341,7 +345,7 @@ export function tokenUpdate(payload: TokenUpdatePayload): TokenUpdate {
 function tokenUpdateToJSON({
     type,
     ...value
-}: TokenUpdate): GenJSON<TransactionKindString.TokenUpdate, TokenUpdatePayloadJSON> {
+}: TokenUpdate): PayloadJSON<TransactionKindString.TokenUpdate, TokenUpdatePayloadJSON> {
     const handler = new TokenUpdateHandler();
     return { type: TransactionKindString.TokenUpdate, ...handler.toJSON(value) };
 }
@@ -371,7 +375,17 @@ export type Type = Payload;
 /**
  * JSON representation of a transaction payload.
  */
-export type JSON = ReturnType<typeof toJSON>;
+export type JSON =
+    | ReturnType<typeof transferToJSON>
+    | ReturnType<typeof transferWithMemoToJSON>
+    | ReturnType<typeof deployModuleToJSON>
+    | ReturnType<typeof initContractToJSON>
+    | ReturnType<typeof updateContractToJSON>
+    | ReturnType<typeof updateCredentialsToJSON>
+    | ReturnType<typeof registerDataToJSON>
+    | ReturnType<typeof configureDelegationToJSON>
+    | ReturnType<typeof configureValidatorToJSON>
+    | ReturnType<typeof tokenUpdateToJSON>;
 
 /**
  * Creates a typed transaction payload from a transaction type and raw payload data.
@@ -417,7 +431,19 @@ export function create(type: AccountTransactionType, payload: AccountTransaction
  * @returns the JSON representation
  * @throws if the transaction type is not supported
  */
-export function toJSON(payload: Payload) {
+export function toJSON(payload: Transfer): ReturnType<typeof transferToJSON>;
+export function toJSON(payload: TransferWithMemo): ReturnType<typeof transferWithMemoToJSON>;
+export function toJSON(payload: DeployModule): ReturnType<typeof deployModuleToJSON>;
+export function toJSON(payload: InitContract): ReturnType<typeof initContractToJSON>;
+export function toJSON(payload: UpdateContract): ReturnType<typeof updateContractToJSON>;
+export function toJSON(payload: UpdateCredentials): ReturnType<typeof updateCredentialsToJSON>;
+export function toJSON(payload: RegisterData): ReturnType<typeof registerDataToJSON>;
+export function toJSON(payload: ConfigureDelegation): ReturnType<typeof configureDelegationToJSON>;
+export function toJSON(payload: ConfigureValidator): ReturnType<typeof configureValidatorToJSON>;
+export function toJSON(payload: TokenUpdate): ReturnType<typeof tokenUpdateToJSON>;
+export function toJSON(payload: Payload): JSON;
+
+export function toJSON(payload: Payload): JSON {
     switch (payload.type) {
         case AccountTransactionType.Transfer:
             return transferToJSON(payload);
@@ -448,12 +474,52 @@ export function toJSON(payload: Payload) {
  * Converts a intermediary JSON representation created from {@linkcode toJSON} to a transaction payload.
  *
  * @param json the JSON to convert
+ * @param [as] the payload type to parse
+ *
  * @returns the transaction payload
  * @throws if the JSON is invalid or the transaction type is not supported
  */
-export function fromJSON(json: unknown): Payload {
+export function fromJSON(json: unknown, as: `${TransactionKindString.Transfer}`): Transfer;
+export function fromJSON(json: unknown, as: `${TransactionKindString.TransferWithMemo}`): TransferWithMemo;
+export function fromJSON(json: unknown, as: `${TransactionKindString.DeployModule}`): DeployModule;
+export function fromJSON(json: unknown, as: `${TransactionKindString.InitContract}`): InitContract;
+export function fromJSON(json: unknown, as: `${TransactionKindString.Update | 'updateContract'}`): UpdateContract;
+export function fromJSON(json: unknown, as: `${TransactionKindString.UpdateCredentials}`): UpdateCredentials;
+export function fromJSON(json: unknown, as: `${TransactionKindString.RegisterData}`): RegisterData;
+export function fromJSON(json: unknown, as: `${TransactionKindString.ConfigureDelegation}`): ConfigureDelegation;
+export function fromJSON(
+    json: unknown,
+    as: `${TransactionKindString.ConfigureBaker}` | 'configureValidator'
+): ConfigureValidator;
+export function fromJSON(json: unknown, as: `${TransactionKindString.TokenUpdate}`): TokenUpdate;
+// NOTE: the following acts as a catch-all for any type not specified above, signaling that the payload type is not
+// supported.
+export function fromJSON(json: unknown, as: `${TransactionKindString}`): never;
+export function fromJSON(json: unknown): Payload;
+
+export function fromJSON(
+    json: unknown,
+    as?: `${TransactionKindString | 'configureValidator' | 'updateContract'}`
+): Payload {
     if (typeof json !== 'object' || json === null) throw new Error('Expected object');
-    if (!('type' in json) || typeof json.type !== 'string') throw new Error('invalid transction type');
+    if (!('type' in json) || typeof json.type !== 'string') throw new Error('invalid transaction type');
+
+    let type: TransactionKindString | undefined;
+    if (as !== undefined) {
+        switch (as) {
+            case 'configureValidator':
+                type = TransactionKindString.ConfigureBaker;
+                break;
+            case 'updateContract':
+                type = TransactionKindString.Update;
+                break;
+            default:
+                type = as as TransactionKindString;
+        }
+    }
+
+    if (type !== undefined && json.type !== type)
+        throw new Error(`Found transaction payload with type "${json.type}", attempted to parse as "${type}".`);
 
     switch (json.type) {
         case getTransactionKindString(AccountTransactionType.Transfer):
@@ -479,6 +545,28 @@ export function fromJSON(json: unknown): Payload {
         default:
             throw new Error('The provided transaction type is not supported: ' + json.type);
     }
+}
+
+/**
+ * Converts a {@linkcode Payload} to a JSON string.
+ *
+ * @param payload - the payload to convert
+ * @returns the JSON string
+ */
+export function toJSONString(payload: Payload): string {
+    return JSONBig.stringify(toJSON(payload));
+}
+/**
+ * Converts a JSON string payload representation to a {@linkcode Payload}.
+ *
+ * @param jsonString - the json string to convert
+ * @param [as] the payload type to parse
+ *
+ * @returns the JSON string
+ * @throws if the JSON is invalid or the transaction type is not supported
+ */
+export function fromJSONString(jsonString: string, as: TransactionKindString): Payload {
+    return fromJSON(JSONBig.parse(jsonString), as);
 }
 
 /**

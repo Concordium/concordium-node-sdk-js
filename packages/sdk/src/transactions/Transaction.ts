@@ -1,3 +1,5 @@
+import _JB from 'json-bigint';
+
 import {
     AccountSigner,
     AccountTransaction,
@@ -32,6 +34,8 @@ import {
 } from '../index.js';
 import { AccountAddress, DataBlob, Energy, SequenceNumber, TransactionExpiry } from '../types/index.js';
 import { AccountTransactionV0, Payload } from './index.js';
+
+const JSONBig = _JB({ useNativeBigInt: true, alwaysParseAsBig: true });
 
 // --- Core types ---
 
@@ -115,6 +119,11 @@ type Transaction<P extends Payload.Type = Payload.Type> = {
  */
 export type Type<P extends Payload.Type = Payload.Type> = Transaction<P>;
 
+export type JSON = {
+    header: HeaderJSON;
+    payload: Payload.JSON;
+};
+
 // --- Transaction construction ---
 
 class TransactionBuilder<P extends Payload.Type = Payload.Type> implements Transaction<P> {
@@ -142,14 +151,25 @@ export function builder<P extends Payload.Type = Payload.Type>(transaction: Tran
     return new TransactionBuilder(transaction.header, transaction.payload);
 }
 
+const isUnsigned = <S extends { version: number }>(tx: Transaction | JSON | S): tx is Transaction | JSON =>
+    (tx as S).version === undefined;
+
 /**
  * Converts a transaction to its intermediary JSON serializable representation.
+ *
  * @param header the transaction header
  * @param payload the transaction payload
  * @returns the JSON representation
  */
-export function toJSON({ header, payload }: Transaction) {
-    return { header: headerToJSON(header), payload: Payload.toJSON(payload) };
+export function toJSON(transaction: Transaction): JSON;
+export function toJSON(transaction: Signed): SignedJSON;
+export function toJSON(transaction: Transaction | Signed): JSON | SignedJSON;
+
+export function toJSON(transaction: Transaction | Signed): JSON | SignedJSON {
+    if (isUnsigned(transaction)) {
+        return { header: headerToJSON(transaction.header), payload: Payload.toJSON(transaction.payload) };
+    }
+    return AccountTransactionV0.toJSON(transaction);
 }
 
 /**
@@ -157,8 +177,44 @@ export function toJSON({ header, payload }: Transaction) {
  * @param json the JSON to convert
  * @returns the transaction
  */
-export function fromJSON(json: ReturnType<typeof toJSON>): Transaction {
-    return { header: headerFromJSON(json.header), payload: Payload.fromJSON(json.payload) };
+export function fromJSON(json: JSON, as?: 'unsigned'): Transaction;
+export function fromJSON(json: SignedJSON, as: 'signed'): Signed;
+export function fromJSON(json: JSON | SignedJSON, as?: 'signed' | 'unsigned'): Transaction | Signed;
+
+export function fromJSON(json: JSON | SignedJSON, as: 'signed' | 'unsigned' = 'unsigned'): Transaction | Signed {
+    if (isUnsigned(json)) {
+        if (as !== 'unsigned') throw new Error(`Found "unsigned" transaction, failed to parse as "${as}"`);
+        return { header: headerFromJSON(json.header), payload: Payload.fromJSON(json.payload) };
+    }
+
+    if (as !== 'signed') throw new Error(`Found "signed" transaction, failed to parse as "${as}"`);
+    return AccountTransactionV0.fromJSON(json, 'signed');
+}
+
+/**
+ * Converts a {@linkcode Transaction} to a JSON string.
+ *
+ * @param transaction - the transaction to convert
+ * @returns the JSON string
+ */
+export function toJSONString(transaction: Transaction | Signed): string {
+    return JSONBig.stringify(toJSON(transaction));
+}
+/**
+ * Converts a JSON string transaction representation to a {@linkcode Transaction}.
+ *
+ * @param jsonString - the json string to convert
+ * @param [as] - the type of transaction to parse as. If not defined, it defaults to
+ * parsing as {@linkcode Transaction}
+ *
+ * @returns the parsed transaction
+ */
+export function fromJSONString(jsonString: string, as?: 'unsigned'): Transaction;
+export function fromJSONString(jsonString: string, as: 'signed'): Signed;
+export function fromJSONString(jsonString: string, as?: 'signed' | 'unsigned'): Transaction | Signed;
+
+export function fromJSONString(jsonString: string, as?: 'unsigned' | 'signed'): Transaction | Signed {
+    return fromJSON(JSONBig.parse(jsonString), as);
 }
 
 /**
@@ -518,6 +574,7 @@ export function getEnergyCost({
  */
 // TODO: factor in v1 transaction
 export type Signed = AccountTransactionV0.Type;
+export type SignedJSON = AccountTransactionV0.JSON;
 
 /**
  * Signs a transaction using the provided signer, calculating total energy cost and creating a version 0 signed transaction.

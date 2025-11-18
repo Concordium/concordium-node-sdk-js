@@ -65,7 +65,7 @@ describe('AccountTransactionV0', () => {
             };
             expect(json.header).toEqual(expectedHeader);
 
-            const roundtrip = AccountTransactionV0.fromJSON(JSONBig.parse(JSONBig.stringify(json)));
+            const roundtrip = AccountTransactionV0.fromJSON(JSONBig.parse(JSONBig.stringify(json)), 'signed');
             expect(roundtrip).toEqual(transaction);
         });
     });

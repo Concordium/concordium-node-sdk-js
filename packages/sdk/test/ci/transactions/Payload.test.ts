@@ -35,7 +35,7 @@ describe('Payload', () => {
             const json = Payload.toJSON(transferPayload);
             const jsonString = jsonBig.stringify(json);
             const parsed = jsonBig.parse(jsonString);
-            const deserialized = Payload.fromJSON(parsed);
+            const deserialized = Payload.fromJSON(parsed, 'transfer');
             expect(deserialized).toEqual(transferPayload);
         });
 
@@ -75,7 +75,7 @@ describe('Payload', () => {
             const json = Payload.toJSON(transferWithMemoPayload);
             const jsonString = jsonBig.stringify(json);
             const parsed = jsonBig.parse(jsonString);
-            const deserialized = Payload.fromJSON(parsed);
+            const deserialized = Payload.fromJSON(parsed, 'transferWithMemo');
             expect(deserialized).toEqual(transferWithMemoPayload);
         });
 
@@ -113,7 +113,7 @@ describe('Payload', () => {
             const json = Payload.toJSON(deployModulePayload);
             const jsonString = jsonBig.stringify(json);
             const parsed = jsonBig.parse(jsonString);
-            const deserialized = Payload.fromJSON(parsed);
+            const deserialized = Payload.fromJSON(parsed, 'deployModule');
             expect(deserialized).toEqual(deployModulePayload);
         });
 
@@ -152,7 +152,7 @@ describe('Payload', () => {
             const json = Payload.toJSON(initContractPayload);
             const jsonString = jsonBig.stringify(json);
             const parsed = jsonBig.parse(jsonString);
-            const deserialized = Payload.fromJSON(parsed);
+            const deserialized = Payload.fromJSON(parsed, 'initContract');
             expect(deserialized).toEqual(initContractPayload);
         });
 
@@ -193,7 +193,7 @@ describe('Payload', () => {
             const json = Payload.toJSON(updateContractPayload);
             const jsonString = jsonBig.stringify(json);
             const parsed = jsonBig.parse(jsonString);
-            const deserialized = Payload.fromJSON(parsed);
+            const deserialized = Payload.fromJSON(parsed, 'update');
             expect(deserialized).toEqual(updateContractPayload);
         });
 
@@ -231,7 +231,7 @@ describe('Payload', () => {
             const json = Payload.toJSON(registerDataPayload);
             const jsonString = jsonBig.stringify(json);
             const parsed = jsonBig.parse(jsonString);
-            const deserialized = Payload.fromJSON(parsed);
+            const deserialized = Payload.fromJSON(parsed, 'registerData');
             expect(deserialized).toEqual(registerDataPayload);
         });
 
@@ -267,7 +267,7 @@ describe('Payload', () => {
             const json = Payload.toJSON(configureDelegationPayload);
             const jsonString = jsonBig.stringify(json);
             const parsed = jsonBig.parse(jsonString);
-            const deserialized = Payload.fromJSON(parsed);
+            const deserialized = Payload.fromJSON(parsed, 'configureDelegation');
             expect(deserialized).toEqual(configureDelegationPayload);
         });
 
@@ -319,7 +319,7 @@ describe('Payload', () => {
             const json = Payload.toJSON(configureValidatorPayload);
             const jsonString = jsonBig.stringify(json);
             const parsed = jsonBig.parse(jsonString);
-            const deserialized = Payload.fromJSON(parsed);
+            const deserialized = Payload.fromJSON(parsed, 'configureValidator');
             expect(deserialized).toEqual(configureValidatorPayload);
         });
 

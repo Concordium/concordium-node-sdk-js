@@ -1,3 +1,5 @@
+import _JB from 'json-bigint';
+
 import { deserializeAccountTransactionSignature } from '../deserialization.js';
 import { Cursor } from '../deserializationHelpers.js';
 import { constantA, constantB } from '../energyCost.js';
@@ -8,6 +10,8 @@ import { encodeWord8, encodeWord32, encodeWord64 } from '../serializationHelpers
 import { AccountSigner } from '../signHelpers.js';
 import { AccountTransactionSignature, BlockItemKind } from '../types.js';
 import { AccountAddress, Energy, SequenceNumber, TransactionExpiry } from '../types/index.js';
+
+const JSONBig = _JB({ useNativeBigInt: true, alwaysParseAsBig: true });
 
 /**
  * Header metadata for a version 0 account transaction.
@@ -98,14 +102,32 @@ export type JSON = {
     readonly signature: Signature;
 };
 
+export type UnsignedJSON = {
+    readonly version: 0;
+    readonly header: HeaderJSON;
+    readonly payload: Payload.JSON;
+};
+
 /**
  * Converts a version 0 account transaction to its intermediary JSON serializable representation.
  *
  * @param transaction the transaction to convert
  * @returns the JSON representation of the transaction
  */
-export function toJSON(transaction: Transaction): JSON {
-    return { ...transaction, header: headerToJSON(transaction.header), payload: Payload.toJSON(transaction.payload) };
+export function toJSON(transaction: Transaction): JSON;
+export function toJSON(transaction: Unsigned): UnsignedJSON;
+export function toJSON(transaction: Transaction | Unsigned): JSON | UnsignedJSON;
+
+export function toJSON(transaction: Transaction | Unsigned): JSON | UnsignedJSON {
+    const base = {
+        version: 0 as const,
+        header: headerToJSON(transaction.header),
+        payload: Payload.toJSON(transaction.payload),
+    };
+    if (!('signature' in transaction)) {
+        return base;
+    }
+    return { ...base, signature: transaction.signature };
 }
 
 /**
@@ -113,10 +135,46 @@ export function toJSON(transaction: Transaction): JSON {
  * version 0 account transaction.
  *
  * @param json the JSON to convert
+ * @param [as] the transaction variant to parse. Defaults to parsing {@linkcode Transaction}.
  * @returns the transaction
  */
-export function fromJSON(json: JSON): Transaction {
-    return { ...json, header: headerFromJSON(json.header), payload: Payload.fromJSON(json.payload) };
+export function fromJSON(json: JSON, as?: 'signed'): Transaction;
+export function fromJSON(json: UnsignedJSON, as: 'unsigned'): Unsigned;
+export function fromJSON(json: JSON | UnsignedJSON, as?: 'signed' | 'unsigned'): Transaction | Unsigned;
+
+export function fromJSON(json: JSON | UnsignedJSON, as: 'signed' | 'unsigned' = 'signed'): Transaction | Unsigned {
+    const base = { version: 0 as const, header: headerFromJSON(json.header), payload: Payload.fromJSON(json.payload) };
+    if (!('signature' in json)) {
+        if (as !== 'unsigned') throw new Error(`Found "unsigned" transaction, failed to parse as "${as}"`);
+        return base;
+    }
+
+    if (as !== 'signed') throw new Error(`Found "signed" transaction, failed to parse as "${as}"`);
+    return { ...base, signature: json.signature };
+}
+
+/**
+ * Converts a {@linkcode Transaction} to a JSON string.
+ *
+ * @param transaction - the transaction to convert
+ * @returns the JSON string
+ */
+export function toJSONString(transaction: Transaction | Unsigned): string {
+    return JSONBig.stringify(toJSON(transaction));
+}
+/**
+ * Converts a JSON string transaction representation to a {@linkcode Transaction}.
+ *
+ * @param jsonString - the json string to convert
+ * @param [as] - the type of transaction to parse. Defaults to parsing {@linkcode Transaction}.
+ * @returns the parsed transaction
+ */
+export function fromJSONString(jsonString: string, as?: 'signed'): Transaction;
+export function fromJSONString(jsonString: string, as: 'unsigned'): Unsigned;
+export function fromJSONString(jsonString: string, as?: 'signed' | 'unsigned'): Transaction | Unsigned;
+
+export function fromJSONString(jsonString: string, as?: 'signed' | 'unsigned'): Transaction | Unsigned {
+    return fromJSON(JSONBig.parse(jsonString), as);
 }
 
 /**

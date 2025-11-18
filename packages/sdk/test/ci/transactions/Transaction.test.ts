@@ -371,7 +371,7 @@ describe('Transaction', () => {
             const json = Transaction.toJSON(tx);
             const jsonString = jsonBig.stringify(json);
             const parsed = jsonBig.parse(jsonString);
-            const deserialized = Transaction.fromJSON(parsed);
+            const deserialized = Transaction.fromJSON(parsed, 'unsigned');
 
             expect(AccountAddress.equals(deserialized.header.sender, tx.header.sender)).toBe(true);
             expect(deserialized.header.nonce.value).toBe(tx.header.nonce.value);

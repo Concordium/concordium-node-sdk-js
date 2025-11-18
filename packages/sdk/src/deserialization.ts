@@ -114,7 +114,7 @@ export function deserializeCredentialDeploymentValues(serializedPayload: Cursor,
             revocationThreshold: revocationThreshold,
             arData: arData,
 
-            //TODO: Still looking for this, not in serialize() but on the bluepaper
+            //Populating these in deserializeCredentialDeploymentProofs() function
             commitments: {
                 cmmPrf: '',
                 cmmCredCounter: '',
@@ -215,9 +215,9 @@ export function deserializeCredentialDeploymentProofs(serializedPayload: Cursor,
     /*const blindedSignature = */ serializedPayload.read(96);
 
     //  IdOwnershipProofs.commitments
-    /* const prf = */serializedPayload.read(48);
+    const prf = serializedPayload.read(48);
     const credCounter = serializedPayload.read(48);
-    /* const maxAccounts = */serializedPayload.read(48);
+    const maxAccounts = serializedPayload.read(48);
 
     const attributeCommitmentRecords: Record<any, any> = {};
     const lengthAttributes = serializedPayload.read(2).readUInt16BE(0);
@@ -229,8 +229,9 @@ export function deserializeCredentialDeploymentProofs(serializedPayload: Cursor,
     }
 
     const sharingCoeffsLength = serializedPayload.read(8).readBigUInt64BE(0);
+    const sharingCoeffs: string[] = [];
     for(let a = 0; a < sharingCoeffsLength; a++) {
-        serializedPayload.read(48); //sharingCoeffs being read, not stored anywhere
+        sharingCoeffs[a] = serializedPayload.read(48).toString('hex');
     }
 
     //  IdOwnershipProofs.challenge
@@ -281,6 +282,10 @@ export function deserializeCredentialDeploymentProofs(serializedPayload: Cursor,
     if(data.newCredentials) {
         //TODO: is cmmCredCounter the same as bluepaper.credCounter inside CredentialDeploymentCommitments
         data.newCredentials[currentLocation].cdi.commitments.cmmCredCounter = credCounter.toString(); 
+        data.newCredentials[currentLocation].cdi.commitments.cmmPrf = prf.toString('hex'); //TODO: is this correct? tostring hex?
+        data.newCredentials[currentLocation].cdi.commitments.cmmIdCredSecSharingCoeff = sharingCoeffs; //TODO: is this correct?
+        data.newCredentials[currentLocation].cdi.commitments.cmmAttributes = attributeCommitmentRecords;
+        data.newCredentials[currentLocation].cdi.commitments.cmmMaxAccounts = maxAccounts.toString('hex'); //TODO: is this correct? tostring hex?
     }
 }
 

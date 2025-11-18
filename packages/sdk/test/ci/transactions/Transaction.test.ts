@@ -314,8 +314,8 @@ describe('Transaction', () => {
             newCredentials: [{ index: 1, cdi }],
             removeCredentialIds: [],
             threshold: 1,
-            currentNumberOfCredentials: 1n,
-        });
+        }, 
+            1n);
 
         test('creates update credentials transaction', () => {
             expect(tx.payload.type).toBe(20);
@@ -334,8 +334,8 @@ describe('Transaction', () => {
                 ],
                 removeCredentialIds: [],
                 threshold: 1,
-                currentNumberOfCredentials: 1n,
-            });
+            }, 
+            1n);
             const energy = Transaction.getEnergyCost(tx);
             expect(energy.value).toBe(109778n);
         });

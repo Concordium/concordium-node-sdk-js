@@ -42,8 +42,8 @@ class SequenceNumber {
  * @param {bigint} json The JSON representation of the sequence number.
  * @returns {SequenceNumber} The sequence number.
  */
-export function fromJSON(json: bigint): SequenceNumber {
-    return create(json);
+export function fromJSON(json: bigint | string | number): SequenceNumber {
+    return create(BigInt(json));
 }
 
 /**
@@ -54,6 +54,15 @@ export function fromJSON(json: bigint): SequenceNumber {
  */
 export function toUnwrappedJSON(value: Type): bigint {
     return value.value;
+}
+
+/**
+ * Converts the intermediary representation created from {@linkcode toUnwrappedJSON} to a typed instance.
+ * @param json - The JSON value to parse
+ * @returns The corresponding typed instance
+ */
+export function fromUnwrappedJSON(json: bigint | string | number): SequenceNumber {
+    return create(BigInt(json));
 }
 
 /** A transaction sequence number. (Formerly refered as Nonce) */

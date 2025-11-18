@@ -1,9 +1,9 @@
 import { Buffer } from 'buffer/index.js';
 import { stringify } from 'json-bigint';
 
-import { getAccountTransactionHandler } from './accountTransactions.js';
 import { ConcordiumGRPCClient } from './grpc/GRPCClient.js';
-import { AccountSigner, signTransaction } from './signHelpers.js';
+import { AccountSigner } from './signHelpers.js';
+import { Transaction } from './transactions/index.js';
 import {
     AccountTransactionType,
     Base64String,
@@ -400,7 +400,7 @@ class ContractBase<E extends string = string, V extends string = string> {
      * @returns {TransactionHash.Type} The transaction hash of the update transaction
      */
     protected async sendUpdateTransaction(
-        transactionBase: ContractUpdateTransaction,
+        { payload }: ContractUpdateTransaction,
         { senderAddress, expiry = getContractUpdateDefaultExpiryDate(), energy }: ContractTransactionMetadata,
         signer: AccountSigner
     ): Promise<TransactionHash.Type> {
@@ -412,11 +412,9 @@ class ContractBase<E extends string = string, V extends string = string> {
             sender: senderAddress,
         };
 
-        const handler = getAccountTransactionHandler(AccountTransactionType.Update);
-        const transaction = handler.create(header, transactionBase.payload, energy);
-
-        const signature = await signTransaction(transaction, signer);
-        return this.grpcClient.sendAccountTransaction(transaction, signature);
+        const transaction = Transaction.updateContract(header, payload, energy);
+        const signed = await Transaction.sign(transaction, signer);
+        return this.grpcClient.sendSignedTransaction(signed);
     }
 
     /**

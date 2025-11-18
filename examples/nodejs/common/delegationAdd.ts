@@ -1,14 +1,12 @@
 import {
     AccountAddress,
-    AccountTransactionType,
     CcdAmount,
     ConfigureDelegationPayload,
     DelegationTargetType,
+    Transaction,
     TransactionExpiry,
     buildAccountSigner,
-    getAccountTransactionHandler,
     parseWallet,
-    signTransaction,
 } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
@@ -88,13 +86,9 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
         restakeEarnings: cli.flags.restake,
     };
 
-    const handler = getAccountTransactionHandler(AccountTransactionType.ConfigureDelegation);
-    const configureDelegationTransaction = handler.create(header, configureDelegationPayload);
-
-    // Sign transaction
-    const signature = await signTransaction(configureDelegationTransaction, signer);
-
-    const transactionHash = await client.sendAccountTransaction(configureDelegationTransaction, signature);
+    const transaction = Transaction.configureDelegation(header, configureDelegationPayload);
+    const signed = await Transaction.sign(transaction, signer);
+    const transactionHash = await client.sendSignedTransaction(signed);
 
     console.log('Transaction submitted, waiting for finalization...');
 

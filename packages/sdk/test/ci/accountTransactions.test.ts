@@ -4,6 +4,8 @@ import JSONBig from 'json-bigint';
 import path from 'path';
 
 import {
+    AccountTransaction,
+    AccountTransactionHeader,
     AccountTransactionType,
     CcdAmount,
     ConfigureBakerHandler,
@@ -19,7 +21,7 @@ import {
     Energy,
     IndexedCredentialDeploymentInfo,
     InitContractHandler,
-    InitContractPayload,
+    InitContractInput,
     ModuleReference,
     OpenStatus,
     Parameter,
@@ -32,10 +34,9 @@ import {
     SimpleTransferWithMemoHandler,
     SimpleTransferWithMemoPayload,
     UpdateContractHandler,
-    UpdateContractPayload,
+    UpdateContractInput,
     UpdateCredentialsHandler,
     UpdateCredentialsPayload,
-    getAccountTransactionHandler,
     getAccountTransactionSignDigest,
     serializeAccountTransactionPayload,
 } from '../../src/index.js';
@@ -46,12 +47,6 @@ const expiry = TransactionExpiry.fromDate(new Date(1675872215));
 
 test('configureBaker is serialized correctly', async () => {
     const expectedDigest = 'dcfb92b6e57b1d3e252c52cb8b838f44a33bf8d67301e89753101912f299dffb';
-
-    const header = {
-        expiry,
-        nonce: SequenceNumber.create(1),
-        sender: AccountAddress.fromBase58(senderAccountAddress),
-    };
 
     const payload: ConfigureBakerPayload = {
         stake: CcdAmount.fromMicroCcd(1000000000n),
@@ -75,35 +70,33 @@ test('configureBaker is serialized correctly', async () => {
         finalizationRewardCommission: 1,
     };
 
-    const handler = getAccountTransactionHandler(AccountTransactionType.ConfigureBaker);
-    const transaction = handler.create(header, payload);
+    const header: AccountTransactionHeader = {
+        expiry,
+        nonce: SequenceNumber.create(1),
+        sender: AccountAddress.fromBase58(senderAccountAddress),
+    };
 
+    const transaction: AccountTransaction = { header, type: AccountTransactionType.ConfigureBaker, payload };
     const signDigest = getAccountTransactionSignDigest(transaction);
 
     expect(signDigest.toString('hex')).toBe(expectedDigest);
 });
 
 test('Init contract serializes init name correctly', async () => {
-    const header = {
-        expiry,
-        nonce: SequenceNumber.create(1),
-        sender: AccountAddress.fromBase58(senderAccountAddress),
-    };
-
     const initNameBase = 'credential_registry';
 
-    const payload: InitContractPayload = {
+    const payload: InitContractInput = {
         amount: CcdAmount.fromMicroCcd(0),
         initName: ContractName.fromString(initNameBase),
         moduleRef: ModuleReference.fromHexString('aabbccddaabbccddaabbccddaabbccddaabbccddaabbccddaabbccddaabbccdd'),
         param: Parameter.empty(),
+        maxContractExecutionEnergy: Energy.create(30000),
     };
 
-    const givenEnergyAmount = Energy.create(30000);
-    const handler = getAccountTransactionHandler(AccountTransactionType.InitContract);
-    const transaction = handler.create(header, payload, givenEnergyAmount);
-
-    const serializedTransaction = serializeAccountTransactionPayload(transaction);
+    const serializedTransaction = serializeAccountTransactionPayload({
+        type: AccountTransactionType.InitContract,
+        payload,
+    });
 
     // Slice out the init name part of the serialized transaction.
     const serializedInitName = serializedTransaction.slice(43, serializedTransaction.length - 2).toString('utf8');
@@ -148,7 +141,7 @@ test('SimpleTransferWithMemoPayload serializes to JSON correctly', async () => {
 test('DeployModulePayload serializes to JSON correctly', async () => {
     let payload: DeployModulePayload = {
         version: 1,
-        source: Buffer.from('test', 'utf8'),
+        source: Uint8Array.from(Buffer.from('test', 'utf8')),
     };
     const handler = new DeployModuleHandler();
     let json = handler.toJSON(payload);
@@ -162,7 +155,7 @@ test('DeployModulePayload serializes to JSON correctly', async () => {
 
     // Test no version
     payload = {
-        source: Buffer.from('test2', 'utf8'),
+        source: Uint8Array.from(Buffer.from('test2', 'utf8')),
     };
     json = handler.toJSON(payload);
     expect(handler.fromJSON(JSONBig.parse(JSONBig.stringify(json)))).toEqual(payload);
@@ -176,18 +169,19 @@ test('DeployModulePayload serializes to JSON correctly', async () => {
 });
 
 test('InitContractPayload serializes to JSON correctly', async () => {
-    const payload: InitContractPayload = {
+    const payload: InitContractInput = {
         amount: CcdAmount.fromMicroCcd(1000),
         initName: ContractName.fromString('test'),
         moduleRef: ModuleReference.fromHexString('aabbccddaabbccddaabbccddaabbccddaabbccddaabbccddaabbccddaabbccdd'),
         param: Parameter.fromBuffer(Buffer.from('test', 'utf8')),
+        maxContractExecutionEnergy: Energy.create(30000),
     };
     const handler = new InitContractHandler();
     const json = handler.toJSON(payload);
 
     const actual = JSONBig.stringify(json);
     const expected =
-        '{"amount":"1000","moduleRef":"00000020aabbccddaabbccddaabbccddaabbccddaabbccddaabbccddaabbccddaabbccdd","initName":"test","param":"74657374"}';
+        '{"amount":"1000","moduleRef":"00000020aabbccddaabbccddaabbccddaabbccddaabbccddaabbccddaabbccddaabbccdd","initName":"test","param":"74657374","maxContractExecutionEnergy":30000}';
     expect(actual).toEqual(expected);
 
     // ID test
@@ -195,17 +189,19 @@ test('InitContractPayload serializes to JSON correctly', async () => {
 });
 
 test('UpdateContractPayload serializes to JSON correctly', async () => {
-    const payload: UpdateContractPayload = {
+    const payload: UpdateContractInput = {
         amount: CcdAmount.fromMicroCcd(5),
         address: ContractAddress.fromSchemaValue({ index: 1n, subindex: 2n }),
         receiveName: ReceiveName.fromString('test.abc'),
         message: Parameter.fromBuffer(Buffer.from('test', 'utf8')),
+        maxContractExecutionEnergy: Energy.create(30000),
     };
     const handler = new UpdateContractHandler();
     const json = handler.toJSON(payload);
 
     const actual = JSONBig.stringify(json);
-    const expected = '{"amount":"5","address":{"index":1,"subindex":2},"receiveName":"test.abc","message":"74657374"}';
+    const expected =
+        '{"amount":"5","address":{"index":1,"subindex":2},"receiveName":"test.abc","message":"74657374","maxContractExecutionEnergy":30000}';
     expect(actual).toEqual(expected);
 
     // ID test

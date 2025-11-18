@@ -1,44 +1,33 @@
 import {
     AccountAddress,
+    AccountTransaction,
+    AccountTransactionHeader,
+    AccountTransactionType,
     CcdAmount,
     SequenceNumber,
     TransactionExpiry,
-    getAccountTransactionHandler,
 } from '../../src/pub/types.js';
 import {
     serializeAccountTransactionForSubmission,
     serializeAccountTransactionSignature,
 } from '../../src/serialization.js';
-import {
-    AccountTransaction,
-    AccountTransactionSignature,
-    AccountTransactionType,
-    OtherPayload,
-    OtherType,
-    SimpleTransferPayload,
-} from '../../src/types.js';
+import { AccountTransactionSignature, SimpleTransferPayload } from '../../src/types.js';
 
 test('fail account transaction serialization if no signatures', () => {
-    const simpleTransferPayload: SimpleTransferPayload = {
+    const payload: SimpleTransferPayload = {
         amount: CcdAmount.fromMicroCcd(5100000n),
         toAddress: AccountAddress.fromBase58('3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'),
     };
 
-    const header = {
+    const header: AccountTransactionHeader = {
         expiry: TransactionExpiry.futureMinutes(20),
         nonce: SequenceNumber.create(1),
         sender: AccountAddress.fromBase58('3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'),
     };
 
-    const handler = getAccountTransactionHandler(AccountTransactionType.Transfer);
-    const simpleTransferAccountTransaction = handler.create(header, simpleTransferPayload);
+    const tx: AccountTransaction = { header, type: AccountTransactionType.Transfer, payload };
 
-    expect(() =>
-        serializeAccountTransactionForSubmission(
-            simpleTransferAccountTransaction as AccountTransaction<OtherType, OtherPayload>,
-            {}
-        )
-    ).toThrow();
+    expect(() => serializeAccountTransactionForSubmission(tx, {})).toThrow();
 });
 
 test('serialization of an account signature with two credentials', () => {

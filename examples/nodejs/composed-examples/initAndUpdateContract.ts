@@ -1,27 +1,24 @@
 import {
     AccountAddress,
-    AccountTransactionType,
     CcdAmount,
     ContractContext,
     ContractName,
     Energy,
     EntrypointName,
-    InitContractPayload,
     ModuleReference,
+    Payload,
     ReceiveName,
     ReturnValue,
+    Transaction,
     TransactionExpiry,
-    UpdateContractPayload,
     affectedContracts,
     buildAccountSigner,
     deserializeReceiveReturnValue,
-    getAccountTransactionHandler,
     isKnown,
     knownOrError,
     parseWallet,
     serializeInitContractParameters,
     serializeUpdateContractParameters,
-    signTransaction,
     unwrap,
 } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
@@ -89,7 +86,7 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
 
     // #region documentation-snippet-init-contract
 
-    const initHeader = {
+    const initHeader: Transaction.Metadata = {
         expiry: TransactionExpiry.futureMinutes(60),
         nonce: (await client.getNextAccountNonce(sender)).nonce,
         sender,
@@ -97,18 +94,18 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
 
     const initParams = serializeInitContractParameters(contractName, sunnyWeather, schema!.buffer);
 
-    const initPayload: InitContractPayload = {
+    const initPayload = Payload.initContract({
         amount: CcdAmount.zero(),
         moduleRef: moduleRef,
         initName: contractName,
         param: initParams,
-    };
+    });
 
-    const handler = getAccountTransactionHandler(AccountTransactionType.InitContract);
-    const initTransaction = handler.create(initHeader, initPayload, maxCost);
+    const initTransaction = Transaction.initContract(initHeader, initPayload, maxCost);
 
-    const initSignature = await signTransaction(initTransaction, signer);
-    const initTrxHash = await client.sendAccountTransaction(initTransaction, initSignature);
+    // Sign transaction
+    const signedInit = await Transaction.sign(initTransaction, signer);
+    const initTrxHash = await client.sendSignedTransaction(signedInit);
 
     console.log('Transaction submitted, waiting for finalization...');
 
@@ -136,7 +133,7 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
 
     // #region documentation-snippet-update-contract
 
-    const updateHeader = {
+    const updateHeader: Transaction.Metadata = {
         expiry: TransactionExpiry.futureMinutes(60),
         nonce: (await client.getNextAccountNonce(sender)).nonce,
         sender,
@@ -149,18 +146,18 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
         schema!.buffer
     );
 
-    const updatePayload: UpdateContractPayload = {
+    const updatePayload = Payload.updateContract({
         amount: CcdAmount.zero(),
         address: unwrap(contractAddress),
         receiveName,
         message: updateParams,
-    };
+    });
 
-    const updateHandler = getAccountTransactionHandler(AccountTransactionType.Update);
-    const updateTransaction = updateHandler.create(updateHeader, updatePayload, maxCost); //using maxCost constant here supplied in beginning of function
+    const updateTransaction = Transaction.updateContract(updateHeader, updatePayload, maxCost);
 
-    const updateSignature = await signTransaction(updateTransaction, signer);
-    const updateTrxHash = await client.sendAccountTransaction(updateTransaction, updateSignature);
+    // Sign transaction
+    const signedUpdate = await Transaction.sign(updateTransaction, signer);
+    const updateTrxHash = await client.sendSignedTransaction(signedUpdate);
 
     console.log('Transaction submitted, waiting for finalization...');
 

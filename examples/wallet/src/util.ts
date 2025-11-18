@@ -2,7 +2,6 @@ import {
     AccountAddress,
     AccountInfo,
     AccountInfoType,
-    AccountTransactionType,
     AttributesKeys,
     CcdAmount,
     ConcordiumGRPCWebClient,
@@ -14,12 +13,11 @@ import {
     IdentityObjectV1,
     Network,
     SimpleTransferPayload,
+    Transaction,
     TransactionExpiry,
     Versioned,
     buildBasicAccountSigner,
-    getAccountTransactionHandler,
     serializeCredentialDeploymentPayload,
-    signTransaction,
 } from '@concordium/web-sdk';
 
 import { credNumber, identityIndex, network, nodeAddress, nodePort, walletProxyBaseUrl } from './constants';
@@ -358,10 +356,7 @@ async function createSimpleTransferTransaction(
         sender: senderAddress,
     };
 
-    const handler = getAccountTransactionHandler(AccountTransactionType.Transfer);
-    const transaction = handler.create(header, payload);
-
-    return transaction;
+    return Transaction.transfer(header, payload);
 }
 
 export async function sendTransferTransaction(
@@ -373,6 +368,6 @@ export async function sendTransferTransaction(
 ) {
     const simpleTransfer = await createSimpleTransferTransaction(amount, accountAddress, toAddress);
     const signingKey = getAccountSigningKey(seedPhrase, identityProviderIdentity);
-    const signature = await signTransaction(simpleTransfer, buildBasicAccountSigner(signingKey));
-    return await client.sendAccountTransaction(simpleTransfer, signature);
+    const signed = await Transaction.sign(simpleTransfer, buildBasicAccountSigner(signingKey));
+    return await client.sendSignedTransaction(signed);
 }

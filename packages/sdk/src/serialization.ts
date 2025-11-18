@@ -17,7 +17,6 @@ import {
 import {
     AccountTransaction,
     AccountTransactionHeader,
-    AccountTransactionPayload,
     AccountTransactionSignature,
     AccountTransactionType,
     AttributesKeys,
@@ -27,15 +26,13 @@ import {
     CredentialDeploymentValues,
     CredentialSignature,
     IdOwnershipProofs,
-    InitContractPayload,
     UnsignedCredentialDeploymentInformation,
-    UpdateContractPayload,
 } from './types.js';
 import * as AccountAddress from './types/AccountAddress.js';
 import * as Energy from './types/Energy.js';
 import { countSignatures } from './util.js';
 
-function serializeAccountTransactionType(type: AccountTransactionType): Buffer {
+export function serializeAccountTransactionType(type: AccountTransactionType): Buffer {
     return Buffer.from(Uint8Array.of(type));
 }
 
@@ -87,32 +84,6 @@ export function serializeAccountTransactionSignature(signatures: AccountTransact
     return serializeMap(signatures, encodeWord8, encodeWord8FromString, putCredentialSignatures);
 }
 
-//defining the overload rules for the serializeAccountTransaction
-//if accountTransaction is of AccountTransaction and the type is Update or InitContract and payload is InitContractPayload or UpdateContractPayload
-export function serializeAccountTransaction(
-    accountTransaction: AccountTransaction<
-        AccountTransactionType.Update | AccountTransactionType.InitContract,
-        InitContractPayload | UpdateContractPayload
-    >,
-    signatures: AccountTransactionSignature,
-    givenEnergy: Energy.Type
-): Buffer;
-
-//if accountTransaction is of AccountTransaction and not Update or Init
-export function serializeAccountTransaction(
-    accountTransaction: AccountTransaction<
-        Exclude<AccountTransactionType, AccountTransactionType.Update | AccountTransactionType.InitContract>,
-        Exclude<AccountTransactionPayload, InitContractPayload | UpdateContractPayload>
-    >,
-    signatures: AccountTransactionSignature
-): Buffer;
-
-export function serializeAccountTransaction(
-    accountTransaction: AccountTransaction,
-    signatures: AccountTransactionSignature,
-    givenEnergy?: Energy.Type
-): Buffer;
-
 /**
  * Serializes a transaction and its signatures. This serialization when sha256 hashed
  * is considered as the transaction hash, and is used to look up the status of a
@@ -123,27 +94,16 @@ export function serializeAccountTransaction(
  */
 export function serializeAccountTransaction(
     accountTransaction: AccountTransaction,
-    signatures: AccountTransactionSignature,
-    givenEnergy?: Energy.Type
+    signatures: AccountTransactionSignature
 ): Buffer {
     const serializedBlockItemKind = encodeWord8(BlockItemKind.AccountTransactionKind);
     const serializedAccountTransactionSignatures = serializeAccountTransactionSignature(signatures);
-
-    const accountTransactionHandler = getAccountTransactionHandler(accountTransaction.type);
     const serializedPayload = serializeAccountTransactionPayload(accountTransaction);
 
-    let baseEnergyCost = accountTransactionHandler.getBaseEnergyCost(accountTransaction.payload);
-
-    if ([accountTransaction.type].includes(AccountTransactionType.InitContract, AccountTransactionType.Update)) {
-        if (givenEnergy === undefined) throw new Error('need to specify energy for contract transactions');
-        baseEnergyCost += givenEnergy.value;
-    }
-
-    const energyCost = calculateEnergyCost(
-        countSignatures(signatures),
-        BigInt(serializedPayload.length),
-        baseEnergyCost
+    const baseEnergy = getAccountTransactionHandler(accountTransaction.type).getBaseEnergyCost(
+        accountTransaction.payload
     );
+    const energyCost = calculateEnergyCost(countSignatures(signatures), BigInt(serializedPayload.length), baseEnergy);
     const serializedHeader = serializeAccountTransactionHeader(
         accountTransaction.header,
         serializedPayload.length,
@@ -194,11 +154,12 @@ export function getAccountTransactionHash(
  * @returns the sha256 hash on the serialized header, type and payload
  */
 export function getAccountTransactionSignDigest(accountTransaction: AccountTransaction, signatureCount = 1n): Buffer {
-    const accountTransactionHandler = getAccountTransactionHandler(accountTransaction.type);
     const serializedPayload = serializeAccountTransactionPayload(accountTransaction);
+    const baseEnergy = getAccountTransactionHandler(accountTransaction.type).getBaseEnergyCost(
+        accountTransaction.payload
+    );
 
-    const baseEnergyCost = accountTransactionHandler.getBaseEnergyCost(accountTransaction.payload);
-    const energyCost = calculateEnergyCost(signatureCount, BigInt(serializedPayload.length), baseEnergyCost);
+    const energyCost = calculateEnergyCost(signatureCount, BigInt(serializedPayload.length), baseEnergy);
     const serializedHeader = serializeAccountTransactionHeader(
         accountTransaction.header,
         serializedPayload.length,
@@ -207,26 +168,6 @@ export function getAccountTransactionSignDigest(accountTransaction: AccountTrans
 
     return sha256([serializedHeader, serializedPayload]);
 }
-
-//defining the overload rules for the serializeAccountTransaction
-//if accountTransaction is of AccountTransaction and the type is Update or InitContract and payload is InitContractPayload or UpdateContractPayload
-export function serializeAccountTransactionForSubmission(
-    accountTransaction: AccountTransaction<
-        AccountTransactionType.Update | AccountTransactionType.InitContract,
-        InitContractPayload | UpdateContractPayload
-    >,
-    signatures: AccountTransactionSignature,
-    givenEnergy: Energy.Type
-): Buffer;
-
-//if accountTransaction is of AccountTransaction and not Update or Init
-export function serializeAccountTransactionForSubmission(
-    accountTransaction: AccountTransaction<
-        Exclude<AccountTransactionType, AccountTransactionType.Update | AccountTransactionType.InitContract>,
-        Exclude<AccountTransactionPayload, InitContractPayload | UpdateContractPayload>
-    >,
-    signatures: AccountTransactionSignature
-): Buffer;
 
 /**
  * Serializes an account transaction so that it is ready for being submitted
@@ -238,10 +179,9 @@ export function serializeAccountTransactionForSubmission(
  */
 export function serializeAccountTransactionForSubmission(
     accountTransaction: AccountTransaction,
-    signatures: AccountTransactionSignature,
-    givenEnergy?: Energy.Type
+    signatures: AccountTransactionSignature
 ): Buffer {
-    const serializedAccountTransaction = serializeAccountTransaction(accountTransaction, signatures, givenEnergy);
+    const serializedAccountTransaction = serializeAccountTransaction(accountTransaction, signatures);
     const serializedVersion = encodeWord8(0);
     return Buffer.concat([serializedVersion, serializedAccountTransaction]);
 }

@@ -1,15 +1,7 @@
 import { ConcordiumGRPCClient } from '../grpc/GRPCClient.js';
-import {
-    AccountAddress,
-    AccountInfo,
-    AccountTransaction,
-    AccountTransactionHeader,
-    AccountTransactionType,
-    TokenUpdatePayload,
-    TransactionExpiry,
-    TransactionHash,
-} from '../pub/types.js';
-import { AccountSigner, signTransaction } from '../signHelpers.js';
+import { AccountAddress, AccountInfo, TokenUpdatePayload, TransactionExpiry, TransactionHash } from '../pub/types.js';
+import { AccountSigner } from '../signHelpers.js';
+import { Transaction } from '../transactions/index.js';
 import { SequenceNumber } from '../types/index.js';
 import { bail } from '../util.js';
 import {
@@ -387,18 +379,15 @@ export async function sendRaw(
     { expiry = TransactionExpiry.futureMinutes(5), nonce }: TokenUpdateMetadata = {}
 ): Promise<TransactionHash.Type> {
     const { nonce: nextNonce } = nonce ? { nonce } : await token.grpc.getNextAccountNonce(sender);
-    const header: AccountTransactionHeader = {
+    const header = {
         expiry,
         nonce: nextNonce,
         sender,
     };
-    const transaction: AccountTransaction = {
-        type: AccountTransactionType.TokenUpdate,
-        payload,
-        header,
-    };
-    const signature = await signTransaction(transaction, signer);
-    return token.grpc.sendAccountTransaction(transaction, signature);
+
+    const transaction = Transaction.tokenUpdate(header, payload);
+    const signed = await Transaction.sign(transaction, signer);
+    return token.grpc.sendSignedTransaction(signed);
 }
 
 /**

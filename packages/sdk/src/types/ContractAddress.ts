@@ -39,6 +39,18 @@ export function toUnwrappedJSON({ index, subindex }: Type): ContractAddressLike<
     return { index, subindex };
 }
 
+/**
+ * Converts the intermediary representation created from {@linkcode toUnwrappedJSON} to a typed instance.
+ * @param json - The JSON value to parse
+ * @returns The corresponding typed instance
+ */
+export function fromUnwrappedJSON({
+    index,
+    subindex,
+}: ContractAddressLike<bigint> | ContractAddressLike<string> | ContractAddressLike<number>): ContractAddress {
+    return create(BigInt(index), BigInt(subindex));
+}
+
 /** Address of a smart contract instance. */
 export type Type = ContractAddress;
 

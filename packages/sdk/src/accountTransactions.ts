@@ -2,7 +2,14 @@ import { Buffer } from 'buffer/index.js';
 
 import { Cursor } from './deserializationHelpers.js';
 import { Cbor, TokenId, TokenOperationType } from './plt/index.js';
-import { ContractAddress, ContractName, Energy, ModuleReference } from './pub/types.js';
+import {
+    AccountTransactionInput,
+    ContractAddress,
+    ContractName,
+    InitContractInput,
+    ModuleReference,
+    UpdateContractInput,
+} from './pub/types.js';
 import { serializeCredentialDeploymentInfo } from './serialization.js';
 import {
     encodeDataBlob,
@@ -17,6 +24,7 @@ import {
     serializeList,
 } from './serializationHelpers.js';
 import {
+    AccountTransactionHeader,
     AccountTransactionPayload,
     AccountTransactionType,
     BakerKeysWithProofs,
@@ -43,13 +51,12 @@ import { DataBlob } from './types/DataBlob.js';
 import * as InitName from './types/InitName.js';
 import * as Parameter from './types/Parameter.js';
 import * as ReceiveName from './types/ReceiveName.js';
+import { Energy } from './types/index.js';
 
-/**
- * A handler for a specific {@linkcode AccountTransactionType}.
- */
 export interface AccountTransactionHandler<
-    PayloadType extends AccountTransactionPayload = AccountTransactionPayload,
-    JSONType = PayloadType,
+    Payload extends AccountTransactionPayload,
+    JSONPayload,
+    Input extends AccountTransactionInput,
 > {
     /**
      * Serializes the payload to a buffer.
@@ -59,7 +66,7 @@ export interface AccountTransactionHandler<
      * @returns The serialized payload.
      * @throws If serializing the type was not possible.
      */
-    serialize: (payload: PayloadType) => Buffer;
+    serialize: (payload: Payload) => Buffer;
 
     /**
      * Deserializes the serialized payload into the payload type.
@@ -67,28 +74,28 @@ export interface AccountTransactionHandler<
      * @returns The deserialized payload.
      * @throws If deserializing the type was not possible.
      */
-    deserialize: (serializedPayload: Cursor) => PayloadType;
+    deserialize: (serializedPayload: Cursor) => Payload;
 
     /**
      * Gets the base energy cost for the given payload.
-     * @param payload - The payload for which to get the base energy cost.
+     * @param input - The transction input for which to get the base energy cost.
      * @returns The base energy cost for the payload.
      */
-    getBaseEnergyCost: (payload: PayloadType) => bigint;
+    getBaseEnergyCost: (input: Input) => bigint;
 
     /**
      * Converts the payload into JSON format.
      * @param payload - The payload to be converted into JSON.
      * @returns The payload in JSON format.
      */
-    toJSON: (payload: PayloadType) => JSONType;
+    toJSON: (payload: Payload | Input) => JSONPayload;
 
     /**
      * Converts a JSON-serialized payload into the payload type.
      * @param json - The JSON to be converted back into the payload.
      * @returns The payload obtained from the JSON.
      */
-    fromJSON: (json: JSONType) => PayloadType;
+    fromJSON: (json: JSONPayload) => Payload | Input;
 }
 
 export interface SimpleTransferPayloadJSON {
@@ -96,8 +103,11 @@ export interface SimpleTransferPayloadJSON {
     amount: string;
 }
 
+/**
+ * @deprecated use `Transaction.transfer` and `Payload.transfer` APIs instead.
+ */
 export class SimpleTransferHandler
-    implements AccountTransactionHandler<SimpleTransferPayload, SimpleTransferPayloadJSON>
+    implements AccountTransactionHandler<SimpleTransferPayload, SimpleTransferPayloadJSON, SimpleTransferPayload>
 {
     getBaseEnergyCost(): bigint {
         return 300n;
@@ -137,10 +147,21 @@ export interface SimpleTransferWithMemoPayloadJSON extends SimpleTransferPayload
     memo: HexString;
 }
 
+/**
+ * @deprecated use `Transaction.transfer` and `Payload.transfer` APIs instead.
+ */
 export class SimpleTransferWithMemoHandler
-    extends SimpleTransferHandler
-    implements AccountTransactionHandler<SimpleTransferWithMemoPayload, SimpleTransferWithMemoPayloadJSON>
+    implements
+        AccountTransactionHandler<
+            SimpleTransferWithMemoPayload,
+            SimpleTransferWithMemoPayloadJSON,
+            SimpleTransferWithMemoPayload
+        >
 {
+    getBaseEnergyCost(): bigint {
+        return 300n;
+    }
+
     serialize(transfer: SimpleTransferWithMemoPayload): Buffer {
         const serializedToAddress = AccountAddress.toBuffer(transfer.toAddress);
         const serializedMemo = encodeDataBlob(transfer.memo);
@@ -182,7 +203,12 @@ export interface DeployModulePayloadJSON {
     version?: number;
 }
 
-export class DeployModuleHandler implements AccountTransactionHandler<DeployModulePayload, DeployModulePayloadJSON> {
+/**
+ * @deprecated use `Transaction.deployModule` and `Payload.deployModule` APIs instead.
+ */
+export class DeployModuleHandler
+    implements AccountTransactionHandler<DeployModulePayload, DeployModulePayloadJSON, DeployModulePayload>
+{
     getBaseEnergyCost(payload: DeployModulePayload): bigint {
         let length = payload.source.byteLength;
         if (payload.version === undefined) {
@@ -231,10 +257,20 @@ export class DeployModuleHandler implements AccountTransactionHandler<DeployModu
 
     fromJSON(json: DeployModulePayloadJSON): DeployModulePayload {
         return {
-            source: Buffer.from(json.source, 'hex'),
+            source: Uint8Array.from(Buffer.from(json.source, 'hex')),
             version: json.version !== undefined ? Number(json.version) : undefined,
         };
     }
+}
+
+function hasEnergy(v: InitContractPayloadJSON): v is InitContractInputJSON;
+function hasEnergy(v: UpdateContractPayloadJSON): v is UpdateContractInputJSON;
+function hasEnergy(v: InitContractPayload): v is InitContractInput;
+function hasEnergy(v: UpdateContractPayload): v is UpdateContractInput;
+function hasEnergy(
+    v: object
+): v is UpdateContractInputJSON | UpdateContractInputJSON | UpdateContractInput | InitContractInput {
+    return 'maxContractExecutionEnergy' in v;
 }
 
 export interface InitContractPayloadJSON {
@@ -242,11 +278,23 @@ export interface InitContractPayloadJSON {
     moduleRef: HexString;
     initName: string;
     param: HexString;
+}
+
+export interface InitContractInputJSON {
+    amount: string;
+    moduleRef: HexString;
+    initName: string;
+    param: HexString;
     maxContractExecutionEnergy: bigint;
 }
 
-export class InitContractHandler implements AccountTransactionHandler<InitContractPayload, InitContractPayloadJSON> {
-    getBaseEnergyCost(payload: InitContractPayload): bigint {
+/**
+ * @deprecated use `Transaction.initContract` and `Payload.initContract` APIs instead.
+ */
+export class InitContractHandler
+    implements AccountTransactionHandler<InitContractPayload, InitContractPayloadJSON, InitContractInput>
+{
+    getBaseEnergyCost(payload: InitContractInput): bigint {
         return payload.maxContractExecutionEnergy.value;
     }
 
@@ -277,29 +325,38 @@ export class InitContractHandler implements AccountTransactionHandler<InitContra
             moduleRef: ModuleReference.fromBuffer(moduleRef),
             initName: ContractName.fromInitName(initNameAfterConversion),
             param: paramBuffer,
-            //The execution energy cannot be recovered as it is not part of the payload serialization
-            maxContractExecutionEnergy: Energy.create(0n),
         };
     }
 
-    toJSON(payload: InitContractPayload): InitContractPayloadJSON {
-        return {
+    toJSON(payload: InitContractPayload): InitContractPayloadJSON;
+    toJSON(payload: InitContractInput): InitContractInputJSON;
+    toJSON(payload: InitContractPayload | InitContractInput): InitContractPayloadJSON | InitContractInputJSON {
+        const json: InitContractPayloadJSON = {
             amount: payload.amount.toJSON(),
             moduleRef: payload.moduleRef.toJSON(),
             initName: payload.initName.toJSON(),
             param: payload.param.toJSON(),
-            maxContractExecutionEnergy: payload.maxContractExecutionEnergy.value,
         };
+        if (hasEnergy(payload)) {
+            (json as InitContractInputJSON).maxContractExecutionEnergy = payload.maxContractExecutionEnergy.value;
+        }
+        return json;
     }
 
-    fromJSON(json: InitContractPayloadJSON): InitContractPayload {
-        return {
+    fromJSON(json: InitContractInputJSON): InitContractInput;
+    fromJSON(json: InitContractPayloadJSON): InitContractPayload;
+    fromJSON(json: InitContractPayloadJSON | InitContractInputJSON): InitContractPayload | InitContractInput {
+        const payload: InitContractPayload = {
             amount: CcdAmount.fromJSON(json.amount),
             moduleRef: ModuleReference.fromJSON(json.moduleRef),
             initName: ContractName.fromJSON(json.initName),
             param: Parameter.fromJSON(json.param),
-            maxContractExecutionEnergy: Energy.create(json.maxContractExecutionEnergy),
         };
+
+        if (hasEnergy(json)) {
+            (payload as InitContractInput).maxContractExecutionEnergy = Energy.create(json.maxContractExecutionEnergy);
+        }
+        return payload;
     }
 }
 
@@ -308,13 +365,25 @@ export interface UpdateContractPayloadJSON {
     address: ContractAddress.SchemaValue;
     receiveName: string;
     message: HexString;
+}
+
+export interface UpdateContractInputJSON {
+    amount: string;
+    address: ContractAddress.SchemaValue;
+    receiveName: string;
+    message: HexString;
     maxContractExecutionEnergy: bigint;
 }
 
+export type TransactionMetadata = Pick<AccountTransactionHeader, 'sender' | 'nonce' | 'expiry'>;
+
+/**
+ * @deprecated use `Transaction.updateContract` and `Payload.updateContract` APIs instead.
+ */
 export class UpdateContractHandler
-    implements AccountTransactionHandler<UpdateContractPayload, UpdateContractPayloadJSON>
+    implements AccountTransactionHandler<UpdateContractPayload, UpdateContractPayloadJSON, UpdateContractInput>
 {
-    getBaseEnergyCost(payload: UpdateContractPayload): bigint {
+    getBaseEnergyCost(payload: UpdateContractInput): bigint {
         return payload.maxContractExecutionEnergy.value;
     }
 
@@ -356,33 +425,49 @@ export class UpdateContractHandler
             ),
             receiveName: ReceiveName.fromString(receiveName.toString()),
             message: Parameter.fromBuffer(message),
-            //The execution energy cannot be recovered as it is not part of the payload serialization
-            maxContractExecutionEnergy: Energy.create(0n),
         };
     }
 
-    toJSON(payload: UpdateContractPayload): UpdateContractPayloadJSON {
-        return {
+    toJSON(payload: UpdateContractPayload): UpdateContractPayloadJSON;
+    toJSON(payload: UpdateContractInput): UpdateContractInputJSON;
+    toJSON(payload: UpdateContractPayload | UpdateContractInput): UpdateContractPayloadJSON | UpdateContractInputJSON {
+        const json: UpdateContractPayloadJSON = {
             amount: payload.amount.toJSON(),
             address: ContractAddress.toSchemaValue(payload.address),
             receiveName: payload.receiveName.toJSON(),
             message: payload.message.toJSON(),
-            maxContractExecutionEnergy: payload.maxContractExecutionEnergy.value,
         };
+        if (hasEnergy(payload)) {
+            (json as UpdateContractInputJSON).maxContractExecutionEnergy = payload.maxContractExecutionEnergy.value;
+        }
+        return json;
     }
 
-    fromJSON(json: UpdateContractPayloadJSON): UpdateContractPayload {
-        return {
+    fromJSON(json: UpdateContractInputJSON): UpdateContractInput;
+    fromJSON(json: UpdateContractPayloadJSON): UpdateContractPayload;
+    fromJSON(json: UpdateContractPayloadJSON | UpdateContractInputJSON): UpdateContractPayload | UpdateContractInput {
+        const payload: UpdateContractPayload = {
             amount: CcdAmount.fromJSON(json.amount),
             address: ContractAddress.fromSchemaValue(json.address),
             receiveName: ReceiveName.fromJSON(json.receiveName),
             message: Parameter.fromJSON(json.message),
-            maxContractExecutionEnergy: Energy.create(json.maxContractExecutionEnergy),
         };
+
+        if (hasEnergy(json)) {
+            (payload as UpdateContractInput).maxContractExecutionEnergy = Energy.create(
+                json.maxContractExecutionEnergy
+            );
+        }
+        return payload;
     }
 }
 
-export class UpdateCredentialsHandler implements AccountTransactionHandler<UpdateCredentialsPayload> {
+/**
+ * @deprecated use `Transaction.updateCredentials` and `Payload.updateCredentials` APIs instead.
+ */
+export class UpdateCredentialsHandler
+    implements AccountTransactionHandler<UpdateCredentialsPayload, UpdateCredentialsPayload, UpdateCredentialsPayload>
+{
     getBaseEnergyCost(updateCredentials: UpdateCredentialsPayload): bigint {
         const newCredentialsCost = updateCredentials.newCredentials
             .map((credential) => {
@@ -445,7 +530,12 @@ export interface RegisterDataPayloadJSON {
     data: HexString;
 }
 
-export class RegisterDataHandler implements AccountTransactionHandler<RegisterDataPayload, RegisterDataPayloadJSON> {
+/**
+ * @deprecated use `Transaction.registerData` and `Payload.registerData` APIs instead.
+ */
+export class RegisterDataHandler
+    implements AccountTransactionHandler<RegisterDataPayload, RegisterDataPayloadJSON, RegisterDataPayload>
+{
     getBaseEnergyCost(): bigint {
         return 300n;
     }
@@ -486,8 +576,11 @@ export interface ConfigureBakerPayloadJSON {
     finalizationRewardCommission?: number;
 }
 
+/**
+ * @deprecated use `Transaction.configureValidator` and `Payload.configureValidator` APIs instead.
+ */
 export class ConfigureBakerHandler
-    implements AccountTransactionHandler<ConfigureBakerPayload, ConfigureBakerPayloadJSON>
+    implements AccountTransactionHandler<ConfigureBakerPayload, ConfigureBakerPayloadJSON, ConfigureBakerPayload>
 {
     getBaseEnergyCost(payload: ConfigureBakerPayload): bigint {
         if (payload.keys) {
@@ -533,8 +626,16 @@ export interface ConfigureDelegationPayloadJSON {
     delegationTarget?: DelegationTarget;
 }
 
+/**
+ * @deprecated use `Transaction.configureDelegation` and `Payload.configureDelegation` APIs instead.
+ */
 export class ConfigureDelegationHandler
-    implements AccountTransactionHandler<ConfigureDelegationPayload, ConfigureDelegationPayloadJSON>
+    implements
+        AccountTransactionHandler<
+            ConfigureDelegationPayload,
+            ConfigureDelegationPayloadJSON,
+            ConfigureDelegationPayload
+        >
 {
     getBaseEnergyCost(): bigint {
         return 300n;
@@ -578,7 +679,12 @@ export type TokenUpdatePayloadJSON = {
     operations: Cbor.JSON;
 };
 
-export class TokenUpdateHandler implements AccountTransactionHandler<TokenUpdatePayload, TokenUpdatePayloadJSON> {
+/**
+ * @deprecated use `Transaction.tokenUpdate` and `Payload.tokenUpdate` APIs instead.
+ */
+export class TokenUpdateHandler
+    implements AccountTransactionHandler<TokenUpdatePayload, TokenUpdatePayloadJSON, TokenUpdatePayload>
+{
     serialize(payload: TokenUpdatePayload): Buffer {
         const tokenId = packBufferWithWord8Length(TokenId.toBytes(payload.tokenId));
         const ops = packBufferWithWord32Length(payload.operations.bytes);
@@ -593,7 +699,6 @@ export class TokenUpdateHandler implements AccountTransactionHandler<TokenUpdate
         return { tokenId, operations };
     }
     getBaseEnergyCost(payload: TokenUpdatePayload): bigint {
-        // TODO: update costs when finalized costs are determined.
         const operations = Cbor.decode(payload.operations, 'TokenOperation[]');
         // The base cost for a token transaction.
         let energyCost = 300n;
@@ -656,6 +761,9 @@ export type AccountTransactionPayloadJSON =
     | ConfigureBakerPayloadJSON
     | TokenUpdatePayloadJSON;
 
+/**
+ * @deprecated use `Transaction` and `Payload` APIs instead.
+ */
 export function getAccountTransactionHandler(type: AccountTransactionType.Transfer): SimpleTransferHandler;
 export function getAccountTransactionHandler(
     type: AccountTransactionType.TransferWithMemo
@@ -672,7 +780,7 @@ export function getAccountTransactionHandler(type: AccountTransactionType.Config
 export function getAccountTransactionHandler(type: AccountTransactionType.TokenUpdate): TokenUpdateHandler;
 export function getAccountTransactionHandler(
     type: AccountTransactionType
-): AccountTransactionHandler<AccountTransactionPayload, AccountTransactionPayloadJSON>;
+): AccountTransactionHandler<AccountTransactionPayload, AccountTransactionPayloadJSON, AccountTransactionInput>;
 export function getAccountTransactionHandler(
     type: AccountTransactionType
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -689,13 +797,13 @@ export function getAccountTransactionHandler(
         case AccountTransactionType.Update:
             return new UpdateContractHandler();
         case AccountTransactionType.UpdateCredentials:
-            return new UpdateCredentialsHandler();
+            return new UpdateCredentialsHandler(); //TODO:
         case AccountTransactionType.RegisterData:
             return new RegisterDataHandler();
         case AccountTransactionType.ConfigureDelegation:
             return new ConfigureDelegationHandler();
         case AccountTransactionType.ConfigureBaker:
-            return new ConfigureBakerHandler();
+            return new ConfigureBakerHandler(); //TODO
         case AccountTransactionType.TokenUpdate:
             return new TokenUpdateHandler();
         default:

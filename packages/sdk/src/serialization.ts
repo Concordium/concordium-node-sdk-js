@@ -32,7 +32,7 @@ import * as AccountAddress from './types/AccountAddress.js';
 import * as Energy from './types/Energy.js';
 import { countSignatures } from './util.js';
 
-function serializeAccountTransactionType(type: AccountTransactionType): Buffer {
+export function serializeAccountTransactionType(type: AccountTransactionType): Buffer {
     return Buffer.from(Uint8Array.of(type));
 }
 
@@ -98,16 +98,12 @@ export function serializeAccountTransaction(
 ): Buffer {
     const serializedBlockItemKind = encodeWord8(BlockItemKind.AccountTransactionKind);
     const serializedAccountTransactionSignatures = serializeAccountTransactionSignature(signatures);
-
-    const accountTransactionHandler = getAccountTransactionHandler(accountTransaction.type);
     const serializedPayload = serializeAccountTransactionPayload(accountTransaction);
 
-    const baseEnergyCost = accountTransactionHandler.getBaseEnergyCost(accountTransaction.payload);
-    const energyCost = calculateEnergyCost(
-        countSignatures(signatures),
-        BigInt(serializedPayload.length),
-        baseEnergyCost
+    const baseEnergy = getAccountTransactionHandler(accountTransaction.type).getBaseEnergyCost(
+        accountTransaction.payload
     );
+    const energyCost = calculateEnergyCost(countSignatures(signatures), BigInt(serializedPayload.length), baseEnergy);
     const serializedHeader = serializeAccountTransactionHeader(
         accountTransaction.header,
         serializedPayload.length,
@@ -147,6 +143,7 @@ export function getAccountTransactionHash(
     signatures: AccountTransactionSignature
 ): string {
     const serializedAccountTransaction = serializeAccountTransaction(accountTransaction, signatures);
+
     return sha256([serializedAccountTransaction]).toString('hex');
 }
 
@@ -157,11 +154,12 @@ export function getAccountTransactionHash(
  * @returns the sha256 hash on the serialized header, type and payload
  */
 export function getAccountTransactionSignDigest(accountTransaction: AccountTransaction, signatureCount = 1n): Buffer {
-    const accountTransactionHandler = getAccountTransactionHandler(accountTransaction.type);
     const serializedPayload = serializeAccountTransactionPayload(accountTransaction);
+    const baseEnergy = getAccountTransactionHandler(accountTransaction.type).getBaseEnergyCost(
+        accountTransaction.payload
+    );
 
-    const baseEnergyCost = accountTransactionHandler.getBaseEnergyCost(accountTransaction.payload);
-    const energyCost = calculateEnergyCost(signatureCount, BigInt(serializedPayload.length), baseEnergyCost);
+    const energyCost = calculateEnergyCost(signatureCount, BigInt(serializedPayload.length), baseEnergy);
     const serializedHeader = serializeAccountTransactionHeader(
         accountTransaction.header,
         serializedPayload.length,
@@ -184,7 +182,6 @@ export function serializeAccountTransactionForSubmission(
     signatures: AccountTransactionSignature
 ): Buffer {
     const serializedAccountTransaction = serializeAccountTransaction(accountTransaction, signatures);
-
     const serializedVersion = encodeWord8(0);
     return Buffer.concat([serializedVersion, serializedAccountTransaction]);
 }

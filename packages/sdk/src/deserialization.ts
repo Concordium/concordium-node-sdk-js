@@ -1,16 +1,11 @@
 import { getAccountTransactionHandler } from './accountTransactions.js';
 import { Cursor } from './deserializationHelpers.js';
 import {
-    AccountTransaction,
-    AccountTransactionHeader,
     AccountTransactionPayload,
     AccountTransactionSignature,
     AccountTransactionType,
     isAccountTransactionType,
 } from './types.js';
-import * as AccountAddress from './types/AccountAddress.js';
-import * as AccountSequenceNumber from './types/SequenceNumber.js';
-import * as TransactionExpiry from './types/TransactionExpiry.js';
 
 /**
  * Reads an unsigned 8-bit integer from the given {@link Cursor}.
@@ -55,28 +50,6 @@ export function deserializeAccountTransactionSignature(signatures: Cursor): Acco
 }
 
 /**
- * Deserializes an account transaction header from a cursor.
- *
- * @param serializedHeader - The cursor containing the serialized header data.
- * @returns The deserialized account transaction header containing sender, nonce, and expiry.
- */
-export function deserializeAccountTransactionHeader(serializedHeader: Cursor): AccountTransactionHeader {
-    const sender = AccountAddress.fromBuffer(serializedHeader.read(32));
-    const nonce = AccountSequenceNumber.create(serializedHeader.read(8).readBigUInt64BE(0));
-    // TODO: extract payloadSize and energyAmount?
-    // energyAmount
-    serializedHeader.read(8).readBigUInt64BE(0);
-    // payloadSize
-    serializedHeader.read(4).readUInt32BE(0);
-    const expiry = TransactionExpiry.fromEpochSeconds(serializedHeader.read(8).readBigUInt64BE(0));
-    return {
-        sender,
-        nonce,
-        expiry,
-    };
-}
-
-/**
  * Deserializes an account transaction payload from a cursor.
  *
  * @param value - The cursor containing the serialized payload data.
@@ -95,28 +68,4 @@ export function deserializeAccountTransactionPayload(value: Cursor): {
     const accountTransactionHandler = getAccountTransactionHandler(type);
     const payload = accountTransactionHandler.deserialize(value);
     return { type, payload };
-}
-
-/**
- * Deserializes a complete account transaction from a cursor.
- *
- * @param serializedTransaction - The cursor containing the serialized transaction data.
- * @returns An object containing the deserialized account transaction and its signatures.
- */
-export function deserializeAccountTransaction(serializedTransaction: Cursor): {
-    accountTransaction: AccountTransaction;
-    signatures: AccountTransactionSignature;
-} {
-    const signatures = deserializeAccountTransactionSignature(serializedTransaction);
-    const header = deserializeAccountTransactionHeader(serializedTransaction);
-    const { type, payload } = deserializeAccountTransactionPayload(serializedTransaction);
-
-    return {
-        accountTransaction: {
-            type,
-            payload,
-            header,
-        },
-        signatures,
-    };
 }

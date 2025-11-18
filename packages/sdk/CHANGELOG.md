@@ -4,13 +4,40 @@
 
 ### Added
 
-- deserialize function for DeployModulePayload implemented instead of throwing an exception of not supporting deserialize
-
-- deserialize function for InitContractPayload implemented instead of throwing an exception of not supporting deserialize
-
-- deserialize function for UpdateContractPayload implemented instead of throwing an exception of not supporting deserialize
+- Deserialize function for `DeployModulePayload` implemented instead of throwing an exception of not supporting deserialize
+- Deserialize function for `InitContractPayload` implemented instead of throwing an exception of not supporting deserialize
+- Deserialize function for `UpdateContractPayload` implemented instead of throwing an exception of not supporting deserialize
 - Extended `AccountTransactionSummary` with optional sponsor details in case the transaction summary details a sponsored
   transaction.
+
+#### `Transaction` API
+
+- A `Transaction` module has been added as a new API for creating, signing, and (de)serializing account transactions.
+- A `Payload` module has been added as a new API for creating and (de)serializing transaction payloads. The payloads
+  represent the payloads supported by concordium nodes.
+- `AccountTransactionV0` module describes the initial account transaction version. This should _not_ be used for
+  creating transactions - use `Transaction` instead.
+- `ConcordiumGRPCClient.sendSignedTransaction` to support submitting transactions created with the new `Transaction`
+  API.
+  - Deprecated `ConcordiumGRPCClient.sendAccountTransaction`.
+- Deprecated `AccountTransactionHandler` implementations and the dynamic `getAccountTransactionHandler` function in
+  favor of the new `Transaction` API.
+
+### Breaking changes
+
+- Remove the `maxContractExecutionEnergy` from `UpdateContractPayload`. This field actually represent the base energy amount and it must be passed in manually instead of deriving from payload. 
+  - A corresponding replacement type `UpdateContractInput` has been added, which can be used in place of the
+    old type definition.
+- Remove the `maxContractExecutionEnergy` from `InitContractPayload`. This field actually represent the base energy amount and it must be passed in manually instead of deriving from payload. 
+  - A corresponding replacement type `InitContractInput` has been added, which can be used in place of the
+    old type definition.
+- `AccountTransactionPayload` now describes the actual transaction payloads instead of the input required to construct
+  transactions of a type.
+- `AccountTransactionInput` replaces the previous definition of `AccountTransactionPayload`.
+- Removed `deserializeAccountTransaction`, as it deserializes an intermediary account transaction format which is not supported
+  by the chain.
+- Account transaction `BlockItem` variant now references `AccountTransactionV0` instead of the previous intermediary
+  `AccountTransaction` format.
 
 ## 11.0.0
 

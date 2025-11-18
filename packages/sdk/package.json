@@ -101,7 +101,7 @@
         "webpack": "tsx ../../node_modules/webpack-cli/bin/cli.js --config webpack.config.ts",
         "typecheck": "tsc -p tsconfig.json",
         "clean": "rimraf -- lib src/grpc-api",
-        "size": "yarn build && size-limit",
+        "size": "tsc -p tsconfig.build.json && size-limit",
         "size:no-build": "size-limit"
     },
     "dependencies": {

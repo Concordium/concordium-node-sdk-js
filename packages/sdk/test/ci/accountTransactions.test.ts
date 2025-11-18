@@ -4,40 +4,38 @@ import JSONBig from 'json-bigint';
 import path from 'path';
 
 import {
-    ConfigureBakerHandler,
-    ConfigureDelegationHandler,
-    DeployModuleHandler,
-    InitContractHandler,
-    RegisterDataHandler,
-    SimpleTransferHandler,
-    SimpleTransferWithMemoHandler,
-    UpdateContractHandler,
-    UpdateCredentialsHandler,
-} from '../../src/accountTransactions.ts';
-import {
     AccountTransaction,
     AccountTransactionHeader,
     AccountTransactionType,
     CcdAmount,
+    ConfigureBakerHandler,
     ConfigureBakerPayload,
+    ConfigureDelegationHandler,
     ConfigureDelegationPayload,
     ContractAddress,
     ContractName,
     DataBlob,
     DelegationTargetType,
+    DeployModuleHandler,
     DeployModulePayload,
     Energy,
     IndexedCredentialDeploymentInfo,
-    InitContractPayload,
+    InitContractHandler,
+    InitContractInput,
     ModuleReference,
     OpenStatus,
     Parameter,
     ReceiveName,
+    RegisterDataHandler,
     RegisterDataPayload,
     SequenceNumber,
+    SimpleTransferHandler,
     SimpleTransferPayload,
+    SimpleTransferWithMemoHandler,
     SimpleTransferWithMemoPayload,
-    UpdateContractPayload,
+    UpdateContractHandler,
+    UpdateContractInput,
+    UpdateCredentialsHandler,
     UpdateCredentialsPayload,
     getAccountTransactionSignDigest,
     serializeAccountTransactionPayload,
@@ -49,12 +47,6 @@ const expiry = TransactionExpiry.fromDate(new Date(1675872215));
 
 test('configureBaker is serialized correctly', async () => {
     const expectedDigest = 'dcfb92b6e57b1d3e252c52cb8b838f44a33bf8d67301e89753101912f299dffb';
-
-    const header: AccountTransactionHeader = {
-        expiry,
-        nonce: SequenceNumber.create(1),
-        sender: AccountAddress.fromBase58(senderAccountAddress),
-    };
 
     const payload: ConfigureBakerPayload = {
         stake: CcdAmount.fromMicroCcd(1000000000n),
@@ -78,41 +70,33 @@ test('configureBaker is serialized correctly', async () => {
         finalizationRewardCommission: 1,
     };
 
-    const transaction: AccountTransaction = {
-        header,
-        payload,
-        type: AccountTransactionType.ConfigureBaker,
-    };
-
-    const signDigest = getAccountTransactionSignDigest(transaction);
-
-    expect(signDigest.toString('hex')).toBe(expectedDigest);
-});
-
-test('Init contract serializes init name correctly', async () => {
     const header: AccountTransactionHeader = {
         expiry,
         nonce: SequenceNumber.create(1),
         sender: AccountAddress.fromBase58(senderAccountAddress),
     };
 
+    const transaction: AccountTransaction = { header, type: AccountTransactionType.ConfigureBaker, payload };
+    const signDigest = getAccountTransactionSignDigest(transaction);
+
+    expect(signDigest.toString('hex')).toBe(expectedDigest);
+});
+
+test('Init contract serializes init name correctly', async () => {
     const initNameBase = 'credential_registry';
 
-    const payload: InitContractPayload = {
+    const payload: InitContractInput = {
         amount: CcdAmount.fromMicroCcd(0),
         initName: ContractName.fromString(initNameBase),
-        maxContractExecutionEnergy: Energy.create(30000),
         moduleRef: ModuleReference.fromHexString('aabbccddaabbccddaabbccddaabbccddaabbccddaabbccddaabbccddaabbccdd'),
         param: Parameter.empty(),
+        maxContractExecutionEnergy: Energy.create(30000),
     };
 
-    const transaction: AccountTransaction = {
-        header,
-        payload,
+    const serializedTransaction = serializeAccountTransactionPayload({
         type: AccountTransactionType.InitContract,
-    };
-
-    const serializedTransaction = serializeAccountTransactionPayload(transaction);
+        payload,
+    });
 
     // Slice out the init name part of the serialized transaction.
     const serializedInitName = serializedTransaction.slice(43, serializedTransaction.length - 2).toString('utf8');
@@ -157,7 +141,7 @@ test('SimpleTransferWithMemoPayload serializes to JSON correctly', async () => {
 test('DeployModulePayload serializes to JSON correctly', async () => {
     let payload: DeployModulePayload = {
         version: 1,
-        source: Buffer.from('test', 'utf8'),
+        source: Uint8Array.from(Buffer.from('test', 'utf8')),
     };
     const handler = new DeployModuleHandler();
     let json = handler.toJSON(payload);
@@ -171,7 +155,7 @@ test('DeployModulePayload serializes to JSON correctly', async () => {
 
     // Test no version
     payload = {
-        source: Buffer.from('test2', 'utf8'),
+        source: Uint8Array.from(Buffer.from('test2', 'utf8')),
     };
     json = handler.toJSON(payload);
     expect(handler.fromJSON(JSONBig.parse(JSONBig.stringify(json)))).toEqual(payload);
@@ -185,12 +169,12 @@ test('DeployModulePayload serializes to JSON correctly', async () => {
 });
 
 test('InitContractPayload serializes to JSON correctly', async () => {
-    const payload: InitContractPayload = {
+    const payload: InitContractInput = {
         amount: CcdAmount.fromMicroCcd(1000),
         initName: ContractName.fromString('test'),
-        maxContractExecutionEnergy: Energy.create(30000),
         moduleRef: ModuleReference.fromHexString('aabbccddaabbccddaabbccddaabbccddaabbccddaabbccddaabbccddaabbccdd'),
         param: Parameter.fromBuffer(Buffer.from('test', 'utf8')),
+        maxContractExecutionEnergy: Energy.create(30000),
     };
     const handler = new InitContractHandler();
     const json = handler.toJSON(payload);
@@ -205,7 +189,7 @@ test('InitContractPayload serializes to JSON correctly', async () => {
 });
 
 test('UpdateContractPayload serializes to JSON correctly', async () => {
-    const payload: UpdateContractPayload = {
+    const payload: UpdateContractInput = {
         amount: CcdAmount.fromMicroCcd(5),
         address: ContractAddress.fromSchemaValue({ index: 1n, subindex: 2n }),
         receiveName: ReceiveName.fromString('test.abc'),

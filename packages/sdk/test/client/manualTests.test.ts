@@ -1,7 +1,8 @@
 import { QueriesClient } from '../../src/grpc-api/v2/concordium/service.client.ts';
 import * as v2 from '../../src/grpc-api/v2/concordium/types.js';
 import * as v1 from '../../src/index.js';
-import { buildBasicAccountSigner, signTransaction } from '../../src/index.js';
+import { buildBasicAccountSigner } from '../../src/index.js';
+import { Transaction } from '../../src/pub/transactions.ts';
 import { getNodeClientV2 as getNodeClient } from './testHelpers.js';
 
 const client = getNodeClient();
@@ -17,7 +18,7 @@ describe.skip('Manual test suite', () => {
         const nonce = (await client.getNextAccountNonce(senderAccount)).nonce;
 
         // Create local transaction
-        const header: v1.AccountTransactionHeader = {
+        const header = {
             expiry: v1.TransactionExpiry.futureMinutes(60),
             nonce: nonce,
             sender: senderAccount,
@@ -26,18 +27,14 @@ describe.skip('Manual test suite', () => {
             amount: v1.CcdAmount.fromMicroCcd(100),
             toAddress: testAccount,
         };
-        const accountTransaction: v1.AccountTransaction = {
-            header: header,
-            payload: simpleTransfer,
-            type: v1.AccountTransactionType.Transfer,
-        };
+
+        const accountTransaction = Transaction.transfer(header, simpleTransfer);
 
         // Sign transaction
         const signer = buildBasicAccountSigner(senderAccountPrivateKey);
-        const signature: v1.AccountTransactionSignature = await signTransaction(accountTransaction, signer);
+        const signed = await Transaction.sign(accountTransaction, signer);
 
-        const transactionHash = await client.sendAccountTransaction(accountTransaction, signature);
-
+        const transactionHash = await client.sendSignedTransaction(signed);
         const blockHash = await client.waitForTransactionFinalization(transactionHash, undefined);
 
         console.log('Blockhash:', blockHash);

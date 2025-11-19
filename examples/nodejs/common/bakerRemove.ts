@@ -3,7 +3,6 @@ import {
     CcdAmount,
     ConfigureBakerPayload,
     Transaction,
-    TransactionExpiry,
     buildAccountSigner,
     parseWallet,
 } from '@concordium/web-sdk';
@@ -58,8 +57,7 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
     const sender = AccountAddress.fromBase58(wallet.value.address);
     const signer = buildAccountSigner(wallet);
 
-    const header = {
-        expiry: TransactionExpiry.futureMinutes(60),
+    const header: Transaction.Metadata = {
         nonce: (await client.getNextAccountNonce(sender)).nonce,
         sender,
     };
@@ -68,7 +66,7 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
         stake: CcdAmount.zero(),
     };
 
-    const transaction = Transaction.configureValidator(header, configureBakerPayload);
+    const transaction = Transaction.configureValidator(configureBakerPayload).addMetadata(header);
     const signed = await Transaction.sign(transaction, signer);
     const transactionHash = await client.sendSignedTransaction(signed);
 

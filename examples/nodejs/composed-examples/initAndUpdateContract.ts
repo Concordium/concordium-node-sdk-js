@@ -10,7 +10,6 @@ import {
     ReceiveName,
     ReturnValue,
     Transaction,
-    TransactionExpiry,
     affectedContracts,
     buildAccountSigner,
     deserializeReceiveReturnValue,
@@ -87,7 +86,6 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
     // #region documentation-snippet-init-contract
 
     const initHeader: Transaction.Metadata = {
-        expiry: TransactionExpiry.futureMinutes(60),
         nonce: (await client.getNextAccountNonce(sender)).nonce,
         sender,
     };
@@ -101,7 +99,7 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
         param: initParams,
     });
 
-    const initTransaction = Transaction.initContract(initHeader, initPayload, maxCost);
+    const initTransaction = Transaction.initContract(initPayload, maxCost).addMetadata(initHeader);
 
     // Sign transaction
     const signedInit = await Transaction.sign(initTransaction, signer);
@@ -134,7 +132,6 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
     // #region documentation-snippet-update-contract
 
     const updateHeader: Transaction.Metadata = {
-        expiry: TransactionExpiry.futureMinutes(60),
         nonce: (await client.getNextAccountNonce(sender)).nonce,
         sender,
     };
@@ -153,7 +150,7 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
         message: updateParams,
     });
 
-    const updateTransaction = Transaction.updateContract(updateHeader, updatePayload, maxCost);
+    const updateTransaction = Transaction.updateContract(updatePayload, maxCost).addMetadata(updateHeader);
 
     // Sign transaction
     const signedUpdate = await Transaction.sign(updateTransaction, signer);

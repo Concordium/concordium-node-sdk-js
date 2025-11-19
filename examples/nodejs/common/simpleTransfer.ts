@@ -6,7 +6,6 @@ import {
     SimpleTransferPayload,
     SimpleTransferWithMemoPayload,
     Transaction,
-    TransactionExpiry,
     buildAccountSigner,
     parseWallet,
 } from '@concordium/web-sdk';
@@ -80,8 +79,7 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
     const toAddress = AccountAddress.fromBase58(cli.flags.receiver);
     const nextNonce: NextAccountNonce = await client.getNextAccountNonce(sender);
 
-    const header = {
-        expiry: TransactionExpiry.futureMinutes(60),
+    const header: Transaction.Metadata = {
         nonce: nextNonce.nonce,
         sender,
     };
@@ -89,7 +87,7 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
     const payload: SimpleTransferPayload | SimpleTransferWithMemoPayload = cli.flags.memo
         ? { memo: new DataBlob(Buffer.from(cli.flags.memo, 'hex')), amount, toAddress }
         : { toAddress, amount };
-    const transaction = Transaction.transfer(header, payload);
+    const transaction = Transaction.transfer(payload).addMetadata(header);
 
     // #region documentation-snippet-sign-transaction
     const signer = buildAccountSigner(walletExport);

@@ -23,7 +23,7 @@ import {
     BlockItemKind,
     CredentialDeploymentDetails,
     CredentialDeploymentInfo,
-    CredentialDeploymentValues,
+    CredentialDeploymentValuesPayload,
     CredentialSignature,
     IdOwnershipProofs,
     UnsignedCredentialDeploymentInformation,
@@ -192,7 +192,7 @@ export function serializeAccountTransactionForSubmission(
  * @param credential the credential deployment values to serialize
  * @returns the serialization of CredentialDeploymentValues
  */
-function serializeCredentialDeploymentValues(credential: CredentialDeploymentValues) {
+function serializeCredentialDeploymentValues(credential: CredentialDeploymentValuesPayload) {
     // Check that we don't attempt to serialize unknown variants
     if (Object.values(credential.credentialPublicKeys.keys).some((v) => !isKnown(v)))
         throw new Error('Cannot serialize unknown key variants');

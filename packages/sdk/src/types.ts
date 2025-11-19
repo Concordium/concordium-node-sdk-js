@@ -838,7 +838,13 @@ interface SharedCredentialDeploymentValues {
     policy: Policy;
 }
 
-export interface CredentialDeploymentValues extends SharedCredentialDeploymentValues {
+export type CredentialDeploymentValuesPayload = SharedCredentialDeploymentValues & {
+    credId: string;
+    revocationThreshold: number;
+    arData: Record<string, ChainArData>;
+};
+
+export interface NormalCredentialValues extends SharedCredentialDeploymentValues {
     credId: string;
     revocationThreshold: number;
     arData: Record<string, ChainArData>;
@@ -848,6 +854,8 @@ export interface CredentialDeploymentValues extends SharedCredentialDeploymentVa
 export interface InitialCredentialDeploymentValues extends SharedCredentialDeploymentValues {
     regId: string;
 }
+
+export type InitialCredentialValues = InitialCredentialDeploymentValues;
 
 export interface CredentialDeploymentCommitments {
     cmmPrf: string;
@@ -859,12 +867,12 @@ export interface CredentialDeploymentCommitments {
 
 export interface NormalAccountCredential {
     type: 'normal';
-    contents: CredentialDeploymentValues;
+    contents: NormalCredentialValues;
 }
 
 export interface InitialAccountCredential {
     type: 'initial';
-    contents: InitialCredentialDeploymentValues;
+    contents: InitialCredentialValues;
 }
 
 export enum StakePendingChangeType {
@@ -1703,7 +1711,7 @@ export interface IdOwnershipProofs {
     sig: string;
 }
 
-export interface UnsignedCredentialDeploymentInformation extends CredentialDeploymentValues {
+export interface UnsignedCredentialDeploymentInformation extends CredentialDeploymentValuesPayload {
     proofs: IdOwnershipProofs;
 }
 
@@ -1727,7 +1735,7 @@ export type UnsignedCdiWithRandomness = {
     unsignedCdi: Known<UnsignedCredentialDeploymentInformation>;
 } & CdiRandomness;
 
-export interface CredentialDeploymentInfo extends CredentialDeploymentValues {
+export interface CredentialDeploymentInfo extends CredentialDeploymentValuesPayload {
     proofs: string;
 }
 

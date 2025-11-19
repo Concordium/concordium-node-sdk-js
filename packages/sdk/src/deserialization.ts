@@ -1,5 +1,6 @@
 import { getAccountTransactionHandler } from './accountTransactions.js';
 import { Cursor } from './deserializationHelpers.js';
+import { Buffer } from 'buffer/index.js';
 import {
     AccountTransactionPayload,
     AccountTransactionSignature,
@@ -92,7 +93,6 @@ export function deserializeCredentialDeploymentValues(
     const revocationThreshold = serializedPayload.read(1).readUInt8(0);
 
     //CredentialDeploymentValues.arData
-    /*const arDataCount = */ serializedPayload.read(1).readUInt8(0);
     const arData = deserializeArDataEntry(serializedPayload);
 
     //CredentialDeploymentValues.policy section
@@ -131,7 +131,7 @@ export function deserializeCredentialDeploymentValues(
     }
 }
 
-export function deserializeArDataEntry(serializedPayload: Cursor): Record<any, any> {
+export function deserializeArDataEntry(serializedPayload: Cursor): Record<string, ChainArData> {
     const result: Record<any, any> = {};
     //ArData.count
     const count = serializedPayload.read(1).readUInt8(0);
@@ -200,6 +200,98 @@ export function deserializeCredentialVerifyKey(serializedPayload: Cursor): Crede
         index: index,
         key: verifyKeyObject,
     };
+}
+
+export function deserializeCredentialDeploymentProofs(serializedPayload: Cursor, data: Partial<UpdateCredentialsPayload>, currentLocation: number): string {
+    
+    //CredentialDeploymentProofs.idProofs
+    //  IdOwnershipProofs.sig
+    const blindedSignature =  serializedPayload.read(96);
+    
+    //  IdOwnershipProofs.commitments
+    const prf = serializedPayload.read(48);
+    const credCounter = serializedPayload.read(48);
+    const maxAccounts = serializedPayload.read(48);
+
+    const combined = Buffer.concat([blindedSignature, prf, credCounter, maxAccounts]);
+
+    const attributeCommitmentRecords: Record<any, any> = {};
+    const buffersToConcat: Buffer[] = [];
+    const lengthAttributes = serializedPayload.read(2).readUInt16BE(0);
+    for(let a = 0; a < lengthAttributes; a++) {
+        //AttributeCommitment
+        const attributeTag = serializedPayload.read(1).readUInt8(0);
+        const attributeCommitment = serializedPayload.read(48);
+        attributeCommitmentRecords[attributeTag] = attributeCommitment;
+
+        buffersToConcat.push(attributeCommitment);
+    }
+
+    Buffer.concat([combined, ...buffersToConcat]);
+
+    const sharingCoeffsLength = serializedPayload.read(8).readBigUInt64BE(0);
+    for(let a = 0; a < sharingCoeffsLength; a++) {
+        const sharingCoeffs = serializedPayload.read(48); //sharingCoeffs being read, not stored anywhere
+
+        Buffer.concat([combined, sharingCoeffs]);
+    }
+
+    //  IdOwnershipProofs.challenge
+    const challenge = serializedPayload.read(32);
+    Buffer.concat([combined, challenge]);
+
+    //  IdOwnershipProofs.proofIdCredPub
+    const proofIdCredPubLength = serializedPayload.read(4).readUInt32BE(0);
+    for(let a = 0; a < proofIdCredPubLength; a++) {
+        const arIdentity = serializedPayload.read(4);
+        const comEncEqResponse = serializedPayload.read(96);
+        Buffer.concat([combined, arIdentity, comEncEqResponse]);
+    }
+
+    //  start of IdOwnershipProofs.proofIpSig
+    const responseRho = serializedPayload.read(32);
+    Buffer.concat([combined, responseRho]);
+
+    const proofLength = serializedPayload.read(4).readUInt32BE(0);
+    //length x (F, F)
+    for(let a = 0; a < proofLength; a++) {
+        const firstF = serializedPayload.read(32);
+        const secondF = serializedPayload.read(32);
+        Buffer.concat([combined, firstF, secondF]);
+    }
+    //  end of IdOwnershipProofs.proofIpSig
+
+    //IdOwnershipProofs.proofRegId
+    const proofRegId = serializedPayload.read(160);
+    Buffer.concat([combined, proofRegId]);
+
+    //IdOwnershipProofs.proofCredCounter
+    const g1Elements = serializedPayload.read(48*4); //4 times 48, g1Elements
+    const scalars1 = serializedPayload.read(32*3); //3 times 32, scalars1
+    Buffer.concat([combined, g1Elements, scalars1]);
+
+    const groupElementLength = serializedPayload.read(4).readUInt32BE(0);
+    for(let a = 0; a < groupElementLength; a++) {
+        const g1 = serializedPayload.read(48);
+        const g2 = serializedPayload.read(48);
+        Buffer.concat([combined, g1, g2]);
+    }
+
+    const scalars2 = serializedPayload.read(32*2) //2 times 32, scalars2
+    Buffer.concat([combined, scalars2]);
+
+    //AccountOwnershipProof
+    const numberOfSignatures = serializedPayload.read(1).readUInt8(0);
+
+    for(let a = 0; a < numberOfSignatures; a++) {
+        //AccountOwnershipProofEntry
+        const index = serializedPayload.read(1);
+        const sig = serializedPayload.read(64);
+        Buffer.concat([combined, index, sig]);
+    }
+
+    //return Buffer, go back to the for loop in deserialize() and read next CredentialDeploymentInformation, if any    
+    return combined.toString('hex');
 }
 
 export function deserializeCredentialsToBeRemoved(serializedPayload: Cursor, data: Partial<UpdateCredentialsPayload>) {

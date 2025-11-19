@@ -1,6 +1,6 @@
 import { Buffer } from 'buffer/index.js';
 
-import { deserializeCredentialDeploymentValues, deserializeCredentialsToBeRemoved } from './deserialization.js';
+import { deserializeCredentialDeploymentProofs, deserializeCredentialDeploymentValues, deserializeCredentialsToBeRemoved } from './deserialization.js';
 import { Cursor } from './deserializationHelpers.js';
 import { Cbor, TokenId, TokenOperationType } from './plt/index.js';
 import {
@@ -529,7 +529,7 @@ export class UpdateCredentialsHandler
             deserializeCredentialDeploymentValues(serializedPayload, partialData, i);
             console.log(`partialData after populating crdValue at i=${i}:`, partialData);
 
-            partialData.newCredentials[i].cdi.proofs = serializedPayload.remainingBytes.toString('hex'); //TODO: is this correct?
+            partialData.newCredentials[i].cdi.proofs = deserializeCredentialDeploymentProofs(serializedPayload, partialData, i) //TODO: is this correct?
             console.log(`partialData after populating crdProofs at i=${i}:`, partialData);
         }
 

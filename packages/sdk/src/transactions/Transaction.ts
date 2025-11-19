@@ -111,8 +111,8 @@ export type JSON = {
 export type Metadata = MakeOptional<AccountTransactionHeader, 'expiry'>;
 
 type Builder<P extends Payload.Type> = Readonly<Transaction<P>> & {
-    addMetadata<T extends Transaction<P>>(this: T, metadata: Metadata): T & Signable<P>;
-    multiSig<T extends Transaction<P>>(this: T, numSignatures: number | bigint): T & MultiSig<P>;
+    addMetadata<T extends Transaction<P>>(this: T, metadata: Metadata): Signable<P, T>;
+    multiSig<T extends Transaction<P>>(this: T, numSignatures: number | bigint): MultiSig<P, T>;
 
     toJSON(): JSON;
 };
@@ -124,7 +124,10 @@ type Initial<P extends Payload.Type = Payload.Type> = Builder<P> & {
     readonly header: Pick<Header, 'executionEnergyAmount'>;
 };
 
-type Signable<P extends Payload.Type = Payload.Type> = Omit<Transaction<P>, 'addMetadata'> & {
+type Signable<P extends Payload.Type = Payload.Type, T extends Transaction<P> = Transaction<P>> = Omit<
+    T,
+    'addMetadata'
+> & {
     /**
      * The transaction input header of the pre-signed transaction stage, i.e. with metadata.
      */
@@ -145,7 +148,10 @@ export function isSignable<P extends Payload.Type>(transaction: Transaction<P>):
     return isDefined(nonce) && isDefined(expiry) && isDefined(sender) && isDefined(executionEnergyAmount);
 }
 
-type MultiSig<P extends Payload.Type = Payload.Type> = Omit<Transaction<P>, 'multiSig'> & {
+type MultiSig<P extends Payload.Type = Payload.Type, T extends Transaction<P> = Transaction<P>> = Omit<
+    T,
+    'multiSig'
+> & {
     /**
      * The transaction input header of the multi-sig transaction stage, i.e. with the number of signatures
      * defined.
@@ -178,16 +184,16 @@ class TransactionBuilder<P extends Payload.Type = Payload.Type> implements FullB
     public addMetadata<T extends Transaction<P>>(
         this: T,
         { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: Metadata
-    ): T & Signable<P> {
+    ): Signable<P, T> {
         this.header.sender = sender;
         this.header.nonce = nonce;
         this.header.expiry = expiry;
-        return this as T & Signable<P>;
+        return this as Signable<P, T>;
     }
 
-    public multiSig<T extends Transaction<P>>(this: T, numSignatures: number | bigint): T & MultiSig<P> {
+    public multiSig<T extends Transaction<P>>(this: T, numSignatures: number | bigint): MultiSig<P, T> {
         this.header.numSignatures = BigInt(numSignatures);
-        return this as T & MultiSig<P>;
+        return this as MultiSig<P, T>;
     }
 
     public toJSON(): JSON {

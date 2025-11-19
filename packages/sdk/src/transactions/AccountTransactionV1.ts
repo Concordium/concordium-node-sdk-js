@@ -3,7 +3,7 @@ import { Buffer } from 'buffer/index.js';
 import { deserializeAccountTransactionSignature } from '../deserialization.js';
 import { Cursor } from '../deserializationHelpers.js';
 import { AccountTransactionV0, Payload } from '../index.js';
-import { serializeAccountTransactionPayload, serializeAccountTransactionSignature } from '../serialization.js';
+import { serializeAccountTransactionSignature } from '../serialization.js';
 import {
     SerializationSpec,
     encodeWord8,
@@ -83,9 +83,9 @@ export function serializeHeader({ sponsor, ...v0 }: Header): Uint8Array {
 
     const bitmap = encodeWord16(getBitmap(options, ['sponsor']));
     const v0Header = AccountTransactionV0.serializeHeader(v0);
-    const extension = serializeFromSpec(headerSerializationSpec)(options);
+    const extension = Uint8Array.from(serializeFromSpec(headerSerializationSpec)(options));
 
-    return Buffer.concat([bitmap, v0Header, extension]);
+    return Uint8Array.from(Buffer.concat([bitmap, v0Header, extension]));
 }
 
 /**
@@ -98,13 +98,8 @@ export function serializeSignatures(signatures: Signatures): Uint8Array {
     const sender = serializeAccountTransactionSignature(signatures.sender);
     const sponsor =
         signatures.sponsor !== undefined ? serializeAccountTransactionSignature(signatures.sponsor) : encodeWord8(0);
-    return Buffer.concat([sender, sponsor]);
+    return Uint8Array.from(Buffer.concat([sender, sponsor]));
 }
-
-/**
- * Serializes the payload of a V1 account transaction.
- */
-export const serializePayload = serializeAccountTransactionPayload;
 
 /**
  * Serializes a complete V1 account transaction, including both header and payload.
@@ -116,7 +111,7 @@ export function serialize(transaction: AccountTransactionV1): Uint8Array {
     const signatures = serializeSignatures(transaction.signatures);
     const header = serializeHeader(transaction.header);
     const payload = Payload.serialize(transaction.payload);
-    return Buffer.concat([signatures, header, payload]);
+    return Uint8Array.from(Buffer.concat([signatures, header, payload]));
 }
 
 const SPONSOR_MASK = 0x0001;

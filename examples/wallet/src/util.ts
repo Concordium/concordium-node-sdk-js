@@ -368,6 +368,6 @@ export async function sendTransferTransaction(
 ) {
     const simpleTransfer = await createSimpleTransferTransaction(amount, accountAddress, toAddress);
     const signingKey = getAccountSigningKey(seedPhrase, identityProviderIdentity);
-    const signed = await Transaction.sign(simpleTransfer, buildBasicAccountSigner(signingKey));
+    const signed = await Transaction.signAndFinalize(simpleTransfer, buildBasicAccountSigner(signingKey));
     return await client.sendSignedTransaction(signed);
 }

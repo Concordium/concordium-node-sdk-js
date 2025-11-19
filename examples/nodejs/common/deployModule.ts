@@ -74,7 +74,7 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
 
     // Sign transaction
     const signer = buildAccountSigner(wallet);
-    const signedTransaction = await Transaction.sign(deployModuleTransaction, signer);
+    const signedTransaction = await Transaction.signAndFinalize(deployModuleTransaction, signer);
     const transactionHash = await client.sendSignedTransaction(signedTransaction);
 
     console.log('Transaction submitted, waiting for finalization...');

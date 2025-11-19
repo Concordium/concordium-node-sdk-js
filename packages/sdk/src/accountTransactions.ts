@@ -530,7 +530,7 @@ export class UpdateCredentialsHandler
 
             deserializeCredentialDeploymentValues(serializedPayload, partialData, i);
             console.log(`partialData after populating crdValue at i=${i}:`, partialData);
-
+            
             deserializeCredentialDeploymentProofs(serializedPayload, partialData, i);
             console.log(`partialData after populating crdProofs at i=${i}:`, partialData);
         }
@@ -568,8 +568,8 @@ export class UpdateCredentialsHandler
                 })),
             };
 
-        if ('currentNumberOfCredentials' in json) {
-            (json as UpdateCredentialsInput).currentNumberOfCredentials = BigInt(json.currentNumberOfCredentials);
+        if(hasCurrentNumberOfCredentials(json)){
+            json.currentNumberOfCredentials = BigInt(json.currentNumberOfCredentials);
     
         } 
 

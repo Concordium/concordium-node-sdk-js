@@ -271,11 +271,12 @@ export function deserializeCredentialDeploymentProofs(serializedPayload: Cursor,
 
     //AccountOwnershipProof
     const numberOfSignatures = serializedPayload.read(1).readUInt8(0);
-
+    const signatures: string[] = [];
     for(let a = 0; a < numberOfSignatures; a++) {
         //AccountOwnershipProofEntry
-        /*const index = */serializedPayload.read(1);
-        /*const sig = */serializedPayload.read(64);
+        const index = serializedPayload.read(1).readUInt8(0);
+        const sig = serializedPayload.read(64);
+        signatures[index] = sig.toString('hex');
     }
 
     //populate placeholder, if any can be populated, and go back to the for loop in deserialize() and read next CredentialDeploymentInformation, if any    

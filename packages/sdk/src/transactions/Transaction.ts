@@ -149,9 +149,6 @@ export function builder<P extends Payload.Type = Payload.Type>(transaction: Tran
     return new TransactionBuilder(transaction.header, transaction.payload);
 }
 
-const isUnsigned = <S extends { version: number }>(tx: Transaction | JSON | S): tx is Transaction | JSON =>
-    (tx as S).version === undefined;
-
 /**
  * Converts a transaction to its intermediary JSON serializable representation.
  *
@@ -159,14 +156,18 @@ const isUnsigned = <S extends { version: number }>(tx: Transaction | JSON | S): 
  * @param payload the transaction payload
  * @returns the JSON representation
  */
-export function toJSON(transaction: Transaction): JSON;
-export function toJSON(transaction: Signed): SignedJSON;
-export function toJSON(transaction: Transaction | Signed): JSON | SignedJSON;
+export function toJSON(transaction: Transaction): JSON {
+    return { header: headerToJSON(transaction.header), payload: Payload.toJSON(transaction.payload) };
+}
 
-export function toJSON(transaction: Transaction | Signed): JSON | SignedJSON {
-    if (isUnsigned(transaction)) {
-        return { header: headerToJSON(transaction.header), payload: Payload.toJSON(transaction.payload) };
-    }
+/**
+ * Converts a _signed_ transaction to its intermediary JSON serializable representation.
+ *
+ * @param header the transaction header
+ * @param payload the transaction payload
+ * @returns the JSON representation
+ */
+export function signedToJSON(transaction: Signed): SignedJSON {
     return AccountTransactionV0.toJSON(transaction);
 }
 
@@ -175,18 +176,17 @@ export function toJSON(transaction: Transaction | Signed): JSON | SignedJSON {
  * @param json the JSON to convert
  * @returns the transaction
  */
-export function fromJSON(json: JSON, as?: 'unsigned'): Transaction;
-export function fromJSON(json: SignedJSON, as: 'signed'): Signed;
-export function fromJSON(json: JSON | SignedJSON, as?: 'signed' | 'unsigned'): Transaction | Signed;
+export function fromJSON(json: JSON): Transaction {
+    return { header: headerFromJSON(json.header), payload: Payload.fromJSON(json.payload) };
+}
 
-export function fromJSON(json: JSON | SignedJSON, as: 'signed' | 'unsigned' = 'unsigned'): Transaction | Signed {
-    if (isUnsigned(json)) {
-        if (as !== 'unsigned') throw new Error(`Found "unsigned" transaction, failed to parse as "${as}"`);
-        return { header: headerFromJSON(json.header), payload: Payload.fromJSON(json.payload) };
-    }
-
-    if (as !== 'signed') throw new Error(`Found "signed" transaction, failed to parse as "${as}"`);
-    return AccountTransactionV0.fromJSON(json, 'signed');
+/**
+ * Converts an intermediary JSON serializable representation created with {@linkcode signedToJSON} to a _signed_ transaction.
+ * @param json the JSON to convert
+ * @returns the signed transaction
+ */
+export function signedFromJSON(json: SignedJSON): Signed {
+    return AccountTransactionV0.fromJSON(json);
 }
 
 /**
@@ -195,24 +195,40 @@ export function fromJSON(json: JSON | SignedJSON, as: 'signed' | 'unsigned' = 'u
  * @param transaction - the transaction to convert
  * @returns the JSON string
  */
-export function toJSONString(transaction: Transaction | Signed): string {
+export function toJSONString(transaction: Transaction): string {
     return JSONBig.stringify(toJSON(transaction));
 }
+
+/**
+ * Converts a {@linkcode Signed} to a JSON string.
+ *
+ * @param transaction - the transaction to convert
+ * @returns the JSON string
+ */
+export function signedToJSONString(transaction: Signed): string {
+    return JSONBig.stringify(signedToJSON(transaction));
+}
+
 /**
  * Converts a JSON string transaction representation to a {@linkcode Transaction}.
  *
  * @param jsonString - the json string to convert
- * @param [as] - the type of transaction to parse as. If not defined, it defaults to
- * parsing as {@linkcode Transaction}
  *
  * @returns the parsed transaction
  */
-export function fromJSONString(jsonString: string, as?: 'unsigned'): Transaction;
-export function fromJSONString(jsonString: string, as: 'signed'): Signed;
-export function fromJSONString(jsonString: string, as?: 'signed' | 'unsigned'): Transaction | Signed;
+export function fromJSONString(jsonString: string): Transaction {
+    return fromJSON(JSONBig.parse(jsonString));
+}
 
-export function fromJSONString(jsonString: string, as?: 'unsigned' | 'signed'): Transaction | Signed {
-    return fromJSON(JSONBig.parse(jsonString), as);
+/**
+ * Converts a JSON string _signed_ transaction representation to a {@linkcode Signed}.
+ *
+ * @param jsonString - the json string to convert
+ *
+ * @returns the parsed signed transaction
+ */
+export function signedFromJSONString(jsonString: string): Signed {
+    return signedFromJSON(JSONBig.parse(jsonString));
 }
 
 /**
@@ -222,13 +238,14 @@ export type Metadata = MakeOptional<AccountTransactionHeader, 'expiry'>;
 
 /**
  * Dynamic `Transaction` creation based on the given transaction `type`.
- * If the transaction type is known, use the specialized creation functions per transaction type
- * instead.
+ *
+ * NOTE: this does _not_ check the payload structure, and thus assumes that the `type` and `payload`
+ * given actually match. If the transaction type is known, use the specialized creation functions
+ * per transaction type instead.
  *
  * @param type - transaction type
  * @param metadata - transaction metadata to put into the transaction header.
- * @param payload - a transaction payload matching the transaction type. If these do not match,
- * this will fail.
+ * @param payload - a transaction payload matching the transaction type.
  *
  * @returns The corresponding transaction
  *

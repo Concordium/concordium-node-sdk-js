@@ -117,15 +117,7 @@ export function deserializeCredentialDeploymentValues(
             revocationThreshold: revocationThreshold,
             arData: arData,
 
-            //Populating these in deserializeCredentialDeploymentProofs() function
-            commitments: {
-                cmmPrf: '',
-                cmmCredCounter: '',
-                cmmIdCredSecSharingCoeff: [],
-                cmmAttributes: {},
-                cmmMaxAccounts: '',
-            },
-            //TODO: still looking for this, not on bluepaper, but this looks to be part of serialize() but how do i generate this back for deserialize?
+            //This will be populated by the remaining bytes after this function returns
             proofs: '',
 
             ipIdentity: ipId,
@@ -208,91 +200,6 @@ export function deserializeCredentialVerifyKey(serializedPayload: Cursor): Crede
         index: index,
         key: verifyKeyObject,
     };
-}
-
-export function deserializeCredentialDeploymentProofs(
-    serializedPayload: Cursor,
-    data: Partial<UpdateCredentialsPayload>,
-    currentLocation: number
-) {
-    //CredentialDeploymentProofs.idProofs
-    //  IdOwnershipProofs.sig
-    /*const blindedSignature = */ serializedPayload.read(96);
-
-    //  IdOwnershipProofs.commitments
-    const prf = serializedPayload.read(48);
-    const credCounter = serializedPayload.read(48);
-    const maxAccounts = serializedPayload.read(48);
-
-    const attributeCommitmentRecords: Record<any, any> = {};
-    const lengthAttributes = serializedPayload.read(2).readUInt16BE(0);
-    for (let a = 0; a < lengthAttributes; a++) {
-        //AttributeCommitment
-        const attributeTag = serializedPayload.read(1).readUInt8(0);
-        const attributeCommitment = serializedPayload.read(48);
-        attributeCommitmentRecords[attributeTag] = attributeCommitment;
-    }
-
-    const sharingCoeffsLength = serializedPayload.read(8).readBigUInt64BE(0);
-    const sharingCoeffs: string[] = [];
-    for (let a = 0; a < sharingCoeffsLength; a++) {
-        sharingCoeffs[a] = serializedPayload.read(48).toString('hex');
-    }
-
-    //  IdOwnershipProofs.challenge
-    /*const challenge = */ serializedPayload.read(32);
-
-    //  IdOwnershipProofs.proofIdCredPub
-    const proofIdCredPubLength = serializedPayload.read(4).readUInt32BE(0);
-    for (let a = 0; a < proofIdCredPubLength; a++) {
-        /*const arIdentity = */ serializedPayload.read(4);
-        /*const comEncEqResponse = */ serializedPayload.read(96);
-    }
-
-    //  start of IdOwnershipProofs.proofIpSig
-    /*const responseRho = */ serializedPayload.read(32);
-    const proofLength = serializedPayload.read(4).readUInt32BE(0);
-    //length x (F, F)
-    for (let a = 0; a < proofLength; a++) {
-        /*const firstF = */ serializedPayload.read(32);
-        /*const secondF = */ serializedPayload.read(32);
-    }
-    //  end of IdOwnershipProofs.proofIpSig
-
-    //IdOwnershipProofs.proofRegId
-    serializedPayload.read(160);
-
-    //IdOwnershipProofs.proofCredCounter
-    serializedPayload.read(48 * 4); //4 times 48, g1Elements
-    serializedPayload.read(32 * 3); //3 times 32, scalars1
-
-    const groupElementLength = serializedPayload.read(4).readUInt32BE(0);
-    for (let a = 0; a < groupElementLength; a++) {
-        serializedPayload.read(48);
-        serializedPayload.read(48);
-    }
-
-    serializedPayload.read(32 * 2); //2 times 32, scalars2
-
-    //AccountOwnershipProof
-    const numberOfSignatures = serializedPayload.read(1).readUInt8(0);
-    const signatures: string[] = [];
-    for (let a = 0; a < numberOfSignatures; a++) {
-        //AccountOwnershipProofEntry
-        const index = serializedPayload.read(1).readUInt8(0);
-        const sig = serializedPayload.read(64);
-        signatures[index] = sig.toString('hex');
-    }
-
-    //populate placeholder, if any can be populated, and go back to the for loop in deserialize() and read next CredentialDeploymentInformation, if any
-    if (data.newCredentials) {
-        //TODO: is cmmCredCounter the same as bluepaper.credCounter inside CredentialDeploymentCommitments
-        data.newCredentials[currentLocation].cdi.commitments.cmmCredCounter = credCounter.toString();
-        data.newCredentials[currentLocation].cdi.commitments.cmmPrf = prf.toString('hex'); //TODO: is this correct? tostring hex?
-        data.newCredentials[currentLocation].cdi.commitments.cmmIdCredSecSharingCoeff = sharingCoeffs; //TODO: is this correct?
-        data.newCredentials[currentLocation].cdi.commitments.cmmAttributes = attributeCommitmentRecords;
-        data.newCredentials[currentLocation].cdi.commitments.cmmMaxAccounts = maxAccounts.toString('hex'); //TODO: is this correct? tostring hex?
-    }
 }
 
 export function deserializeCredentialsToBeRemoved(serializedPayload: Cursor, data: Partial<UpdateCredentialsPayload>) {

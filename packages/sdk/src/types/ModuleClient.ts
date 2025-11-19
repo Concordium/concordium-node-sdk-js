@@ -8,7 +8,6 @@ import * as CcdAmount from './CcdAmount.js';
 import * as ContractName from './ContractName.js';
 import * as ModuleReference from './ModuleReference.js';
 import * as Parameter from './Parameter.js';
-import * as TransactionExpiry from './TransactionExpiry.js';
 import * as TransactionHash from './TransactionHash.js';
 
 /**
@@ -135,13 +134,13 @@ export async function createAndSendInitTransaction(
         param: parameter,
     };
     const { nonce } = await moduleClient.grpcClient.getNextAccountNonce(metadata.senderAddress);
-    const header = {
-        expiry: metadata.expiry ?? TransactionExpiry.futureMinutes(5),
+    const header: Transaction.Metadata = {
+        expiry: metadata.expiry,
         nonce: nonce,
         sender: metadata.senderAddress,
     };
 
-    const transaction = Transaction.initContract(header, payload, metadata.energy);
+    const transaction = Transaction.initContract(payload, metadata.energy).addMetadata(header);
     const signed = await Transaction.sign(transaction, signer);
     return moduleClient.grpcClient.sendSignedTransaction(signed);
 }

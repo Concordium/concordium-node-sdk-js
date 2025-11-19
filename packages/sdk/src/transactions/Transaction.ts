@@ -15,6 +15,7 @@ import {
     InitContractInput,
     InitContractPayload,
     MakeOptional,
+    MakeRequired,
     RegisterDataHandler,
     RegisterDataPayload,
     SimpleTransferHandler,
@@ -32,14 +33,15 @@ import {
 } from '../index.js';
 import * as JSONBig from '../json-bigint.js';
 import { AccountAddress, DataBlob, Energy, SequenceNumber, TransactionExpiry } from '../types/index.js';
+import { orUndefined } from '../util.js';
 import { AccountTransactionV0, Payload } from './index.js';
 
 // --- Core types ---
 
 type HeaderJSON = {
-    sender: Base58String;
-    nonce: bigint;
-    expiry: number;
+    sender?: Base58String;
+    nonce?: bigint;
+    expiry?: number;
     executionEnergyAmount: bigint;
     numSignatures?: number;
 };
@@ -47,7 +49,7 @@ type HeaderJSON = {
 /**
  * Transaction header for the intermediary state of account transactions, i.e. prior to being signing.
  */
-export type Header = AccountTransactionHeader & {
+export type Header = Partial<Metadata> & {
     /** a base energy amount, this amount excludes transaction size and signature costs */
     executionEnergyAmount: Energy.Type;
     /** The number of signatures the transaction can hold. If `undefined`, this will be defined at the time of signing. */
@@ -56,9 +58,9 @@ export type Header = AccountTransactionHeader & {
 
 function headerToJSON(header: Header): HeaderJSON {
     const json: HeaderJSON = {
-        sender: header.sender.toJSON(),
-        nonce: header.nonce.toJSON(),
-        expiry: header.expiry.toJSON(),
+        sender: header.sender?.toJSON(),
+        nonce: header.nonce?.toJSON(),
+        expiry: header.expiry?.toJSON(),
         executionEnergyAmount: header.executionEnergyAmount.value,
     };
 
@@ -69,34 +71,13 @@ function headerToJSON(header: Header): HeaderJSON {
 }
 
 function headerFromJSON(json: HeaderJSON): Header {
-    return header(
-        AccountAddress.fromJSON(json.sender),
-        SequenceNumber.fromJSON(json.nonce),
-        TransactionExpiry.fromJSON(json.expiry),
-        Energy.create(json.executionEnergyAmount),
-        json.numSignatures === undefined ? undefined : BigInt(json.numSignatures)
-    );
-}
-
-/**
- * Creates a transaction header.
- *
- * @param sender the account address of the sender
- * @param nonce the account nonce
- * @param expiry the transaction expiry
- * @param executionEnergyAmount the base energy amount for transaction execution
- * @param numSignatures optional number of signatures
- *
- * @returns a transaction header
- */
-export function header(
-    sender: AccountAddress.Type,
-    nonce: SequenceNumber.Type,
-    expiry: TransactionExpiry.Type,
-    executionEnergyAmount: Energy.Type,
-    numSignatures?: bigint
-): Header {
-    return { sender, nonce, expiry, executionEnergyAmount, numSignatures };
+    return {
+        sender: orUndefined(AccountAddress.fromJSON)(json.sender),
+        nonce: orUndefined(SequenceNumber.fromJSON)(json.nonce),
+        expiry: orUndefined(TransactionExpiry.fromJSON)(json.expiry),
+        executionEnergyAmount: Energy.create(json.executionEnergyAmount),
+        numSignatures: orUndefined(BigInt)(json.numSignatures),
+    };
 }
 
 type Transaction<P extends Payload.Type = Payload.Type> = {
@@ -123,18 +104,66 @@ export type JSON = {
 
 // --- Transaction construction ---
 
-class TransactionBuilder<P extends Payload.Type = Payload.Type> implements Transaction<P> {
-    constructor(
-        public readonly header: Header,
-        public readonly payload: P
-    ) {}
+/**
+ * Base metadata input with optional expiry field.
+ */
+export type Metadata = MakeOptional<AccountTransactionHeader, 'expiry'>;
 
-    public multiSig(numSignatures: number | bigint): this {
-        this.header.numSignatures = BigInt(numSignatures);
-        return this;
+type Builder<P extends Payload.Type> = Transaction<P> & {
+    addMetadata<T extends Transaction<P>>(this: T, metadata: Metadata): PreSigned<P, T>;
+    multiSig<T extends Transaction<P>>(this: T, numSignatures: number | bigint): MultiSig<P, T>;
+    toJSON(): JSON;
+};
+
+type Initial<P extends Payload.Type = Payload.Type> = Builder<P> & {
+    header: Pick<Header, 'executionEnergyAmount'>;
+};
+
+type PreSigned<P extends Payload.Type = Payload.Type, T extends Transaction<P> = Builder<P>> = Omit<
+    T,
+    'addMetadata'
+> & {
+    header: MakeRequired<Header, keyof Metadata>;
+};
+
+type MultiSig<P extends Payload.Type = Payload.Type, T extends Transaction<P> = Builder<P>> = Omit<T, 'multiSig'> & {
+    header: MakeRequired<Header, 'numSignatures'>;
+};
+
+class TransactionBuilder<P extends Payload.Type = Payload.Type> implements Builder<P> {
+    private _header: Header;
+
+    constructor(
+        header: Header,
+        public readonly payload: P
+    ) {
+        this._header = header;
     }
 
-    public toJSON() {
+    public get header(): Header {
+        return this._header;
+    }
+
+    private set header(header: Header) {
+        this._header = header;
+    }
+
+    public addMetadata<T extends Transaction<P>>(
+        this: T,
+        { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: Metadata
+    ): PreSigned<P, T> {
+        this.header.sender = sender;
+        this.header.nonce = nonce;
+        this.header.expiry = expiry;
+        return this as PreSigned<P, T>;
+    }
+
+    public multiSig<T extends Transaction<P>>(this: T, numSignatures: number | bigint): MultiSig<P, T> {
+        this.header.numSignatures = BigInt(numSignatures);
+        return this as MultiSig<P, T>;
+    }
+
+    public toJSON(): JSON {
         return toJSON(this);
     }
 }
@@ -231,11 +260,6 @@ export function signedFromJSONString(jsonString: string): Signed {
 }
 
 /**
- * Base metadata input with optional expiry field.
- */
-export type Metadata = MakeOptional<AccountTransactionHeader, 'expiry'>;
-
-/**
  * Dynamic `Transaction` creation based on the given transaction `type`.
  *
  * NOTE: this does _not_ check the payload structure, and thus assumes that the `type` and `payload`
@@ -243,7 +267,6 @@ export type Metadata = MakeOptional<AccountTransactionHeader, 'expiry'>;
  * per transaction type instead.
  *
  * @param type - transaction type
- * @param metadata - transaction metadata to put into the transaction header.
  * @param payload - a transaction payload matching the transaction type.
  *
  * @returns The corresponding transaction
@@ -251,34 +274,30 @@ export type Metadata = MakeOptional<AccountTransactionHeader, 'expiry'>;
  * @throws if transaction type is not currently supported.
  * @throws if transaction cannot be created due to mismatch between `type` and `payload`.
  */
-export function create(
-    type: AccountTransactionType,
-    metadata: Metadata,
-    payload: AccountTransactionInput
-): TransactionBuilder {
+export function create(type: AccountTransactionType, payload: AccountTransactionInput): Initial {
     switch (type) {
         case AccountTransactionType.Transfer:
-            return transfer(metadata, payload as SimpleTransferPayload);
+            return transfer(payload as SimpleTransferPayload);
         case AccountTransactionType.TransferWithMemo:
-            return transfer(metadata, payload as SimpleTransferWithMemoPayload);
+            return transfer(payload as SimpleTransferWithMemoPayload);
         case AccountTransactionType.DeployModule:
-            return deployModule(metadata, payload as DeployModulePayload);
+            return deployModule(payload as DeployModulePayload);
         case AccountTransactionType.InitContract:
             const { maxContractExecutionEnergy: initEnergy, ...initPayload } = payload as InitContractInput;
-            return initContract(metadata, initPayload, initEnergy);
+            return initContract(initPayload, initEnergy);
         case AccountTransactionType.Update:
             const { maxContractExecutionEnergy: updateEnergy, ...updatePayload } = payload as UpdateContractInput;
-            return updateContract(metadata, updatePayload, updateEnergy);
+            return updateContract(updatePayload, updateEnergy);
         case AccountTransactionType.UpdateCredentials:
-            return updateCredentials(metadata, payload as UpdateCredentialsPayload);
+            return updateCredentials(payload as UpdateCredentialsPayload);
         case AccountTransactionType.RegisterData:
-            return registerData(metadata, payload as RegisterDataPayload);
+            return registerData(payload as RegisterDataPayload);
         case AccountTransactionType.ConfigureDelegation:
-            return configureDelegation(metadata, payload as ConfigureDelegationPayload);
+            return configureDelegation(payload as ConfigureDelegationPayload);
         case AccountTransactionType.ConfigureBaker:
-            return configureValidator(metadata, payload as ConfigureBakerPayload);
+            return configureValidator(payload as ConfigureBakerPayload);
         case AccountTransactionType.TokenUpdate:
-            return tokenUpdate(metadata, payload as TokenUpdatePayload);
+            return tokenUpdate(payload as TokenUpdatePayload);
         default:
             throw new Error('The provided type is not supported: ' + type);
     }
@@ -290,8 +309,8 @@ export function create(
  * @param transaction - The {@linkcode AccountTransaction} to convert.
  * @returns a corresonding transaction builder object.
  */
-export function fromLegacyAccountTransaction({ type, header, payload }: AccountTransaction): TransactionBuilder {
-    return create(type, header, payload);
+export function fromLegacyAccountTransaction({ type, header, payload }: AccountTransaction): PreSigned {
+    return create(type, payload).addMetadata(header);
 }
 
 /**
@@ -334,83 +353,66 @@ const isWithMemo = (
 
 /**
  * Creates a transfer transaction with memo
- * @param metadata transaction metadata including sender, nonce, and optional expiry (defaults to 5 minutes)
  * @param payload the transfer payload containing recipient and amount and memo
  * @returns a transfer with memo transaction
  */
 export function transfer(
-    metadata: Metadata,
     payload: SimpleTransferWithMemoPayload | Payload.TransferWithMemo
-): TransactionBuilder<Payload.TransferWithMemo>;
+): Initial<Payload.TransferWithMemo>;
 
 /**
  * Creates a transfer transaction with a memo.
- * @param metadata transaction metadata including sender, nonce, and optional expiry (defaults to 5 minutes)
  * @param payload the transfer payload containing recipient and amount
  * @param memo the transfer memo to include
  * @returns a transfer with memo transaction
  */
-export function transfer(
-    metadata: Metadata,
-    payload: SimpleTransferPayload,
-    memo: DataBlob
-): TransactionBuilder<Payload.TransferWithMemo>;
+export function transfer(payload: SimpleTransferPayload, memo: DataBlob): Initial<Payload.TransferWithMemo>;
 
 /**
  * Creates a transfer transaction
- * @param metadata transaction metadata including sender, nonce, and optional expiry (defaults to 5 minutes)
  * @param payload the transfer payload containing recipient and amount
  * @returns a transfer transaction
  */
-export function transfer(
-    metadata: Metadata,
-    payload: SimpleTransferPayload | Payload.Transfer
-): TransactionBuilder<Payload.Transfer>;
+export function transfer(payload: SimpleTransferPayload | Payload.Transfer): Initial<Payload.Transfer>;
 
 export function transfer(
-    metadata: Metadata,
     payload: SimpleTransferPayload | SimpleTransferWithMemoPayload | Payload.Transfer | Payload.TransferWithMemo,
     memo?: DataBlob
-): TransactionBuilder<Payload.Transfer> | TransactionBuilder<Payload.TransferWithMemo> {
-    const { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) } = metadata;
-
+): Initial<Payload.Transfer> | Initial<Payload.TransferWithMemo> {
     if (!isPayloadWithType(payload)) {
         // a little hacky, but at this point, the we don't care if the memo is defined or not, as the
         // Payload.transfer fuction will take care of the different cases here
-        return transfer(metadata, Payload.transfer(payload, memo as any));
+        return transfer(Payload.transfer(payload, memo as any));
     }
 
     if (isWithMemo(payload)) {
         const handler = new SimpleTransferWithMemoHandler();
         return new TransactionBuilder<Payload.TransferWithMemo>(
-            header(sender, nonce, expiry, Energy.create(handler.getBaseEnergyCost())),
+            { executionEnergyAmount: Energy.create(handler.getBaseEnergyCost()) },
             payload
         );
     }
 
     const handler = new SimpleTransferHandler();
     return new TransactionBuilder<Payload.Transfer>(
-        header(sender, nonce, expiry, Energy.create(handler.getBaseEnergyCost())),
+        { executionEnergyAmount: Energy.create(handler.getBaseEnergyCost()) },
         payload
     );
 }
 
 /**
  * Creates a transaction to update account credentials.
- * @param metadata transaction metadata including sender, nonce, and optional expiry (defaults to 5 minutes)
  * @param payload the credentials update payload
  * @returns an update credentials transaction
  */
 export function updateCredentials(
-    metadata: Metadata,
     payload: UpdateCredentialsPayload | Payload.UpdateCredentials
-): TransactionBuilder<Payload.UpdateCredentials> {
-    if (!isPayloadWithType(payload)) return updateCredentials(metadata, Payload.updateCredentials(payload));
+): Initial<Payload.UpdateCredentials> {
+    if (!isPayloadWithType(payload)) return updateCredentials(Payload.updateCredentials(payload));
 
-    const { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) } = metadata;
     const handler = new UpdateCredentialsHandler();
     return new TransactionBuilder(
-        header(sender, nonce, expiry, Energy.create(handler.getBaseEnergyCost(payload))),
+        { executionEnergyAmount: Energy.create(handler.getBaseEnergyCost(payload)) },
         payload
     );
 }
@@ -422,15 +424,13 @@ export function updateCredentials(
  * @returns a configure baker transaction
  */
 export function configureValidator(
-    metadata: Metadata,
     payload: ConfigureBakerPayload | Payload.ConfigureValidator
-): TransactionBuilder<Payload.ConfigureValidator> {
-    if (!isPayloadWithType(payload)) return configureValidator(metadata, Payload.configureValidator(payload));
+): Initial<Payload.ConfigureValidator> {
+    if (!isPayloadWithType(payload)) return configureValidator(Payload.configureValidator(payload));
 
-    const { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) } = metadata;
     const handler = new ConfigureBakerHandler();
     return new TransactionBuilder(
-        header(sender, nonce, expiry, Energy.create(handler.getBaseEnergyCost(payload))),
+        { executionEnergyAmount: Energy.create(handler.getBaseEnergyCost(payload)) },
         payload
     );
 }
@@ -442,32 +442,25 @@ export function configureValidator(
  * @returns a configure delegation transaction
  */
 export function configureDelegation(
-    metadata: Metadata,
     payload: ConfigureDelegationPayload | Payload.ConfigureDelegation
-): TransactionBuilder<Payload.ConfigureDelegation> {
-    if (!isPayloadWithType(payload)) return configureDelegation(metadata, Payload.configureDelegation(payload));
+): Initial<Payload.ConfigureDelegation> {
+    if (!isPayloadWithType(payload)) return configureDelegation(Payload.configureDelegation(payload));
 
-    const { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) } = metadata;
     const handler = new ConfigureDelegationHandler();
-    return new TransactionBuilder(header(sender, nonce, expiry, Energy.create(handler.getBaseEnergyCost())), payload);
+    return new TransactionBuilder({ executionEnergyAmount: Energy.create(handler.getBaseEnergyCost()) }, payload);
 }
 
 /**
  * Creates a transaction to update token parameters on chain.
- * @param metadata transaction metadata including sender, nonce, and optional expiry (defaults to 5 minutes)
  * @param payload the token update payload
  * @returns a token update transaction
  */
-export function tokenUpdate(
-    metadata: Metadata,
-    payload: TokenUpdatePayload | Payload.TokenUpdate
-): TransactionBuilder<Payload.TokenUpdate> {
-    if (!isPayloadWithType(payload)) return tokenUpdate(metadata, Payload.tokenUpdate(payload));
+export function tokenUpdate(payload: TokenUpdatePayload | Payload.TokenUpdate): Initial<Payload.TokenUpdate> {
+    if (!isPayloadWithType(payload)) return tokenUpdate(Payload.tokenUpdate(payload));
 
-    const { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) } = metadata;
     const handler = new TokenUpdateHandler();
     return new TransactionBuilder(
-        header(sender, nonce, expiry, Energy.create(handler.getBaseEnergyCost(payload))),
+        { executionEnergyAmount: Energy.create(handler.getBaseEnergyCost(payload)) },
         payload
     );
 }
@@ -478,91 +471,64 @@ export function tokenUpdate(
  * @param payload the module deployment payload containing the wasm module
  * @returns a deploy module transaction
  */
-export function deployModule(
-    metadata: Metadata,
-    payload: DeployModulePayload | Payload.DeployModule
-): TransactionBuilder<Payload.DeployModule> {
-    if (!isPayloadWithType(payload)) return deployModule(metadata, Payload.deployModule(payload));
+export function deployModule(payload: DeployModulePayload | Payload.DeployModule): Initial<Payload.DeployModule> {
+    if (!isPayloadWithType(payload)) return deployModule(Payload.deployModule(payload));
 
-    const { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) } = metadata;
     const handler = new DeployModuleHandler();
     return new TransactionBuilder(
-        header(sender, nonce, expiry, Energy.create(handler.getBaseEnergyCost(payload))),
+        { executionEnergyAmount: Energy.create(handler.getBaseEnergyCost(payload)) },
         payload
     );
 }
 
 /**
  * Creates a transaction to register arbitrary data on chain.
- * @param metadata transaction metadata including sender, nonce, and optional expiry (defaults to 5 minutes)
  * @param payload the data registration payload
  * @returns a register data transaction
  */
-export function registerData(
-    metadata: Metadata,
-    payload: RegisterDataPayload | Payload.RegisterData
-): TransactionBuilder<Payload.RegisterData> {
-    if (!isPayloadWithType(payload)) return registerData(metadata, Payload.registerData(payload));
+export function registerData(payload: RegisterDataPayload | Payload.RegisterData): Initial<Payload.RegisterData> {
+    if (!isPayloadWithType(payload)) return registerData(Payload.registerData(payload));
 
-    const { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) } = metadata;
     const handler = new RegisterDataHandler();
-    return new TransactionBuilder(header(sender, nonce, expiry, Energy.create(handler.getBaseEnergyCost())), payload);
+    return new TransactionBuilder({ executionEnergyAmount: Energy.create(handler.getBaseEnergyCost()) }, payload);
 }
 
 /**
  * Creates a transaction to initialize a smart contract instance.
- * @param metadata transaction metadata including sender, nonce, and optional expiry (defaults to 5 minutes)
  * @param payload the contract initialization payload with specified execution energy limit
  * @param maxContractExecutionEnergy the maximum amount of energy to spend on initializing the contract instance
  *
  * @returns an init contract transaction
  */
 export function initContract(
-    metadata: Metadata,
     payload: InitContractPayload | Payload.InitContract,
     maxContractExecutionEnergy: Energy.Type
-): TransactionBuilder<Payload.InitContract> {
-    if (!isPayloadWithType(payload))
-        return initContract(metadata, Payload.initContract(payload), maxContractExecutionEnergy);
+): Initial<Payload.InitContract> {
+    if (!isPayloadWithType(payload)) return initContract(Payload.initContract(payload), maxContractExecutionEnergy);
 
-    const { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) } = metadata;
     const handler = new InitContractHandler();
     return new TransactionBuilder(
-        header(
-            sender,
-            nonce,
-            expiry,
-            Energy.create(handler.getBaseEnergyCost({ ...payload, maxContractExecutionEnergy }))
-        ),
+        { executionEnergyAmount: Energy.create(handler.getBaseEnergyCost({ ...payload, maxContractExecutionEnergy })) },
         payload
     );
 }
 
 /**
  * Creates a transaction to invoke an existing smart contract.
- * @param metadata transaction metadata including sender, nonce, and optional expiry (defaults to 5 minutes)
  * @param payload the contract update payload specifying the contract and receive function with specified execution energy limit
  * @param maxContractExecutionEnergy the maximum amount of energy to spend on updating the contract instance
  *
  * @returns an update contract transaction
  */
 export function updateContract(
-    metadata: Metadata,
     payload: UpdateContractPayload | Payload.UpdateContract,
     maxContractExecutionEnergy: Energy.Type
-): TransactionBuilder<Payload.UpdateContract> {
-    if (!isPayloadWithType(payload))
-        return updateContract(metadata, Payload.updateContract(payload), maxContractExecutionEnergy);
+): Initial<Payload.UpdateContract> {
+    if (!isPayloadWithType(payload)) return updateContract(Payload.updateContract(payload), maxContractExecutionEnergy);
 
-    const { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) } = metadata;
     const handler = new UpdateContractHandler();
     return new TransactionBuilder(
-        header(
-            sender,
-            nonce,
-            expiry,
-            Energy.create(handler.getBaseEnergyCost({ ...payload, maxContractExecutionEnergy }))
-        ),
+        { executionEnergyAmount: Energy.create(handler.getBaseEnergyCost({ ...payload, maxContractExecutionEnergy })) },
         payload
     );
 }
@@ -570,8 +536,10 @@ export function updateContract(
 // TODO: factor in v1 transaction
 /**
  * Calculates the total energy cost for a transaction including signature and size costs.
- * @param header the transaction header with execution energy and number of signatures
+ * @param header the transaction header with execution energy and number of signatures. If the number of signatures is
+ * `undefined`, it defaults to `1`.
  * @param payload the transaction payload
+ *
  * @returns the total energy cost
  */
 export function getEnergyCost({
@@ -594,10 +562,11 @@ export type SignedJSON = AccountTransactionV0.JSON;
  * Signs a transaction using the provided signer, calculating total energy cost and creating a version 0 signed transaction.
  * @param transaction the unsigned transaction to sign
  * @param signer the account signer containing keys and signature logic
+ *
  * @returns a promise resolving to the signed transaction
  */
 // TODO: factor in v1 transaction
-export async function sign(transaction: Transaction, signer: AccountSigner): Promise<Signed> {
+export async function sign(transaction: PreSigned, signer: AccountSigner): Promise<Signed> {
     const { expiry, sender, nonce, numSignatures = signer.getSignatureCount() } = transaction.header;
 
     const energyAmount = getEnergyCost({ ...transaction, header: { ...transaction.header, numSignatures } });

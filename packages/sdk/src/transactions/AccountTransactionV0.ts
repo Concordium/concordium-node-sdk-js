@@ -2,13 +2,14 @@ import { deserializeAccountTransactionSignature } from '../deserialization.js';
 import { Cursor } from '../deserializationHelpers.js';
 import { constantA, constantB } from '../energyCost.js';
 import { sha256 } from '../hash.js';
-import { Transaction as AccountTransactionV0, Base58String, Payload } from '../index.js';
+import { Base58String } from '../index.js';
 import * as JSONBig from '../json-bigint.js';
 import { serializeAccountTransactionSignature } from '../serialization.js';
 import { encodeWord8, encodeWord32, encodeWord64 } from '../serializationHelpers.js';
 import { AccountSigner } from '../signHelpers.js';
 import { AccountTransactionSignature, BlockItemKind } from '../types.js';
 import { AccountAddress, Energy, SequenceNumber, TransactionExpiry } from '../types/index.js';
+import { Payload } from './index.js';
 
 /**
  * Header metadata for a version 0 account transaction.

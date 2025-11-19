@@ -255,7 +255,7 @@ test.each(clients)('sendBlockItem', async (client) => {
         toAddress: testAccount,
     };
 
-    const accountTransaction = Transaction.transfer(header, simpleTransfer);
+    const accountTransaction = Transaction.transfer(simpleTransfer).addMetadata(header);
 
     // Sign transaction
     const signer = buildBasicAccountSigner(privateKey);
@@ -280,7 +280,7 @@ test.each(clients)('transactionHash', async (client) => {
         toAddress: testAccount,
     };
 
-    const transaction = Transaction.transfer(headerLocal, simpleTransfer);
+    const transaction = Transaction.transfer(simpleTransfer).addMetadata(headerLocal);
     const rawPayload = v1.Payload.serialize(transaction.payload);
 
     // Sign transaction

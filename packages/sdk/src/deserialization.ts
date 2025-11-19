@@ -6,9 +6,9 @@ import {
     AccountTransactionType,
     ChainArData,
     CredentialPublicKeys,
-    isAccountTransactionType,
     UpdateCredentialsPayload,
     VerifyKey,
+    isAccountTransactionType,
 } from './types.js';
 
 /**
@@ -74,8 +74,11 @@ export function deserializeAccountTransactionPayload(value: Cursor): {
     return { type, payload };
 }
 
-export function deserializeCredentialDeploymentValues(serializedPayload: Cursor, data: Partial<UpdateCredentialsPayload>, currentLocation: number) {
-
+export function deserializeCredentialDeploymentValues(
+    serializedPayload: Cursor,
+    data: Partial<UpdateCredentialsPayload>,
+    currentLocation: number
+) {
     //CredentialDeploymentValues.publicKeys
     const publicKeys = deserializeCredentialPublicKeys(serializedPayload);
 
@@ -89,7 +92,7 @@ export function deserializeCredentialDeploymentValues(serializedPayload: Cursor,
     const revocationThreshold = serializedPayload.read(1).readUInt8(0);
 
     //CredentialDeploymentValues.arData
-    /*const arDataCount = */serializedPayload.read(1).readUInt8(0);
+    /*const arDataCount = */ serializedPayload.read(1).readUInt8(0);
     const arData = deserializeArDataEntry(serializedPayload);
 
     //CredentialDeploymentValues.policy section
@@ -97,8 +100,8 @@ export function deserializeCredentialDeploymentValues(serializedPayload: Cursor,
     const createdAt = serializedPayload.read(3);
     const countAtrributes = serializedPayload.read(2).readUInt16BE(0);
 
-    const revealedAttributes: Partial<Record<any,any>> = {}; 
-    for(let a = 0; a < countAtrributes; a++) {
+    const revealedAttributes: Partial<Record<any, any>> = {};
+    for (let a = 0; a < countAtrributes; a++) {
         //AttributeEntry
         const attributeTag = serializedPayload.read(1);
         const countAttributeValue = serializedPayload.read(1).readUInt8(0);
@@ -108,7 +111,7 @@ export function deserializeCredentialDeploymentValues(serializedPayload: Cursor,
     }
     //end of policy section
 
-    if(data.newCredentials) {
+    if (data.newCredentials) {
         data.newCredentials[currentLocation].cdi = {
             credId: credId.toString(),
             revocationThreshold: revocationThreshold,
@@ -132,17 +135,16 @@ export function deserializeCredentialDeploymentValues(serializedPayload: Cursor,
                 createdAt: createdAt.toString(),
                 revealedAttributes: revealedAttributes,
             },
-        }
+        };
     }
 }
 
 export function deserializeArDataEntry(serializedPayload: Cursor): Record<any, any> {
-
-    const result:Record<any, any> = {};
+    const result: Record<any, any> = {};
     //ArData.count
     const count = serializedPayload.read(1).readUInt8(0);
 
-    for(let i = 0; i < count; i++) {
+    for (let i = 0; i < count; i++) {
         //ArData.ArDataEntry
         //          .arIdentity
         const arIdentity = serializedPayload.read(4);
@@ -161,7 +163,7 @@ export function deserializeChainArData(serializedPayload: Cursor): ChainArData {
 
     return {
         encIdCredPubShare: idCredPubShare.toString(),
-    }
+    };
 }
 
 export function deserializeCredentialPublicKeys(serializedPayload: Cursor): CredentialPublicKeys {
@@ -170,7 +172,7 @@ export function deserializeCredentialPublicKeys(serializedPayload: Cursor): Cred
 
     //CredentialPublicKeys.keys: count x CredentialVerifyKeyEntry
     const keys: Record<any, any> = {};
-    for(let i = 0; i < count; i++) {
+    for (let i = 0; i < count; i++) {
         const credentialVerifyKeyEntry = deserializeCredentialVerifyKey(serializedPayload);
         keys[credentialVerifyKeyEntry.index] = credentialVerifyKeyEntry.key;
     }
@@ -181,7 +183,7 @@ export function deserializeCredentialPublicKeys(serializedPayload: Cursor): Cred
     return {
         keys: keys,
         threshold: threshold,
-    }
+    };
 }
 
 interface CredentialVerifyKeyEntry {
@@ -200,16 +202,19 @@ export function deserializeCredentialVerifyKey(serializedPayload: Cursor): Crede
     const verifyKeyObject: VerifyKey = {
         schemeId: scheme.toString(),
         verifyKey: verifyKey.toString('hex'),
-    }
+    };
 
     return {
         index: index,
         key: verifyKeyObject,
-    }
+    };
 }
 
-export function deserializeCredentialDeploymentProofs(serializedPayload: Cursor, data: Partial<UpdateCredentialsPayload>, currentLocation: number) {
-
+export function deserializeCredentialDeploymentProofs(
+    serializedPayload: Cursor,
+    data: Partial<UpdateCredentialsPayload>,
+    currentLocation: number
+) {
     //CredentialDeploymentProofs.idProofs
     //  IdOwnershipProofs.sig
     /*const blindedSignature = */ serializedPayload.read(96);
@@ -221,7 +226,7 @@ export function deserializeCredentialDeploymentProofs(serializedPayload: Cursor,
 
     const attributeCommitmentRecords: Record<any, any> = {};
     const lengthAttributes = serializedPayload.read(2).readUInt16BE(0);
-    for(let a = 0; a < lengthAttributes; a++) {
+    for (let a = 0; a < lengthAttributes; a++) {
         //AttributeCommitment
         const attributeTag = serializedPayload.read(1).readUInt8(0);
         const attributeCommitment = serializedPayload.read(48);
@@ -230,27 +235,27 @@ export function deserializeCredentialDeploymentProofs(serializedPayload: Cursor,
 
     const sharingCoeffsLength = serializedPayload.read(8).readBigUInt64BE(0);
     const sharingCoeffs: string[] = [];
-    for(let a = 0; a < sharingCoeffsLength; a++) {
+    for (let a = 0; a < sharingCoeffsLength; a++) {
         sharingCoeffs[a] = serializedPayload.read(48).toString('hex');
     }
 
     //  IdOwnershipProofs.challenge
-    /*const challenge = */serializedPayload.read(32);
+    /*const challenge = */ serializedPayload.read(32);
 
     //  IdOwnershipProofs.proofIdCredPub
     const proofIdCredPubLength = serializedPayload.read(4).readUInt32BE(0);
-    for(let a = 0; a < proofIdCredPubLength; a++) {
-        /*const arIdentity = */serializedPayload.read(4);
-        /*const comEncEqResponse = */serializedPayload.read(96);
+    for (let a = 0; a < proofIdCredPubLength; a++) {
+        /*const arIdentity = */ serializedPayload.read(4);
+        /*const comEncEqResponse = */ serializedPayload.read(96);
     }
 
     //  start of IdOwnershipProofs.proofIpSig
-    /*const responseRho = */serializedPayload.read(32);
+    /*const responseRho = */ serializedPayload.read(32);
     const proofLength = serializedPayload.read(4).readUInt32BE(0);
     //length x (F, F)
-    for(let a = 0; a < proofLength; a++) {
-        /*const firstF = */serializedPayload.read(32);
-        /*const secondF = */serializedPayload.read(32);
+    for (let a = 0; a < proofLength; a++) {
+        /*const firstF = */ serializedPayload.read(32);
+        /*const secondF = */ serializedPayload.read(32);
     }
     //  end of IdOwnershipProofs.proofIpSig
 
@@ -258,31 +263,31 @@ export function deserializeCredentialDeploymentProofs(serializedPayload: Cursor,
     serializedPayload.read(160);
 
     //IdOwnershipProofs.proofCredCounter
-    serializedPayload.read(48*4); //4 times 48, g1Elements
-    serializedPayload.read(32*3); //3 times 32, scalars1
+    serializedPayload.read(48 * 4); //4 times 48, g1Elements
+    serializedPayload.read(32 * 3); //3 times 32, scalars1
 
     const groupElementLength = serializedPayload.read(4).readUInt32BE(0);
-    for(let a = 0; a < groupElementLength; a++) {
+    for (let a = 0; a < groupElementLength; a++) {
         serializedPayload.read(48);
         serializedPayload.read(48);
     }
 
-    serializedPayload.read(32*2) //2 times 32, scalars2
+    serializedPayload.read(32 * 2); //2 times 32, scalars2
 
     //AccountOwnershipProof
     const numberOfSignatures = serializedPayload.read(1).readUInt8(0);
     const signatures: string[] = [];
-    for(let a = 0; a < numberOfSignatures; a++) {
+    for (let a = 0; a < numberOfSignatures; a++) {
         //AccountOwnershipProofEntry
         const index = serializedPayload.read(1).readUInt8(0);
         const sig = serializedPayload.read(64);
         signatures[index] = sig.toString('hex');
     }
 
-    //populate placeholder, if any can be populated, and go back to the for loop in deserialize() and read next CredentialDeploymentInformation, if any    
-    if(data.newCredentials) {
+    //populate placeholder, if any can be populated, and go back to the for loop in deserialize() and read next CredentialDeploymentInformation, if any
+    if (data.newCredentials) {
         //TODO: is cmmCredCounter the same as bluepaper.credCounter inside CredentialDeploymentCommitments
-        data.newCredentials[currentLocation].cdi.commitments.cmmCredCounter = credCounter.toString(); 
+        data.newCredentials[currentLocation].cdi.commitments.cmmCredCounter = credCounter.toString();
         data.newCredentials[currentLocation].cdi.commitments.cmmPrf = prf.toString('hex'); //TODO: is this correct? tostring hex?
         data.newCredentials[currentLocation].cdi.commitments.cmmIdCredSecSharingCoeff = sharingCoeffs; //TODO: is this correct?
         data.newCredentials[currentLocation].cdi.commitments.cmmAttributes = attributeCommitmentRecords;
@@ -291,7 +296,6 @@ export function deserializeCredentialDeploymentProofs(serializedPayload: Cursor,
 }
 
 export function deserializeCredentialsToBeRemoved(serializedPayload: Cursor, data: Partial<UpdateCredentialsPayload>) {
-
     //TransactionPayload.UpdateCredentials.removeLength
     //number of credentials to be removed
     const removeLength = serializedPayload.read(1).readUInt8(0);
@@ -299,7 +303,7 @@ export function deserializeCredentialsToBeRemoved(serializedPayload: Cursor, dat
     //TransactionPayload.UpdateCredentials.CredIds
     const removeCredIds: string[] = [];
     //the credential IDs of the credentials to be removed, based on the removeLength value
-    for(let a = 0; a < removeLength; a++) {
+    for (let a = 0; a < removeLength; a++) {
         const credentialRegistrationId = serializedPayload.read(48);
         removeCredIds[a] = credentialRegistrationId.toString();
     }
@@ -314,5 +318,3 @@ export function deserializeCredentialsToBeRemoved(serializedPayload: Cursor, dat
 
     //now need to construct the UpdateCredentialsPayload based on the partial data, so we return our way upwards to the deserialize() function
 }
-
-

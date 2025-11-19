@@ -1,5 +1,10 @@
 import { Buffer } from 'buffer/index.js';
 
+import {
+    deserializeCredentialDeploymentProofs,
+    deserializeCredentialDeploymentValues,
+    deserializeCredentialsToBeRemoved,
+} from './deserialization.js';
 import { Cursor } from './deserializationHelpers.js';
 import { Cbor, TokenId, TokenOperationType } from './plt/index.js';
 import {
@@ -53,7 +58,6 @@ import * as InitName from './types/InitName.js';
 import * as Parameter from './types/Parameter.js';
 import * as ReceiveName from './types/ReceiveName.js';
 import { Energy } from './types/index.js';
-import { deserializeCredentialDeploymentValues, deserializeCredentialDeploymentProofs, deserializeCredentialsToBeRemoved } from './deserialization.js';
 
 export interface AccountTransactionHandler<
     Payload extends AccountTransactionPayload,
@@ -467,7 +471,7 @@ export class UpdateContractHandler
 /**
  * {@linkcode UpdateCredentialsPayload} is already JSON serializable.
  */
-export type UpdateCredentialsPayloadJSON  = UpdateCredentialsPayload;
+export type UpdateCredentialsPayloadJSON = UpdateCredentialsPayload;
 
 /**
  * {@linkcode UpdateCredentialsInput} is already JSON serializable.
@@ -476,9 +480,7 @@ export type UpdateCredentialsInputJSON = UpdateCredentialsInput;
 
 function hasCurrentNumberOfCredentials(v: UpdateCredentialsPayloadJSON): v is UpdateCredentialsInputJSON;
 function hasCurrentNumberOfCredentials(v: UpdateCredentialsPayload): v is UpdateCredentialsInput;
-function hasCurrentNumberOfCredentials(
-    v: object
-): v is UpdateCredentialsInputJSON | UpdateCredentialsInput {
+function hasCurrentNumberOfCredentials(v: object): v is UpdateCredentialsInputJSON | UpdateCredentialsInput {
     return 'currentNumberOfCredentials' in v;
 }
 
@@ -524,13 +526,13 @@ export class UpdateCredentialsHandler
         const cdiItems = serializedPayload.read(8);
         partialData.newCredentials = [];
         //the following for loop is to read the CredentialDeploymentInformation
-        for(let i = 0; i < cdiItems.readUInt8(0); i++) {
-            const index = serializedPayload.read(8).readUInt8(0);            
+        for (let i = 0; i < cdiItems.readUInt8(0); i++) {
+            const index = serializedPayload.read(8).readUInt8(0);
             partialData.newCredentials[i].index = index;
 
             deserializeCredentialDeploymentValues(serializedPayload, partialData, i);
             console.log(`partialData after populating crdValue at i=${i}:`, partialData);
-            
+
             deserializeCredentialDeploymentProofs(serializedPayload, partialData, i);
             console.log(`partialData after populating crdProofs at i=${i}:`, partialData);
         }
@@ -541,7 +543,7 @@ export class UpdateCredentialsHandler
             newCredentials: partialData.newCredentials,
             removeCredentialIds: partialData.removeCredentialIds ?? [],
             threshold: partialData.threshold ?? 0,
-        }
+        };
     }
 
     toJSON(updateCredentials: UpdateCredentialsPayload): UpdateCredentialsPayload {
@@ -550,31 +552,31 @@ export class UpdateCredentialsHandler
 
     fromJSON(json: UpdateCredentialsInputJSON): UpdateCredentialsInput;
     fromJSON(json: UpdateCredentialsPayloadJSON): UpdateCredentialsPayload;
-    fromJSON(json: UpdateCredentialsPayloadJSON | UpdateCredentialsInputJSON): UpdateCredentialsPayload | UpdateCredentialsInput {
+    fromJSON(
+        json: UpdateCredentialsPayloadJSON | UpdateCredentialsInputJSON
+    ): UpdateCredentialsPayload | UpdateCredentialsInput {
         const payload = {
-                ...json,
-                threshold: Number(json.threshold),
-                newCredentials: json.newCredentials.map((nc) => ({
-                    index: Number(nc.index),
-                    cdi: {
-                        ...nc.cdi,
-                        credentialPublicKeys: {
-                            ...nc.cdi.credentialPublicKeys,
-                            threshold: Number(nc.cdi.credentialPublicKeys.threshold),
-                        },
-                        ipIdentity: Number(nc.cdi.ipIdentity),
-                        revocationThreshold: Number(nc.cdi.revocationThreshold),
+            ...json,
+            threshold: Number(json.threshold),
+            newCredentials: json.newCredentials.map((nc) => ({
+                index: Number(nc.index),
+                cdi: {
+                    ...nc.cdi,
+                    credentialPublicKeys: {
+                        ...nc.cdi.credentialPublicKeys,
+                        threshold: Number(nc.cdi.credentialPublicKeys.threshold),
                     },
-                })),
-            };
+                    ipIdentity: Number(nc.cdi.ipIdentity),
+                    revocationThreshold: Number(nc.cdi.revocationThreshold),
+                },
+            })),
+        };
 
-        if(hasCurrentNumberOfCredentials(json)){
+        if (hasCurrentNumberOfCredentials(json)) {
             json.currentNumberOfCredentials = BigInt(json.currentNumberOfCredentials);
-    
-        } 
+        }
 
         return payload;
-        
     }
 }
 

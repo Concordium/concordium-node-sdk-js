@@ -255,11 +255,11 @@ test.each(clients)('sendBlockItem', async (client) => {
         toAddress: testAccount,
     };
 
-    const accountTransaction = Transaction.transfer(header, simpleTransfer);
+    const accountTransaction = Transaction.transfer(simpleTransfer).addMetadata(header);
 
     // Sign transaction
     const signer = buildBasicAccountSigner(privateKey);
-    const signed = await Transaction.sign(accountTransaction, signer);
+    const signed = await Transaction.signAndFinalize(accountTransaction, signer);
 
     expect(client.sendSignedTransaction(signed)).rejects.toThrow('costs');
 });
@@ -280,12 +280,12 @@ test.each(clients)('transactionHash', async (client) => {
         toAddress: testAccount,
     };
 
-    const transaction = Transaction.transfer(headerLocal, simpleTransfer);
+    const transaction = Transaction.transfer(simpleTransfer).addMetadata(headerLocal);
     const rawPayload = v1.Payload.serialize(transaction.payload);
 
     // Sign transaction
     const signer = buildBasicAccountSigner(privateKey);
-    const signedTransction = await Transaction.sign(transaction, signer);
+    const signedTransction = await Transaction.signAndFinalize(transaction, signer);
 
     // Put together sendBlockItemRequest
     const header: v2.AccountTransactionHeader = {

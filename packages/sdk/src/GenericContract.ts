@@ -406,14 +406,14 @@ class ContractBase<E extends string = string, V extends string = string> {
     ): Promise<TransactionHash.Type> {
         const { nonce } = await this.grpcClient.getNextAccountNonce(senderAddress);
 
-        const header = {
+        const header: Transaction.Metadata = {
             expiry,
             nonce: nonce,
             sender: senderAddress,
         };
 
-        const transaction = Transaction.updateContract(header, payload, energy);
-        const signed = await Transaction.sign(transaction, signer);
+        const transaction = Transaction.updateContract(payload, energy).addMetadata(header);
+        const signed = await Transaction.signAndFinalize(transaction, signer);
         return this.grpcClient.sendSignedTransaction(signed);
     }
 

@@ -1,3 +1,5 @@
+import { Buffer } from 'buffer/index.js';
+
 import { deserializeAccountTransactionSignature } from '../deserialization.js';
 import { Cursor } from '../deserializationHelpers.js';
 import { constantA, constantB } from '../energyCost.js';

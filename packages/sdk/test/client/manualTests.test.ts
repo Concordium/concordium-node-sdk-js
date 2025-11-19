@@ -32,7 +32,7 @@ describe.skip('Manual test suite', () => {
 
         // Sign transaction
         const signer = buildBasicAccountSigner(senderAccountPrivateKey);
-        const signed = await Transaction.sign(accountTransaction, signer);
+        const signed = await Transaction.signAndFinalize(accountTransaction, signer);
 
         const transactionHash = await client.sendSignedTransaction(signed);
         const blockHash = await client.waitForTransactionFinalization(transactionHash, undefined);

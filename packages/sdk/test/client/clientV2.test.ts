@@ -259,7 +259,7 @@ test.each(clients)('sendBlockItem', async (client) => {
 
     // Sign transaction
     const signer = buildBasicAccountSigner(privateKey);
-    const signed = await Transaction.sign(accountTransaction, signer);
+    const signed = await Transaction.signAndFinalize(accountTransaction, signer);
 
     expect(client.sendSignedTransaction(signed)).rejects.toThrow('costs');
 });
@@ -285,7 +285,7 @@ test.each(clients)('transactionHash', async (client) => {
 
     // Sign transaction
     const signer = buildBasicAccountSigner(privateKey);
-    const signedTransction = await Transaction.sign(transaction, signer);
+    const signedTransction = await Transaction.signAndFinalize(transaction, signer);
 
     // Put together sendBlockItemRequest
     const header: v2.AccountTransactionHeader = {

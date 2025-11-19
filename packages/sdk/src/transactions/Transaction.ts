@@ -34,7 +34,7 @@ import {
 } from '../index.js';
 import * as JSONBig from '../json-bigint.js';
 import { AccountAddress, DataBlob, Energy, SequenceNumber, TransactionExpiry } from '../types/index.js';
-import { countSignatures, orUndefined } from '../util.js';
+import { countSignatures, isDefined, orUndefined } from '../util.js';
 import { AccountTransactionV0, Payload } from './index.js';
 
 // --- Core types ---
@@ -111,7 +111,7 @@ export type JSON = {
 export type Metadata = MakeOptional<AccountTransactionHeader, 'expiry'>;
 
 type Builder<P extends Payload.Type> = Readonly<Transaction<P>> & {
-    addMetadata<T extends Transaction<P>>(this: T, metadata: Metadata): T & PreSigned<P>;
+    addMetadata<T extends Transaction<P>>(this: T, metadata: Metadata): T & Signable<P>;
     multiSig<T extends Transaction<P>>(this: T, numSignatures: number | bigint): T & MultiSig<P>;
 
     toJSON(): JSON;
@@ -124,12 +124,26 @@ type Initial<P extends Payload.Type = Payload.Type> = Builder<P> & {
     readonly header: Pick<Header, 'executionEnergyAmount'>;
 };
 
-type PreSigned<P extends Payload.Type = Payload.Type> = Omit<Transaction<P>, 'addMetadata'> & {
+type Signable<P extends Payload.Type = Payload.Type> = Omit<Transaction<P>, 'addMetadata'> & {
     /**
      * The transaction input header of the pre-signed transaction stage, i.e. with metadata.
      */
     readonly header: MakeRequired<Header, keyof Metadata>;
 };
+
+/**
+ * Type predicate checking if the transaction is a _signable_ transaction.
+ *
+ * @template P extends Payload.Type
+ * @param transaction - the transaction to check
+ * @returns whether the transaction is a _signable transaction
+ */
+export function isSignable<P extends Payload.Type>(transaction: Transaction<P>): transaction is Signable<P> {
+    const {
+        header: { nonce, expiry, sender, executionEnergyAmount },
+    } = transaction as Signable<P>;
+    return isDefined(nonce) && isDefined(expiry) && isDefined(sender) && isDefined(executionEnergyAmount);
+}
 
 type MultiSig<P extends Payload.Type = Payload.Type> = Omit<Transaction<P>, 'multiSig'> & {
     /**
@@ -138,6 +152,20 @@ type MultiSig<P extends Payload.Type = Payload.Type> = Omit<Transaction<P>, 'mul
      */
     readonly header: MakeRequired<Header, 'numSignatures'>;
 };
+
+/**
+ * Type predicate checking if the transaction is a _signable_ transaction.
+ *
+ * @template P extends Payload.Type
+ * @param transaction - the transaction to check
+ * @returns whether the transaction is a _signable transaction
+ */
+export function isMultiSig<P extends Payload.Type>(transaction: Transaction<P>): transaction is MultiSig<P> {
+    const {
+        header: { numSignatures },
+    } = transaction as MultiSig<P>;
+    return isDefined(numSignatures) && numSignatures > 1n;
+}
 
 type FullBuilder<P extends Payload.Type> = Builder<P>;
 
@@ -150,11 +178,11 @@ class TransactionBuilder<P extends Payload.Type = Payload.Type> implements FullB
     public addMetadata<T extends Transaction<P>>(
         this: T,
         { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: Metadata
-    ): T & PreSigned<P> {
+    ): T & Signable<P> {
         this.header.sender = sender;
         this.header.nonce = nonce;
         this.header.expiry = expiry;
-        return this as T & PreSigned<P>;
+        return this as T & Signable<P>;
     }
 
     public multiSig<T extends Transaction<P>>(this: T, numSignatures: number | bigint): T & MultiSig<P> {
@@ -226,7 +254,7 @@ export function create(type: AccountTransactionType, payload: AccountTransaction
  * @param transaction - The {@linkcode AccountTransaction} to convert.
  * @returns a corresonding transaction builder object.
  */
-export function fromLegacyAccountTransaction({ type, header, payload }: AccountTransaction): PreSigned {
+export function fromLegacyAccountTransaction({ type, header, payload }: AccountTransaction): Signable {
     return create(type, payload).addMetadata(header);
 }
 
@@ -467,7 +495,7 @@ export function getEnergyCost({
 
 type Unsigned = AccountTransactionV0.Unsigned;
 
-function toUnsigned(transaction: PreSigned): Unsigned {
+function toUnsigned(transaction: Signable): Unsigned {
     const { expiry, sender, nonce, numSignatures = 1n } = transaction.header;
 
     const energyAmount = getEnergyCost({ ...transaction, header: { ...transaction.header, numSignatures } });
@@ -485,19 +513,31 @@ function toUnsigned(transaction: PreSigned): Unsigned {
     };
 }
 
-type Signed<P extends Payload.Type = Payload.Type> = PreSigned<P> & {
+type Signed<P extends Payload.Type = Payload.Type> = Signable<P> & {
     /**
      * The transaction input header of the signed transaction stage, i.e. with everything required to finalize the
      * transaction.
      */
-    readonly header: Required<Header>;
+    readonly header: Readonly<Required<Header>>;
     /**
      * The map of signatures for the credentials associated with the account.
      */
     readonly signatures: AccountTransactionSignature;
 };
 
-export async function addSignature<P extends Payload.Type = Payload.Type, T extends PreSigned<P> = PreSigned<P>>(
+/**
+ * Type predicate checking if the transaction is a _signed_ transaction.
+ *
+ * @template P extends Payload.Type
+ * @param transaction - the transaction to check
+ * @returns whether the transaction is a _signed_ transaction
+ */
+export function isSigned<P extends Payload.Type>(transaction: Transaction<P>): transaction is Signed<P> {
+    const { signatures } = transaction as Signed<P>;
+    return signatures !== undefined && countSignatures(signatures) > 0n;
+}
+
+export async function sign<P extends Payload.Type = Payload.Type, T extends Signable<P> = Signable<P>>(
     transaction: T,
     signer: AccountSigner
 ): Promise<Signed<P>> {
@@ -572,7 +612,9 @@ export type Finalized = AccountTransactionV0.Type;
 export type FinalizedJSON = AccountTransactionV0.JSON;
 
 /**
- * Signs a transaction using the provided signer, calculating total energy cost and creating a _signed_ transaction.
+ * Signs a transaction using the provided signer, calculating total energy cost and creating a _finalized transaction.
+ *
+ * This is the same as doing `Transaction.finalize(await Transaction.sign(transaction))`
  *
  * @param transaction the unsigned transaction to sign
  * @param signer the account signer containing keys and signature logic
@@ -581,8 +623,8 @@ export type FinalizedJSON = AccountTransactionV0.JSON;
  * @throws if too many signatures are included in the transaction
  */
 // TODO: factor in v1 transaction
-export async function sign(transaction: PreSigned, signer: AccountSigner): Promise<Finalized> {
-    const signed = await addSignature(transaction, signer);
+export async function signAndFinalize(transaction: Signable, signer: AccountSigner): Promise<Finalized> {
+    const signed = await sign(transaction, signer);
     return finalize(signed);
 }
 

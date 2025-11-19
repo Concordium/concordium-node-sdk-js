@@ -3,6 +3,7 @@ import {
     AccountTransaction,
     AccountTransactionHeader,
     AccountTransactionInput,
+    AccountTransactionSignature,
     AccountTransactionType,
     Base58String,
     ConfigureBakerHandler,
@@ -33,7 +34,7 @@ import {
 } from '../index.js';
 import * as JSONBig from '../json-bigint.js';
 import { AccountAddress, DataBlob, Energy, SequenceNumber, TransactionExpiry } from '../types/index.js';
-import { orUndefined } from '../util.js';
+import { countSignatures, orUndefined } from '../util.js';
 import { AccountTransactionV0, Payload } from './index.js';
 
 // --- Core types ---
@@ -84,11 +85,11 @@ type Transaction<P extends Payload.Type = Payload.Type> = {
     /**
      * The transaction input header.
      */
-    header: Header;
+    readonly header: Header;
     /**
      * The transaction payload, defining the transaction type and type specific data.
      */
-    payload: P;
+    readonly payload: P;
 };
 
 /**
@@ -109,58 +110,56 @@ export type JSON = {
  */
 export type Metadata = MakeOptional<AccountTransactionHeader, 'expiry'>;
 
-type Builder<P extends Payload.Type> = Transaction<P> & {
-    addMetadata<T extends Transaction<P>>(this: T, metadata: Metadata): PreSigned<P, T>;
-    multiSig<T extends Transaction<P>>(this: T, numSignatures: number | bigint): MultiSig<P, T>;
+type Builder<P extends Payload.Type> = Readonly<Transaction<P>> & {
+    addMetadata<T extends Transaction<P>>(this: T, metadata: Metadata): T & PreSigned<P>;
+    multiSig<T extends Transaction<P>>(this: T, numSignatures: number | bigint): T & MultiSig<P>;
+
     toJSON(): JSON;
 };
 
 type Initial<P extends Payload.Type = Payload.Type> = Builder<P> & {
-    header: Pick<Header, 'executionEnergyAmount'>;
+    /**
+     * The transaction input header of the initial transaction stage, i.e. without metadata.
+     */
+    readonly header: Pick<Header, 'executionEnergyAmount'>;
 };
 
-type PreSigned<P extends Payload.Type = Payload.Type, T extends Transaction<P> = Builder<P>> = Omit<
-    T,
-    'addMetadata'
-> & {
-    header: MakeRequired<Header, keyof Metadata>;
+type PreSigned<P extends Payload.Type = Payload.Type> = Omit<Transaction<P>, 'addMetadata'> & {
+    /**
+     * The transaction input header of the pre-signed transaction stage, i.e. with metadata.
+     */
+    readonly header: MakeRequired<Header, keyof Metadata>;
 };
 
-type MultiSig<P extends Payload.Type = Payload.Type, T extends Transaction<P> = Builder<P>> = Omit<T, 'multiSig'> & {
-    header: MakeRequired<Header, 'numSignatures'>;
+type MultiSig<P extends Payload.Type = Payload.Type> = Omit<Transaction<P>, 'multiSig'> & {
+    /**
+     * The transaction input header of the multi-sig transaction stage, i.e. with the number of signatures
+     * defined.
+     */
+    readonly header: MakeRequired<Header, 'numSignatures'>;
 };
 
-class TransactionBuilder<P extends Payload.Type = Payload.Type> implements Builder<P> {
-    private _header: Header;
+type FullBuilder<P extends Payload.Type> = Builder<P>;
 
+class TransactionBuilder<P extends Payload.Type = Payload.Type> implements FullBuilder<P> {
     constructor(
-        header: Header,
+        public readonly header: Header,
         public readonly payload: P
-    ) {
-        this._header = header;
-    }
-
-    public get header(): Header {
-        return this._header;
-    }
-
-    private set header(header: Header) {
-        this._header = header;
-    }
+    ) {}
 
     public addMetadata<T extends Transaction<P>>(
         this: T,
         { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: Metadata
-    ): PreSigned<P, T> {
+    ): T & PreSigned<P> {
         this.header.sender = sender;
         this.header.nonce = nonce;
         this.header.expiry = expiry;
-        return this as PreSigned<P, T>;
+        return this as T & PreSigned<P>;
     }
 
-    public multiSig<T extends Transaction<P>>(this: T, numSignatures: number | bigint): MultiSig<P, T> {
+    public multiSig<T extends Transaction<P>>(this: T, numSignatures: number | bigint): T & MultiSig<P> {
         this.header.numSignatures = BigInt(numSignatures);
-        return this as MultiSig<P, T>;
+        return this as T & MultiSig<P>;
     }
 
     public toJSON(): JSON {
@@ -175,88 +174,6 @@ class TransactionBuilder<P extends Payload.Type = Payload.Type> implements Build
  */
 export function builder<P extends Payload.Type = Payload.Type>(transaction: Transaction<P>): TransactionBuilder<P> {
     return new TransactionBuilder(transaction.header, transaction.payload);
-}
-
-/**
- * Converts a transaction to its intermediary JSON serializable representation.
- *
- * @param header the transaction header
- * @param payload the transaction payload
- * @returns the JSON representation
- */
-export function toJSON(transaction: Transaction): JSON {
-    return { header: headerToJSON(transaction.header), payload: Payload.toJSON(transaction.payload) };
-}
-
-/**
- * Converts a _signed_ transaction to its intermediary JSON serializable representation.
- *
- * @param header the transaction header
- * @param payload the transaction payload
- * @returns the JSON representation
- */
-export function signedToJSON(transaction: Signed): SignedJSON {
-    return AccountTransactionV0.toJSON(transaction);
-}
-
-/**
- * Converts an intermediary JSON serializable representation created with {@linkcode toJSON} to a transaction.
- * @param json the JSON to convert
- * @returns the transaction
- */
-export function fromJSON(json: JSON): Transaction {
-    return { header: headerFromJSON(json.header), payload: Payload.fromJSON(json.payload) };
-}
-
-/**
- * Converts an intermediary JSON serializable representation created with {@linkcode signedToJSON} to a _signed_ transaction.
- * @param json the JSON to convert
- * @returns the signed transaction
- */
-export function signedFromJSON(json: SignedJSON): Signed {
-    return AccountTransactionV0.fromJSON(json);
-}
-
-/**
- * Converts a {@linkcode Transaction} to a JSON string.
- *
- * @param transaction - the transaction to convert
- * @returns the JSON string
- */
-export function toJSONString(transaction: Transaction): string {
-    return JSONBig.stringify(toJSON(transaction));
-}
-
-/**
- * Converts a {@linkcode Signed} to a JSON string.
- *
- * @param transaction - the transaction to convert
- * @returns the JSON string
- */
-export function signedToJSONString(transaction: Signed): string {
-    return JSONBig.stringify(signedToJSON(transaction));
-}
-
-/**
- * Converts a JSON string transaction representation to a {@linkcode Transaction}.
- *
- * @param jsonString - the json string to convert
- *
- * @returns the parsed transaction
- */
-export function fromJSONString(jsonString: string): Transaction {
-    return fromJSON(JSONBig.parse(jsonString));
-}
-
-/**
- * Converts a JSON string _signed_ transaction representation to a {@linkcode Signed}.
- *
- * @param jsonString - the json string to convert
- *
- * @returns the parsed signed transaction
- */
-export function signedFromJSONString(jsonString: string): Signed {
-    return signedFromJSON(JSONBig.parse(jsonString));
 }
 
 /**
@@ -540,8 +457,7 @@ export function updateContract(
  * `undefined`, it defaults to `1`.
  * @param payload the transaction payload
  *
- * @returns the total energy cost
- */
+ * @returns the total energy cost */
 export function getEnergyCost({
     header: { numSignatures = 1n, executionEnergyAmount },
     payload,
@@ -549,25 +465,10 @@ export function getEnergyCost({
     return AccountTransactionV0.calculateEnergyCost(BigInt(numSignatures), payload, executionEnergyAmount);
 }
 
-// --- Transaction signing ---
+type Unsigned = AccountTransactionV0.Unsigned;
 
-/**
- * A signed version 0 account transaction.
- */
-// TODO: factor in v1 transaction
-export type Signed = AccountTransactionV0.Type;
-export type SignedJSON = AccountTransactionV0.JSON;
-
-/**
- * Signs a transaction using the provided signer, calculating total energy cost and creating a version 0 signed transaction.
- * @param transaction the unsigned transaction to sign
- * @param signer the account signer containing keys and signature logic
- *
- * @returns a promise resolving to the signed transaction
- */
-// TODO: factor in v1 transaction
-export async function sign(transaction: PreSigned, signer: AccountSigner): Promise<Signed> {
-    const { expiry, sender, nonce, numSignatures = signer.getSignatureCount() } = transaction.header;
+function toUnsigned(transaction: PreSigned): Unsigned {
+    const { expiry, sender, nonce, numSignatures = 1n } = transaction.header;
 
     const energyAmount = getEnergyCost({ ...transaction, header: { ...transaction.header, numSignatures } });
     const header: AccountTransactionV0.Header = {
@@ -577,12 +478,172 @@ export async function sign(transaction: PreSigned, signer: AccountSigner): Promi
         payloadSize: Payload.sizeOf(transaction.payload),
         energyAmount,
     };
-    const unsigned: AccountTransactionV0.Unsigned = {
+    return {
         version: 0,
         header,
         payload: transaction.payload,
     };
-    return await AccountTransactionV0.sign(unsigned, signer);
+}
+
+type Signed<P extends Payload.Type = Payload.Type> = PreSigned<P> & {
+    /**
+     * The transaction input header of the signed transaction stage, i.e. with everything required to finalize the
+     * transaction.
+     */
+    readonly header: Required<Header>;
+    /**
+     * The map of signatures for the credentials associated with the account.
+     */
+    readonly signatures: AccountTransactionSignature;
+};
+
+export async function addSignature<P extends Payload.Type = Payload.Type, T extends PreSigned<P> = PreSigned<P>>(
+    transaction: T,
+    signer: AccountSigner
+): Promise<Signed<P>> {
+    const mapped: Omit<Signed<P>, 'signatures'> = {
+        ...transaction,
+        header: { ...transaction.header, numSignatures: transaction.header.numSignatures ?? 1n },
+    };
+    const unsigned = toUnsigned(mapped);
+    const sig = await AccountTransactionV0.createSignature(unsigned, signer);
+    const signed: Signed<P> = {
+        ...mapped,
+        signatures: sig,
+    };
+
+    const includedSigs = countSignatures(signed.signatures);
+    if (includedSigs > signed.header.numSignatures)
+        throw new Error(
+            `Too many signatures added to the transaction. Counted ${includedSigs}, but transaction specifies ${signed.header.numSignatures} allowed number of signatures.`
+        );
+
+    return signed;
+}
+
+/**
+ * Converts a transaction to its intermediary JSON serializable representation.
+ *
+ * @param header the transaction header
+ * @param payload the transaction payload
+ * @returns the JSON representation
+ */
+export function toJSON(transaction: Transaction): JSON {
+    return { header: headerToJSON(transaction.header), payload: Payload.toJSON(transaction.payload) };
+}
+
+/**
+ * Converts a {@linkcode Transaction} to a JSON string.
+ *
+ * @param transaction - the transaction to convert
+ * @returns the JSON string
+ */
+export function toJSONString(transaction: Transaction): string {
+    return JSONBig.stringify(toJSON(transaction));
+}
+
+/**
+ * Converts an intermediary JSON serializable representation created with {@linkcode toJSON} to a transaction.
+ * @param json the JSON to convert
+ * @returns the transaction
+ */
+export function fromJSON(json: JSON): Transaction {
+    return { header: headerFromJSON(json.header), payload: Payload.fromJSON(json.payload) };
+}
+
+/**
+ * Converts a JSON string transaction representation to a {@linkcode Transaction}.
+ *
+ * @param jsonString - the json string to convert
+ *
+ * @returns the parsed transaction
+ */
+export function fromJSONString(jsonString: string): Transaction {
+    return fromJSON(JSONBig.parse(jsonString));
+}
+
+// --- Transaction signing ---
+
+/**
+ * A finalized account transaction, which is ready for submission.
+ */
+// TODO: factor in v1 transaction
+export type Finalized = AccountTransactionV0.Type;
+export type FinalizedJSON = AccountTransactionV0.JSON;
+
+/**
+ * Signs a transaction using the provided signer, calculating total energy cost and creating a _signed_ transaction.
+ *
+ * @param transaction the unsigned transaction to sign
+ * @param signer the account signer containing keys and signature logic
+ *
+ * @returns a promise resolving to the signed transaction
+ * @throws if too many signatures are included in the transaction
+ */
+// TODO: factor in v1 transaction
+export async function sign(transaction: PreSigned, signer: AccountSigner): Promise<Finalized> {
+    const signed = await addSignature(transaction, signer);
+    return finalize(signed);
+}
+
+/**
+ * Finalizes a _signed_ transaction, creating a _finalized_ transaction which is ready for submission.
+ *
+ * @param transaction the signed transaction
+ *
+ * @returns a corresponding _finalized_ transaction
+ * @throws if too many signatures are included in the transaction
+ */
+// TODO: factor in v1 transaction
+export function finalize(transaction: Signed): Finalized {
+    const includedSigs = countSignatures(transaction.signatures);
+    if (includedSigs > transaction.header.numSignatures)
+        throw new Error(
+            `Too many signatures added to the transaction. Counted ${includedSigs}, but transaction specifies ${transaction.header.numSignatures} allowed number of signatures.`
+        );
+
+    return AccountTransactionV0.create(toUnsigned(transaction), transaction.signatures);
+}
+
+/**
+ * Converts a _signed_ transaction to its intermediary JSON serializable representation.
+ *
+ * @param header the transaction header
+ * @param payload the transaction payload
+ * @returns the JSON representation
+ */
+export function finalizedToJSON(transaction: Finalized): FinalizedJSON {
+    return AccountTransactionV0.toJSON(transaction);
+}
+
+/**
+ * Converts a {@linkcode Finalized} to a JSON string.
+ *
+ * @param transaction - the transaction to convert
+ * @returns the JSON string
+ */
+export function finalizedToJSONString(transaction: Finalized): string {
+    return JSONBig.stringify(finalizedToJSON(transaction));
+}
+
+/**
+ * Converts an intermediary JSON serializable representation created with {@linkcode finalizedToJSON} to a _finalized_ transaction.
+ * @param json the JSON to convert
+ * @returns the finalized transaction
+ */
+export function finalizedFromJSON(json: FinalizedJSON): Finalized {
+    return AccountTransactionV0.fromJSON(json);
+}
+
+/**
+ * Converts a JSON string _finalized_ transaction representation to a {@linkcode Finalized}.
+ *
+ * @param jsonString - the json string to convert
+ *
+ * @returns the parsed finalized transaction
+ */
+export function finalizedFromJSONString(jsonString: string): Finalized {
+    return finalizedFromJSON(JSONBig.parse(jsonString));
 }
 
 /**
@@ -590,7 +651,7 @@ export async function sign(transaction: PreSigned, signer: AccountSigner): Promi
  * @param signedTransaction the transaction to hash
  * @returns the sha256 hash of the serialized block item kind, signatures, header, type and payload
  */
-export function getAccountTransactionHash(signedTransaction: Signed): Uint8Array {
+export function getAccountTransactionHash(signedTransaction: Finalized): Uint8Array {
     const serializedAccountTransaction = AccountTransactionV0.serialize(signedTransaction);
     return Uint8Array.from(sha256([serializedAccountTransaction]));
 }
@@ -600,6 +661,6 @@ export function getAccountTransactionHash(signedTransaction: Signed): Uint8Array
  * @param signedTransaction the signed transaction to serialize
  * @returns the serialized block item as a byte array
  */
-export function serializeBlockItem(signedTransaction: Signed): Uint8Array {
+export function serializeBlockItem(signedTransaction: Finalized): Uint8Array {
     return AccountTransactionV0.serializeBlockItem(signedTransaction);
 }

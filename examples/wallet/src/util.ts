@@ -350,13 +350,13 @@ async function createSimpleTransferTransaction(
     };
     const nonce = (await client.getNextAccountNonce(senderAddress)).nonce;
 
-    const header = {
+    const header: Transaction.Metadata = {
         expiry: getDefaultTransactionExpiry(),
         nonce,
         sender: senderAddress,
     };
 
-    return Transaction.transfer(header, payload);
+    return Transaction.transfer(payload).addMetadata(header);
 }
 
 export async function sendTransferTransaction(

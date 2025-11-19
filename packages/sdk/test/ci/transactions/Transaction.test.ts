@@ -33,7 +33,8 @@ describe('Transaction', () => {
             const tx = Transaction.transfer({
                 amount: CcdAmount.fromMicroCcd(1000000n),
                 toAddress: recipientAddress,
-            });
+            }).addMetadata(metadata);
+            tx.header.numSignatures = 2n;
             test('creates transfer transaction', () => {
                 expect(tx.payload.type).toBe(3);
             });
@@ -345,7 +346,9 @@ describe('Transaction', () => {
             const tx = Transaction.transfer({
                 amount: CcdAmount.fromMicroCcd(1000000n),
                 toAddress: recipientAddress,
-            }).multiSig(3);
+            })
+                .addMetadata(metadata)
+                .multiSig(3);
 
             const json = Transaction.toJSON(tx);
             const expectedHeader = {

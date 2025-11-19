@@ -336,6 +336,18 @@ export function getAccountTransactionHash(transaction: AccountTransactionV0): Ui
 export type Unsigned = Omit<AccountTransactionV0, 'signature'>;
 
 /**
+ * Creates a v0 transaction from an unsigned transaction and the associated signature on the transaction.
+ *
+ * @param transaction the unsigned transaction
+ * @param signature the signature on the transaction
+ *
+ * @returns a complete v0 transaction.
+ */
+export function create(unsigned: Unsigned, signature: Signature): AccountTransactionV0 {
+    return { ...unsigned, signature };
+}
+
+/**
  * Returns the digest of the transaction that has to be signed.
  *
  * @param transaction the transaction to hash
@@ -348,13 +360,25 @@ export function signDigest(transaction: Unsigned): Uint8Array {
 }
 
 /**
+ * Creates a signature on an unsigned version 0 account transaction using the provided signer.
+ *
+ * @param transaction the unsigned transaction to sign
+ * @param signer the account signer to use for signing
+ *
+ * @returns a promise resolving to the signature
+ */
+export async function createSignature(transaction: Unsigned, signer: AccountSigner): Promise<Signature> {
+    return await signer.sign(signDigest(transaction));
+}
+
+/**
  * Signs an unsigned version 0 account transaction using the provided signer.
+ *
  * @param transaction the unsigned transaction to sign
  * @param signer the account signer to use for signing
  *
  * @returns a promise resolving to the signed transaction
  */
 export async function sign(transaction: Unsigned, signer: AccountSigner): Promise<AccountTransactionV0> {
-    const signature = await signer.sign(signDigest(transaction));
-    return { ...transaction, signature };
+    return { ...transaction, signature: await createSignature(transaction, signer) };
 }

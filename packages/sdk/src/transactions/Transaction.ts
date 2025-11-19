@@ -522,7 +522,7 @@ type Signed<P extends Payload.Type = Payload.Type> = Signable<P> & {
     /**
      * The map of signatures for the credentials associated with the account.
      */
-    readonly signatures: AccountTransactionSignature;
+    readonly signature: AccountTransactionSignature;
 };
 
 /**
@@ -533,32 +533,115 @@ type Signed<P extends Payload.Type = Payload.Type> = Signable<P> & {
  * @returns whether the transaction is a _signed_ transaction
  */
 export function isSigned<P extends Payload.Type>(transaction: Transaction<P>): transaction is Signed<P> {
-    const { signatures } = transaction as Signed<P>;
+    const { signature: signatures } = transaction as Signed<P>;
     return signatures !== undefined && countSignatures(signatures) > 0n;
 }
 
-export async function sign<P extends Payload.Type = Payload.Type, T extends Signable<P> = Signable<P>>(
+/**
+ * Adds a pre-computed signature to a signable transaction.
+ *
+ * @template P - the payload type
+ * @template T - the signable transaction type
+ *
+ * @param transaction - the signable transaction to add a signature to
+ * @param signature - the account transaction signature to add
+ *
+ * @returns the signed transaction with the signature attached
+ * @throws Error if the number of signatures exceeds the allowed number specified in the transaction header
+ */
+export function addSignature<P extends Payload.Type = Payload.Type, T extends Signable<P> = Signable<P>>(
     transaction: T,
-    signer: AccountSigner
-): Promise<Signed<P>> {
-    const mapped: Omit<Signed<P>, 'signatures'> = {
+    signature: AccountTransactionSignature
+): T & Signed<P> {
+    const mapped: T & Omit<Signed<P>, 'signature'> = {
         ...transaction,
         header: { ...transaction.header, numSignatures: transaction.header.numSignatures ?? 1n },
     };
-    const unsigned = toUnsigned(mapped);
-    const sig = await AccountTransactionV0.createSignature(unsigned, signer);
-    const signed: Signed<P> = {
+    const signed: T & Signed<P> = {
         ...mapped,
-        signatures: sig,
+        signature,
     };
 
-    const includedSigs = countSignatures(signed.signatures);
+    const includedSigs = countSignatures(signed.signature);
     if (includedSigs > signed.header.numSignatures)
         throw new Error(
             `Too many signatures added to the transaction. Counted ${includedSigs}, but transaction specifies ${signed.header.numSignatures} allowed number of signatures.`
         );
 
     return signed;
+}
+
+/**
+ * Signs a signable transaction using the provided account signer.
+ *
+ * @template P - the payload type
+ * @template T - the signable transaction type
+ *
+ * @param transaction - the signable transaction to sign
+ * @param signer - the account signer to use for signing
+ *
+ * @returns a promise that resolves to the signed transaction
+ * @throws Error if the number of signatures exceeds the allowed number specified in the transaction header
+ */
+export async function sign<P extends Payload.Type = Payload.Type, T extends Signable<P> = Signable<P>>(
+    transaction: T,
+    signer: AccountSigner
+): Promise<T & Signed<P>> {
+    const mapped: T & Omit<Signed<P>, 'signature'> = {
+        ...transaction,
+        header: { ...transaction.header, numSignatures: transaction.header.numSignatures ?? 1n },
+    };
+    const unsigned = toUnsigned(mapped);
+    const signature = await AccountTransactionV0.createSignature(unsigned, signer);
+    return addSignature(mapped, signature);
+}
+
+/**
+ * Merges signatures from two signed transactions into a single transaction.
+ * Used for multi-signature scenarios where multiple parties sign the same transaction.
+ *
+ * @template P - the payload type
+ * @template T - the signed transaction type
+ *
+ * @param a - the first signed transaction
+ * @param b - the second signed transaction
+ *
+ * @returns a new transaction containing all signatures from both transactions
+ * @throws Error if duplicate signatures are found for the same credential and key index
+ * @throws Error if the number of signatures exceeds the allowed number specified in the transaction header
+ */
+export function mergeSignatures<P extends Payload.Type, T extends Signed<P> = Signed<P>>(a: T, b: T): T {
+    const signature: AccountTransactionSignature = {};
+    // First, we copy all the signatures from `a`.
+    for (const credIndex in a.signature) {
+        signature[credIndex] = { ...a.signature[credIndex] };
+    }
+
+    for (const credIndex in b.signature) {
+        if (signature[credIndex] === undefined) {
+            // If signatures don't exist for this credential index, we copy everything and move on.
+            signature[credIndex] = { ...b.signature[credIndex] };
+            continue;
+        }
+
+        // Otherwise, check all key indices of the credential signature
+        for (const keyIndex in b.signature[credIndex]) {
+            const sig = signature[credIndex][keyIndex];
+            if (sig !== undefined)
+                throw new Error(`Duplicate signature found for credential index ${credIndex} at key index ${keyIndex}`);
+
+            // Copy the signature found, as it does not already exist
+            signature[credIndex][keyIndex] = b.signature[credIndex][keyIndex];
+        }
+    }
+
+    const includedSigs = countSignatures(signature);
+    if (includedSigs > a.header.numSignatures)
+        throw new Error(
+            `Too many signatures added to the transaction. Counted ${includedSigs}, but transaction specifies ${a.header.numSignatures} allowed number of signatures.`
+        );
+
+    return { ...a, signature: signature };
 }
 
 /**
@@ -638,13 +721,13 @@ export async function signAndFinalize(transaction: Signable, signer: AccountSign
  */
 // TODO: factor in v1 transaction
 export function finalize(transaction: Signed): Finalized {
-    const includedSigs = countSignatures(transaction.signatures);
+    const includedSigs = countSignatures(transaction.signature);
     if (includedSigs > transaction.header.numSignatures)
         throw new Error(
             `Too many signatures added to the transaction. Counted ${includedSigs}, but transaction specifies ${transaction.header.numSignatures} allowed number of signatures.`
         );
 
-    return AccountTransactionV0.create(toUnsigned(transaction), transaction.signatures);
+    return AccountTransactionV0.create(toUnsigned(transaction), transaction.signature);
 }
 
 /**

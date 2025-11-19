@@ -361,4 +361,208 @@ describe('Transaction', () => {
             expect(json.header).toEqual(expectedHeader);
         });
     });
+
+    describe('addSignature', () => {
+        test('fails when signature count exceeds numSignatures in header', () => {
+            const tx = Transaction.transfer({
+                amount: CcdAmount.fromMicroCcd(1000000n),
+                toAddress: recipientAddress,
+            })
+                .addMetadata(metadata)
+                .multiSig(2);
+
+            const signature = {
+                0: {
+                    0: 'signature1',
+                    1: 'signature2',
+                    2: 'signature3',
+                },
+            };
+
+            expect(() => Transaction.addSignature(tx, signature)).toThrow(
+                'Too many signatures added to the transaction. Counted 3, but transaction specifies 2 allowed number of signatures.'
+            );
+        });
+
+        test('succeeds when signature count equals numSignatures', () => {
+            const tx = Transaction.transfer({
+                amount: CcdAmount.fromMicroCcd(1000000n),
+                toAddress: recipientAddress,
+            })
+                .addMetadata(metadata)
+                .multiSig(2);
+
+            const signature = {
+                0: {
+                    0: 'signature1',
+                    1: 'signature2',
+                },
+            };
+
+            const signed = Transaction.addSignature(tx, signature);
+            expect(signed.signature).toEqual(signature);
+        });
+
+        test('succeeds when signature count is less than numSignatures', () => {
+            const tx = Transaction.transfer({
+                amount: CcdAmount.fromMicroCcd(1000000n),
+                toAddress: recipientAddress,
+            })
+                .addMetadata(metadata)
+                .multiSig(3);
+
+            const signature = {
+                0: {
+                    0: 'signature1',
+                },
+            };
+
+            const signed = Transaction.addSignature(tx, signature);
+            expect(signed.signature).toEqual(signature);
+        });
+
+        test('defaults numSignatures to 1 when not specified', () => {
+            const tx = Transaction.transfer({
+                amount: CcdAmount.fromMicroCcd(1000000n),
+                toAddress: recipientAddress,
+            }).addMetadata(metadata);
+
+            const signature = {
+                0: {
+                    0: 'signature1',
+                },
+            };
+
+            const signed = Transaction.addSignature(tx, signature);
+            expect(signed.signature).toEqual(signature);
+            expect(signed.header.numSignatures).toBe(1n);
+        });
+    });
+
+    describe('mergeSignatures', () => {
+        test('merges signatures from two transactions successfully', () => {
+            const tx = Transaction.transfer({
+                amount: CcdAmount.fromMicroCcd(1000000n),
+                toAddress: recipientAddress,
+            })
+                .addMetadata(metadata)
+                .multiSig(3);
+
+            const sig1 = {
+                0: {
+                    0: 'signature1',
+                },
+            };
+
+            const sig2 = {
+                0: {
+                    1: 'signature2',
+                },
+            };
+
+            const signed1 = Transaction.addSignature(tx, sig1);
+            const signed2 = Transaction.addSignature(tx, sig2);
+
+            const merged = Transaction.mergeSignatures(signed1, signed2);
+
+            expect(merged.signature).toEqual({
+                0: {
+                    0: 'signature1',
+                    1: 'signature2',
+                },
+            });
+        });
+
+        test('merges signatures from different credentials', () => {
+            const tx = Transaction.transfer({
+                amount: CcdAmount.fromMicroCcd(1000000n),
+                toAddress: recipientAddress,
+            })
+                .addMetadata(metadata)
+                .multiSig(3);
+
+            const sig1 = {
+                0: {
+                    0: 'signature1',
+                },
+            };
+
+            const sig2 = {
+                1: {
+                    0: 'signature2',
+                },
+            };
+
+            const signed1 = Transaction.addSignature(tx, sig1);
+            const signed2 = Transaction.addSignature(tx, sig2);
+
+            const merged = Transaction.mergeSignatures(signed1, signed2);
+
+            expect(merged.signature).toEqual({
+                0: {
+                    0: 'signature1',
+                },
+                1: {
+                    0: 'signature2',
+                },
+            });
+        });
+
+        test('fails when duplicate signatures exist for same credential and key index', () => {
+            const tx = Transaction.transfer({
+                amount: CcdAmount.fromMicroCcd(1000000n),
+                toAddress: recipientAddress,
+            })
+                .addMetadata(metadata)
+                .multiSig(2);
+
+            const sig1 = {
+                0: {
+                    0: 'signature1',
+                },
+            };
+
+            const sig2 = {
+                0: {
+                    0: 'signature2',
+                },
+            };
+
+            const signed1 = Transaction.addSignature(tx, sig1);
+            const signed2 = Transaction.addSignature(tx, sig2);
+
+            expect(() => Transaction.mergeSignatures(signed1, signed2)).toThrow(
+                'Duplicate signature found for credential index 0 at key index 0'
+            );
+        });
+
+        test('preserves all properties from first transaction', () => {
+            const tx = Transaction.transfer({
+                amount: CcdAmount.fromMicroCcd(1000000n),
+                toAddress: recipientAddress,
+            })
+                .addMetadata(metadata)
+                .multiSig(2);
+
+            const sig1 = {
+                0: {
+                    0: 'signature1',
+                },
+            };
+
+            const sig2 = {
+                0: {
+                    1: 'signature2',
+                },
+            };
+
+            const signed1 = Transaction.addSignature(tx, sig1);
+            const signed2 = Transaction.addSignature(tx, sig2);
+
+            const merged = Transaction.mergeSignatures(signed1, signed2);
+
+            expect(merged.header).toEqual(signed1.header);
+            expect(merged.payload).toEqual(signed1.payload);
+        });
+    });
 });

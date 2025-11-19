@@ -386,8 +386,13 @@ export type JSON =
 
 /**
  * Creates a typed transaction payload from a transaction type and raw payload data.
+ *
+ * NOTE: this does _not_ check the payload structure, and thus assumes that the `type` and `payload`
+ * given actually match.
+ *
  * @param type the transaction type
  * @param payload the raw transaction payload
+ *
  * @returns the typed transaction payload
  * @throws if the transaction type is not supported
  */
@@ -471,52 +476,13 @@ export function toJSON(payload: Payload): JSON {
  * Converts a intermediary JSON representation created from {@linkcode toJSON} to a transaction payload.
  *
  * @param json the JSON to convert
- * @param [as] the payload type to parse
  *
  * @returns the transaction payload
  * @throws if the JSON is invalid or the transaction type is not supported
  */
-export function fromJSON(json: unknown, as: `${TransactionKindString.Transfer}`): Transfer;
-export function fromJSON(json: unknown, as: `${TransactionKindString.TransferWithMemo}`): TransferWithMemo;
-export function fromJSON(json: unknown, as: `${TransactionKindString.DeployModule}`): DeployModule;
-export function fromJSON(json: unknown, as: `${TransactionKindString.InitContract}`): InitContract;
-export function fromJSON(json: unknown, as: `${TransactionKindString.Update | 'updateContract'}`): UpdateContract;
-export function fromJSON(json: unknown, as: `${TransactionKindString.UpdateCredentials}`): UpdateCredentials;
-export function fromJSON(json: unknown, as: `${TransactionKindString.RegisterData}`): RegisterData;
-export function fromJSON(json: unknown, as: `${TransactionKindString.ConfigureDelegation}`): ConfigureDelegation;
-export function fromJSON(
-    json: unknown,
-    as: `${TransactionKindString.ConfigureBaker}` | 'configureValidator'
-): ConfigureValidator;
-export function fromJSON(json: unknown, as: `${TransactionKindString.TokenUpdate}`): TokenUpdate;
-// NOTE: the following acts as a catch-all for any type not specified above, signaling that the payload type is not
-// supported.
-export function fromJSON(json: unknown, as: `${TransactionKindString}`): never;
-export function fromJSON(json: unknown): Payload;
-
-export function fromJSON(
-    json: unknown,
-    as?: `${TransactionKindString | 'configureValidator' | 'updateContract'}`
-): Payload {
+export function fromJSON(json: JSON): Payload {
     if (typeof json !== 'object' || json === null) throw new Error('Expected object');
     if (!('type' in json) || typeof json.type !== 'string') throw new Error('invalid transaction type');
-
-    let type: TransactionKindString | undefined;
-    if (as !== undefined) {
-        switch (as) {
-            case 'configureValidator':
-                type = TransactionKindString.ConfigureBaker;
-                break;
-            case 'updateContract':
-                type = TransactionKindString.Update;
-                break;
-            default:
-                type = as as TransactionKindString;
-        }
-    }
-
-    if (type !== undefined && json.type !== type)
-        throw new Error(`Found transaction payload with type "${json.type}", attempted to parse as "${type}".`);
 
     switch (json.type) {
         case getTransactionKindString(AccountTransactionType.Transfer):
@@ -557,13 +523,12 @@ export function toJSONString(payload: Payload): string {
  * Converts a JSON string payload representation to a {@linkcode Payload}.
  *
  * @param jsonString - the json string to convert
- * @param [as] the payload type to parse
  *
  * @returns the JSON string
  * @throws if the JSON is invalid or the transaction type is not supported
  */
-export function fromJSONString(jsonString: string, as: TransactionKindString): Payload {
-    return fromJSON(JSONBig.parse(jsonString), as);
+export function fromJSONString(jsonString: string): Payload {
+    return fromJSON(JSONBig.parse(jsonString));
 }
 
 /**

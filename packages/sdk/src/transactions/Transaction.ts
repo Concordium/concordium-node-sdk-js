@@ -771,13 +771,13 @@ function validateSignatureAmount(
 }
 
 /**
- * Adds a pre-computed signature to a signable transaction.
+ * Adds a pre-computed signature to a transaction.
  *
  * @template P - the payload type
- * @template T - the signable transaction type
+ * @template T - the transaction type
  *
- * @param transaction - the signable transaction to add a signature to
- * @param signature - the account transaction signature to add
+ * @param transaction - the transaction to add a signature to
+ * @param signature - the sender signature on the transaction to add
  *
  * @returns the signed transaction with the signature attached
  * @throws Error if the number of signatures exceeds the allowed number specified in the transaction header
@@ -792,7 +792,6 @@ export function addSignature<P extends Payload.Type = Payload.Type>(
                 ...transaction,
                 signature,
             };
-
             return mergeSignatures(transaction, signed);
         }
         case 1: {
@@ -800,17 +799,16 @@ export function addSignature<P extends Payload.Type = Payload.Type>(
                 ...transaction,
                 signatures: { sender: signature },
             };
-
             return mergeSignatures(transaction, signed);
         }
     }
 }
 
 /**
- * Signs a signable transaction using the provided account signer.
+ * Signs a transaction using the provided account signer.
  *
  * @template P - the payload type
- * @template T - the signable transaction type
+ * @template T - the transaction type
  *
  * @param transaction - the signable transaction to sign
  * @param signer - the account signer to use for signing
@@ -835,6 +833,49 @@ export async function sign<P extends Payload.Type = Payload.Type>(
     }
 
     return addSignature(transaction, signature);
+}
+
+/**
+ * Adds a pre-computed sponsor signature to a transaction.
+ *
+ * @template P - the payload type
+ * @template T - the transaction type
+ *
+ * @param transaction - the transaction to add a sponsor signature to
+ * @param signature - the sponsor signature on the transaction to add
+ *
+ * @returns the signed transaction with the sponsor signature attached
+ * @throws Error if the number of signatures exceeds the allowed number specified in the transaction header
+ */
+export function addSponsorSignature<P extends Payload.Type = Payload.Type>(
+    transaction: PreV1<P>,
+    signature: AccountTransactionSignature
+): PreFinalized<P> {
+    const signed: PreV1<P> = {
+        ...transaction,
+        signatures: { sponsor: signature, sender: {} },
+    };
+    return mergeSignatures(transaction, signed);
+}
+
+/**
+ * Signs a transaction as a sponsor using the provided account signer.
+ *
+ * @template P - the payload type
+ * @template T - the transaction type
+ *
+ * @param transaction - the signable transaction to sign
+ * @param signer - the account signer to use for signing
+ *
+ * @returns a promise that resolves to the signed transaction
+ * @throws Error if the number of signatures exceeds the allowed number specified in the transaction header
+ */
+export async function sponsor<P extends Payload.Type = Payload.Type>(
+    transaction: PreV1<P>,
+    signer: AccountSigner
+): Promise<PreFinalized<P>> {
+    let signature = await AccountTransactionV1.createSignature(toUnsigned(transaction), signer);
+    return addSponsorSignature(transaction, signature);
 }
 
 function mergeSignature(a: AccountTransactionSignature, b: AccountTransactionSignature): AccountTransactionSignature;
@@ -976,7 +1017,7 @@ export async function signAndFinalize(transaction: PreFinalized, signer: Account
 }
 
 /**
- * Finalizes a _signed_ transaction, creating a _finalized_ transaction which is ready for submission.
+ * Finalizes a _pre-finalized transaction, creating a _finalized_ transaction which is ready for submission.
  *
  * @param transaction the signed transaction
  *
@@ -1007,7 +1048,7 @@ export function getAccountTransactionHash(transaction: Finalized): Uint8Array {
 }
 
 /**
- * Serializes a signed transaction as a block item for submission to the chain.
+ * Serializes a _finalized_ transaction as a block item for submission to the chain.
  * @param transaction the signed transaction to serialize
  * @returns the serialized block item as a byte array
  */

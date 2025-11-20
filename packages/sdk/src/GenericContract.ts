@@ -12,7 +12,7 @@ import {
     InvokeContractResult,
     MakeOptional,
     SmartContractTypeValues,
-    UpdateContractPayload,
+    UpdateContractInput,
 } from './types.js';
 import * as AccountAddress from './types/AccountAddress.js';
 import * as BlockHash from './types/BlockHash.js';
@@ -62,7 +62,7 @@ export type ContractInvokeMetadata = {
 /**
  * Metadata necessary for creating a {@link UpdateTransaction}
  */
-export type CreateContractTransactionMetadata = Pick<ContractTransactionMetadata, 'amount'>;
+export type CreateContractTransactionMetadata = Pick<ContractTransactionMetadata, 'amount' | 'energy'>;
 
 /**
  * Holds either a contract module schema, or the schema for a single parameters of a contract entrypoint
@@ -81,7 +81,7 @@ export type ContractUpdateTransaction = {
     /** The type of the transaction, which will always be of type {@link AccountTransactionType.Update} */
     type: AccountTransactionType.Update;
     /** The payload of the transaction, which will always be of type {@link UpdateContractPayload} */
-    payload: UpdateContractPayload;
+    payload: UpdateContractInput;
 };
 
 /**
@@ -342,17 +342,18 @@ class ContractBase<E extends string = string, V extends string = string> {
     public createUpdateTransaction<T, J extends SmartContractTypeValues>(
         entrypoint: EntrypointName.Type<E>,
         serializeInput: (input: T) => ArrayBuffer,
-        { amount = CcdAmount.zero() }: CreateContractTransactionMetadata,
+        { amount = CcdAmount.zero(), energy }: CreateContractTransactionMetadata,
         input: T,
         inputJsonFormatter?: (input: T) => J
     ): ContractUpdateTransaction | MakeOptional<ContractUpdateTransactionWithSchema<J>, 'schema'> {
         const parameter = Parameter.fromBuffer(serializeInput(input));
 
-        const payload: UpdateContractPayload = {
+        const payload: UpdateContractInput = {
             amount,
             address: this.contractAddress,
             receiveName: ReceiveName.create(this.contractName, entrypoint),
             message: parameter,
+            maxContractExecutionEnergy: energy,
         };
         const transaction: ContractUpdateTransaction = {
             type: AccountTransactionType.Update,

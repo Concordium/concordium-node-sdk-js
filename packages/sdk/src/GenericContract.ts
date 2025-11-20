@@ -415,7 +415,7 @@ class ContractBase<E extends string = string, V extends string = string> {
 
         const transaction = Transaction.updateContract(payload, energy).addMetadata(header);
         const signed = await Transaction.signAndFinalize(transaction, signer);
-        return this.grpcClient.sendSignedTransaction(signed);
+        return this.grpcClient.sendTransaction(signed);
     }
 
     /**

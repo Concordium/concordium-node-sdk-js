@@ -1,3 +1,5 @@
+import { Buffer } from 'buffer/index.js';
+
 import { deserializeUint8 } from '../deserialization.js';
 import { Cursor } from '../deserializationHelpers.js';
 import {

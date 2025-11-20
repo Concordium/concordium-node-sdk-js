@@ -350,13 +350,13 @@ async function createSimpleTransferTransaction(
     };
     const nonce = (await client.getNextAccountNonce(senderAddress)).nonce;
 
-    const header = {
+    const header: Transaction.Metadata = {
         expiry: getDefaultTransactionExpiry(),
         nonce,
         sender: senderAddress,
     };
 
-    return Transaction.transfer(header, payload);
+    return Transaction.transfer(payload).addMetadata(header);
 }
 
 export async function sendTransferTransaction(
@@ -368,6 +368,6 @@ export async function sendTransferTransaction(
 ) {
     const simpleTransfer = await createSimpleTransferTransaction(amount, accountAddress, toAddress);
     const signingKey = getAccountSigningKey(seedPhrase, identityProviderIdentity);
-    const signed = await Transaction.sign(simpleTransfer, buildBasicAccountSigner(signingKey));
+    const signed = await Transaction.signAndFinalize(simpleTransfer, buildBasicAccountSigner(signingKey));
     return await client.sendSignedTransaction(signed);
 }

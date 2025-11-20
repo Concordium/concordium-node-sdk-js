@@ -291,7 +291,7 @@ export class ConcordiumGRPCClient {
      * @param transaction the transaction to send to the node
      * @returns The transaction hash as a hex-encoded string
      */
-    async sendSignedTransaction(transaction: Transaction.Finalized): Promise<TransactionHash.Type> {
+    async sendTransaction(transaction: Transaction.Finalized): Promise<TransactionHash.Type> {
         const rawPayload = Payload.serialize(transaction.payload);
         return this.sendRawAccountTransaction(
             transaction.header,
@@ -302,7 +302,7 @@ export class ConcordiumGRPCClient {
     }
 
     /**
-     * @deprecated Use {@linkcode sendSignedTransaction} instead
+     * @deprecated Use {@linkcode sendTransaction} instead
      *
      * Serializes and sends an account transaction to the node to be
      * put in a block on the chain.

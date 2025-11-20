@@ -86,7 +86,7 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
 
     const transaction = Transaction.configureDelegation(configureDelegationPayload).addMetadata(header);
     const signed = await Transaction.signAndFinalize(transaction, signer);
-    const transactionHash = await client.sendSignedTransaction(signed);
+    const transactionHash = await client.sendTransaction(signed);
 
     console.log('Transaction submitted, waiting for finalization...');
 

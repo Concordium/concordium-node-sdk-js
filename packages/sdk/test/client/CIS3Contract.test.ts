@@ -13,6 +13,7 @@ import {
     serializeTypeValue,
     signMessage,
 } from '../../src/index.js';
+import { Energy } from '../../src/types/index.ts';
 import { getNodeClientV2 } from './testHelpers.ts';
 
 // Sponsoree and contract owner
@@ -68,9 +69,10 @@ describe('permit', () => {
         const contract = await getContract();
         const params = await makePermitParams();
 
-        const tx = contract.createPermit({}, params);
+        const tx = contract.createPermit({ energy: Energy.create(1000000) }, params);
         const schemaSerial = serializeTypeValue(tx.parameter.json, Buffer.from(tx.schema.value, 'base64'), true);
         expect(tx.parameter.hex).toEqual(Parameter.toHexString(schemaSerial));
+        expect(tx.payload.maxContractExecutionEnergy.value).toEqual(1000000n);
     });
 });
 

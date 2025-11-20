@@ -293,12 +293,17 @@ export class ConcordiumGRPCClient {
      */
     async sendSignedTransaction(transaction: Transaction.Finalized): Promise<TransactionHash.Type> {
         const rawPayload = Payload.serialize(transaction.payload);
-        return this.sendRawAccountTransaction(
-            transaction.header,
-            transaction.header.energyAmount,
-            rawPayload,
-            transaction.signature
-        );
+        switch (transaction.version) {
+            case 0:
+                return this.sendRawAccountTransaction(
+                    transaction.header,
+                    transaction.header.energyAmount,
+                    rawPayload,
+                    transaction.signature
+                );
+            case 1:
+                throw new Error('not implemented'); // TODO: implement...
+        }
     }
 
     /**

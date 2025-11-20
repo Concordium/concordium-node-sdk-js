@@ -1,6 +1,7 @@
 // self-referencing not allowed by eslint resolver
 // eslint-disable-next-line import/no-extraneous-dependencies
 import * as ed from '@concordium/web-sdk/shims/ed25519';
+import assert from 'assert';
 
 import { QueriesClient } from '../../src/grpc-api/v2/concordium/service.client.ts';
 import * as v2 from '../../src/grpc-api/v2/concordium/types.js';
@@ -255,7 +256,7 @@ test.each(clients)('sendBlockItem', async (client) => {
         toAddress: testAccount,
     };
 
-    const accountTransaction = Transaction.transfer(simpleTransfer).addMetadata(header);
+    const accountTransaction = Transaction.transfer(simpleTransfer).addMetadata(header).build();
 
     // Sign transaction
     const signer = buildBasicAccountSigner(privateKey);
@@ -280,7 +281,7 @@ test.each(clients)('transactionHash', async (client) => {
         toAddress: testAccount,
     };
 
-    const transaction = Transaction.transfer(simpleTransfer).addMetadata(headerLocal);
+    const transaction = Transaction.transfer(simpleTransfer).addMetadata(headerLocal).build();
     const rawPayload = v1.Payload.serialize(transaction.payload);
 
     // Sign transaction
@@ -300,6 +301,8 @@ test.each(clients)('transactionHash', async (client) => {
             payload: { oneofKind: 'rawPayload', rawPayload: rawPayload },
         },
     };
+
+    assert(signedTransction.version === 0);
 
     const serializedAccountTransaction = v1.AccountTransactionV0.serialize(signedTransction).slice(71);
     const localHash = Buffer.from(sha256([serializedAccountTransaction])).toString('hex');

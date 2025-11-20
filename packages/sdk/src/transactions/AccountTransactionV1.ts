@@ -306,18 +306,15 @@ export async function createSignature(
  *
  * @param transaction the unsigned transaction to sign
  * @param signer the account signer to use for signing
- * @param [role] the role to sign the transaction as. This can be `"sender" | "sponsor"`.
- * Defaults to `"sender"`
  *
  * @returns a promise resolving to the signed transaction
  */
 export async function sign(
-    transaction: Unsigned,
-    signer: AccountSigner,
-    role: keyof Signatures = 'sender'
+    transaction: Unsigned | AccountTransactionV1,
+    signer: AccountSigner
 ): Promise<AccountTransactionV1> {
     return {
         ...transaction,
-        signatures: { ...transaction.signatures, [role]: await createSignature(transaction, signer) },
+        signatures: { sender: await createSignature(transaction, signer) },
     };
 }

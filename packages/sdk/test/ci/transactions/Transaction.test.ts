@@ -1,3 +1,4 @@
+import assert from 'assert';
 import { Buffer } from 'buffer/index.js';
 
 import {
@@ -369,7 +370,8 @@ describe('Transaction', () => {
                 toAddress: recipientAddress,
             })
                 .addMetadata(metadata)
-                .addMultiSig(2);
+                .addMultiSig(2)
+                .build();
 
             const signature = {
                 0: {
@@ -390,7 +392,8 @@ describe('Transaction', () => {
                 toAddress: recipientAddress,
             })
                 .addMetadata(metadata)
-                .addMultiSig(2);
+                .addMultiSig(2)
+                .build();
 
             const signature = {
                 0: {
@@ -400,6 +403,8 @@ describe('Transaction', () => {
             };
 
             const signed = Transaction.addSignature(tx, signature);
+
+            assert(signed.preVersion === 0);
             expect(signed.signature).toEqual(signature);
         });
 
@@ -409,7 +414,8 @@ describe('Transaction', () => {
                 toAddress: recipientAddress,
             })
                 .addMetadata(metadata)
-                .addMultiSig(3);
+                .addMultiSig(3)
+                .build();
 
             const signature = {
                 0: {
@@ -418,6 +424,8 @@ describe('Transaction', () => {
             };
 
             const signed = Transaction.addSignature(tx, signature);
+
+            assert(signed.preVersion === 0);
             expect(signed.signature).toEqual(signature);
         });
 
@@ -425,7 +433,9 @@ describe('Transaction', () => {
             const tx = Transaction.transfer({
                 amount: CcdAmount.fromMicroCcd(1000000n),
                 toAddress: recipientAddress,
-            }).addMetadata(metadata);
+            })
+                .addMetadata(metadata)
+                .build();
 
             const signature = {
                 0: {
@@ -434,6 +444,8 @@ describe('Transaction', () => {
             };
 
             const signed = Transaction.addSignature(tx, signature);
+
+            assert(signed.preVersion === 0);
             expect(signed.signature).toEqual(signature);
             expect(signed.header.numSignatures).toBe(1n);
         });
@@ -446,7 +458,8 @@ describe('Transaction', () => {
                 toAddress: recipientAddress,
             })
                 .addMetadata(metadata)
-                .addMultiSig(3);
+                .addMultiSig(3)
+                .build();
 
             const sig1 = {
                 0: {
@@ -464,6 +477,7 @@ describe('Transaction', () => {
             const signed2 = Transaction.addSignature(tx, sig2);
 
             const merged = Transaction.mergeSignatures(signed1, signed2);
+            assert(merged.preVersion === 0);
 
             expect(merged.signature).toEqual({
                 0: {
@@ -479,7 +493,8 @@ describe('Transaction', () => {
                 toAddress: recipientAddress,
             })
                 .addMetadata(metadata)
-                .addMultiSig(3);
+                .addMultiSig(3)
+                .build();
 
             const sig1 = {
                 0: {
@@ -497,6 +512,7 @@ describe('Transaction', () => {
             const signed2 = Transaction.addSignature(tx, sig2);
 
             const merged = Transaction.mergeSignatures(signed1, signed2);
+            assert(merged.preVersion === 0);
 
             expect(merged.signature).toEqual({
                 0: {
@@ -514,7 +530,8 @@ describe('Transaction', () => {
                 toAddress: recipientAddress,
             })
                 .addMetadata(metadata)
-                .addMultiSig(2);
+                .addMultiSig(2)
+                .build();
 
             const sig1 = {
                 0: {
@@ -542,7 +559,8 @@ describe('Transaction', () => {
                 toAddress: recipientAddress,
             })
                 .addMetadata(metadata)
-                .addMultiSig(2);
+                .addMultiSig(2)
+                .build();
 
             const sig1 = {
                 0: {
@@ -560,6 +578,7 @@ describe('Transaction', () => {
             const signed2 = Transaction.addSignature(tx, sig2);
 
             const merged = Transaction.mergeSignatures(signed1, signed2);
+            assert(merged.preVersion === 0);
 
             expect(merged.header).toEqual(signed1.header);
             expect(merged.payload).toEqual(signed1.payload);

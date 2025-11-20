@@ -162,6 +162,7 @@ describe('AccountTransactionV1', () => {
             };
 
             const transaction: AccountTransactionV1.Type = {
+                version: 1,
                 signatures,
                 header,
                 payload: transferPayload,
@@ -204,6 +205,7 @@ describe('AccountTransactionV1', () => {
             };
 
             const transactionWithSponsor: AccountTransactionV1.Type = {
+                version: 1,
                 signatures: signaturesWithSponsor,
                 header: headerWithSponsor,
                 payload: transferPayload,
@@ -231,6 +233,7 @@ describe('AccountTransactionV1', () => {
 
             test('transaction with sponsor differs from transaction without sponsor', () => {
                 const transactionWithoutSponsor: AccountTransactionV1.Type = {
+                    version: 1,
                     signatures: { sender: senderSignature },
                     header: {
                         sender: senderAddress,

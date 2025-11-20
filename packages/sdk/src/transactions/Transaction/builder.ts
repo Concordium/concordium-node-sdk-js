@@ -1,9 +1,7 @@
 import {
-    AccountSigner,
     AccountTransaction,
     AccountTransactionHeader,
     AccountTransactionInput,
-    AccountTransactionSignature,
     AccountTransactionType,
     Base58String,
     ConfigureBakerHandler,
@@ -30,11 +28,12 @@ import {
     UpdateContractPayload,
     UpdateCredentialsHandler,
     UpdateCredentialsPayload,
-} from '../index.js';
-import * as JSONBig from '../json-bigint.js';
-import { AccountAddress, DataBlob, Energy, SequenceNumber, TransactionExpiry } from '../types/index.js';
-import { countSignatures, isDefined, orUndefined } from '../util.js';
-import { AccountTransactionV0, AccountTransactionV1, Payload } from './index.js';
+} from '../../index.js';
+import * as JSONBig from '../../json-bigint.js';
+import { AccountAddress, DataBlob, Energy, SequenceNumber, TransactionExpiry } from '../../types/index.js';
+import { isDefined, orUndefined } from '../../util.js';
+import { AccountTransactionV0, AccountTransactionV1, Payload } from '../index.js';
+import { type Signable } from './finalize.js';
 
 // --- Core types ---
 
@@ -123,9 +122,9 @@ type Initial<P extends Payload.Type = Payload.Type> = Builder<P> & {
     readonly header: Pick<Header, 'executionEnergyAmount'>;
 };
 
-type SignableAPI<P extends Payload.Type> = {
+type ConfiguredAPI<P extends Payload.Type> = {
     /**
-     * Adds metadata (sender, nonce, expiry) to the transaction, making it signable.
+     * Adds metadata (sender, nonce, expiry) to the transaction, making it configured and ready to be signed.
      *
      * @template T - the transaction builder type
      * @param metadata - transaction metadata including sender, nonce, and optionally expiry
@@ -133,26 +132,26 @@ type SignableAPI<P extends Payload.Type> = {
      * @returns a signable transaction with metadata attached
      * @throws if transaction metadata already exists.
      */
-    addMetadata<T extends Transaction<P>>(this: T, metadata: Metadata): Signable<P, T>;
+    addMetadata<T extends Transaction<P>>(this: T, metadata: Metadata): Configured<P, T>;
     /**
-     * Attempts to convert a builder to a signable configured builder. This is useful in case type information is lost
+     * Attempts to convert a builder to a _configured_ builder. This is useful in case type information is lost
      * during (de)serialization.
      *
      * @example
      * const tx = Transaction.transfer(...).addMetadata(...);
      * const json = Transaction.fromJSON(Transaction.toJSON(t));
-     * const rebuilt = builder(json).signable();
+     * const rebuilt = builder(json).configured();
      *
      * @template T - the transaction builder type
-     * @returns a _signable_ transaction builder if the transaction is properly configured to be signable. Otherwise
+     * @returns a _configured transaction builder if the transaction is properly configured to be buildable. Otherwise
      * returns `undefined`.
      */
-    signable<T extends Transaction<P>>(this: T): Signable<P, T> | undefined;
+    configured<T extends Transaction<P>>(this: T): Configured<P, T> | undefined;
 };
 
-type Signable<P extends Payload.Type = Payload.Type, T extends Transaction<P> = Transaction<P>> = Omit<
+type Configured<P extends Payload.Type = Payload.Type, T extends Transaction<P> = Transaction<P>> = Omit<
     T,
-    keyof SignableAPI<P> | 'header'
+    keyof ConfiguredAPI<P> | 'header'
 > & {
     /**
      * The transaction input header of the pre-signed transaction stage, i.e. with metadata.
@@ -161,16 +160,16 @@ type Signable<P extends Payload.Type = Payload.Type, T extends Transaction<P> = 
 };
 
 /**
- * Type predicate checking if the transaction is a _signable_ transaction.
+ * Type predicate checking if the transaction is a _configured_ transaction.
  *
  * @template P extends Payload.Type
  * @param transaction - the transaction to check
- * @returns whether the transaction is a _signable transaction
+ * @returns whether the transaction is a _configured_ transaction
  */
-export function isSignable<P extends Payload.Type>(transaction: Transaction<P>): transaction is Signable<P> {
+export function isConfigured<P extends Payload.Type>(transaction: Transaction<P>): transaction is Configured<P> {
     const {
         header: { nonce, expiry, sender, executionEnergyAmount },
-    } = transaction as Signable<P>;
+    } = transaction as Configured<P>;
     return isDefined(nonce) && isDefined(expiry) && isDefined(sender) && isDefined(executionEnergyAmount);
 }
 
@@ -270,13 +269,13 @@ type Sponsorable<P extends Payload.Type = Payload.Type, T extends Transaction<P>
 };
 
 type Builder<P extends Payload.Type> = Readonly<Transaction<P>> &
-    SignableAPI<P> &
+    ConfiguredAPI<P> &
     MultiSigAPI<P> &
     SponsorableAPI<P> & {
         /**
          * Build the transaction to it's pre-finalized stage.
          */
-        build(this: Signable<P>): PreFinalized<P>;
+        build(this: Configured<P>): Signable<P>;
         /**
          * Serializes the transaction to JSON format.
          *
@@ -308,7 +307,7 @@ class TransactionBuilder<P extends Payload.Type = Payload.Type> implements Build
     public addMetadata<T extends Transaction<P>>(
         this: T,
         { sender, nonce, expiry = TransactionExpiry.futureMinutes(5) }: Metadata
-    ): Signable<P, T> {
+    ): Configured<P, T> {
         if ([this.header.sender, this.header.nonce, this.header.expiry].every(isDefined))
             throw new Error('Number of transaction metadata has already been specified.');
 
@@ -316,12 +315,12 @@ class TransactionBuilder<P extends Payload.Type = Payload.Type> implements Build
         this.header.nonce = nonce;
         this.header.expiry = expiry;
 
-        return this as Signable<P, T>;
+        return this as Configured<P, T>;
     }
 
-    public signable<T extends Transaction<P>>(this: T): Signable<P, T> | undefined {
-        if (isSignable(this)) {
-            return this as Signable<P, T>;
+    public configured<T extends Transaction<P>>(this: T): Configured<P, T> | undefined {
+        if (isConfigured(this)) {
+            return this as Configured<P, T>;
         }
     }
 
@@ -359,7 +358,7 @@ class TransactionBuilder<P extends Payload.Type = Payload.Type> implements Build
         }
     }
 
-    build(this: Signable<P, Transaction<P>>): PreFinalized<P> {
+    build(this: Configured<P, Transaction<P>>): Signable<P> {
         const {
             header: { numSignatures = 1n },
             payload,
@@ -436,7 +435,7 @@ export function create(type: AccountTransactionType, payload: AccountTransaction
  * @param transaction - The {@linkcode AccountTransaction} to convert.
  * @returns a corresonding transaction builder object.
  */
-export function fromLegacyAccountTransaction({ type, header, payload }: AccountTransaction): Signable {
+export function fromLegacyAccountTransaction({ type, header, payload }: AccountTransaction): Configured {
     return create(type, payload).addMetadata(header);
 }
 
@@ -680,280 +679,6 @@ export function getEnergyCost({
     return AccountTransactionV0.calculateEnergyCost(numSignatures, payload, executionEnergyAmount);
 }
 
-// --- Transaction signing/finalization ---
-
-type Unsigned = AccountTransactionV0.Unsigned | AccountTransactionV1.Unsigned;
-
-function toUnsigned(transaction: PreV1): AccountTransactionV1.Unsigned;
-function toUnsigned(transaction: PreV0): AccountTransactionV0.Unsigned;
-function toUnsigned(transaction: PreFinalized): Unsigned;
-
-function toUnsigned(transaction: PreFinalized): Unsigned {
-    const { expiry, sender, nonce, numSignatures = 1n } = transaction.header;
-    const energyAmount = getEnergyCost({ ...transaction, header: { ...transaction.header, numSignatures } });
-
-    if (transaction.preVersion === 1) {
-        const v1Header: AccountTransactionV1.Header = {
-            expiry,
-            sender,
-            nonce,
-            payloadSize: Payload.sizeOf(transaction.payload),
-            energyAmount,
-            sponsor: transaction.header.sponsor?.account,
-        };
-        return {
-            version: 1,
-            header: v1Header,
-            payload: transaction.payload,
-        };
-    }
-
-    const v0Header: AccountTransactionV0.Header = {
-        expiry,
-        sender,
-        nonce,
-        payloadSize: Payload.sizeOf(transaction.payload),
-        energyAmount,
-    };
-    return {
-        version: 0,
-        header: v0Header,
-        payload: transaction.payload,
-    };
-}
-
-type PreFinalized<P extends Payload.Type = Payload.Type> = PreV0<P> | PreV1<P>;
-
-type PreV0<P extends Payload.Type = Payload.Type> = {
-    preVersion: 0;
-    /**
-     * The transaction input header of the v0 pre-finalized transaction stage, i.e. with everything required to finalize the
-     * transaction.
-     */
-    readonly header: Required<Pick<Header, 'sender' | 'nonce' | 'expiry' | 'executionEnergyAmount' | 'numSignatures'>>;
-    /**
-     * The transaction payload, defining the transaction type and type specific data.
-     */
-    readonly payload: P;
-    /**
-     * The map of signatures for the credentials associated with the account.
-     */
-    readonly signature: AccountTransactionSignature;
-};
-
-type PreV1<P extends Payload.Type = Payload.Type> = {
-    preVersion: 1;
-    /**
-     * The transaction input header of the v1 pre-finalized transaction stage, i.e. with everything required to finalize the
-     * transaction.
-     */
-    readonly header: MakeRequired<Header, keyof PreV0['header']>;
-    /**
-     * The transaction payload, defining the transaction type and type specific data.
-     */
-    readonly payload: P;
-    /**
-     * The signatures for both `sender` and `sponsor`.
-     */
-    readonly signatures: AccountTransactionV1.Signatures;
-};
-
-function validateSignatureAmount(
-    signature: AccountTransactionSignature,
-    numAllowed: bigint,
-    role: 'sender' | 'sponsor' = 'sender'
-): void {
-    const sigs = countSignatures(signature);
-    if (sigs > numAllowed)
-        throw new Error(
-            `Too many ${role} signatures added to the transaction. Counted ${sigs}, but transaction specifies ${numAllowed} allowed number of signatures.`
-        );
-}
-
-/**
- * Adds a pre-computed signature to a transaction.
- *
- * @template P - the payload type
- * @template T - the transaction type
- *
- * @param transaction - the transaction to add a signature to
- * @param signature - the sender signature on the transaction to add
- *
- * @returns the signed transaction with the signature attached
- * @throws Error if the number of signatures exceeds the allowed number specified in the transaction header
- */
-export function addSignature<P extends Payload.Type = Payload.Type>(
-    transaction: PreFinalized<P>,
-    signature: AccountTransactionSignature
-): PreFinalized<P> {
-    switch (transaction.preVersion) {
-        case 0: {
-            const signed: PreV0<P> = {
-                ...transaction,
-                signature,
-            };
-            return mergeSignatures(transaction, signed);
-        }
-        case 1: {
-            const signed: PreV1<P> = {
-                ...transaction,
-                signatures: { sender: signature },
-            };
-            return mergeSignatures(transaction, signed);
-        }
-    }
-}
-
-/**
- * Signs a transaction using the provided account signer.
- *
- * @template P - the payload type
- * @template T - the transaction type
- *
- * @param transaction - the signable transaction to sign
- * @param signer - the account signer to use for signing
- *
- * @returns a promise that resolves to the signed transaction
- * @throws Error if the number of signatures exceeds the allowed number specified in the transaction header
- */
-export async function sign<P extends Payload.Type = Payload.Type>(
-    transaction: PreFinalized<P>,
-    signer: AccountSigner
-): Promise<PreFinalized<P>> {
-    let signature: AccountTransactionSignature;
-    switch (transaction.preVersion) {
-        case 0: {
-            signature = await AccountTransactionV0.createSignature(toUnsigned(transaction), signer);
-            break;
-        }
-        case 1: {
-            signature = await AccountTransactionV1.createSignature(toUnsigned(transaction), signer);
-            break;
-        }
-    }
-
-    return addSignature(transaction, signature);
-}
-
-/**
- * Adds a pre-computed sponsor signature to a transaction.
- *
- * @template P - the payload type
- * @template T - the transaction type
- *
- * @param transaction - the transaction to add a sponsor signature to
- * @param signature - the sponsor signature on the transaction to add
- *
- * @returns the signed transaction with the sponsor signature attached
- * @throws Error if the number of signatures exceeds the allowed number specified in the transaction header
- */
-export function addSponsorSignature<P extends Payload.Type = Payload.Type>(
-    transaction: PreV1<P>,
-    signature: AccountTransactionSignature
-): PreFinalized<P> {
-    const signed: PreV1<P> = {
-        ...transaction,
-        signatures: { sponsor: signature, sender: {} },
-    };
-    return mergeSignatures(transaction, signed);
-}
-
-/**
- * Signs a transaction as a sponsor using the provided account signer.
- *
- * @template P - the payload type
- * @template T - the transaction type
- *
- * @param transaction - the signable transaction to sign
- * @param signer - the account signer to use for signing
- *
- * @returns a promise that resolves to the signed transaction
- * @throws Error if the number of signatures exceeds the allowed number specified in the transaction header
- */
-export async function sponsor<P extends Payload.Type = Payload.Type>(
-    transaction: PreV1<P>,
-    signer: AccountSigner
-): Promise<PreFinalized<P>> {
-    let signature = await AccountTransactionV1.createSignature(toUnsigned(transaction), signer);
-    return addSponsorSignature(transaction, signature);
-}
-
-function mergeSignature(a: AccountTransactionSignature, b: AccountTransactionSignature): AccountTransactionSignature;
-function mergeSignature(
-    a: AccountTransactionSignature | undefined,
-    b: AccountTransactionSignature | undefined
-): AccountTransactionSignature | undefined;
-
-function mergeSignature(
-    a: AccountTransactionSignature | undefined,
-    b: AccountTransactionSignature | undefined
-): AccountTransactionSignature | undefined {
-    if (a === undefined) return b;
-    if (b === undefined) return a;
-
-    const signature: AccountTransactionSignature = {};
-    // First, we copy all the signatures from `a`.
-    for (const credIndex in a) {
-        signature[credIndex] = { ...a[credIndex] };
-    }
-
-    for (const credIndex in b) {
-        if (signature[credIndex] === undefined) {
-            // If signatures don't exist for this credential index, we copy everything and move on.
-            signature[credIndex] = { ...b[credIndex] };
-            continue;
-        }
-
-        // Otherwise, check all key indices of the credential signature
-        for (const keyIndex in b[credIndex]) {
-            const sig = signature[credIndex][keyIndex];
-            if (sig !== undefined)
-                throw new Error(`Duplicate signature found for credential index ${credIndex} at key index ${keyIndex}`);
-
-            // Copy the signature found, as it does not already exist
-            signature[credIndex][keyIndex] = b[credIndex][keyIndex];
-        }
-    }
-
-    return signature;
-}
-
-/**
- * Merges signatures from two pre-finalized transactions into a single transaction.
- * Used for multi-signature scenarios where multiple parties sign the same transaction.
- *
- * @template P - the payload type
- * @template T - the signed transaction type
- *
- * @param a - the first signed transaction
- * @param b - the second signed transaction
- *
- * @returns a new transaction containing all signatures from both transactions
- * @throws Error if duplicate signatures are found for the same credential and key index
- * @throws Error if the number of signatures exceeds the allowed number specified in the transaction header
- */
-export function mergeSignatures<P extends Payload.Type, T extends PreFinalized<P> = PreFinalized<P>>(a: T, b: T): T {
-    if (a.preVersion !== b.preVersion) throw new Error('"a" is incompatible with "b"');
-
-    switch (a.preVersion) {
-        case 0: {
-            const signature: AccountTransactionSignature = mergeSignature(a.signature, (b as PreV0).signature);
-            validateSignatureAmount(signature, a.header.numSignatures);
-            return { ...a, signature: signature };
-        }
-        case 1: {
-            const bv1 = b as PreV1;
-            const sender = mergeSignature(a.signatures.sender, bv1.signatures.sender);
-            const sponsor = mergeSignature(a.signatures.sponsor, bv1.signatures.sponsor);
-
-            validateSignatureAmount(sender, a.header.numSignatures);
-            validateSignatureAmount(sponsor ?? {}, a.header.sponsor?.numSignatures ?? 0n);
-
-            return { ...a, signatures: { sender, sponsor } };
-        }
-    }
-}
-
 /**
  * Converts a transaction to its intermediary JSON serializable representation.
  *
@@ -993,70 +718,4 @@ export function fromJSON(json: JSON): Transaction {
  */
 export function fromJSONString(jsonString: string): Transaction {
     return fromJSON(JSONBig.parse(jsonString));
-}
-
-/**
- * A finalized account transaction, which is ready for submission.
- */
-export type Finalized = AccountTransactionV0.Type | AccountTransactionV1.Type;
-
-/**
- * Signs a transaction using the provided signer, calculating total energy cost and creating a _finalized transaction.
- *
- * This is the same as doing `Transaction.finalize(await Transaction.sign(transaction))`
- *
- * @param transaction the unsigned transaction to sign
- * @param signer the account signer containing keys and signature logic
- *
- * @returns a promise resolving to the signed transaction
- * @throws if too many signatures are included in the transaction
- */
-export async function signAndFinalize(transaction: PreFinalized, signer: AccountSigner): Promise<Finalized> {
-    const signed = await sign(transaction, signer);
-    return finalize(signed);
-}
-
-/**
- * Finalizes a _pre-finalized transaction, creating a _finalized_ transaction which is ready for submission.
- *
- * @param transaction the signed transaction
- *
- * @returns a corresponding _finalized_ transaction
- * @throws if too many signatures are included in the transaction
- */
-export function finalize(transaction: PreFinalized): Finalized {
-    switch (transaction.preVersion) {
-        case 0:
-            return AccountTransactionV0.create(toUnsigned(transaction), transaction.signature);
-        case 1:
-            return AccountTransactionV1.create(toUnsigned(transaction), transaction.signatures);
-    }
-}
-
-/**
- * Gets the transaction hash that is used to look up the status of a transaction.
- * @param transaction the transaction to hash
- * @returns the sha256 hash of the serialized block item kind, signatures, header, type and payload
- */
-export function getAccountTransactionHash(transaction: Finalized): Uint8Array {
-    switch (transaction.version) {
-        case 0:
-            return AccountTransactionV0.getAccountTransactionHash(transaction);
-        case 1:
-            return AccountTransactionV1.getAccountTransactionHash(transaction);
-    }
-}
-
-/**
- * Serializes a _finalized_ transaction as a block item for submission to the chain.
- * @param transaction the signed transaction to serialize
- * @returns the serialized block item as a byte array
- */
-export function serializeBlockItem(transaction: Finalized): Uint8Array {
-    switch (transaction.version) {
-        case 0:
-            return AccountTransactionV0.serializeBlockItem(transaction);
-        case 1:
-            return AccountTransactionV1.serializeBlockItem(transaction);
-    }
 }

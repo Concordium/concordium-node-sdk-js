@@ -70,7 +70,7 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
         sender,
     };
 
-    const deployModuleTransaction = Transaction.deployModule(deployModule).addMetadata(header);
+    const deployModuleTransaction = Transaction.deployModule(deployModule).addMetadata(header).build();
 
     // Sign transaction
     const signer = buildAccountSigner(wallet);

@@ -66,7 +66,7 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
         stake: CcdAmount.zero(),
     };
 
-    const transaction = Transaction.configureValidator(configureBakerPayload).addMetadata(header);
+    const transaction = Transaction.configureValidator(configureBakerPayload).addMetadata(header).build();
     const signed = await Transaction.signAndFinalize(transaction, signer);
     const transactionHash = await client.sendSignedTransaction(signed);
 

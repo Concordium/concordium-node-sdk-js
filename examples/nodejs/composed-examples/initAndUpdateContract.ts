@@ -99,7 +99,7 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
         param: initParams,
     });
 
-    const initTransaction = Transaction.initContract(initPayload, maxCost).addMetadata(initHeader);
+    const initTransaction = Transaction.initContract(initPayload, maxCost).addMetadata(initHeader).build();
 
     // Sign transaction
     const signedInit = await Transaction.signAndFinalize(initTransaction, signer);
@@ -150,7 +150,7 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
         message: updateParams,
     });
 
-    const updateTransaction = Transaction.updateContract(updatePayload, maxCost).addMetadata(updateHeader);
+    const updateTransaction = Transaction.updateContract(updatePayload, maxCost).addMetadata(updateHeader).build();
 
     // Sign transaction
     const signedUpdate = await Transaction.signAndFinalize(updateTransaction, signer);

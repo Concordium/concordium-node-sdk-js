@@ -2,11 +2,11 @@ import { Buffer } from 'buffer/index.js';
 
 import { deserializeAccountTransactionSignature } from '../deserialization.js';
 import { Cursor } from '../deserializationHelpers.js';
-import { AccountTransactionV0, Payload } from '../index.js';
+import { AccountSigner, AccountTransactionV0, BlockItemKind, Payload, constantA, constantB, sha256 } from '../index.js';
 import { serializeAccountTransactionSignature } from '../serialization.js';
 import { SerializationSpec, encodeWord8, encodeWord16, getBitmap, serializeFromSpec } from '../serializationHelpers.js';
 import { type AccountTransactionSignature } from '../types.js';
-import { AccountAddress } from '../types/index.js';
+import { AccountAddress, Energy } from '../types/index.js';
 import { orUndefined } from '../util.js';
 
 type HeaderOptionals = {
@@ -193,4 +193,127 @@ export function deserialize(value: Cursor | ArrayBuffer): AccountTransactionV1 {
         throw new Error('Deserializing the transaction did not exhaust the buffer');
 
     return { signatures, header, payload };
+}
+
+/**
+ * Serializes a version 1 account transaction as a block item for submission to the chain.
+ *
+ * @param transaction the transaction to serialize
+ * @returns the serialized block item as a byte array with block item kind prefix
+ */
+export function serializeBlockItem(transaction: AccountTransactionV1): Uint8Array {
+    const blockItemKind = encodeWord8(BlockItemKind.AccountTransactionV1Kind);
+    return Uint8Array.from(Buffer.concat([blockItemKind, serialize(transaction)]));
+}
+
+type Configuration = { [p in keyof HeaderOptionals]: boolean };
+
+function headerSize({ sponsor = false }: Configuration): bigint {
+    // (AccountAddress | 0)
+    const optionsSize = sponsor ? 32n : 0n;
+    // bitmap + v0 header + options
+    return 2n + AccountTransactionV0.HEADER_SIZE + optionsSize;
+}
+
+/**
+ * The energy cost is assigned according to the formula:
+ * A * signatureCount + B * size + C_t, where C_t is a transaction specific cost.
+ *
+ * The transaction specific cost can be found at https://github.com/Concordium/concordium-base/blob/main/haskell-src/Concordium/Cost.hs.
+ *
+ * @param signatureCount number of signatures for the transaction, including sponsor signatures
+ * @param payload the transaction payload
+ * @param transactionSpecificCost a transaction specific cost
+ *
+ * @returns the energy cost for the transaction, to be set in the transaction header
+ */
+export function calculateEnergyCost(
+    signatureCount: bigint,
+    payload: Payload.Type,
+    transactionSpecificCost: Energy.Type,
+    configuration: Configuration
+): Energy.Type {
+    return Energy.create(
+        constantA * signatureCount +
+            constantB * (headerSize(configuration) + BigInt(Payload.sizeOf(payload))) +
+            transactionSpecificCost.value
+    );
+}
+
+const PREFIX = Buffer.from('00'.repeat(31) + '01', 'hex');
+
+/**
+ * Gets the transaction hash that is used to look up the status of a transaction.
+ *
+ * @param transaction the transaction to hash
+ * @returns the sha256 hash of the serialized block item kind, signatures, header and payload
+ */
+export function getAccountTransactionHash(transaction: AccountTransactionV1): Uint8Array {
+    const serializedAccountTransaction = serialize(transaction);
+    return Uint8Array.from(sha256([serializedAccountTransaction]));
+}
+
+/**
+ * An unsigned version 1 account transaction (without signatures).
+ */
+export type Unsigned = Omit<AccountTransactionV1, 'signature'>;
+
+/**
+ * Creates a v1 transaction from an unsigned transaction and the associated signature on the transaction.
+ *
+ * @param transaction the unsigned transaction
+ * @param signature the signature on the transaction
+ *
+ * @returns a complete v1 transaction.
+ */
+export function create(unsigned: Unsigned, signatures: Signatures): AccountTransactionV1 {
+    return { ...unsigned, signatures };
+}
+
+/**
+ * Returns the digest of the transaction that has to be signed.
+ *
+ * @param transaction the transaction to hash
+ * @returns the sha256 hash on the serialized header and payload
+ */
+export function signDigest(transaction: Unsigned): Uint8Array {
+    const serializedHeader = serializeHeader(transaction.header);
+    const serializedPayload = Payload.serialize(transaction.payload);
+    return Uint8Array.from(sha256([PREFIX, serializedHeader, serializedPayload]));
+}
+
+/**
+ * Creates a signature on an unsigned version 1 account transaction using the provided signer.
+ *
+ * @param transaction the unsigned transaction to sign
+ * @param signer the account signer to use for signing
+ *
+ * @returns a promise resolving to the signature
+ */
+export async function createSignature(
+    transaction: Unsigned,
+    signer: AccountSigner
+): Promise<AccountTransactionSignature> {
+    return await signer.sign(signDigest(transaction));
+}
+
+/**
+ * Signs an unsigned version 1 account transaction using the provided signer.
+ *
+ * @param transaction the unsigned transaction to sign
+ * @param signer the account signer to use for signing
+ * @param [role] the role to sign the transaction as. This can be `"sender" | "sponsor"`.
+ * Defaults to `"sender"`
+ *
+ * @returns a promise resolving to the signed transaction
+ */
+export async function sign(
+    transaction: Unsigned,
+    signer: AccountSigner,
+    role: keyof Signatures = 'sender'
+): Promise<AccountTransactionV1> {
+    return {
+        ...transaction,
+        signatures: { ...transaction.signatures, [role]: await createSignature(transaction, signer) },
+    };
 }

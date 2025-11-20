@@ -1329,6 +1329,7 @@ export enum BlockItemKind {
     AccountTransactionKind = 0,
     CredentialDeploymentKind = 1,
     UpdateInstructionKind = 2,
+    AccountTransactionV1Kind = 3,
 }
 
 /**

@@ -295,7 +295,7 @@ export function serializeBlockItem(transaction: AccountTransactionV0): Uint8Arra
 }
 
 // Account address (32 bytes), nonce (8 bytes), energy (8 bytes), payload size (4 bytes), expiry (8 bytes);
-const ACCOUNT_TRANSACTION_HEADER_SIZE = BigInt(32 + 8 + 8 + 4 + 8);
+export const HEADER_SIZE = BigInt(32 + 8 + 8 + 4 + 8);
 
 /**
  * The energy cost is assigned according to the formula:
@@ -316,7 +316,7 @@ export function calculateEnergyCost(
 ): Energy.Type {
     return Energy.create(
         constantA * signatureCount +
-            constantB * (ACCOUNT_TRANSACTION_HEADER_SIZE + BigInt(Payload.sizeOf(payload))) +
+            constantB * (HEADER_SIZE + BigInt(Payload.sizeOf(payload))) +
             transactionSpecificCost.value
     );
 }

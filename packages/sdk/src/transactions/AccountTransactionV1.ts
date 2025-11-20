@@ -44,18 +44,22 @@ export type Signatures = {
  */
 type AccountTransactionV1 = {
     /**
+     * Transaction version discriminant;
+     */
+    readonly version: 1;
+    /**
      * The signatures for V1 account transactions
      */
-    signatures: Signatures;
+    readonly signatures: Signatures;
     /**
      * The transaction header for the transaction which includes metadata required for execution
      * of any account transaction of the v1 format.
      */
-    header: Header;
+    readonly header: Header;
     /**
      * The transaction payload.
      */
-    payload: Payload.Type;
+    readonly payload: Payload.Type;
 };
 
 /**
@@ -192,7 +196,7 @@ export function deserialize(value: Cursor | ArrayBuffer): AccountTransactionV1 {
     if (isRawBuffer && cursor.remainingBytes.length !== 0)
         throw new Error('Deserializing the transaction did not exhaust the buffer');
 
-    return { signatures, header, payload };
+    return { version: 1, signatures, header, payload };
 }
 
 /**
@@ -256,7 +260,7 @@ export function getAccountTransactionHash(transaction: AccountTransactionV1): Ui
 /**
  * An unsigned version 1 account transaction (without signatures).
  */
-export type Unsigned = Omit<AccountTransactionV1, 'signature'>;
+export type Unsigned = Omit<AccountTransactionV1, 'signatures'>;
 
 /**
  * Creates a v1 transaction from an unsigned transaction and the associated signature on the transaction.

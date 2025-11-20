@@ -4,8 +4,6 @@ import { deserializeAccountTransactionSignature } from '../deserialization.js';
 import { Cursor } from '../deserializationHelpers.js';
 import { constantA, constantB } from '../energyCost.js';
 import { sha256 } from '../hash.js';
-import { Base58String } from '../index.js';
-import * as JSONBig from '../json-bigint.js';
 import { serializeAccountTransactionSignature } from '../serialization.js';
 import { encodeWord8, encodeWord32, encodeWord64 } from '../serializationHelpers.js';
 import { AccountSigner } from '../signHelpers.js';
@@ -35,34 +33,6 @@ export type Header = {
     readonly payloadSize: number;
 };
 
-type HeaderJSON = {
-    readonly sender: Base58String;
-    readonly nonce: bigint;
-    readonly expiry: number;
-    readonly energyAmount: bigint;
-    readonly payloadSize: number;
-};
-
-function headerToJSON(header: Header): HeaderJSON {
-    return {
-        sender: header.sender.toJSON(),
-        nonce: header.nonce.toJSON(),
-        expiry: header.expiry.toJSON(),
-        energyAmount: header.energyAmount.value,
-        payloadSize: header.payloadSize,
-    };
-}
-
-function headerFromJSON(json: HeaderJSON): Header {
-    return {
-        sender: AccountAddress.fromBase58(json.sender),
-        nonce: SequenceNumber.fromJSON(json.nonce),
-        expiry: TransactionExpiry.fromJSON(json.expiry),
-        energyAmount: Energy.create(json.energyAmount),
-        payloadSize: json.payloadSize,
-    };
-}
-
 /**
  * Signature type for account transactions.
  */
@@ -79,11 +49,11 @@ type AccountTransactionV0 = {
     /**
      * The transaction header containing metadata for the transaction
      */
-    readonly header: Header;
+    readonly header: Readonly<Header>;
     /**
      * The transaction payload.
      */
-    readonly payload: Payload.Type;
+    readonly payload: Readonly<Payload.Type>;
     /**
      * The signature by the transaction sender on the transaction
      */
@@ -94,115 +64,6 @@ type AccountTransactionV0 = {
  * A complete version 0 account transaction with header, type, payload, and signature.
  */
 export type Type = AccountTransactionV0;
-
-export type JSON = {
-    readonly version: 0;
-    readonly header: HeaderJSON;
-    readonly payload: Payload.JSON;
-    readonly signature: Signature;
-};
-
-export type UnsignedJSON = {
-    readonly version: 0;
-    readonly header: HeaderJSON;
-    readonly payload: Payload.JSON;
-};
-
-/**
- * Converts a _signed_ version 0 account transaction to its intermediary JSON serializable representation.
- *
- * @param transaction the transaction to convert
- * @returns the JSON representation of the transaction
- */
-export function toJSON(transaction: AccountTransactionV0): JSON {
-    return {
-        version: 0 as const,
-        header: headerToJSON(transaction.header),
-        payload: Payload.toJSON(transaction.payload),
-        signature: transaction.signature,
-    };
-}
-
-/**
- * Converts an _unsigned_ version 0 account transaction to its intermediary JSON serializable representation.
- *
- * @param transaction the transaction to convert
- * @returns the JSON representation of the transaction
- */
-export function unsignedToJSON(transaction: Unsigned): UnsignedJSON {
-    return {
-        version: 0 as const,
-        header: headerToJSON(transaction.header),
-        payload: Payload.toJSON(transaction.payload),
-    };
-}
-
-/**
- * Converts a intermediary JSON serializable representation created with {@linkcode toJSON} back to a
- * _signed_ version 0 account transaction.
- *
- * @param json the JSON to convert
- * @returns the transaction
- */
-export function fromJSON(json: JSON): AccountTransactionV0 {
-    return {
-        version: 0 as const,
-        header: headerFromJSON(json.header),
-        payload: Payload.fromJSON(json.payload),
-        signature: json.signature,
-    };
-}
-
-/**
- * Converts a intermediary JSON serializable representation created with {@linkcode unsignedToJSON} back to an
- * _unsigned_ version 0 account transaction.
- *
- * @param json the JSON to convert
- * @returns the unsigned transaction
- */
-export function unsignedFromJSON(json: UnsignedJSON): Unsigned {
-    return { version: 0 as const, header: headerFromJSON(json.header), payload: Payload.fromJSON(json.payload) };
-}
-
-/**
- * Converts a {@linkcode AccountTransactionV0} to a JSON string.
- *
- * @param transaction - the transaction to convert
- * @returns the JSON string
- */
-export function toJSONString(transaction: AccountTransactionV0): string {
-    return JSONBig.stringify(toJSON(transaction));
-}
-
-/**
- * Converts an {@linkcode Unsigned} to a JSON string.
- *
- * @param transaction - the transaction to convert
- * @returns the JSON string
- */
-export function unsignedToJSONString(transaction: Unsigned): string {
-    return JSONBig.stringify(unsignedToJSON(transaction));
-}
-
-/**
- * Converts a JSON string transaction representation to a {@linkcode AccountTransactionV0}.
- *
- * @param jsonString - the json string to convert
- * @returns the parsed transaction
- */
-export function fromJSONString(jsonString: string): AccountTransactionV0 {
-    return fromJSON(JSONBig.parse(jsonString));
-}
-
-/**
- * Converts a JSON string _unsigned_ transaction representation to an {@linkcode Unsigned}.
- *
- * @param jsonString - the json string to convert
- * @returns the parsed unsigned transaction
- */
-export function unsignedFromJSONString(jsonString: string): Unsigned {
-    return unsignedFromJSON(JSONBig.parse(jsonString));
-}
 
 /**
  * Serializes a version 0 transaction header to the encoding expected by concordium nodes.

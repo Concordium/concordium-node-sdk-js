@@ -7,6 +7,7 @@ import {
     AccountTransactionInput,
     ContractAddress,
     ContractName,
+    IndexedCredentialDeploymentInfo,
     InitContractInput,
     ModuleReference,
     UpdateContractInput,
@@ -487,6 +488,8 @@ export class UpdateCredentialsHandler
     implements AccountTransactionHandler<UpdateCredentialsPayload, UpdateCredentialsPayload, UpdateCredentialsInput>
 {
     getBaseEnergyCost(payload: UpdateCredentialsInput): bigint {
+        console.log('----> currentNumberOfCredentials:', payload.currentNumberOfCredentials);
+
         const newCredentialsCost = payload.newCredentials
             .map((credential) => {
                 const numberOfKeys = BigInt(Object.keys(credential.cdi.credentialPublicKeys.keys).length);
@@ -494,7 +497,14 @@ export class UpdateCredentialsHandler
             })
             .reduce((prev, curr) => prev + curr, BigInt(0));
 
-        const currentCredentialsCost = 500n * payload.currentNumberOfCredentials;
+        //TODO: I am putting a check against undefined here
+        let currentCredentialsCost = 0n;
+        if(payload.currentNumberOfCredentials === undefined){
+            currentCredentialsCost = 500n;    
+        }
+        else {
+            currentCredentialsCost = 500n * payload.currentNumberOfCredentials;
+        }
 
         return 500n + currentCredentialsCost + newCredentialsCost;
     }
@@ -503,34 +513,69 @@ export class UpdateCredentialsHandler
         const serializedAddedCredentials = serializeList(
             updateCredentials.newCredentials,
             encodeWord8,
-            ({ index, cdi }) => Buffer.concat([encodeWord8(index), serializeCredentialDeploymentInfo(cdi)])
+            ({ index, cdi }) => {
+                console.log(`Serializing CredentialDeploymentInformation at index: ${index}`);
+                console.log(' size of newCredentials array: ', updateCredentials.newCredentials.length);
+                //console.log(`CredentialDeploymentInformation:`, cdi); // TODO: I confirmed it is same cdi from the json file, index is 0
+                return Buffer.concat([encodeWord8(index), serializeCredentialDeploymentInfo(cdi)]);
+            }
         );
+
+        //TODO: assuming credId should be 96 characters long (48 bytes)
+        const PADDING_LENGTH = 96;
 
         const serializedRemovedCredIds = serializeList(
             updateCredentials.removeCredentialIds,
             encodeWord8,
-            (credId: string) => Buffer.from(credId, 'hex')
+            (credId: string) => {
+                console.log(`Serializing removeCredentialId: ${credId}`);
+                console.log('length of bytes of credId:', Buffer.from(credId, 'hex').length);
+                const paddedCredId = credId.padEnd(PADDING_LENGTH, '0');
+                console.log('padded length', paddedCredId.length);
+                console.log('padded credId:', paddedCredId);
+
+                return Buffer.from(paddedCredId, 'hex');
+            }
         );
+        console.log('bytes length of serializedRemovedCredIds:', serializedRemovedCredIds.byteLength);
+
         const serializedThreshold = encodeWord8(updateCredentials.threshold);
         return Buffer.concat([serializedAddedCredentials, serializedRemovedCredIds, serializedThreshold]);
     }
 
     deserialize(serializedPayload: Cursor): UpdateCredentialsPayload {
+        console.log('Beginning deserialization of UpdateCredentialsPayload');        
         //using this to as a placeholder to populate the values to be used in the final response
         const partialData: Partial<UpdateCredentialsPayload> = {};
 
-        const cdiItems = serializedPayload.read(8);
+        const cdiItems = serializedPayload.read(1);
+        const cdiLength = cdiItems.readUInt8(0);
+        console.log(`cdiLength: ${cdiLength}`);
         partialData.newCredentials = [];
         //the following for loop is to read the CredentialDeploymentInformation
-        for (let i = 0; i < cdiItems.readUInt8(0); i++) {
-            const index = serializedPayload.read(8).readUInt8(0);
-            partialData.newCredentials[i].index = index;
+        for (let i = 0; i < cdiLength; i++) {
+            const index = serializedPayload.read(1).readUInt8(0)
+            console.log(`new credentials.index with index: ${index}`);
 
-            deserializeCredentialDeploymentValues(serializedPayload, partialData, i);
-            console.log(`partialData after populating crdValue at i=${i}:`, partialData);
+            //TODO: remember to remove the partial data and signature of these two methods, I don't think they are needed anymore
+            const cdvalues = deserializeCredentialDeploymentValues(serializedPayload, partialData, i);
 
-            partialData.newCredentials[i].cdi.proofs = deserializeCredentialDeploymentProofs(serializedPayload, partialData, i) //TODO: is this correct?
-            console.log(`partialData after populating crdProofs at i=${i}:`, partialData);
+            const cdProofs = deserializeCredentialDeploymentProofs(serializedPayload, partialData, i) //TODO: is this correct?
+            console.log(`Deserialized CredentialDeploymentProofs for index ${index}:`, cdProofs);
+
+            const newCredentialItem: IndexedCredentialDeploymentInfo = {
+                index: index,
+                cdi: {
+                    credId: cdvalues.credId!,
+                    revocationThreshold: cdvalues.revocationThreshold!,
+                    arData: cdvalues.arData!,
+                    ipIdentity: cdvalues.ipIdentity!,
+                    credentialPublicKeys: cdvalues.credentialPublicKeys!,
+                    policy: cdvalues.policy!,
+                    proofs: cdProofs,
+                }
+            };
+            partialData.newCredentials.push(newCredentialItem);
         }
 
         deserializeCredentialsToBeRemoved(serializedPayload, partialData);

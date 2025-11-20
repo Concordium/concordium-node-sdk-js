@@ -215,7 +215,7 @@ export function encodeHexString(s: string): Buffer {
     return Buffer.from(s, 'hex');
 }
 
-enum SchemeId {
+export enum SchemeId {
     Ed25519 = 0,
 }
 

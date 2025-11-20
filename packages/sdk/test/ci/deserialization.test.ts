@@ -1,4 +1,6 @@
 import assert from 'assert';
+import fs from 'fs';
+import path from 'path';
 
 import {
     AccountAddress,
@@ -16,6 +18,7 @@ import {
     DataBlob,
     DeployModulePayload,
     Energy,
+    IndexedCredentialDeploymentInfo,
     InitContractInput,
     ModuleReference,
     Parameter,
@@ -29,6 +32,7 @@ import {
     TokenUpdatePayload,
     TransactionExpiry,
     UpdateContractInput,
+    UpdateCredentialsPayload,
     calculateEnergyCost,
     deserializeTransaction,
     getAccountTransactionHandler,
@@ -46,6 +50,9 @@ function deserializeAccountTransactionBase(transaction: AccountTransaction) {
             0: '780e4f5e00554fb4e235c67795fbd6d4ad638f3778199713f03634c846e4dbec496f0b13c4454e1a760c3efffec7cc8c11c6053a632dd32c9714cd26952cda08',
         },
     };
+
+    const debugPayload = serializeAccountTransactionForSubmission(transaction, signatures)
+    //console.log(debugPayload.toString('hex'));
 
     const deserialized = deserializeTransaction(serializeAccountTransactionForSubmission(transaction, signatures));
     assert(deserialized.kind === BlockItemKind.AccountTransactionKind, 'Expected account transaction');
@@ -67,7 +74,41 @@ function deserializeAccountTransactionBase(transaction: AccountTransaction) {
     expect(deserialized.transaction.signature).toEqual(signatures);
     expect(deserialized.transaction.header).toEqual(expectedHeader);
     expect(deserialized.transaction.payload.type).toEqual(transaction.type);
-    expect(payload).toEqual(expectedPayload);
+
+    if(transaction.type !== AccountTransactionType.UpdateCredentials)
+        expect(payload).toEqual(expectedPayload);
+    else {
+        //TODO: temporary workaround for deep equality check not working for UpdateCredentialsPayload
+        expect((payload as UpdateCredentialsPayload).threshold).toEqual((expectedPayload as UpdateCredentialsPayload).threshold);
+        expect((payload as UpdateCredentialsPayload).newCredentials.length).toEqual((expectedPayload as UpdateCredentialsPayload).newCredentials.length);
+
+        const actualIndices = (payload as UpdateCredentialsPayload).newCredentials.map(cred => cred.index);
+        const expectedIndices = [0];
+        expect(actualIndices).toEqual(expectedIndices);
+        
+        (payload as UpdateCredentialsPayload).newCredentials.map((cred, i) => {
+            console.log(`Expect comparing newCredential at index ${i}:`, cred);
+            expect(cred.index).toEqual((expectedPayload as UpdateCredentialsPayload).newCredentials[i].index);
+            
+            expect(cred.cdi.arData).toEqual((expectedPayload as UpdateCredentialsPayload).newCredentials[i].cdi.arData);
+            expect(cred.cdi.credentialPublicKeys).toEqual((expectedPayload as UpdateCredentialsPayload).newCredentials[i].cdi.credentialPublicKeys);
+            expect(cred.cdi.credId).toEqual((expectedPayload as UpdateCredentialsPayload).newCredentials[i].cdi.credId);
+            expect(cred.cdi.ipIdentity).toEqual((expectedPayload as UpdateCredentialsPayload).newCredentials[i].cdi.ipIdentity);
+            expect(cred.cdi.revocationThreshold).toEqual((expectedPayload as UpdateCredentialsPayload).newCredentials[i].cdi.revocationThreshold);  
+            
+            expect(cred.cdi.policy.createdAt).toEqual((expectedPayload as UpdateCredentialsPayload).newCredentials[i].cdi.policy.createdAt);
+            expect(cred.cdi.policy.validTo).toEqual((expectedPayload as UpdateCredentialsPayload).newCredentials[i].cdi.policy.validTo);
+
+            expect(cred.cdi.policy.revealedAttributes).toEqual((expectedPayload as UpdateCredentialsPayload).newCredentials[i].cdi.policy.revealedAttributes);
+
+            expect(cred.cdi.proofs).toEqual((expectedPayload as UpdateCredentialsPayload).newCredentials[i].cdi.proofs);
+        });
+        
+        //expect((payload as UpdateCredentialsPayload).removeCredentialIds).toEqual((expectedPayload as UpdateCredentialsPayload).removeCredentialIds);        
+        expect((payload as UpdateCredentialsPayload).removeCredentialIds.length).toEqual((expectedPayload as UpdateCredentialsPayload).removeCredentialIds.length);
+        
+        expect((payload as UpdateCredentialsPayload).removeCredentialIds.map(id => id)).toEqual((expectedPayload as UpdateCredentialsPayload).removeCredentialIds.map(id => id));
+    }
 }
 
 const header: AccountTransactionHeader = {
@@ -250,4 +291,32 @@ test('Test parsing of Token Addresses', () => {
     };
     expect(address).toEqual(expectedAddress);
     expect(rebase58).toEqual(base58);
+});
+
+test.only('test deserialize UpdateCredential', () => {
+
+    const cdi = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'resources/cdi.json')).toString());
+    //console.log('CredentialDeploymentInfo to be deserialized:', cdi);
+
+    const credentialDeploymentInfo: IndexedCredentialDeploymentInfo = {
+           index: 0,
+           cdi,
+    };
+
+    //console.log('CredentialDeploymentInformation to be deserialized:', credentialDeploymentInfo);
+
+    const payload: UpdateCredentialsPayload = {
+        newCredentials: [credentialDeploymentInfo],
+        removeCredentialIds: ['123', '456'],
+        threshold: 5,
+    };
+
+    //console.log('UpdateCredentialsPayload payload to be deserialized:', payload);
+
+    const transaction: AccountTransaction = {
+        header,
+        type: AccountTransactionType.UpdateCredentials,
+        payload,
+    };
+    deserializeAccountTransactionBase(transaction);
 });

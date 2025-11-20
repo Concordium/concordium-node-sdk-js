@@ -379,14 +379,14 @@ export async function sendRaw(
     { expiry = TransactionExpiry.futureMinutes(5), nonce }: TokenUpdateMetadata = {}
 ): Promise<TransactionHash.Type> {
     const { nonce: nextNonce } = nonce ? { nonce } : await token.grpc.getNextAccountNonce(sender);
-    const header = {
+    const header: Transaction.Metadata = {
         expiry,
         nonce: nextNonce,
         sender,
     };
 
-    const transaction = Transaction.tokenUpdate(header, payload);
-    const signed = await Transaction.sign(transaction, signer);
+    const transaction = Transaction.tokenUpdate(payload).addMetadata(header);
+    const signed = await Transaction.signAndFinalize(transaction, signer);
     return token.grpc.sendSignedTransaction(signed);
 }
 

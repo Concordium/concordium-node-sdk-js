@@ -1,5 +1,4 @@
 import { Buffer } from 'buffer/index.js';
-import JSONBig from 'json-bigint';
 
 import {
     Cbor,
@@ -19,8 +18,6 @@ import {
 import { AccountAddress, TransactionExpiry } from '../../../src/pub/types.js';
 import { Transaction } from '../../../src/transactions/index.js';
 
-const jsonBig = JSONBig({ useNativeBigInt: true });
-
 describe('Transaction', () => {
     const senderAddress = AccountAddress.fromBase58('3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt');
     const recipientAddress = AccountAddress.fromBase58('4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M');
@@ -31,47 +28,19 @@ describe('Transaction', () => {
         expiry: TransactionExpiry.fromEpochSeconds(1700000000n),
     };
 
-    describe('header', () => {
-        test('creates header with all fields', () => {
-            const header = Transaction.header(
-                senderAddress,
-                SequenceNumber.create(1n),
-                TransactionExpiry.fromEpochSeconds(1700000000n),
-                Energy.create(100n)
-            );
-
-            expect(AccountAddress.equals(header.sender, senderAddress)).toBe(true);
-            expect(header.nonce.value).toBe(1n);
-            expect(header.expiry.expiryEpochSeconds).toBe(1700000000n);
-            expect(header.executionEnergyAmount.value).toBe(100n);
-            expect(header.numSignatures).toBeUndefined();
-        });
-
-        test('creates header with numSignatures', () => {
-            const header = Transaction.header(
-                senderAddress,
-                SequenceNumber.create(1n),
-                TransactionExpiry.fromEpochSeconds(1700000000n),
-                Energy.create(100n),
-                2n
-            );
-
-            expect(header.numSignatures).toBe(2n);
-        });
-    });
-
     describe('transfer', () => {
         describe('without memo', () => {
-            const tx = Transaction.transfer(metadata, {
+            const tx = Transaction.transfer({
                 amount: CcdAmount.fromMicroCcd(1000000n),
                 toAddress: recipientAddress,
-            });
+            }).addMetadata(metadata);
+            tx.header.numSignatures = 2n;
             test('creates transfer transaction', () => {
                 expect(tx.payload.type).toBe(3);
             });
 
             test('calculates fixed energy cost correctly', () => {
-                const tx = Transaction.transfer(metadata, {
+                const tx = Transaction.transfer({
                     amount: CcdAmount.fromMicroCcd(1000000n),
                     toAddress: recipientAddress,
                 });
@@ -81,7 +50,7 @@ describe('Transaction', () => {
         });
 
         describe('with memo', () => {
-            const tx = Transaction.transfer(metadata, {
+            const tx = Transaction.transfer({
                 amount: CcdAmount.fromMicroCcd(1000000n),
                 toAddress: recipientAddress,
                 memo: new DataBlob(Buffer.from('test', 'utf8')),
@@ -93,7 +62,6 @@ describe('Transaction', () => {
 
             test('creates transfer with memo using third parameter', () => {
                 const tx = Transaction.transfer(
-                    metadata,
                     {
                         amount: CcdAmount.fromMicroCcd(1000000n),
                         toAddress: recipientAddress,
@@ -105,7 +73,7 @@ describe('Transaction', () => {
             });
 
             test('calculates fixed energy cost correctly', () => {
-                const tx = Transaction.transfer(metadata, {
+                const tx = Transaction.transfer({
                     amount: CcdAmount.fromMicroCcd(1000000n),
                     toAddress: recipientAddress,
                     memo: new DataBlob(Buffer.from('test', 'utf8')),
@@ -117,7 +85,7 @@ describe('Transaction', () => {
     });
 
     describe('deployModule', () => {
-        const tx = Transaction.deployModule(metadata, {
+        const tx = Transaction.deployModule({
             source: new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0]),
             version: 1,
         });
@@ -133,7 +101,7 @@ describe('Transaction', () => {
     });
 
     describe('registerData', () => {
-        const tx = Transaction.registerData(metadata, {
+        const tx = Transaction.registerData({
             data: new DataBlob(Buffer.from('test data', 'utf8')),
         });
 
@@ -149,7 +117,6 @@ describe('Transaction', () => {
 
     describe('initContract', () => {
         const tx = Transaction.initContract(
-            metadata,
             {
                 amount: CcdAmount.fromMicroCcd(0n),
                 initName: ContractName.fromString('my_contract'),
@@ -173,7 +140,6 @@ describe('Transaction', () => {
 
     describe('updateContract', () => {
         const tx = Transaction.updateContract(
-            metadata,
             {
                 amount: CcdAmount.fromMicroCcd(100n),
                 address: ContractAddress.create(0, 0),
@@ -194,7 +160,7 @@ describe('Transaction', () => {
     });
 
     describe('configureDelegation', () => {
-        const tx = Transaction.configureDelegation(metadata, {
+        const tx = Transaction.configureDelegation({
             stake: CcdAmount.fromMicroCcd(5000000000n),
             restakeEarnings: true,
             delegationTarget: {
@@ -213,7 +179,7 @@ describe('Transaction', () => {
     });
 
     describe('configureValidator', () => {
-        const tx = Transaction.configureValidator(metadata, {
+        const tx = Transaction.configureValidator({
             stake: CcdAmount.fromMicroCcd(10000000000n),
             restakeEarnings: false,
             openForDelegation: OpenStatus.ClosedForAll,
@@ -245,7 +211,7 @@ describe('Transaction', () => {
         });
 
         test('calculates fixed energy cost without keys', () => {
-            const tx = Transaction.configureValidator(metadata, {
+            const tx = Transaction.configureValidator({
                 stake: CcdAmount.fromMicroCcd(10000000000n),
                 restakeEarnings: false,
                 openForDelegation: OpenStatus.ClosedForAll,
@@ -260,7 +226,7 @@ describe('Transaction', () => {
     });
 
     describe('tokenUpdate', () => {
-        const tx = Transaction.tokenUpdate(metadata, {
+        const tx = Transaction.tokenUpdate({
             tokenId: TokenId.fromString('TEST'),
             operations: Cbor.encode([{ pause: {} }]),
         });
@@ -310,7 +276,7 @@ describe('Transaction', () => {
             proofs: 'abc123',
         };
 
-        const tx = Transaction.updateCredentials(metadata, {
+        const tx = Transaction.updateCredentials({
             newCredentials: [{ index: 1, cdi }],
             removeCredentialIds: [],
             threshold: 1,
@@ -327,7 +293,7 @@ describe('Transaction', () => {
         });
 
         test('calculates fixed energy cost (multiple credentials)', () => {
-            const tx = Transaction.updateCredentials(metadata, {
+            const tx = Transaction.updateCredentials({
                 newCredentials: [
                     { index: 1, cdi },
                     { index: 2, cdi },
@@ -343,15 +309,15 @@ describe('Transaction', () => {
 
     describe('getEnergyCost', () => {
         test('energy cost increases with multiple signatures', () => {
-            const tx1 = Transaction.transfer(metadata, {
+            const tx1 = Transaction.transfer({
                 amount: CcdAmount.fromMicroCcd(1000000n),
                 toAddress: recipientAddress,
             });
 
-            const tx2 = Transaction.transfer(metadata, {
+            const tx2 = Transaction.transfer({
                 amount: CcdAmount.fromMicroCcd(1000000n),
                 toAddress: recipientAddress,
-            }).multiSig(3);
+            }).addMultiSig(3);
 
             const energy1 = Transaction.getEnergyCost(tx1);
             expect(energy1.value).toBe(501n);
@@ -363,26 +329,26 @@ describe('Transaction', () => {
 
     describe('toJSON/fromJSON', () => {
         test('roundtrip completes successfully', () => {
-            const tx = Transaction.transfer(metadata, {
+            const tx = Transaction.transfer({
                 amount: CcdAmount.fromMicroCcd(1000000n),
                 toAddress: recipientAddress,
-            });
+            }).addMetadata(metadata);
 
-            const json = Transaction.toJSON(tx);
-            const jsonString = jsonBig.stringify(json);
-            const parsed = jsonBig.parse(jsonString);
-            const deserialized = Transaction.fromJSON(parsed);
+            const json = Transaction.toJSONString(tx);
+            const deserialized = Transaction.fromJSONString(json);
 
-            expect(AccountAddress.equals(deserialized.header.sender, tx.header.sender)).toBe(true);
-            expect(deserialized.header.nonce.value).toBe(tx.header.nonce.value);
+            expect(AccountAddress.equals(deserialized.header.sender!, tx.header.sender)).toBe(true);
+            expect(deserialized.header.nonce!.value).toBe(tx.header.nonce.value);
             expect(deserialized.payload).toEqual(tx.payload);
         });
 
         test('header JSON values are correct types', () => {
-            const tx = Transaction.transfer(metadata, {
+            const tx = Transaction.transfer({
                 amount: CcdAmount.fromMicroCcd(1000000n),
                 toAddress: recipientAddress,
-            }).multiSig(3);
+            })
+                .addMetadata(metadata)
+                .addMultiSig(3);
 
             const json = Transaction.toJSON(tx);
             const expectedHeader = {
@@ -393,6 +359,210 @@ describe('Transaction', () => {
                 numSignatures: 3,
             };
             expect(json.header).toEqual(expectedHeader);
+        });
+    });
+
+    describe('addSignature', () => {
+        test('fails when signature count exceeds numSignatures in header', () => {
+            const tx = Transaction.transfer({
+                amount: CcdAmount.fromMicroCcd(1000000n),
+                toAddress: recipientAddress,
+            })
+                .addMetadata(metadata)
+                .addMultiSig(2);
+
+            const signature = {
+                0: {
+                    0: 'signature1',
+                    1: 'signature2',
+                    2: 'signature3',
+                },
+            };
+
+            expect(() => Transaction.addSignature(tx, signature)).toThrow(
+                'Too many signatures added to the transaction. Counted 3, but transaction specifies 2 allowed number of signatures.'
+            );
+        });
+
+        test('succeeds when signature count equals numSignatures', () => {
+            const tx = Transaction.transfer({
+                amount: CcdAmount.fromMicroCcd(1000000n),
+                toAddress: recipientAddress,
+            })
+                .addMetadata(metadata)
+                .addMultiSig(2);
+
+            const signature = {
+                0: {
+                    0: 'signature1',
+                    1: 'signature2',
+                },
+            };
+
+            const signed = Transaction.addSignature(tx, signature);
+            expect(signed.signature).toEqual(signature);
+        });
+
+        test('succeeds when signature count is less than numSignatures', () => {
+            const tx = Transaction.transfer({
+                amount: CcdAmount.fromMicroCcd(1000000n),
+                toAddress: recipientAddress,
+            })
+                .addMetadata(metadata)
+                .addMultiSig(3);
+
+            const signature = {
+                0: {
+                    0: 'signature1',
+                },
+            };
+
+            const signed = Transaction.addSignature(tx, signature);
+            expect(signed.signature).toEqual(signature);
+        });
+
+        test('defaults numSignatures to 1 when not specified', () => {
+            const tx = Transaction.transfer({
+                amount: CcdAmount.fromMicroCcd(1000000n),
+                toAddress: recipientAddress,
+            }).addMetadata(metadata);
+
+            const signature = {
+                0: {
+                    0: 'signature1',
+                },
+            };
+
+            const signed = Transaction.addSignature(tx, signature);
+            expect(signed.signature).toEqual(signature);
+            expect(signed.header.numSignatures).toBe(1n);
+        });
+    });
+
+    describe('mergeSignatures', () => {
+        test('merges signatures from two transactions successfully', () => {
+            const tx = Transaction.transfer({
+                amount: CcdAmount.fromMicroCcd(1000000n),
+                toAddress: recipientAddress,
+            })
+                .addMetadata(metadata)
+                .addMultiSig(3);
+
+            const sig1 = {
+                0: {
+                    0: 'signature1',
+                },
+            };
+
+            const sig2 = {
+                0: {
+                    1: 'signature2',
+                },
+            };
+
+            const signed1 = Transaction.addSignature(tx, sig1);
+            const signed2 = Transaction.addSignature(tx, sig2);
+
+            const merged = Transaction.mergeSignatures(signed1, signed2);
+
+            expect(merged.signature).toEqual({
+                0: {
+                    0: 'signature1',
+                    1: 'signature2',
+                },
+            });
+        });
+
+        test('merges signatures from different credentials', () => {
+            const tx = Transaction.transfer({
+                amount: CcdAmount.fromMicroCcd(1000000n),
+                toAddress: recipientAddress,
+            })
+                .addMetadata(metadata)
+                .addMultiSig(3);
+
+            const sig1 = {
+                0: {
+                    0: 'signature1',
+                },
+            };
+
+            const sig2 = {
+                1: {
+                    0: 'signature2',
+                },
+            };
+
+            const signed1 = Transaction.addSignature(tx, sig1);
+            const signed2 = Transaction.addSignature(tx, sig2);
+
+            const merged = Transaction.mergeSignatures(signed1, signed2);
+
+            expect(merged.signature).toEqual({
+                0: {
+                    0: 'signature1',
+                },
+                1: {
+                    0: 'signature2',
+                },
+            });
+        });
+
+        test('fails when duplicate signatures exist for same credential and key index', () => {
+            const tx = Transaction.transfer({
+                amount: CcdAmount.fromMicroCcd(1000000n),
+                toAddress: recipientAddress,
+            })
+                .addMetadata(metadata)
+                .addMultiSig(2);
+
+            const sig1 = {
+                0: {
+                    0: 'signature1',
+                },
+            };
+
+            const sig2 = {
+                0: {
+                    0: 'signature2',
+                },
+            };
+
+            const signed1 = Transaction.addSignature(tx, sig1);
+            const signed2 = Transaction.addSignature(tx, sig2);
+
+            expect(() => Transaction.mergeSignatures(signed1, signed2)).toThrow(
+                'Duplicate signature found for credential index 0 at key index 0'
+            );
+        });
+
+        test('preserves all properties from first transaction', () => {
+            const tx = Transaction.transfer({
+                amount: CcdAmount.fromMicroCcd(1000000n),
+                toAddress: recipientAddress,
+            })
+                .addMetadata(metadata)
+                .addMultiSig(2);
+
+            const sig1 = {
+                0: {
+                    0: 'signature1',
+                },
+            };
+
+            const sig2 = {
+                0: {
+                    1: 'signature2',
+                },
+            };
+
+            const signed1 = Transaction.addSignature(tx, sig1);
+            const signed2 = Transaction.addSignature(tx, sig2);
+
+            const merged = Transaction.mergeSignatures(signed1, signed2);
+
+            expect(merged.header).toEqual(signed1.header);
+            expect(merged.payload).toEqual(signed1.payload);
         });
     });
 });

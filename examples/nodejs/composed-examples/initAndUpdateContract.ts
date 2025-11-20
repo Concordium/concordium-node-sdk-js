@@ -10,7 +10,6 @@ import {
     ReceiveName,
     ReturnValue,
     Transaction,
-    TransactionExpiry,
     affectedContracts,
     buildAccountSigner,
     deserializeReceiveReturnValue,
@@ -87,7 +86,6 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
     // #region documentation-snippet-init-contract
 
     const initHeader: Transaction.Metadata = {
-        expiry: TransactionExpiry.futureMinutes(60),
         nonce: (await client.getNextAccountNonce(sender)).nonce,
         sender,
     };
@@ -101,10 +99,10 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
         param: initParams,
     });
 
-    const initTransaction = Transaction.initContract(initHeader, initPayload, maxCost);
+    const initTransaction = Transaction.initContract(initPayload, maxCost).addMetadata(initHeader);
 
     // Sign transaction
-    const signedInit = await Transaction.sign(initTransaction, signer);
+    const signedInit = await Transaction.signAndFinalize(initTransaction, signer);
     const initTrxHash = await client.sendSignedTransaction(signedInit);
 
     console.log('Transaction submitted, waiting for finalization...');
@@ -134,7 +132,6 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
     // #region documentation-snippet-update-contract
 
     const updateHeader: Transaction.Metadata = {
-        expiry: TransactionExpiry.futureMinutes(60),
         nonce: (await client.getNextAccountNonce(sender)).nonce,
         sender,
     };
@@ -153,10 +150,10 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
         message: updateParams,
     });
 
-    const updateTransaction = Transaction.updateContract(updateHeader, updatePayload, maxCost);
+    const updateTransaction = Transaction.updateContract(updatePayload, maxCost).addMetadata(updateHeader);
 
     // Sign transaction
-    const signedUpdate = await Transaction.sign(updateTransaction, signer);
+    const signedUpdate = await Transaction.signAndFinalize(updateTransaction, signer);
     const updateTrxHash = await client.sendSignedTransaction(signedUpdate);
 
     console.log('Transaction submitted, waiting for finalization...');

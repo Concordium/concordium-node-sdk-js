@@ -4,16 +4,10 @@ import { deserializeAccountTransactionSignature } from '../deserialization.js';
 import { Cursor } from '../deserializationHelpers.js';
 import { AccountTransactionV0, Payload } from '../index.js';
 import { serializeAccountTransactionSignature } from '../serialization.js';
-import {
-    SerializationSpec,
-    encodeWord8,
-    encodeWord16,
-    getBitmap,
-    orUndefined,
-    serializeFromSpec,
-} from '../serializationHelpers.js';
+import { SerializationSpec, encodeWord8, encodeWord16, getBitmap, serializeFromSpec } from '../serializationHelpers.js';
 import { type AccountTransactionSignature } from '../types.js';
 import { AccountAddress } from '../types/index.js';
+import { orUndefined } from '../util.js';
 
 type HeaderOptionals = {
     /**

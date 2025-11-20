@@ -28,11 +28,11 @@ describe.skip('Manual test suite', () => {
             toAddress: testAccount,
         };
 
-        const accountTransaction = Transaction.transfer(header, simpleTransfer);
+        const accountTransaction = Transaction.transfer(simpleTransfer).addMetadata(header);
 
         // Sign transaction
         const signer = buildBasicAccountSigner(senderAccountPrivateKey);
-        const signed = await Transaction.sign(accountTransaction, signer);
+        const signed = await Transaction.signAndFinalize(accountTransaction, signer);
 
         const transactionHash = await client.sendSignedTransaction(signed);
         const blockHash = await client.waitForTransactionFinalization(transactionHash, undefined);

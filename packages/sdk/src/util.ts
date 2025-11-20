@@ -191,3 +191,11 @@ export function toBuffer(s: string, encoding?: string): Buffer {
 export const bail = (error: string | Error): never => {
     throw error instanceof Error ? error : new Error(error);
 };
+
+/**
+ * Takes a callback function taking 1 argument, returning a new function taking same argument, applying callback only if supplied argument is defined.
+ */
+export const orUndefined =
+    <A, R>(fun: (v: A) => R) =>
+    (v: A | undefined): R | undefined =>
+        v !== undefined ? fun(v) : undefined;

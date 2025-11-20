@@ -10,7 +10,7 @@ import {
     VerifyKey,
 } from './types.js';
 import { DataBlob } from './types/DataBlob.js';
-import { isDefined } from './util.js';
+import { isDefined, orUndefined } from './util.js';
 
 export function serializeMap<K extends string | number | symbol, T>(
     map: Record<K, T>,
@@ -295,14 +295,6 @@ const serializeFromSpec =
 
         return Buffer.concat(buffers);
     };
-
-/**
- * Takes a callback function taking 1 argument, returning a new function taking same argument, applying callback only if supplied argument is defined.
- */
-export const orUndefined =
-    <A, R>(fun: (v: A) => R) =>
-    (v: A | undefined): R | undefined =>
-        v !== undefined ? fun(v) : undefined;
 
 function serializeDelegationTarget(target: DelegationTarget) {
     if (target.delegateType === DelegationTargetType.PassiveDelegation) {

@@ -3,7 +3,6 @@ import {
     CcdAmount,
     ConfigureDelegationPayload,
     Transaction,
-    TransactionExpiry,
     buildAccountSigner,
     parseWallet,
 } from '@concordium/web-sdk';
@@ -57,8 +56,7 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
     const wallet = parseWallet(walletFile);
     const sender = AccountAddress.fromBase58(wallet.value.address);
 
-    const header = {
-        expiry: TransactionExpiry.futureMinutes(60),
+    const header: Transaction.Metadata = {
         nonce: (await client.getNextAccountNonce(sender)).nonce,
         sender: sender,
     };
@@ -68,8 +66,8 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
     };
     const signer = buildAccountSigner(wallet);
 
-    const transaction = Transaction.configureDelegation(header, configureDelegationPayload);
-    const signed = await Transaction.sign(transaction, signer);
+    const transaction = Transaction.configureDelegation(configureDelegationPayload).addMetadata(header);
+    const signed = await Transaction.signAndFinalize(transaction, signer);
     const transactionHash = await client.sendSignedTransaction(signed);
 
     console.log('Transaction submitted, waiting for finalization...');

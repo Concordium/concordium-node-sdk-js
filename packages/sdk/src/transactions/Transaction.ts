@@ -110,12 +110,66 @@ export type JSON = {
  */
 export type Metadata = MakeOptional<AccountTransactionHeader, 'expiry'>;
 
-type Builder<P extends Payload.Type> = Readonly<Transaction<P>> & {
+type SignableAPI<P extends Payload.Type> = {
+    /**
+     * Adds metadata (sender, nonce, expiry) to the transaction, making it signable.
+     *
+     * @template T - the transaction builder type
+     * @param metadata - transaction metadata including sender, nonce, and optionally expiry
+     * @returns a signable transaction with metadata attached
+     */
     addMetadata<T extends Transaction<P>>(this: T, metadata: Metadata): Signable<P, T>;
-    multiSig<T extends Transaction<P>>(this: T, numSignatures: number | bigint): MultiSig<P, T>;
-
-    toJSON(): JSON;
+    /**
+     * Attempts to convert a builder to a signable configured builder. This is useful in case type information is lost
+     * during (de)serialization.
+     *
+     * @example
+     * const tx = Transaction.transfer(...).addMetadata(...);
+     * const json = Transaction.fromJSON(Transaction.toJSON(t));
+     * const rebuilt = builder(json).signable();
+     *
+     * @template T - the transaction builder type
+     * @returns a _signable_ transaction builder if the transaction is properly configured to be signable. Otherwise
+     * returns `undefined`.
+     */
+    signable<T extends Transaction<P>>(this: T): Signable<P, T> | undefined;
 };
+
+type MultiSigAPI<P extends Payload.Type> = {
+    /**
+     * Configures the transaction for multi-signature by specifying the number of signatures required.
+     *
+     * @template T - the transaction builder type
+     * @param numSignatures - the number of signatures required to authorize this transaction
+     * @returns a multi-sig transaction with the signature count configured
+     */
+    addMultiSig<T extends Transaction<P>>(this: T, numSignatures: number | bigint): MultiSig<P, T>;
+    /**
+     * Attempts to convert a builder to a multi-sig configured builder. This is useful in case type information is lost
+     * during (de)serialization.
+     *
+     * @example
+     * const tx = Transaction.transfer(...).addMultiSig(4);
+     * const json = Transaction.fromJSON(Transaction.toJSON(t));
+     * const rebuilt = builder(json).multiSig();
+     *
+     * @template T - the transaction builder type
+     * @returns a multi-sig transaction builder if the transaction is properly configured for multi-sig. Otherwise
+     * returns `undefined`.
+     */
+    multiSig<T extends Transaction<P>>(this: T): MultiSig<P, T> | undefined;
+};
+
+type Builder<P extends Payload.Type> = Readonly<Transaction<P>> &
+    SignableAPI<P> &
+    MultiSigAPI<P> & {
+        /**
+         * Serializes the transaction to JSON format.
+         *
+         * @returns the JSON representation of the transaction
+         */
+        toJSON(): JSON;
+    };
 
 type Initial<P extends Payload.Type = Payload.Type> = Builder<P> & {
     /**
@@ -126,7 +180,7 @@ type Initial<P extends Payload.Type = Payload.Type> = Builder<P> & {
 
 type Signable<P extends Payload.Type = Payload.Type, T extends Transaction<P> = Transaction<P>> = Omit<
     T,
-    'addMetadata'
+    keyof SignableAPI<P>
 > & {
     /**
      * The transaction input header of the pre-signed transaction stage, i.e. with metadata.
@@ -150,7 +204,7 @@ export function isSignable<P extends Payload.Type>(transaction: Transaction<P>):
 
 type MultiSig<P extends Payload.Type = Payload.Type, T extends Transaction<P> = Transaction<P>> = Omit<
     T,
-    'multiSig'
+    keyof MultiSigAPI<P>
 > & {
     /**
      * The transaction input header of the multi-sig transaction stage, i.e. with the number of signatures
@@ -173,9 +227,7 @@ export function isMultiSig<P extends Payload.Type>(transaction: Transaction<P>):
     return isDefined(numSignatures) && numSignatures > 1n;
 }
 
-type FullBuilder<P extends Payload.Type> = Builder<P>;
-
-class TransactionBuilder<P extends Payload.Type = Payload.Type> implements FullBuilder<P> {
+class TransactionBuilder<P extends Payload.Type = Payload.Type> implements Builder<P> {
     constructor(
         public readonly header: Header,
         public readonly payload: P
@@ -191,9 +243,21 @@ class TransactionBuilder<P extends Payload.Type = Payload.Type> implements FullB
         return this as Signable<P, T>;
     }
 
-    public multiSig<T extends Transaction<P>>(this: T, numSignatures: number | bigint): MultiSig<P, T> {
+    public signable<T extends Transaction<P>>(this: T): Signable<P, T> | undefined {
+        if (isSignable(this)) {
+            return this as Signable<P, T>;
+        }
+    }
+
+    public addMultiSig<T extends Transaction<P>>(this: T, numSignatures: number | bigint): MultiSig<P, T> {
         this.header.numSignatures = BigInt(numSignatures);
         return this as MultiSig<P, T>;
+    }
+
+    public multiSig<T extends Transaction<P>>(this: T): MultiSig<P, T> | undefined {
+        if (isMultiSig(this)) {
+            return this as MultiSig<P, T>;
+        }
     }
 
     public toJSON(): JSON {
@@ -499,6 +563,8 @@ export function getEnergyCost({
     return AccountTransactionV0.calculateEnergyCost(BigInt(numSignatures), payload, executionEnergyAmount);
 }
 
+// --- Transaction signing/finalization ---
+
 type Unsigned = AccountTransactionV0.Unsigned;
 
 function toUnsigned(transaction: Signable): Unsigned {
@@ -519,12 +585,16 @@ function toUnsigned(transaction: Signable): Unsigned {
     };
 }
 
-type Signed<P extends Payload.Type = Payload.Type> = Signable<P> & {
+type Signed<P extends Payload.Type = Payload.Type> = {
     /**
      * The transaction input header of the signed transaction stage, i.e. with everything required to finalize the
      * transaction.
      */
     readonly header: Readonly<Required<Header>>;
+    /**
+     * The transaction payload, defining the transaction type and type specific data.
+     */
+    readonly payload: P;
     /**
      * The map of signatures for the credentials associated with the account.
      */
@@ -555,15 +625,15 @@ export function isSigned<P extends Payload.Type>(transaction: Transaction<P>): t
  * @returns the signed transaction with the signature attached
  * @throws Error if the number of signatures exceeds the allowed number specified in the transaction header
  */
-export function addSignature<P extends Payload.Type = Payload.Type, T extends Signable<P> = Signable<P>>(
-    transaction: T,
+export function addSignature<P extends Payload.Type = Payload.Type>(
+    transaction: Signable<P>,
     signature: AccountTransactionSignature
-): T & Signed<P> {
-    const mapped: T & Omit<Signed<P>, 'signature'> = {
+): Signed<P> {
+    const mapped: Omit<Signed<P>, 'signature'> = {
         ...transaction,
         header: { ...transaction.header, numSignatures: transaction.header.numSignatures ?? 1n },
     };
-    const signed: T & Signed<P> = {
+    const signed: Signed<P> = {
         ...mapped,
         signature,
     };
@@ -589,11 +659,11 @@ export function addSignature<P extends Payload.Type = Payload.Type, T extends Si
  * @returns a promise that resolves to the signed transaction
  * @throws Error if the number of signatures exceeds the allowed number specified in the transaction header
  */
-export async function sign<P extends Payload.Type = Payload.Type, T extends Signable<P> = Signable<P>>(
-    transaction: T,
+export async function sign<P extends Payload.Type = Payload.Type>(
+    transaction: Signable<P>,
     signer: AccountSigner
-): Promise<T & Signed<P>> {
-    const mapped: T & Omit<Signed<P>, 'signature'> = {
+): Promise<Signed<P>> {
+    const mapped: Omit<Signed<P>, 'signature'> = {
         ...transaction,
         header: { ...transaction.header, numSignatures: transaction.header.numSignatures ?? 1n },
     };
@@ -690,8 +760,6 @@ export function fromJSON(json: JSON): Transaction {
 export function fromJSONString(jsonString: string): Transaction {
     return fromJSON(JSONBig.parse(jsonString));
 }
-
-// --- Transaction signing ---
 
 /**
  * A finalized account transaction, which is ready for submission.

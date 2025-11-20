@@ -317,7 +317,7 @@ describe('Transaction', () => {
             const tx2 = Transaction.transfer({
                 amount: CcdAmount.fromMicroCcd(1000000n),
                 toAddress: recipientAddress,
-            }).multiSig(3);
+            }).addMultiSig(3);
 
             const energy1 = Transaction.getEnergyCost(tx1);
             expect(energy1.value).toBe(501n);
@@ -348,7 +348,7 @@ describe('Transaction', () => {
                 toAddress: recipientAddress,
             })
                 .addMetadata(metadata)
-                .multiSig(3);
+                .addMultiSig(3);
 
             const json = Transaction.toJSON(tx);
             const expectedHeader = {
@@ -369,7 +369,7 @@ describe('Transaction', () => {
                 toAddress: recipientAddress,
             })
                 .addMetadata(metadata)
-                .multiSig(2);
+                .addMultiSig(2);
 
             const signature = {
                 0: {
@@ -390,7 +390,7 @@ describe('Transaction', () => {
                 toAddress: recipientAddress,
             })
                 .addMetadata(metadata)
-                .multiSig(2);
+                .addMultiSig(2);
 
             const signature = {
                 0: {
@@ -409,7 +409,7 @@ describe('Transaction', () => {
                 toAddress: recipientAddress,
             })
                 .addMetadata(metadata)
-                .multiSig(3);
+                .addMultiSig(3);
 
             const signature = {
                 0: {
@@ -446,7 +446,7 @@ describe('Transaction', () => {
                 toAddress: recipientAddress,
             })
                 .addMetadata(metadata)
-                .multiSig(3);
+                .addMultiSig(3);
 
             const sig1 = {
                 0: {
@@ -479,7 +479,7 @@ describe('Transaction', () => {
                 toAddress: recipientAddress,
             })
                 .addMetadata(metadata)
-                .multiSig(3);
+                .addMultiSig(3);
 
             const sig1 = {
                 0: {
@@ -514,7 +514,7 @@ describe('Transaction', () => {
                 toAddress: recipientAddress,
             })
                 .addMetadata(metadata)
-                .multiSig(2);
+                .addMultiSig(2);
 
             const sig1 = {
                 0: {
@@ -542,7 +542,7 @@ describe('Transaction', () => {
                 toAddress: recipientAddress,
             })
                 .addMetadata(metadata)
-                .multiSig(2);
+                .addMultiSig(2);
 
             const sig1 = {
                 0: {

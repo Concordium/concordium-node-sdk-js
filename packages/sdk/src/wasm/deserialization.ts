@@ -5,7 +5,7 @@ import { Cursor } from '../deserializationHelpers.js';
 import { AccountTransactionV0 } from '../transactions/index.js';
 import { BlockItem, BlockItemKind } from '../types.js';
 
-function deserializeCredentialDeployment(serializedDeployment: Cursor) {
+export function deserializeCredentialDeployment(serializedDeployment: Cursor) {
     const raw = wasm.deserializeCredentialDeployment(serializedDeployment.read().toString('hex'));
     try {
         const parsed = JSON.parse(raw);
@@ -20,6 +20,8 @@ function deserializeCredentialDeployment(serializedDeployment: Cursor) {
 }
 
 /**
+ * @deprecated Use `Transaction.deserializeBlockItem` instead.
+ *
  * Deserializes a transaction, from the binary format used to send it to the node, back into an js object.
  * @param serializedTransaction A buffer containing the binary transaction. It is expected to start with the version and blockItemKind.
  * @returns An object specifiying the blockItemKind that the transaction has. The object also contains the actual transaction under the transaction field.

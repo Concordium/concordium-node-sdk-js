@@ -1,4 +1,9 @@
-import { AccountSigner } from '../../index.js';
+import { deserializeUint8 } from '../../deserialization.js';
+import { Cursor } from '../../deserializationHelpers.js';
+import { Upward } from '../../grpc/upward.js';
+import { AccountSigner } from '../../signHelpers.js';
+import { BlockItem, BlockItemKind } from '../../types.js';
+import { deserializeCredentialDeployment } from '../../wasm/deserialization.js';
 import { AccountTransactionV0, AccountTransactionV1, Payload, Transaction } from '../index.js';
 import { type Signable, type SignableV0, type SignableV1, sign } from './signable.js';
 
@@ -108,5 +113,38 @@ export function serializeBlockItem(transaction: Finalized): Uint8Array {
             return AccountTransactionV0.serializeBlockItem(transaction);
         case 1:
             return AccountTransactionV1.serializeBlockItem(transaction);
+    }
+}
+
+/**
+ * Deserializes a transaction from the block item encoding used to send it to a node.
+ *
+ * @param buffer A buffer containing transaction encoding. It is expected to start the _block item kind_.
+ * @returns a block item.
+ **/
+export function deserializeBlockItem(buffer: ArrayBuffer): Upward<BlockItem> {
+    const cursor = Cursor.fromBuffer(buffer);
+
+    const blockItemKind = deserializeUint8(cursor);
+    switch (blockItemKind) {
+        case BlockItemKind.AccountTransactionKind:
+            return {
+                kind: BlockItemKind.AccountTransactionKind,
+                transaction: AccountTransactionV0.deserialize(cursor),
+            };
+        case BlockItemKind.CredentialDeploymentKind:
+            return {
+                kind: BlockItemKind.CredentialDeploymentKind,
+                transaction: deserializeCredentialDeployment(cursor),
+            };
+        case BlockItemKind.UpdateInstructionKind:
+            throw new Error('deserialization of UpdateInstructions is not supported');
+        case BlockItemKind.AccountTransactionV1Kind:
+            return {
+                kind: BlockItemKind.AccountTransactionV1Kind,
+                transaction: AccountTransactionV1.deserialize(cursor),
+            };
+        default:
+            return null;
     }
 }

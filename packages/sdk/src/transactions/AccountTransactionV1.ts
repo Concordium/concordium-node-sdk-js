@@ -2,22 +2,15 @@ import { Buffer } from 'buffer/index.js';
 
 import { deserializeAccountTransactionSignature } from '../deserialization.js';
 import { Cursor } from '../deserializationHelpers.js';
-import {
-    AccountInfo,
-    AccountSigner,
-    AccountTransactionV0,
-    BlockItemKind,
-    Payload,
-    constantA,
-    constantB,
-    sha256,
-    verifyAccountSignature,
-} from '../index.js';
+import { constantA, constantB } from '../energyCost.js';
+import { sha256 } from '../hash.js';
 import { serializeAccountTransactionSignature } from '../serialization.js';
 import { SerializationSpec, encodeWord8, encodeWord16, getBitmap, serializeFromSpec } from '../serializationHelpers.js';
-import { type AccountTransactionSignature } from '../types.js';
+import { AccountSigner, verifyAccountSignature } from '../signHelpers.js';
+import { type AccountInfo, type AccountTransactionSignature, BlockItemKind } from '../types.js';
 import { AccountAddress, Energy } from '../types/index.js';
 import { orUndefined } from '../util.js';
+import { AccountTransactionV0, Payload } from './index.js';
 
 type HeaderOptionals = {
     /**

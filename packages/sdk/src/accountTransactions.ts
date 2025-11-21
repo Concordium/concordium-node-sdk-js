@@ -515,8 +515,6 @@ export class UpdateCredentialsHandler
         );
 
         //TODO: assuming credId should be 96 characters long (48 bytes)
-        const PADDING_LENGTH = 96;
-
         const serializedRemovedCredIds = serializeList(
             updateCredentials.removeCredentialIds,
             encodeWord8,

@@ -103,7 +103,7 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
 
     // Sign transaction
     const signedInit = await Transaction.signAndFinalize(initTransaction, signer);
-    const initTrxHash = await client.sendSignedTransaction(signedInit);
+    const initTrxHash = await client.sendTransaction(signedInit);
 
     console.log('Transaction submitted, waiting for finalization...');
 
@@ -154,7 +154,7 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
 
     // Sign transaction
     const signedUpdate = await Transaction.signAndFinalize(updateTransaction, signer);
-    const updateTrxHash = await client.sendSignedTransaction(signedUpdate);
+    const updateTrxHash = await client.sendTransaction(signedUpdate);
 
     console.log('Transaction submitted, waiting for finalization...');
 

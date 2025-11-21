@@ -94,7 +94,7 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
 
     // Sign transaction
     const signedTransaction = await Transaction.signAndFinalize(transaction, signer);
-    const transactionHash = await client.sendSignedTransaction(signedTransaction);
+    const transactionHash = await client.sendTransaction(signedTransaction);
     // #endregion documentation-snippet-sign-transaction
 
     const status = await client.waitForTransactionFinalization(transactionHash);

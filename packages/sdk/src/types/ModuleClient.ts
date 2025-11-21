@@ -142,5 +142,5 @@ export async function createAndSendInitTransaction(
 
     const transaction = Transaction.initContract(payload, metadata.energy).addMetadata(header).build();
     const signed = await Transaction.signAndFinalize(transaction, signer);
-    return moduleClient.grpcClient.sendSignedTransaction(signed);
+    return moduleClient.grpcClient.sendTransaction(signed);
 }

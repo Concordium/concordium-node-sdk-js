@@ -262,7 +262,7 @@ test.each(clients)('sendBlockItem', async (client) => {
     const signer = buildBasicAccountSigner(privateKey);
     const signed = await Transaction.signAndFinalize(accountTransaction, signer);
 
-    expect(client.sendSignedTransaction(signed)).rejects.toThrow('costs');
+    expect(client.sendTransaction(signed)).rejects.toThrow('costs');
 });
 
 test.each(clients)('transactionHash', async (client) => {

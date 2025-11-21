@@ -270,7 +270,6 @@ export function serialize(transaction: AccountTransactionV0): Uint8Array {
  * @throws if the buffer is not fully consumed during deserialization
  */
 export function deserialize(value: Cursor | ArrayBuffer): AccountTransactionV0 {
-    console.log('Beginning deserialization of AccountTransactionV0');
     const isRawBuffer = !(value instanceof Cursor);
     const cursor = isRawBuffer ? Cursor.fromBuffer(value) : value;
 

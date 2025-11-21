@@ -3,14 +3,6 @@ import { AccountAddress, Energy, SequenceNumber, TransactionExpiry } from '../..
 import { bigintFromJSON } from '../../types/json.js';
 import { assertIn, assertInteger, orUndefined } from '../../util.js';
 
-export type HeaderJSON = {
-    sender?: Base58String;
-    nonce?: bigint;
-    expiry?: number;
-    executionEnergyAmount: bigint;
-    numSignatures?: number;
-};
-
 /**
  * Transaction header for the intermediary state of account transactions, i.e. prior to being signing.
  */
@@ -28,6 +20,20 @@ type SponsorDetails = {
     numSignatures: bigint;
 };
 
+export type HeaderJSON = {
+    sender?: Base58String;
+    nonce?: bigint;
+    expiry?: number;
+    executionEnergyAmount: bigint;
+    numSignatures?: number;
+    sponsor?: SponsorDetailsJSON;
+};
+
+type SponsorDetailsJSON = {
+    account: Base58String;
+    numSignatures: number;
+};
+
 export function headerToJSON(header: Header): HeaderJSON {
     const json: HeaderJSON = {
         sender: header.sender?.toJSON(),
@@ -39,7 +45,18 @@ export function headerToJSON(header: Header): HeaderJSON {
     if (header.numSignatures !== undefined) {
         json.numSignatures = Number(header.numSignatures);
     }
+    if (header.sponsor !== undefined) {
+        json.sponsor = {
+            account: header.sponsor.account.toJSON(),
+            numSignatures: Number(header.sponsor.numSignatures),
+        };
+    }
     return json;
+}
+
+function sponsorDetailsFromJSON(json: unknown): SponsorDetails {
+    assertIn<SponsorDetailsJSON>(json, 'account', 'numSignatures');
+    return { account: AccountAddress.fromJSON(json.account), numSignatures: bigintFromJSON(json.numSignatures) };
 }
 
 export function headerFromJSON(json: unknown): Header {
@@ -52,5 +69,6 @@ export function headerFromJSON(json: unknown): Header {
         expiry: orUndefined(TransactionExpiry.fromJSON)(json.expiry),
         executionEnergyAmount: Energy.create(json.executionEnergyAmount),
         numSignatures: orUndefined(bigintFromJSON)(json.numSignatures),
+        sponsor: orUndefined(sponsorDetailsFromJSON)(json.sponsor),
     };
 }

@@ -33,7 +33,7 @@ import { AccountAddress, DataBlob, Energy, TransactionExpiry } from '../../types
 import { assertIn, isDefined } from '../../util.js';
 import { AccountTransactionV0, AccountTransactionV1, Payload } from '../index.js';
 import { Header, HeaderJSON, headerFromJSON, headerToJSON } from './shared.js';
-import { type Signable, SignableJSON, isSignable, signableToJSON } from './signable.js';
+import { type Signable, SignableJSON, SignableV0, SignableV1, isSignable, signableToJSON } from './signable.js';
 
 type Transaction<P extends Payload.Type = Payload.Type> = {
     /**
@@ -226,6 +226,7 @@ export type Builder<P extends Payload.Type = Payload.Type> = Readonly<Transactio
         /**
          * Build the transaction to it's pre-finalized stage.
          */
+        build(this: Sponsorable<P> & Configured<P>): SignableV1<P>;
         build(this: Configured<P>): Signable<P>;
         /**
          * Serializes the transaction to JSON format.
@@ -306,7 +307,9 @@ class TransactionBuilder<P extends Payload.Type = Payload.Type> implements Build
         }
     }
 
-    build(this: Configured<P, Transaction<P>>): Signable<P> {
+    build(this: Sponsorable<P> & Configured<P>): SignableV1<P>;
+    build(this: Configured<P>): SignableV0<P>;
+    build(this: Configured<P>): Signable<P> {
         const {
             header: { numSignatures = 1n },
             payload,
@@ -634,7 +637,11 @@ export function builderFromJSON(json: unknown): Builder {
  * @param payload the transaction payload
  * @returns the JSON representation
  */
-export function toJSON(transaction: Transaction): BuilderJSON {
+export function toJSON(transaction: Builder): BuilderJSON;
+export function toJSON(transaction: Signable): SignableJSON;
+export function toJSON(transaction: Transaction): SignableJSON;
+
+export function toJSON(transaction: Transaction): JSON {
     if (isSignable(transaction)) {
         return signableToJSON(transaction);
     }

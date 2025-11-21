@@ -12,15 +12,15 @@ export type SignableV0<P extends Payload.Type = Payload.Type> = {
      * The transaction input header of the v0 _signable_ transaction stage, i.e. with everything required to finalize the
      * transaction.
      */
-    readonly header: Required<Pick<Header, 'sender' | 'nonce' | 'expiry' | 'executionEnergyAmount' | 'numSignatures'>>;
+    header: Required<Pick<Header, 'sender' | 'nonce' | 'expiry' | 'executionEnergyAmount' | 'numSignatures'>>;
     /**
      * The transaction payload, defining the transaction type and type specific data.
      */
-    readonly payload: P;
+    payload: P;
     /**
      * The map of signatures for the credentials associated with the account.
      */
-    readonly signature: AccountTransactionV0.Signature;
+    signature: AccountTransactionV0.Signature;
 };
 
 export type SignableV1<P extends Payload.Type = Payload.Type> = {
@@ -29,29 +29,29 @@ export type SignableV1<P extends Payload.Type = Payload.Type> = {
      * The transaction input header of the v1 _signable_ transaction stage, i.e. with everything required to finalize the
      * transaction.
      */
-    readonly header: MakeRequired<Header, keyof SignableV0['header']>;
+    header: MakeRequired<Header, keyof SignableV0['header']>;
     /**
      * The transaction payload, defining the transaction type and type specific data.
      */
-    readonly payload: P;
+    payload: P;
     /**
      * The signatures for both `sender` and `sponsor`.
      */
-    readonly signatures: AccountTransactionV1.Signatures;
+    signatures: AccountTransactionV1.Signatures;
 };
 
 type V0JSON = {
     version: 0;
     header: HeaderJSON;
     payload: Payload.JSON;
-    signature?: AccountTransactionSignature;
+    signature: AccountTransactionSignature;
 };
 
 type V1JSON = {
     version: 1;
     header: HeaderJSON;
     payload: Payload.JSON;
-    signatures?: AccountTransactionV1.Signatures;
+    signatures: AccountTransactionV1.Signatures;
 };
 
 export type SignableJSON = V0JSON | V1JSON;
@@ -97,14 +97,14 @@ export function addSignature<P extends Payload.Type = Payload.Type>(
                 ...transaction,
                 signature,
             };
-            return mergeSignatures(transaction, signed);
+            return mergeSignaturesInto(transaction, signed);
         }
         case 1: {
             const signed: SignableV1<P> = {
                 ...transaction,
                 signatures: { sender: signature },
             };
-            return mergeSignatures(transaction, signed);
+            return mergeSignaturesInto(transaction, signed);
         }
     }
 }
@@ -160,7 +160,7 @@ export function addSponsorSignature<P extends Payload.Type = Payload.Type>(
         ...transaction,
         signatures: { sponsor: signature, sender: {} },
     };
-    return mergeSignatures(transaction, signed);
+    return mergeSignaturesInto(transaction, signed);
 }
 
 /**
@@ -246,37 +246,45 @@ export async function verifySignature(
 }
 
 /**
- * Merges signatures from two _signable_ transactions into a single _signable_ transaction.
+ * Merges signatures from _signable_ transaction `other` into _signable_ transaction `target`.
  * Used for multi-signature scenarios where multiple parties sign the same transaction.
  *
  * @template P - the payload type
  * @template T - the signed transaction type
  *
- * @param a - the first signed transaction
- * @param b - the second signed transaction
+ * @param target - the signed transaction to merge signatures into
+ * @param other - the signed transaction from which the signatures are merged into `target`
  *
- * @returns a new _signable_ transaction containing all signatures from both transactions
+ * @returns `target` with the signatures from `other` added into it.
  * @throws Error if duplicate signatures are found for the same credential and key index
  * @throws Error if the number of signatures exceeds the allowed number specified in the transaction header
  */
-export function mergeSignatures<P extends Payload.Type, T extends Signable<P> = Signable<P>>(a: T, b: T): T {
-    if (a.version !== b.version) throw new Error('"a" is incompatible with "b"');
+export function mergeSignaturesInto<P extends Payload.Type, T extends Signable<P> = Signable<P>>(
+    target: T,
+    other: T
+): T {
+    if (target.version !== other.version) throw new Error('"a" is incompatible with "b"');
 
-    switch (a.version) {
+    switch (target.version) {
         case 0: {
-            const signature: AccountTransactionSignature = mergeSignature(a.signature, (b as SignableV0).signature);
-            validateSignatureAmount(signature, a.header.numSignatures);
-            return { ...a, signature: signature };
+            const signature: AccountTransactionSignature = mergeSignature(
+                target.signature,
+                (other as SignableV0).signature
+            );
+            validateSignatureAmount(signature, target.header.numSignatures);
+            target.signature = signature;
+            return target;
         }
         case 1: {
-            const bv1 = b as SignableV1;
-            const sender = mergeSignature(a.signatures.sender, bv1.signatures.sender);
-            const sponsor = mergeSignature(a.signatures.sponsor, bv1.signatures.sponsor);
+            const bv1 = other as SignableV1;
+            const sender = mergeSignature(target.signatures.sender, bv1.signatures.sender);
+            const sponsor = mergeSignature(target.signatures.sponsor, bv1.signatures.sponsor);
 
-            validateSignatureAmount(sender, a.header.numSignatures);
-            validateSignatureAmount(sponsor ?? {}, a.header.sponsor?.numSignatures ?? 0n);
+            validateSignatureAmount(sender, target.header.numSignatures);
+            validateSignatureAmount(sponsor ?? {}, target.header.sponsor?.numSignatures ?? 0n);
 
-            return { ...a, signatures: { sender, sponsor } };
+            target.signatures = { sender, sponsor };
+            return target;
         }
     }
 }

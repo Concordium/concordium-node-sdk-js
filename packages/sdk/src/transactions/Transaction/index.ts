@@ -5,9 +5,10 @@ export {
     Signable,
     sponsor,
     addSignature,
-    mergeSignatures,
+    mergeSignaturesInto,
     addSponsorSignature,
     isSignable,
     signableFromJSON,
+    verifySignature,
 } from './signable.js';
 export { finalize, Finalized, signAndFinalize, serializeBlockItem, getAccountTransactionHash } from './finalized.js';

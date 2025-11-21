@@ -126,25 +126,32 @@ export function deserializeBlockItem(buffer: ArrayBuffer): Upward<BlockItem> {
     const cursor = Cursor.fromBuffer(buffer);
 
     const blockItemKind = deserializeUint8(cursor);
+    let blockItem: BlockItem;
     switch (blockItemKind) {
         case BlockItemKind.AccountTransactionKind:
-            return {
+            blockItem = {
                 kind: BlockItemKind.AccountTransactionKind,
                 transaction: AccountTransactionV0.deserialize(cursor),
             };
+            break;
         case BlockItemKind.CredentialDeploymentKind:
-            return {
+            blockItem = {
                 kind: BlockItemKind.CredentialDeploymentKind,
                 transaction: deserializeCredentialDeployment(cursor),
             };
+            break;
         case BlockItemKind.UpdateInstructionKind:
             throw new Error('deserialization of UpdateInstructions is not supported');
         case BlockItemKind.AccountTransactionV1Kind:
-            return {
+            blockItem = {
                 kind: BlockItemKind.AccountTransactionV1Kind,
                 transaction: AccountTransactionV1.deserialize(cursor),
             };
+            break;
         default:
             return null;
     }
+
+    if (cursor.remainingBytes.length !== 0) throw new Error('Deserializing the transaction did not exhaust the buffer');
+    return blockItem;
 }

@@ -32,6 +32,7 @@ import {
     TokenUpdatePayload,
     TransactionExpiry,
     UpdateContractInput,
+    UpdateCredentialsInput,
     UpdateCredentialsPayload,
     calculateEnergyCost,
     deserializeTransaction,
@@ -78,41 +79,41 @@ function deserializeAccountTransactionBase(transaction: AccountTransaction) {
     if(transaction.type !== AccountTransactionType.UpdateCredentials)
         expect(payload).toEqual(expectedPayload);
     else {
-        //TODO: temporary workaround for deep equality check not working for UpdateCredentialsPayload
-        expect((payload as UpdateCredentialsPayload).threshold).toEqual((expectedPayload as UpdateCredentialsPayload).threshold);
+        //UpdateCredentials.newCredInfos.cdiLength
         expect((payload as UpdateCredentialsPayload).newCredentials.length).toEqual((expectedPayload as UpdateCredentialsPayload).newCredentials.length);
 
+        //UpdateCredentials.newCredInfos.index (Index, CredentialDeploymentInformation)
         const actualIndices = (payload as UpdateCredentialsPayload).newCredentials.map(cred => cred.index);
         const expectedIndices = [0];
         expect(actualIndices).toEqual(expectedIndices);
         
         (payload as UpdateCredentialsPayload).newCredentials.map((cred, i) => {
             console.log(`Expect comparing newCredential at index ${i}:`, cred);
-            expect(cred.index).toEqual((expectedPayload as UpdateCredentialsPayload).newCredentials[i].index);
-            
+
+            //CredentialDeploymentInformation.credentialDeploymentValues
+            expect(cred.index).toEqual((expectedPayload as UpdateCredentialsPayload).newCredentials[i].index);            
             expect(cred.cdi.arData).toEqual((expectedPayload as UpdateCredentialsPayload).newCredentials[i].cdi.arData);
             expect(cred.cdi.credentialPublicKeys).toEqual((expectedPayload as UpdateCredentialsPayload).newCredentials[i].cdi.credentialPublicKeys);
             expect(cred.cdi.credId).toEqual((expectedPayload as UpdateCredentialsPayload).newCredentials[i].cdi.credId);
             expect(cred.cdi.ipIdentity).toEqual((expectedPayload as UpdateCredentialsPayload).newCredentials[i].cdi.ipIdentity);
-            expect(cred.cdi.revocationThreshold).toEqual((expectedPayload as UpdateCredentialsPayload).newCredentials[i].cdi.revocationThreshold);  
-            
+            expect(cred.cdi.revocationThreshold).toEqual((expectedPayload as UpdateCredentialsPayload).newCredentials[i].cdi.revocationThreshold);              
             expect(cred.cdi.policy.createdAt).toEqual((expectedPayload as UpdateCredentialsPayload).newCredentials[i].cdi.policy.createdAt);
             expect(cred.cdi.policy.validTo).toEqual((expectedPayload as UpdateCredentialsPayload).newCredentials[i].cdi.policy.validTo);
-
             expect(cred.cdi.policy.revealedAttributes).toEqual((expectedPayload as UpdateCredentialsPayload).newCredentials[i].cdi.policy.revealedAttributes);
-            expect(cred.cdi.proofs).toEqual((expectedPayload as UpdateCredentialsPayload).newCredentials[i].cdi.proofs);
-            
-            expect((payload as UpdateCredentialsPayload).removeCredentialIds.length).toEqual((expectedPayload as UpdateCredentialsPayload).removeCredentialIds.length);
-            expect((payload as UpdateCredentialsPayload).threshold).toEqual((expectedPayload as UpdateCredentialsPayload).threshold);   
 
-            //TODO: 48 bytes ?? we are passing only 123 and 425 in the original payload in the test here, so we are comparing those three digits against padded ones from deserialize
-            expect((payload as UpdateCredentialsPayload).removeCredentialIds.map(id => id)).toEqual((expectedPayload as UpdateCredentialsPayload).removeCredentialIds.map(id => id));
-        });
-        
-        //expect((payload as UpdateCredentialsPayload).removeCredentialIds).toEqual((expectedPayload as UpdateCredentialsPayload).removeCredentialIds);        
-        
-        
-        
+            //CredentialDeploymentInformation.CredentialDeploymentProofs
+            expect(cred.cdi.proofs).toEqual((expectedPayload as UpdateCredentialsPayload).newCredentials[i].cdi.proofs);            
+        });                
+
+        //UpdateCredentials.removeLength
+        expect((payload as UpdateCredentialsPayload).removeCredentialIds.length).toEqual((expectedPayload as UpdateCredentialsPayload).removeCredentialIds.length);
+
+        //UpdateCredentials.CredentialRegistrationId.removeCredIds
+        expect((payload as UpdateCredentialsPayload).removeCredentialIds.map(id => id)).toEqual((expectedPayload as UpdateCredentialsPayload).removeCredentialIds.map(id => id));
+
+        //UpdateCredentials.AccountThreshold
+        expect((payload as UpdateCredentialsPayload).threshold).toEqual((expectedPayload as UpdateCredentialsPayload).threshold);   
+
     }
 }
 
@@ -298,11 +299,10 @@ test('Test parsing of Token Addresses', () => {
     expect(rebase58).toEqual(base58);
 });
 
-//TODO: undo the temporary test.only after debugging
-test.only('test deserialize UpdateCredential', () => {
+
+test('test deserialize UpdateCredential', () => {
 
     const cdi = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'resources/cdi.json')).toString());
-    //console.log('CredentialDeploymentInfo to be deserialized:', cdi);
 
     const credentialDeploymentInfo: IndexedCredentialDeploymentInfo = {
            index: 0,
@@ -311,10 +311,13 @@ test.only('test deserialize UpdateCredential', () => {
 
     //console.log('CredentialDeploymentInformation to be deserialized:', credentialDeploymentInfo);
 
-    const payload: UpdateCredentialsPayload = {
+    const payload: UpdateCredentialsInput = {
         newCredentials: [credentialDeploymentInfo],
-        removeCredentialIds: ['123', '456'],
+        removeCredentialIds: 
+        ['123000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000', 
+            '456000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'], ///make these 48 bytes
         threshold: 5,
+        currentNumberOfCredentials: 2n,
     };
 
     //console.log('UpdateCredentialsPayload payload to be deserialized:', payload);

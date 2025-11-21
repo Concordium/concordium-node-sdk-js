@@ -497,14 +497,7 @@ export class UpdateCredentialsHandler
             })
             .reduce((prev, curr) => prev + curr, BigInt(0));
 
-        //TODO: I am putting a check against undefined here, test run complained about this, either my test is inaccurate or this is needed?
-        let currentCredentialsCost = 0n;
-        if(payload.currentNumberOfCredentials === undefined){
-            currentCredentialsCost = 500n;    
-        }
-        else {
-            currentCredentialsCost = 500n * payload.currentNumberOfCredentials;
-        }
+        const currentCredentialsCost = 500n * payload.currentNumberOfCredentials;
 
         return 500n + currentCredentialsCost + newCredentialsCost;
     }
@@ -530,11 +523,7 @@ export class UpdateCredentialsHandler
             (credId: string) => {
                 console.log(`Serializing removeCredentialId: ${credId}`);
                 console.log('length of bytes of credId:', Buffer.from(credId, 'hex').length);
-                const paddedCredId = credId.padEnd(PADDING_LENGTH, '0');
-                console.log('padded length', paddedCredId.length);
-                console.log('padded credId:', paddedCredId);
-
-                return Buffer.from(paddedCredId, 'hex'); //TODO: before this, it was just Buffer.from(credId, 'hex')
+                return Buffer.from(credId, 'hex');
             }
         );
         console.log('bytes length of serializedRemovedCredIds:', serializedRemovedCredIds.byteLength);

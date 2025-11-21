@@ -1573,9 +1573,10 @@ export type AccountTransactionPayload =
     | TokenUpdatePayload;
 
 export type AccountTransactionInput =
-    | Exclude<AccountTransactionPayload, InitContractPayload | UpdateContractPayload>
+    | Exclude<AccountTransactionPayload, InitContractPayload | UpdateContractPayload | UpdateCredentialsPayload>
     | InitContractInput
-    | UpdateContractInput;
+    | UpdateContractInput
+    | UpdateCredentialsInput;
 
 /**
  * Describes account transactions. This does _not_ describe the transaction format that is serialized

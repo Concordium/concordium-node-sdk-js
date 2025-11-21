@@ -2,7 +2,17 @@ import { Buffer } from 'buffer/index.js';
 
 import { deserializeAccountTransactionSignature } from '../deserialization.js';
 import { Cursor } from '../deserializationHelpers.js';
-import { AccountSigner, AccountTransactionV0, BlockItemKind, Payload, constantA, constantB, sha256 } from '../index.js';
+import {
+    AccountInfo,
+    AccountSigner,
+    AccountTransactionV0,
+    BlockItemKind,
+    Payload,
+    constantA,
+    constantB,
+    sha256,
+    verifyAccountSignature,
+} from '../index.js';
 import { serializeAccountTransactionSignature } from '../serialization.js';
 import { SerializationSpec, encodeWord8, encodeWord16, getBitmap, serializeFromSpec } from '../serializationHelpers.js';
 import { type AccountTransactionSignature } from '../types.js';
@@ -317,4 +327,22 @@ export async function sign(
         ...transaction,
         signatures: { sender: await createSignature(transaction, signer) },
     };
+}
+
+/**
+ * Verify an account signature on a transaction.
+ *
+ * @param transaction the transaction to verify the signature for.
+ * @param signature the signature on the transaction, from a specific account.
+ * @param accountInfo the address and credentials of the account.
+ *
+ * @returns whether the signature is valid.
+ */
+export async function verifySignature(
+    transaction: Unsigned,
+    signature: AccountTransactionSignature,
+    accountInfo: Pick<AccountInfo, 'accountThreshold' | 'accountCredentials' | 'accountAddress'>
+): Promise<boolean> {
+    const digest = signDigest(transaction);
+    return verifyAccountSignature(digest, signature, accountInfo);
 }

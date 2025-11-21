@@ -1,4 +1,4 @@
-import { AccountSigner, AccountTransactionSignature, MakeRequired } from '../../index.js';
+import { AccountInfo, AccountSigner, AccountTransactionSignature, MakeRequired } from '../../index.js';
 import { assert, assertIn, assertInteger, assertObject, countSignatures } from '../../util.js';
 import { AccountTransactionV0, AccountTransactionV1, Payload, Transaction } from '../index.js';
 import { preFinalized } from './finalized.js';
@@ -20,7 +20,7 @@ export type SignableV0<P extends Payload.Type = Payload.Type> = {
     /**
      * The map of signatures for the credentials associated with the account.
      */
-    readonly signature: AccountTransactionSignature;
+    readonly signature: AccountTransactionV0.Signature;
 };
 
 export type SignableV1<P extends Payload.Type = Payload.Type> = {
@@ -221,6 +221,28 @@ function mergeSignature(
     }
 
     return signature;
+}
+
+/**
+ * Verify an account signature on a transaction.
+ *
+ * @param transaction the transaction to verify the signature for.
+ * @param signature the signature on the transaction, from a specific account.
+ * @param accountInfo the address and credentials of the account.
+ *
+ * @returns whether the signature is valid.
+ */
+export async function verifySignature(
+    transaction: Signable,
+    signature: AccountTransactionSignature,
+    accountInfo: Pick<AccountInfo, 'accountThreshold' | 'accountCredentials' | 'accountAddress'>
+): Promise<boolean> {
+    switch (transaction.version) {
+        case 0:
+            return AccountTransactionV0.verifySignature(preFinalized(transaction), signature, accountInfo);
+        case 1:
+            return AccountTransactionV1.verifySignature(preFinalized(transaction), signature, accountInfo);
+    }
 }
 
 /**

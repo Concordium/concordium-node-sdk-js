@@ -6,8 +6,8 @@ import { constantA, constantB } from '../energyCost.js';
 import { sha256 } from '../hash.js';
 import { serializeAccountTransactionSignature } from '../serialization.js';
 import { encodeWord8, encodeWord32, encodeWord64 } from '../serializationHelpers.js';
-import { AccountSigner } from '../signHelpers.js';
-import { AccountTransactionSignature, BlockItemKind } from '../types.js';
+import { AccountSigner, verifyAccountSignature } from '../signHelpers.js';
+import { AccountInfo, AccountTransactionSignature, BlockItemKind } from '../types.js';
 import { AccountAddress, Energy, SequenceNumber, TransactionExpiry } from '../types/index.js';
 import { Payload } from './index.js';
 
@@ -244,4 +244,22 @@ export async function createSignature(transaction: Unsigned, signer: AccountSign
  */
 export async function sign(transaction: Unsigned, signer: AccountSigner): Promise<AccountTransactionV0> {
     return { ...transaction, signature: await createSignature(transaction, signer) };
+}
+
+/**
+ * Verify an account signature on a transaction.
+ *
+ * @param transaction the transaction to verify the signature for.
+ * @param signature the signature on the transaction, from a specific account.
+ * @param accountInfo the address and credentials of the account.
+ *
+ * @returns whether the signature is valid.
+ */
+export async function verifySignature(
+    transaction: Unsigned,
+    signature: Signature,
+    accountInfo: Pick<AccountInfo, 'accountThreshold' | 'accountCredentials' | 'accountAddress'>
+): Promise<boolean> {
+    const digest = signDigest(transaction);
+    return verifyAccountSignature(digest, signature, accountInfo);
 }

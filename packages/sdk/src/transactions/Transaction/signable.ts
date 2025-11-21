@@ -1,5 +1,5 @@
 import { AccountInfo, AccountSigner, AccountTransactionSignature, MakeRequired } from '../../index.js';
-import { assert, assertIn, assertInteger, assertObject, countSignatures } from '../../util.js';
+import { assert, assertIn, assertInteger, assertObject, countSignatures, isDefined } from '../../util.js';
 import { AccountTransactionV0, AccountTransactionV1, Payload, Transaction } from '../index.js';
 import { preFinalized } from './finalized.js';
 import { Header, HeaderJSON, headerFromJSON, headerToJSON } from './shared.js';
@@ -294,13 +294,14 @@ export function signableToJSON(transaction: Signable): SignableJSON {
 }
 
 function signableHeaderFromJSON(json: unknown): Signable['header'] {
-    const header = headerFromJSON(json);
+    const { sender, nonce, expiry, numSignatures, ...header } = headerFromJSON(json);
 
-    assert(header.sender !== undefined);
-    assert(header.nonce !== undefined);
-    assert(header.expiry !== undefined);
+    assert(isDefined(sender));
+    assert(isDefined(nonce));
+    assert(isDefined(expiry));
+    assert(isDefined(numSignatures));
 
-    return header as Signable['header'];
+    return { ...header, sender, nonce, expiry, numSignatures };
 }
 
 export function signableFromJSON(json: unknown): Signable {
@@ -313,12 +314,12 @@ export function signableFromJSON(json: unknown): Signable {
 
     if (Number(json.version) === 0) {
         assertIn<V0JSON>(json, 'signature');
-        assertObject<AccountTransactionV0.Signature>(json.signature);
+        assertObject(json.signature);
         return { version: 0, header, payload, signature: json.signature as AccountTransactionV0.Signature };
     }
     if (Number(json.version) === 1) {
         assertIn<V1JSON>(json, 'signatures');
-        assertObject<AccountTransactionV1.Signatures>(json.signatures);
+        assertObject(json.signatures);
         return { version: 1, header, payload, signatures: json.signatures as AccountTransactionV1.Signatures };
     }
 

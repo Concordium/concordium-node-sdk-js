@@ -92,7 +92,7 @@ export function deserializeCredentialDeploymentValues(
 
     //CredentialDeploymentValues.ipId
     const ipId = serializedPayload.read(4).readUInt32BE(0);
-=
+
     //CredentialDeploymentValues.revocationThreshold
     const revocationThreshold = serializedPayload.read(1).readUInt8(0);
  

@@ -24,6 +24,7 @@ import {
     serializeUpdateContractParameters,
     toBuffer,
     UpdateCredentialsInput,
+    UpdateCredentialsPayload,
 } from '@concordium/web-sdk';
 import { WalletConnectModal, WalletConnectModalConfig } from '@walletconnect/modal';
 import { MobileWallet } from '@walletconnect/modal-core';
@@ -75,8 +76,7 @@ export type WalletConnectModalMobileWallet = MobileWallet & {
     iconUrl?: string;
 };
 
-export type SendTransactionUpdateCredentialPayload = Omit<UpdateCredentialsInput, 'currentNumberOfCredentials'>;
-export type SendTransactionPayloadModified = SendTransactionPayload | SendTransactionUpdateContractPayload;
+export type SendTransactionPayloadModified = Exclude<SendTransactionPayload, UpdateCredentialsPayload>;
 
 /**
  * Creates a {@linkcode WalletConnectModalConfig}.
@@ -285,6 +285,12 @@ function serializePayloadParameters(
                     typedParams
                 ),
             } as UpdateContractInput;
+        } case AccountTransactionType.UpdateCredentials: {
+            const updateCredentialsPayload = payload as UpdateCredentialsPayload;
+            return {
+                ...payload,
+                currentNumberOfCredentials: BigInt(0), //TODO: placeholder value, to be populated by wallet calling the account info?
+            } as UpdateCredentialsInput;
         }
         default: {
             if (typedParams) {

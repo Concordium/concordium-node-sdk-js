@@ -8,17 +8,17 @@ import { GrpcWebFetchTransport, GrpcWebOptions } from '@protobuf-ts/grpcweb-tran
 import type { RpcError, RpcTransport } from '@protobuf-ts/runtime-rpc';
 import { Buffer } from 'buffer/index.js';
 
+import { getAccountTransactionHandler } from '../accountTransactions.js';
 import { DEFAULT_INVOKE_ENERGY } from '../constants.js';
 import { calculateEnergyCost } from '../energyCost.js';
 import { HealthClient } from '../grpc-api/v2/concordium/health.client.js';
 import * as GRPCKernel from '../grpc-api/v2/concordium/kernel.js';
 import { QueriesClient } from '../grpc-api/v2/concordium/service.client.js';
 import * as GRPC from '../grpc-api/v2/concordium/types.js';
-import { getAccountTransactionHandler } from '../index.js';
 import * as PLT from '../plt/index.js';
 import { RawModuleSchema } from '../schemaTypes.js';
 import { serializeAccountTransactionPayload } from '../serialization.js';
-import { Payload, type Transaction } from '../transactions/index.js';
+import { Payload, Transaction } from '../transactions/index.js';
 import * as SDK from '../types.js';
 import { HexString, isRpcError } from '../types.js';
 import * as AccountAddress from '../types/AccountAddress.js';
@@ -293,6 +293,8 @@ export class ConcordiumGRPCClient {
      */
     async sendTransaction(transaction: Transaction.Finalized): Promise<TransactionHash.Type> {
         const rawPayload = Payload.serialize(transaction.payload);
+        // TODO: once node v10 is out with general support for submitting raw block items, the version check can be
+        // removed.
         switch (transaction.version) {
             case 0:
                 return this.sendRawAccountTransaction(
@@ -302,8 +304,20 @@ export class ConcordiumGRPCClient {
                     transaction.signature
                 );
             case 1:
-                throw new Error('not implemented'); // TODO: implement...
+                return this.sendRawTransaction(transaction);
         }
+    }
+
+    private async sendRawTransaction(transaction: Transaction.Finalized): Promise<TransactionHash.Type> {
+        const rawBlockItem = Transaction.serializeBlockItem(transaction);
+        const sendBlockItemRequest: GRPC.SendBlockItemRequest = {
+            blockItem: {
+                oneofKind: 'rawBlockItem',
+                rawBlockItem,
+            },
+        };
+        const response = await this.client.sendBlockItem(sendBlockItemRequest).response;
+        return TransactionHash.fromProto(response);
     }
 
     /**

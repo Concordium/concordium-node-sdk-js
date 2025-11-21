@@ -1,8 +1,8 @@
 import { AccountSigner, AccountTransactionSignature, MakeRequired } from '../../index.js';
-import { countSignatures } from '../../util.js';
-import { AccountTransactionV0, AccountTransactionV1, Payload } from '../index.js';
+import { assert, assertIn, assertInteger, assertObject, countSignatures } from '../../util.js';
+import { AccountTransactionV0, AccountTransactionV1, Payload, Transaction } from '../index.js';
 import { preFinalized } from './finalized.js';
-import { Header } from './shared.js';
+import { Header, HeaderJSON, headerFromJSON, headerToJSON } from './shared.js';
 
 export type Signable<P extends Payload.Type = Payload.Type> = SignableV0<P> | SignableV1<P>;
 
@@ -40,6 +40,22 @@ export type SignableV1<P extends Payload.Type = Payload.Type> = {
     readonly signatures: AccountTransactionV1.Signatures;
 };
 
+type V0JSON = {
+    version: 0;
+    header: HeaderJSON;
+    payload: Payload.JSON;
+    signature?: AccountTransactionSignature;
+};
+
+type V1JSON = {
+    version: 1;
+    header: HeaderJSON;
+    payload: Payload.JSON;
+    signatures?: AccountTransactionV1.Signatures;
+};
+
+export type SignableJSON = V0JSON | V1JSON;
+
 function validateSignatureAmount(
     signature: AccountTransactionSignature,
     numAllowed: bigint,
@@ -50,6 +66,13 @@ function validateSignatureAmount(
         throw new Error(
             `Too many ${role} signatures added to the transaction. Counted ${sigs}, but transaction specifies ${numAllowed} allowed number of signatures.`
         );
+}
+
+export function isSignable(transaction: Transaction.Type): transaction is Signable {
+    const hasVersion =
+        'version' in transaction && typeof transaction.version === 'number' && [0, 1].includes(transaction.version);
+    const hasSigs = 'signature' in transaction || 'signatures' in transaction;
+    return hasVersion && hasSigs;
 }
 
 /**
@@ -234,4 +257,48 @@ export function mergeSignatures<P extends Payload.Type, T extends Signable<P> = 
             return { ...a, signatures: { sender, sponsor } };
         }
     }
+}
+
+export function signableToJSON(transaction: Signable): SignableJSON {
+    const json = {
+        header: headerToJSON(transaction.header),
+        payload: Payload.toJSON(transaction.payload),
+    };
+
+    if (transaction.version === 0) {
+        return { version: 0, signature: transaction.signature, ...json };
+    }
+    return { version: 1, signatures: transaction.signatures, ...json };
+}
+
+function signableHeaderFromJSON(json: unknown): Signable['header'] {
+    const header = headerFromJSON(json);
+
+    assert(header.sender !== undefined);
+    assert(header.nonce !== undefined);
+    assert(header.expiry !== undefined);
+
+    return header as Signable['header'];
+}
+
+export function signableFromJSON(json: unknown): Signable {
+    assertIn<SignableJSON>(json, 'header', 'payload', 'version');
+
+    assertInteger(json.version);
+
+    const header = signableHeaderFromJSON(json.header);
+    const payload = Payload.fromJSON(json.payload);
+
+    if (Number(json.version) === 0) {
+        assertIn<V0JSON>(json, 'signature');
+        assertObject<AccountTransactionV0.Signature>(json.signature);
+        return { version: 0, header, payload, signature: json.signature as AccountTransactionV0.Signature };
+    }
+    if (Number(json.version) === 1) {
+        assertIn<V1JSON>(json, 'signatures');
+        assertObject<AccountTransactionV1.Signatures>(json.signatures);
+        return { version: 1, header, payload, signatures: json.signatures as AccountTransactionV1.Signatures };
+    }
+
+    throw new Error('Failed to parse "Signable" from value');
 }

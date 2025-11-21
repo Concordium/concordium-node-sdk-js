@@ -1,4 +1,13 @@
 export { Header } from './shared.js';
 export * from './builder.js';
-export { sign, Signable, sponsor, addSignature, mergeSignatures, addSponsorSignature } from './signable.js';
+export {
+    sign,
+    Signable,
+    sponsor,
+    addSignature,
+    mergeSignatures,
+    addSponsorSignature,
+    isSignable,
+    signableFromJSON,
+} from './signable.js';
 export { finalize, Finalized, signAndFinalize, serializeBlockItem, getAccountTransactionHash } from './finalized.js';

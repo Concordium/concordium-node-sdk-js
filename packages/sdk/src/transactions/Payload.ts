@@ -482,7 +482,7 @@ export function toJSON(payload: Payload): JSON {
  * @returns the transaction payload
  * @throws if the JSON is invalid or the transaction type is not supported
  */
-export function fromJSON(json: JSON): Payload {
+export function fromJSON(json: unknown): Payload {
     if (typeof json !== 'object' || json === null) throw new Error('Expected object');
     if (!('type' in json) || typeof json.type !== 'string') throw new Error('invalid transaction type');
 

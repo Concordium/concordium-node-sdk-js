@@ -3,6 +3,7 @@ import { Buffer } from 'buffer/index.js';
 
 import type * as Proto from '../grpc-api/v2/concordium/kernel.js';
 import { Base58String } from '../types.js';
+import { assertString } from '../util.js';
 import { TypedJson, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 
 /**
@@ -53,7 +54,8 @@ class AccountAddress {
  * @param {Base58String} json The JSON representation of the account address.
  * @returns {AccountAddress} The account address.
  */
-export function fromJSON(json: Base58String): AccountAddress {
+export function fromJSON(json: unknown): AccountAddress {
+    assertString(json);
     return fromBase58(json);
 }
 

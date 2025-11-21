@@ -30,12 +30,12 @@ import {
 } from '../../index.js';
 import * as JSONBig from '../../json-bigint.js';
 import { AccountAddress, DataBlob, Energy, TransactionExpiry } from '../../types/index.js';
-import { isDefined } from '../../util.js';
+import { assertIn, isDefined } from '../../util.js';
 import { AccountTransactionV0, AccountTransactionV1, Payload } from '../index.js';
 import { Header, HeaderJSON, headerFromJSON, headerToJSON } from './shared.js';
-import { type Signable } from './signable.js';
+import { type Signable, SignableJSON, isSignable, signableToJSON } from './signable.js';
 
-export type Transaction<P extends Payload.Type = Payload.Type> = {
+type Transaction<P extends Payload.Type = Payload.Type> = {
     /**
      * The transaction input header.
      */
@@ -46,10 +46,14 @@ export type Transaction<P extends Payload.Type = Payload.Type> = {
     readonly payload: P;
 };
 
-export type JSON = {
+export type Type<P extends Payload.Type = Payload.Type> = Transaction<P>;
+
+export type BuilderJSON = {
     header: HeaderJSON;
     payload: Payload.JSON;
 };
+
+export type JSON = BuilderJSON | SignableJSON;
 
 // --- Transaction construction ---
 
@@ -215,7 +219,7 @@ type Sponsorable<P extends Payload.Type = Payload.Type, T extends Transaction<P>
  * Describes an account transaction in its unprocessed form, i.e. defining the input required
  * to create a transaction which can be signed
  */
-export type Builder<P extends Payload.Type> = Readonly<Transaction<P>> &
+export type Builder<P extends Payload.Type = Payload.Type> = Readonly<Transaction<P>> &
     ConfiguredAPI<P> &
     MultiSigAPI<P> &
     SponsorableAPI<P> & {
@@ -228,7 +232,7 @@ export type Builder<P extends Payload.Type> = Readonly<Transaction<P>> &
          *
          * @returns the JSON representation of the transaction
          */
-        toJSON(): JSON;
+        toJSON(): BuilderJSON;
     };
 
 /**
@@ -315,7 +319,7 @@ class TransactionBuilder<P extends Payload.Type = Payload.Type> implements Build
         return { version: 0, header, payload, signature: {} };
     }
 
-    public toJSON(): JSON {
+    public toJSON(): BuilderJSON {
         return toJSON(this);
     }
 }
@@ -614,6 +618,15 @@ export function getEnergyCost({
     return AccountTransactionV0.calculateEnergyCost(numSignatures, payload, executionEnergyAmount);
 }
 
+export function builderFromJSON(json: unknown): Builder {
+    assertIn<BuilderJSON>(json, 'header');
+    assertIn<BuilderJSON>(json, 'payload');
+
+    const header = headerFromJSON(json.header);
+    const payload = Payload.fromJSON(json.payload);
+    return new TransactionBuilder(header, payload);
+}
+
 /**
  * Converts a transaction to its intermediary JSON serializable representation.
  *
@@ -621,7 +634,10 @@ export function getEnergyCost({
  * @param payload the transaction payload
  * @returns the JSON representation
  */
-export function toJSON(transaction: Transaction): JSON {
+export function toJSON(transaction: Transaction): BuilderJSON {
+    if (isSignable(transaction)) {
+        return signableToJSON(transaction);
+    }
     return { header: headerToJSON(transaction.header), payload: Payload.toJSON(transaction.payload) };
 }
 
@@ -636,21 +652,16 @@ export function toJSONString(transaction: Transaction): string {
 }
 
 /**
- * Converts an intermediary JSON serializable representation created with {@linkcode toJSON} to a transaction.
- * @param json the JSON to convert
- * @returns the transaction
- */
-export function fromJSON(json: JSON): Transaction {
-    return new TransactionBuilder(headerFromJSON(json.header), Payload.fromJSON(json.payload));
-}
-
-/**
  * Converts a JSON string transaction representation to a {@linkcode Transaction}.
  *
  * @param jsonString - the json string to convert
+ * @param fromJSON - a function to convert the intermediary value parsed.
  *
  * @returns the parsed transaction
+ *
+ * @example
+ * const builder = Transaction.fromJSONString(jsonString, Transaction.builderFromJSON);
  */
-export function fromJSONString(jsonString: string): Transaction {
+export function fromJSONString<R extends Transaction>(jsonString: string, fromJSON: (json: unknown) => R): R {
     return fromJSON(JSONBig.parse(jsonString));
 }

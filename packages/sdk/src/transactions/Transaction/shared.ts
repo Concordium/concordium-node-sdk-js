@@ -1,7 +1,7 @@
 import { AccountTransactionHeader, Base58String } from '../../index.js';
 import { AccountAddress, Energy, SequenceNumber, TransactionExpiry } from '../../types/index.js';
-import { orUndefined } from '../../util.js';
-import { Payload } from '../index.js';
+import { bigintFromJSON } from '../../types/json.js';
+import { assertIn, assertInteger, orUndefined } from '../../util.js';
 
 export type HeaderJSON = {
     sender?: Base58String;
@@ -42,12 +42,15 @@ export function headerToJSON(header: Header): HeaderJSON {
     return json;
 }
 
-export function headerFromJSON(json: HeaderJSON): Header {
+export function headerFromJSON(json: unknown): Header {
+    assertIn<HeaderJSON>(json, 'executionEnergyAmount');
+    assertInteger(json.executionEnergyAmount);
+
     return {
         sender: orUndefined(AccountAddress.fromJSON)(json.sender),
         nonce: orUndefined(SequenceNumber.fromJSON)(json.nonce),
         expiry: orUndefined(TransactionExpiry.fromJSON)(json.expiry),
         executionEnergyAmount: Energy.create(json.executionEnergyAmount),
-        numSignatures: orUndefined(BigInt)(json.numSignatures),
+        numSignatures: orUndefined(bigintFromJSON)(json.numSignatures),
     };
 }

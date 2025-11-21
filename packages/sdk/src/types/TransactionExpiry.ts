@@ -1,5 +1,5 @@
 import type * as Proto from '../grpc-api/v2/concordium/types.js';
-import { secondsSinceEpoch } from '../util.js';
+import { assert, secondsSinceEpoch } from '../util.js';
 import { TypedJson, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 
 /**
@@ -44,11 +44,12 @@ class TransactionExpiry {
 
 /**
  * Converts a JSON representation of a transaction expiry
- * @param value - JSON representation to convert
+ * @param json - JSON representation to convert
  * @returns Transaction expiry
  */
-export function fromJSON(value: number | bigint | string): TransactionExpiry {
-    return new TransactionExpiry(BigInt(value));
+export function fromJSON(json: unknown): TransactionExpiry {
+    assert(typeof json === 'number' || typeof json === 'string' || typeof json === 'bigint');
+    return new TransactionExpiry(BigInt(json));
 }
 
 /**

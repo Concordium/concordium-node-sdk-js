@@ -336,7 +336,7 @@ describe('Transaction', () => {
             }).addMetadata(metadata);
 
             const json = Transaction.toJSONString(tx);
-            const deserialized = Transaction.fromJSONString(json);
+            const deserialized = Transaction.fromJSONString(json, Transaction.builderFromJSON);
 
             expect(AccountAddress.equals(deserialized.header.sender!, tx.header.sender)).toBe(true);
             expect(deserialized.header.nonce!.value).toBe(tx.header.nonce.value);

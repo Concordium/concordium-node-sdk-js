@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import JSONBig from 'json-bigint';
 
+import { assert } from '../util.js';
 import * as AccountAddress from './AccountAddress.js';
 import * as BlockHash from './BlockHash.js';
 import * as CcdAmount from './CcdAmount.js';
@@ -281,4 +282,9 @@ export function jsonUnwrapStringify(
 
     const stringify = bigintFormat === BigintFormatType.Integer ? JSONBig.stringify : JSON.stringify;
     return stringify(replaced, replacerFunction, space);
+}
+
+export function bigintFromJSON(json: unknown): bigint {
+    assert(typeof json === 'bigint' || typeof json === 'number' || typeof json === 'string');
+    return BigInt(json);
 }

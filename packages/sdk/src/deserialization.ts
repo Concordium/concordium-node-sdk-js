@@ -80,8 +80,6 @@ export function deserializeAccountTransactionPayload(value: Cursor): {
 
 export function deserializeCredentialDeploymentValues(
     serializedPayload: Cursor,
-    data: Partial<UpdateCredentialsPayload>,
-    currentLocation: number
 ): Partial<CredentialDeploymentInfo> {    
     //CredentialDeploymentValues.publicKeys
     const publicKeys = deserializeCredentialPublicKeys(serializedPayload);
@@ -221,7 +219,7 @@ export function deserializeCredentialVerifyKey(serializedPayload: Cursor): Crede
     };
 }
 
-export function deserializeCredentialDeploymentProofs(serializedPayload: Cursor, data: Partial<UpdateCredentialsPayload>, currentLocation: number): string {
+export function deserializeCredentialDeploymentProofs(serializedPayload: Cursor): string {
     
     //based on serialize function implementation, the length of proofs is actually written in the payload, we read the proof length now
     const lengthOfProofBytes = serializedPayload.read(4); //proofLength, not used here

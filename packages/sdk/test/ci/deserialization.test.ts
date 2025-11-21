@@ -52,9 +52,6 @@ function deserializeAccountTransactionBase(transaction: AccountTransaction) {
         },
     };
 
-    const debugPayload = serializeAccountTransactionForSubmission(transaction, signatures)
-    //console.log(debugPayload.toString('hex'));
-
     const deserialized = deserializeTransaction(serializeAccountTransactionForSubmission(transaction, signatures));
     assert(deserialized.kind === BlockItemKind.AccountTransactionKind, 'Expected account transaction');
     const payloadSize = serializeAccountTransactionPayload(transaction).length;

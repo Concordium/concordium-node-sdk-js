@@ -286,7 +286,6 @@ function serializePayloadParameters(
                 ),
             } as UpdateContractInput;
         } case AccountTransactionType.UpdateCredentials: {
-            const updateCredentialsPayload = payload as UpdateCredentialsPayload;
             return {
                 ...payload,
                 currentNumberOfCredentials: BigInt(0), //TODO: placeholder value, to be populated by wallet calling the account info?

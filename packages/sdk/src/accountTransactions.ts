@@ -535,10 +535,9 @@ export class UpdateCredentialsHandler
         for (let i = 0; i < cdiLength; i++) {
             const index = serializedPayload.read(1).readUInt8(0)
 
-            //TODO: remember to remove the partial data and signature of these two methods, I don't think they are needed anymore
-            const cdvalues = deserializeCredentialDeploymentValues(serializedPayload, partialData, i);
+            const cdvalues = deserializeCredentialDeploymentValues(serializedPayload);
 
-            const cdProofs = deserializeCredentialDeploymentProofs(serializedPayload, partialData, i) //TODO: is this correct?
+            const cdProofs = deserializeCredentialDeploymentProofs(serializedPayload);
 
             const newCredentialItem: IndexedCredentialDeploymentInfo = {
                 index: index,

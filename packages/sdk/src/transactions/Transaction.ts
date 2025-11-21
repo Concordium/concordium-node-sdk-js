@@ -306,7 +306,7 @@ export function create(type: AccountTransactionType, payload: AccountTransaction
             return updateContract(updatePayload, updateEnergy);
         case AccountTransactionType.UpdateCredentials:
             const { currentNumberOfCredentials, ...credPayload } = payload as UpdateCredentialsInput;
-            return updateCredentials(payload as UpdateCredentialsPayload, currentNumberOfCredentials);
+            return updateCredentials(credPayload, currentNumberOfCredentials);
         case AccountTransactionType.RegisterData:
             return registerData(payload as RegisterDataPayload);
         case AccountTransactionType.ConfigureDelegation:

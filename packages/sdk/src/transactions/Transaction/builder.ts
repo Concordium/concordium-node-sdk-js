@@ -180,7 +180,7 @@ type SponsorableAPI<P extends Payload.Type> = {
      * @param account - the sponsor account to use for sponsorring the transaction.
      * @param [numSignaturesSponsor] - the number of signatures required to authorize this transaction. Defaults to `1` for if not specified.
      *
-     * @returns a sponsorred transaction
+     * @returns a sponsorable transaction
      * @throws if sponsor details already exits.
      */
     addSponsor<T extends Transaction<P>>(

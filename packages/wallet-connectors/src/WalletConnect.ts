@@ -16,6 +16,7 @@ import {
     Parameter,
     UpdateContractInput,
     UpdateContractPayload,
+    UpdateCredentialsPayload,
     VerifiablePresentation,
     getTransactionKindString,
     jsonUnwrapStringify,

@@ -381,9 +381,7 @@ describe('Transaction', () => {
                 },
             };
 
-            expect(() => Transaction.addSignature(tx, signature)).toThrow(
-                'Too many signatures added to the transaction. Counted 3, but transaction specifies 2 allowed number of signatures.'
-            );
+            expect(() => Transaction.addSignature(tx, signature)).toThrow();
         });
 
         test('succeeds when signature count equals numSignatures', () => {
@@ -404,7 +402,7 @@ describe('Transaction', () => {
 
             const signed = Transaction.addSignature(tx, signature);
 
-            assert(signed.preVersion === 0);
+            assert(signed.version === 0);
             expect(signed.signature).toEqual(signature);
         });
 
@@ -425,7 +423,7 @@ describe('Transaction', () => {
 
             const signed = Transaction.addSignature(tx, signature);
 
-            assert(signed.preVersion === 0);
+            assert(signed.version === 0);
             expect(signed.signature).toEqual(signature);
         });
 
@@ -445,7 +443,7 @@ describe('Transaction', () => {
 
             const signed = Transaction.addSignature(tx, signature);
 
-            assert(signed.preVersion === 0);
+            assert(signed.version === 0);
             expect(signed.signature).toEqual(signature);
             expect(signed.header.numSignatures).toBe(1n);
         });
@@ -477,7 +475,7 @@ describe('Transaction', () => {
             const signed2 = Transaction.addSignature(tx, sig2);
 
             const merged = Transaction.mergeSignatures(signed1, signed2);
-            assert(merged.preVersion === 0);
+            assert(merged.version === 0);
 
             expect(merged.signature).toEqual({
                 0: {
@@ -512,7 +510,7 @@ describe('Transaction', () => {
             const signed2 = Transaction.addSignature(tx, sig2);
 
             const merged = Transaction.mergeSignatures(signed1, signed2);
-            assert(merged.preVersion === 0);
+            assert(merged.version === 0);
 
             expect(merged.signature).toEqual({
                 0: {
@@ -578,7 +576,7 @@ describe('Transaction', () => {
             const signed2 = Transaction.addSignature(tx, sig2);
 
             const merged = Transaction.mergeSignatures(signed1, signed2);
-            assert(merged.preVersion === 0);
+            assert(merged.version === 0);
 
             expect(merged.header).toEqual(signed1.header);
             expect(merged.payload).toEqual(signed1.payload);

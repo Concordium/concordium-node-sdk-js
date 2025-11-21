@@ -3,7 +3,6 @@ import {
     AccountTransactionHeader,
     AccountTransactionInput,
     AccountTransactionType,
-    Base58String,
     ConfigureBakerHandler,
     ConfigureBakerPayload,
     ConfigureDelegationHandler,
@@ -30,63 +29,13 @@ import {
     UpdateCredentialsPayload,
 } from '../../index.js';
 import * as JSONBig from '../../json-bigint.js';
-import { AccountAddress, DataBlob, Energy, SequenceNumber, TransactionExpiry } from '../../types/index.js';
-import { isDefined, orUndefined } from '../../util.js';
+import { AccountAddress, DataBlob, Energy, TransactionExpiry } from '../../types/index.js';
+import { isDefined } from '../../util.js';
 import { AccountTransactionV0, AccountTransactionV1, Payload } from '../index.js';
-import { type Signable } from './finalize.js';
+import { Header, HeaderJSON, headerFromJSON, headerToJSON } from './shared.js';
+import { type Signable } from './signable.js';
 
-// --- Core types ---
-
-type HeaderJSON = {
-    sender?: Base58String;
-    nonce?: bigint;
-    expiry?: number;
-    executionEnergyAmount: bigint;
-    numSignatures?: number;
-};
-
-/**
- * Transaction header for the intermediary state of account transactions, i.e. prior to being signing.
- */
-export type Header = Partial<Metadata> & {
-    /** a base energy amount, this amount excludes transaction size and signature costs */
-    executionEnergyAmount: Energy.Type;
-    /** The number of signatures the transaction can hold. If `undefined`, this will be defined at the time of signing. */
-    numSignatures?: bigint;
-    sponsor?: SponsorDetails;
-};
-
-type SponsorDetails = {
-    account: AccountAddress.Type;
-    /** The number of signatures the transaction can hold. */
-    numSignatures: bigint;
-};
-
-function headerToJSON(header: Header): HeaderJSON {
-    const json: HeaderJSON = {
-        sender: header.sender?.toJSON(),
-        nonce: header.nonce?.toJSON(),
-        expiry: header.expiry?.toJSON(),
-        executionEnergyAmount: header.executionEnergyAmount.value,
-    };
-
-    if (header.numSignatures !== undefined) {
-        json.numSignatures = Number(header.numSignatures);
-    }
-    return json;
-}
-
-function headerFromJSON(json: HeaderJSON): Header {
-    return {
-        sender: orUndefined(AccountAddress.fromJSON)(json.sender),
-        nonce: orUndefined(SequenceNumber.fromJSON)(json.nonce),
-        expiry: orUndefined(TransactionExpiry.fromJSON)(json.expiry),
-        executionEnergyAmount: Energy.create(json.executionEnergyAmount),
-        numSignatures: orUndefined(BigInt)(json.numSignatures),
-    };
-}
-
-type Transaction<P extends Payload.Type = Payload.Type> = {
+export type Transaction<P extends Payload.Type = Payload.Type> = {
     /**
      * The transaction input header.
      */
@@ -96,12 +45,6 @@ type Transaction<P extends Payload.Type = Payload.Type> = {
      */
     readonly payload: P;
 };
-
-/**
- * Describes an account transaction in its unprocessed form, i.e. defining the input required
- * to create a transaction which can be signed
- */
-export type Type<P extends Payload.Type = Payload.Type> = Transaction<P>;
 
 export type JSON = {
     header: HeaderJSON;
@@ -268,7 +211,11 @@ type Sponsorable<P extends Payload.Type = Payload.Type, T extends Transaction<P>
     readonly header: MakeRequired<T['header'], 'sponsor' | 'numSignatures'>;
 };
 
-type Builder<P extends Payload.Type> = Readonly<Transaction<P>> &
+/**
+ * Describes an account transaction in its unprocessed form, i.e. defining the input required
+ * to create a transaction which can be signed
+ */
+export type Builder<P extends Payload.Type> = Readonly<Transaction<P>> &
     ConfiguredAPI<P> &
     MultiSigAPI<P> &
     SponsorableAPI<P> & {
@@ -292,10 +239,7 @@ type Builder<P extends Payload.Type> = Readonly<Transaction<P>> &
  * @returns whether the transaction is a _signable transaction
  */
 export function isSponsorable<P extends Payload.Type>(transaction: Transaction<P>): transaction is Sponsorable<P> {
-    const {
-        header: { numSignatures },
-    } = transaction as Sponsorable<P>;
-    return isDefined(numSignatures) && numSignatures > 1n;
+    return 'sponsor' in transaction.header && isDefined(transaction.header.sponsor);
 }
 
 class TransactionBuilder<P extends Payload.Type = Payload.Type> implements Builder<P> {
@@ -366,23 +310,14 @@ class TransactionBuilder<P extends Payload.Type = Payload.Type> implements Build
         const header = { ...this.header, numSignatures };
 
         if (isSponsorable(this)) {
-            return { preVersion: 1, header, payload, signatures: { sender: {} } };
+            return { version: 1, header, payload, signatures: { sender: {} } };
         }
-        return { preVersion: 0, header, payload, signature: {} };
+        return { version: 0, header, payload, signature: {} };
     }
 
     public toJSON(): JSON {
         return toJSON(this);
     }
-}
-
-/**
- * Creates a transaction builder from an existing transaction.
- * @param transaction the transaction to wrap
- * @returns a transaction builder
- */
-export function builder<P extends Payload.Type = Payload.Type>(transaction: Transaction<P>): TransactionBuilder<P> {
-    return new TransactionBuilder(transaction.header, transaction.payload);
 }
 
 /**
@@ -706,7 +641,7 @@ export function toJSONString(transaction: Transaction): string {
  * @returns the transaction
  */
 export function fromJSON(json: JSON): Transaction {
-    return { header: headerFromJSON(json.header), payload: Payload.fromJSON(json.payload) };
+    return new TransactionBuilder(headerFromJSON(json.header), Payload.fromJSON(json.payload));
 }
 
 /**

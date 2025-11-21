@@ -83,55 +83,43 @@ export function deserializeCredentialDeploymentValues(
     serializedPayload: Cursor,
     data: Partial<UpdateCredentialsPayload>,
     currentLocation: number
-): Partial<CredentialDeploymentInfo> {
-    console.log('starting deserializeCredentialDeploymentValues at location:', currentLocation);
-    
+): Partial<CredentialDeploymentInfo> {    
     //CredentialDeploymentValues.publicKeys
     const publicKeys = deserializeCredentialPublicKeys(serializedPayload);
-    //console.log('Deserialized CredentialPublicKeys:', publicKeys);
 
     //CredentialDeploymentValues.credId
     const credId = serializedPayload.read(48);
-    //console.log('Deserialized credId:', credId.toString('hex'));
 
     //CredentialDeploymentValues.ipId
     const ipId = serializedPayload.read(4).readUInt32BE(0);
-    //console.log('Deserialized ipId:', ipId);
-
+=
     //CredentialDeploymentValues.revocationThreshold
     const revocationThreshold = serializedPayload.read(1).readUInt8(0);
-    //console.log('Deserialized revocationThreshold:', revocationThreshold);
-
+ 
     //CredentialDeploymentValues.arData
     const arData = deserializeArDataEntry(serializedPayload);
-    //console.log('Deserialized arData:', arData);
-
+ 
     //CredentialDeploymentValues.policy section
     const validToYear = serializedPayload.read(2).readInt16BE(0);
     const validToMonth = serializedPayload.read(1).readUInt8(0);
     const validTo = validToYear.toString().padStart(4, '0') + validToMonth.toString().padStart(2, '0');
-    console.log('Deserialized policy.validTo:', validTo.toString());
-
+ 
     const createdAtYear = serializedPayload.read(2).readInt16BE(0);
     const createdAtMonth = serializedPayload.read(1).readUInt8(0);
     const createdAt = createdAtYear.toString().padStart(4, '0') + createdAtMonth.toString().padStart(2, '0');
-    console.log('Deserialized policy.createdAt:', createdAt);
-
+ 
     const countAtrributes = serializedPayload.read(2).readUInt16BE(0);
-    console.log(countAtrributes, ' attributes to be deserialized in policy section');
-
+ 
     const revealedAttributes: Partial<Record<any, any>> = {};
     for (let a = 0; a < countAtrributes; a++) {
-        console.log('Deserializing revealed attribute index:', a);
         //AttributeEntry
         const attributeTagTemp = serializedPayload.read(1).readUInt8(0);
-        console.log(' Deserialized attributeTag:', attributeTagTemp);  
+ 
         const attributeTag = AttributesKeys[attributeTagTemp]  
-        console.log(' Mapped attributeTag to string key:', attributeTag);
+ 
         const countAttributeValue = serializedPayload.read(1).readUInt8(0);
-        console.log(' Deserialized attributeValue length:', countAttributeValue);
+ 
         const attributeValue = serializedPayload.read(countAttributeValue);
-        console.log(' Deserialized attributeValue:', attributeValue.toString());
 
         revealedAttributes[attributeTag.toString()] = attributeValue.toString();
     }
@@ -159,7 +147,6 @@ export function deserializeArDataEntry(serializedPayload: Cursor): Record<string
     const result: Record<any, any> = {};
     //ArData.count
     const count = serializedPayload.read(2).readUInt16BE(0);
-    console.log('inside deserializeArDataEntry -> count:', count);
 
     for (let i = 0; i < count; i++) {
         //ArData.ArDataEntry
@@ -186,7 +173,6 @@ export function deserializeChainArData(serializedPayload: Cursor): ChainArData {
 export function deserializeCredentialPublicKeys(serializedPayload: Cursor): CredentialPublicKeys {
     //CredentialPublicKeys.count
     const count = serializedPayload.read(1).readUInt8(0);
-    console.log('inside deserializeCredentialPublicKeys, count:', count);
 
     //CredentialPublicKeys.keys: count x CredentialVerifyKeyEntry
     const keys: Record<any, any> = {};
@@ -212,10 +198,8 @@ interface CredentialVerifyKeyEntry {
 export function deserializeCredentialVerifyKey(serializedPayload: Cursor): CredentialVerifyKeyEntry {
     //CredentialVerifyKeyEntry.index
     const index = serializedPayload.read(1).readUInt8(0);
-    //console.log('Deserializing CredentialVerifyKey at index:', index);
     //CredentialVerifyKeyEntry.key
     const schemeTemp = serializedPayload.read(1).readUInt8(0);
-    console.log('Deserialized schemeId (temp):', schemeTemp);
 
     //TODO: for now, enum only support Ed25519, i am converting this from 0 to Ed25519 string    
     let scheme: string;
@@ -224,10 +208,8 @@ export function deserializeCredentialVerifyKey(serializedPayload: Cursor): Crede
     } else {
         throw new Error('Unsupported schemeId found during deserialization');
     }
-    console.log('--> Deserialized schemeId:', scheme);
 
     const verifyKey = serializedPayload.read(32);
-    //console.log('Deserialized verifyKey:', verifyKey.toString('hex'));
 
     const verifyKeyObject: VerifyKey = {
         schemeId: scheme.toString(),
@@ -344,7 +326,6 @@ export function deserializeCredentialsToBeRemoved(serializedPayload: Cursor, dat
     //TransactionPayload.UpdateCredentials.removeLength
     //number of credentials to be removed
     const removeLength = serializedPayload.read(1).readUInt8(0);
-    console.log('--> Deserialized removeLength:', removeLength);
 
     //TransactionPayload.UpdateCredentials.CredIds
     const removeCredIds: string[] = [];
@@ -352,14 +333,12 @@ export function deserializeCredentialsToBeRemoved(serializedPayload: Cursor, dat
     for (let a = 0; a < removeLength; a++) {
         //TODO: bluepaper says 48 bytes, but I don't see this being 48 in the serialize and I am experimenting by padding in serialize locally??
         const credentialRegistrationId = serializedPayload.read(48); 
-        console.log('--> Deserialized removeCredentialId at index', a, ':', credentialRegistrationId.toString('hex'));
         removeCredIds[a] = credentialRegistrationId.toString('hex');
     }
 
     //TransactionPayload.UpdateCredentials.newThresholdd
     //AccountThreshold
     const newThreshold = serializedPayload.read(1).readUInt8(0);
-    console.log('Deserialized newThreshold:', newThreshold);
 
     //populate placeholder
     data.removeCredentialIds = removeCredIds;

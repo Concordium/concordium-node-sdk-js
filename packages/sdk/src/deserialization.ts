@@ -350,7 +350,8 @@ export function deserializeCredentialsToBeRemoved(serializedPayload: Cursor, dat
     const removeCredIds: string[] = [];
     //the credential IDs of the credentials to be removed, based on the removeLength value
     for (let a = 0; a < removeLength; a++) {
-        const credentialRegistrationId = serializedPayload.read(48); //TODO: bluepaper says 48 bytes, but I don't see this being 48 in the serialize??
+        //TODO: bluepaper says 48 bytes, but I don't see this being 48 in the serialize and I am experimenting by padding in serialize locally??
+        const credentialRegistrationId = serializedPayload.read(48); 
         console.log('--> Deserialized removeCredentialId at index', a, ':', credentialRegistrationId.toString('hex'));
         removeCredIds[a] = credentialRegistrationId.toString('hex');
     }

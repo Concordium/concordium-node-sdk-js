@@ -100,14 +100,19 @@ function deserializeAccountTransactionBase(transaction: AccountTransaction) {
             expect(cred.cdi.policy.validTo).toEqual((expectedPayload as UpdateCredentialsPayload).newCredentials[i].cdi.policy.validTo);
 
             expect(cred.cdi.policy.revealedAttributes).toEqual((expectedPayload as UpdateCredentialsPayload).newCredentials[i].cdi.policy.revealedAttributes);
-
             expect(cred.cdi.proofs).toEqual((expectedPayload as UpdateCredentialsPayload).newCredentials[i].cdi.proofs);
+            
+            expect((payload as UpdateCredentialsPayload).removeCredentialIds.length).toEqual((expectedPayload as UpdateCredentialsPayload).removeCredentialIds.length);
+            expect((payload as UpdateCredentialsPayload).threshold).toEqual((expectedPayload as UpdateCredentialsPayload).threshold);   
+
+            //TODO: 48 bytes ?? we are passing only 123 and 425 in the original payload in the test here, so we are comparing those three digits against padded ones from deserialize
+            expect((payload as UpdateCredentialsPayload).removeCredentialIds.map(id => id)).toEqual((expectedPayload as UpdateCredentialsPayload).removeCredentialIds.map(id => id));
         });
         
         //expect((payload as UpdateCredentialsPayload).removeCredentialIds).toEqual((expectedPayload as UpdateCredentialsPayload).removeCredentialIds);        
-        expect((payload as UpdateCredentialsPayload).removeCredentialIds.length).toEqual((expectedPayload as UpdateCredentialsPayload).removeCredentialIds.length);
         
-        expect((payload as UpdateCredentialsPayload).removeCredentialIds.map(id => id)).toEqual((expectedPayload as UpdateCredentialsPayload).removeCredentialIds.map(id => id));
+        
+        
     }
 }
 
@@ -293,6 +298,7 @@ test('Test parsing of Token Addresses', () => {
     expect(rebase58).toEqual(base58);
 });
 
+//TODO: undo the temporary test.only after debugging
 test.only('test deserialize UpdateCredential', () => {
 
     const cdi = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'resources/cdi.json')).toString());

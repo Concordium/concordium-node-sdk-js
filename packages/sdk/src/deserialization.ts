@@ -1,4 +1,3 @@
-import { create } from 'domain';
 import { getAccountTransactionHandler } from './accountTransactions.js';
 import { Cursor } from './deserializationHelpers.js';
 
@@ -14,7 +13,7 @@ import {
     isAccountTransactionType,
     AttributesKeys,
 } from './types.js';
-import { SchemeId } from './serializationHelpers.ts';
+import { SchemeId } from './serializationHelpers.js';
 
 /**
  * Reads an unsigned 8-bit integer from the given {@link Cursor}.

@@ -291,7 +291,7 @@ function serializePayloadParameters(
                 throw new Error(`'typedParams' must not be provided for transaction of type '${type}'`);
             }
             return payload as Exclude<
-                SendTransactionPayload,
+                SendTransactionPayloadModified,
                 SendTransactionInitContractPayload | SendTransactionUpdateContractPayload
             >;
         }

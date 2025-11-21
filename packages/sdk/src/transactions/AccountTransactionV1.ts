@@ -149,7 +149,7 @@ export function deserializeHeader(value: Cursor | ArrayBuffer): Header {
     const options = deserializeHeaderOptions(cursor, bitmap);
 
     if (isRawBuffer && cursor.remainingBytes.length !== 0)
-        throw new Error('Deserializing the transaction did not exhaust the buffer');
+        throw new Error('Deserializing the transaction header did not exhaust the buffer');
 
     return { ...v0Header, ...options };
 }
@@ -176,7 +176,7 @@ export function deserializeSignatures(value: Cursor | ArrayBuffer): Signatures {
     }
 
     if (isRawBuffer && cursor.remainingBytes.length !== 0)
-        throw new Error('Deserializing the transaction did not exhaust the buffer');
+        throw new Error('Deserializing the transaction signature did not exhaust the buffer');
 
     return { sender, sponsor };
 }

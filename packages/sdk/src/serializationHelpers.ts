@@ -255,7 +255,7 @@ export function serializeYearMonth(yearMonth: string): Buffer {
  * Makes a bitmap for types with optional fields, where each bit indicates whether a value is included or not.
  *
  * @param value the value to generate the bitmap for
- * @param fieldOrder the order the value fields are serialized in. The order is represented in the bitmap from right to left, i.e index 0 of the order translates to first bit.
+ * @param fieldOrder the order the value fields are serialized in. The order is represented in the bitmap from right to left, i.e index 0 of the order translates to the least significant bit.
  *
  * @example
  * getBitmap<{test?: string; test2?: string}>({test2: 'yes'}, ['test', 'test2']) // returns 2 (00000010 as bits of UInt8)

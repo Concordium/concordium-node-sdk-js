@@ -9,6 +9,7 @@
 - Deserialize function for `DeployModulePayload` implemented instead of throwing an exception of not supporting deserialize
 - Deserialize function for `InitContractPayload` implemented instead of throwing an exception of not supporting deserialize
 - Deserialize function for `UpdateContractPayload` implemented instead of throwing an exception of not supporting deserialize
+- Deserialize function for `UpdateCredentialsPayload` implemented instead of throwing an exception of not supporting deserialize
 
 #### `Transaction` API
 

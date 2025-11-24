@@ -868,7 +868,7 @@ export function getAccountTransactionHandler(
         case AccountTransactionType.Update:
             return new UpdateContractHandler();
         case AccountTransactionType.UpdateCredentials:
-            return new UpdateCredentialsHandler(); //TODO:
+            return new UpdateCredentialsHandler();
         case AccountTransactionType.RegisterData:
             return new RegisterDataHandler();
         case AccountTransactionType.ConfigureDelegation:

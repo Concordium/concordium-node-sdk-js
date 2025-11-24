@@ -1726,11 +1726,11 @@ export interface CommitmentsRandomness {
     attributesRand: AttributesRandomness;
 }
 
-interface CdiRandomness {
+export interface CdiRandomness {
     randomness: CommitmentsRandomness;
 }
 
-export type CredentialDeploymentPayload = CredentialDeploymentDetails & CdiRandomness;
+export type CredentialDeploymentPayload = CredentialDeploymentDetails;
 /** Internal type used when building credentials */
 export type UnsignedCdiWithRandomness = {
     unsignedCdi: Known<UnsignedCredentialDeploymentInformation>;

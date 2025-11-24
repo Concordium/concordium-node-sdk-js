@@ -1,9 +1,6 @@
 import { Buffer } from 'buffer/index.js';
 
-import {
-    deserializeCredentialDeploymentValues,
-    deserializeCredentialsToBeRemoved,
-} from './deserialization.js';
+import { deserializeCredentialDeploymentValues, deserializeCredentialsToBeRemoved } from './deserialization.js';
 import { Cursor } from './deserializationHelpers.js';
 import { Cbor, TokenId, TokenOperationType } from './plt/index.js';
 import {

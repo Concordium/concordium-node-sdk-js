@@ -1,9 +1,4 @@
 import {
-    SendTransactionInitContractPayload,
-    SendTransactionPayload,
-    SendTransactionUpdateContractPayload,
-} from '@concordium/browser-wallet-api-helpers';
-import {
     AccountTransactionInput,
     AccountTransactionSignature,
     AccountTransactionType,
@@ -16,7 +11,6 @@ import {
     Parameter,
     UpdateContractInput,
     UpdateContractPayload,
-    UpdateCredentialsInput,
     UpdateCredentialsPayload,
     VerifiablePresentation,
     getTransactionKindString,
@@ -32,6 +26,11 @@ import { MobileWallet } from '@walletconnect/modal-core';
 import SignClient from '@walletconnect/sign-client';
 import { ISignClient, ProposalTypes, SessionTypes, SignClientTypes } from '@walletconnect/types';
 
+import {
+    SendTransactionInitContractPayload,
+    SendTransactionPayload,
+    SendTransactionUpdateContractPayload,
+} from './WalletConnection';
 import {
     Network,
     Schema,
@@ -75,8 +74,6 @@ export type WalletConnectModalMobileWallet = MobileWallet & {
     /** Url for an icon to represent the wallet */
     iconUrl?: string;
 };
-
-export type SendTransactionPayloadModified = Exclude<SendTransactionPayload, UpdateCredentialsPayload>;
 
 /**
  * Creates a {@linkcode WalletConnectModalConfig}.
@@ -286,15 +283,12 @@ function serializePayloadParameters(
                 ),
             } as UpdateContractInput;
         }
-        case AccountTransactionType.UpdateCredentials: {
-            return payload as UpdateCredentialsInput;
-        }
         default: {
             if (typedParams) {
                 throw new Error(`'typedParams' must not be provided for transaction of type '${type}'`);
             }
             return payload as Exclude<
-                SendTransactionPayloadModified,
+                SendTransactionPayload,
                 SendTransactionInitContractPayload | SendTransactionUpdateContractPayload
             >;
         }

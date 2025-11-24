@@ -17,20 +17,22 @@ export function configure(walletFile: string, client: ConcordiumGRPCClient) {
 }
 
 // #region documentation-snippet
-let wallet: [AccountAddress.Type, AccountSigner];
-let grpcClient: ConcordiumGRPCClient;
+let wallet: [AccountAddress.Type, AccountSigner]; // sponsor account + keys.
+let grpcClient: ConcordiumGRPCClient; // connection to a node on the network.
 
 /**
  * Get the "connected" account from the wallet
- * @returns The wallet (sender) account address.
+ * @returns the wallet (sender) account address.
  */
 export function getAccount(): AccountAddress.Type {
     return wallet[0];
 }
 
 /**
- * @param transaction - The sponsored transaction to send
- * @returns
+ * Submits a sponsored transaction to chain.
+ *
+ * @param transaction - the sponsored transaction to send
+ * @returns the transaction hash of the submitted sponsored transaction
  */
 export async function submitSponsoredTransaction(transaction: Transaction.Signable): Promise<TransactionHash.Type> {
     const [walletAccount, walletSigner] = wallet;

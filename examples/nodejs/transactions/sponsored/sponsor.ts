@@ -14,9 +14,20 @@ export function configure(walletFile: string, client: ConcordiumGRPCClient) {
 }
 
 // #region documentation-snippet
-let wallet: [AccountAddress.Type, AccountSigner];
-let grpcClient: ConcordiumGRPCClient;
+let wallet: [AccountAddress.Type, AccountSigner]; // sponsor account + keys.
+let grpcClient: ConcordiumGRPCClient; // connection to a node on the network.
 
+/**
+ * Sponsors the `transaction`, covering the transaction fees for the `sender`.
+ *
+ * @param sender - the account address of the sender. This is used to construct the transaction
+ * header, which means that the transaction can only be submitted by that account using the next
+ * sequence number (nonce) of that account at the time of sponsoring.
+ * @param transaction - the transaction to sponsor, holding just the payload and the amount of energy
+ * allowed for executing the payload on-chain.
+ *
+ * @returns A sponsored transaction, which must be signed by the sender and submitted to chain.
+ */
 export async function sponsorTransaction(
     sender: AccountAddress.Type,
     transaction: Transaction.JSON

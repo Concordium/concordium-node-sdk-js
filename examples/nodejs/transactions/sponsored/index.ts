@@ -110,7 +110,6 @@ const recipient = AccountAddress.fromBase58(cli.flags.recipient);
 const memo = cli.flags.memo ? CborMemo.fromString(cli.flags.memo) : undefined;
 
 // #region documentation-snippet
-
 // 1.
 // Connect to the application that submits the transaction to get the sender account. The sponsor needs to know this, at
 // it goes into the transaction header along with the sequence number of that account.
@@ -141,7 +140,6 @@ console.log(`Transaction submitted with hash: ${transaction}`);
 
 const result = await grpcClient.waitForTransactionFinalization(transactionHash);
 console.log('Transaction finalized:', result);
-
 // #endregion documentation-snippet
 
 assert(isKnown(result.summary));

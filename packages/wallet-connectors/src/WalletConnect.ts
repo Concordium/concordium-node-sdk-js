@@ -11,7 +11,6 @@ import {
     Parameter,
     UpdateContractInput,
     UpdateContractPayload,
-    UpdateCredentialsPayload,
     VerifiablePresentation,
     getTransactionKindString,
     jsonUnwrapStringify,
@@ -27,13 +26,11 @@ import SignClient from '@walletconnect/sign-client';
 import { ISignClient, ProposalTypes, SessionTypes, SignClientTypes } from '@walletconnect/types';
 
 import {
+    Network,
+    Schema,
     SendTransactionInitContractPayload,
     SendTransactionPayload,
     SendTransactionUpdateContractPayload,
-} from './WalletConnection';
-import {
-    Network,
-    Schema,
     SignableMessage,
     TypedSmartContractParameters,
     WalletConnection,

@@ -6,8 +6,8 @@ import {
     VerifiablePresentation,
 } from '@concordium/web-sdk';
 
-import { SendTransactionPayload } from './WalletConnection';
 import {
+    SendTransactionPayload,
     SignableMessage,
     TypedSmartContractParameters,
     WalletConnection,

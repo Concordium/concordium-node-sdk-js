@@ -47,7 +47,8 @@
 - `ConcordiumGRPCClient.sendAccountTransaction`. Instead `ConcordiumGRPCClient.sendTransaction`
 - `AccountTransactionHandler` implementations and the dynamic `getAccountTransactionHandler`. Instead, the new `Transaction` API
   should be used.
-- `deserializeTransaction` (it deserialized an unsupported format). Instead `deserializeBlockItem` should be used.
+- `deserializeTransaction` (it deserializes an unsupported format). Instead `deserializeBlockItem` should be used.
+- `serializeAccountTransactionForSubmission` (it serializes an unsupported format). Instead `serializeAccountTransaction` should be used.
 
 ## 12.0.0-alpha.1 [YANKED]
 

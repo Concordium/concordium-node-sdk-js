@@ -210,13 +210,13 @@ export function unsignedFromJSONString(jsonString: string): Unsigned {
  * @param header the transaction header to serialize
  * @returns the serialized header as a byte array
  */
-function serializeHeader(header: Header): Uint8Array {
+export function serializeHeader(header: Header): Uint8Array {
     const sender = AccountAddress.toBuffer(header.sender);
     const nonce = encodeWord64(header.nonce.value);
     const energyAmount = encodeWord64(header.energyAmount.value);
     const payloadSize = encodeWord32(header.payloadSize);
     const expiry = encodeWord64(header.expiry.expiryEpochSeconds);
-    return Buffer.concat([sender, nonce, energyAmount, payloadSize, expiry]);
+    return Uint8Array.from(Buffer.concat([sender, nonce, energyAmount, payloadSize, expiry]));
 }
 
 /**

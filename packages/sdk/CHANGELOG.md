@@ -10,6 +10,7 @@
 - Deserialize function for `InitContractPayload` implemented instead of throwing an exception of not supporting deserialize
 - Deserialize function for `UpdateContractPayload` implemented instead of throwing an exception of not supporting deserialize
 - Deserialize function for `UpdateCredentialsPayload` implemented instead of throwing an exception of not supporting deserialize
+- `deserializeBlockItem` to deserialize block items from their encoding as received by concordium nodes.
 
 #### `Transaction` API
 
@@ -47,6 +48,8 @@
 - `ConcordiumGRPCClient.sendAccountTransaction`. Instead `ConcordiumGRPCClient.sendTransaction`
 - `AccountTransactionHandler` implementations and the dynamic `getAccountTransactionHandler`. Instead, the new `Transaction` API
   should be used.
+- `deserializeTransaction` (it deserializes an unsupported format). Instead `deserializeBlockItem` should be used.
+- `serializeAccountTransactionForSubmission` (it serializes an unsupported format). Instead `serializeAccountTransaction` should be used.
 
 ## 12.0.0-alpha.1 [YANKED]
 

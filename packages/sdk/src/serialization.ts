@@ -170,11 +170,15 @@ export function getAccountTransactionSignDigest(accountTransaction: AccountTrans
 }
 
 /**
+ * @deprecated describes an unused serialization format - use {@linkcode serializeAccountTransaction} instead.
+ *
  * Serializes an account transaction so that it is ready for being submitted
  * to the node. This consists of the standard serialization of an account transaction
  * prefixed by a version byte.
+ *
  * @param accountTransaction the transaction to serialize
  * @param signatures the signatures on the hash of the account transaction
+ *
  * @returns the serialization of the account transaction ready for being submitted to a node
  */
 export function serializeAccountTransactionForSubmission(

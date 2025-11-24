@@ -1,4 +1,6 @@
 import assert from 'assert';
+import fs from 'fs';
+import path from 'path';
 
 import {
     AccountAddress,
@@ -16,6 +18,7 @@ import {
     DataBlob,
     DeployModulePayload,
     Energy,
+    IndexedCredentialDeploymentInfo,
     InitContractInput,
     ModuleReference,
     Parameter,
@@ -29,6 +32,7 @@ import {
     TokenUpdatePayload,
     TransactionExpiry,
     UpdateContractInput,
+    UpdateCredentialsInput,
     calculateEnergyCost,
     deserializeBlockItem,
     getAccountTransactionHandler,
@@ -58,12 +62,13 @@ function deserializeAccountTransactionBase(transaction: AccountTransaction) {
         energyAmount,
     };
     // Filter out input values, as they will not be included in deserialized values
-    const { maxContractExecutionEnergy, ...expectedPayload } = transaction.payload as any;
+    const { maxContractExecutionEnergy, currentNumberOfCredentials, ...expectedPayload } = transaction.payload as any;
     const { type, ...payload } = deserialized.transaction.payload;
 
     expect(deserialized.transaction.signature).toEqual(signatures);
     expect(deserialized.transaction.header).toEqual(expectedHeader);
     expect(deserialized.transaction.payload.type).toEqual(transaction.type);
+
     expect(payload).toEqual(expectedPayload);
 }
 
@@ -247,4 +252,30 @@ test('Test parsing of Token Addresses', () => {
     };
     expect(address).toEqual(expectedAddress);
     expect(rebase58).toEqual(base58);
+});
+
+test('test deserialize UpdateCredential', () => {
+    const cdi = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'resources/cdi.json')).toString());
+
+    const credentialDeploymentInfo: IndexedCredentialDeploymentInfo = {
+        index: 0,
+        cdi,
+    };
+
+    const payload: UpdateCredentialsInput = {
+        newCredentials: [credentialDeploymentInfo],
+        removeCredentialIds: [
+            '123000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
+            '456000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
+        ], ///make these 48 bytes
+        threshold: 5,
+        currentNumberOfCredentials: 2n,
+    };
+
+    const transaction: AccountTransaction = {
+        header,
+        type: AccountTransactionType.UpdateCredentials,
+        payload,
+    };
+    deserializeAccountTransactionBase(transaction);
 });

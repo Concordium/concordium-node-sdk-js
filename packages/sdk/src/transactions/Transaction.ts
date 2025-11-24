@@ -29,6 +29,7 @@ import {
     UpdateContractInput,
     UpdateContractPayload,
     UpdateCredentialsHandler,
+    UpdateCredentialsInput,
     UpdateCredentialsPayload,
     sha256,
 } from '../index.js';
@@ -304,7 +305,8 @@ export function create(type: AccountTransactionType, payload: AccountTransaction
             const { maxContractExecutionEnergy: updateEnergy, ...updatePayload } = payload as UpdateContractInput;
             return updateContract(updatePayload, updateEnergy);
         case AccountTransactionType.UpdateCredentials:
-            return updateCredentials(payload as UpdateCredentialsPayload);
+            const { currentNumberOfCredentials, ...credPayload } = payload as UpdateCredentialsInput;
+            return updateCredentials(credPayload, currentNumberOfCredentials);
         case AccountTransactionType.RegisterData:
             return registerData(payload as RegisterDataPayload);
         case AccountTransactionType.ConfigureDelegation:
@@ -421,13 +423,16 @@ export function transfer(
  * @returns an update credentials transaction
  */
 export function updateCredentials(
-    payload: UpdateCredentialsPayload | Payload.UpdateCredentials
+    payload: UpdateCredentialsPayload | Payload.UpdateCredentials,
+    currentNumberOfCredentials: bigint
 ): Initial<Payload.UpdateCredentials> {
-    if (!isPayloadWithType(payload)) return updateCredentials(Payload.updateCredentials(payload));
+    //TODO: double check with Soren here, isn't current number of credentials actually a total that we get from chain?
+    if (!isPayloadWithType(payload))
+        return updateCredentials(Payload.updateCredentials(payload), currentNumberOfCredentials);
 
     const handler = new UpdateCredentialsHandler();
     return new TransactionBuilder(
-        { executionEnergyAmount: Energy.create(handler.getBaseEnergyCost(payload)) },
+        { executionEnergyAmount: Energy.create(handler.getBaseEnergyCost({ ...payload, currentNumberOfCredentials })) },
         payload
     );
 }

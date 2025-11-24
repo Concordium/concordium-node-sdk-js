@@ -1,5 +1,29 @@
 export { Header } from './shared.js';
-export * from './builder.js';
+export {
+    JSON,
+    Type,
+    create,
+    toJSON,
+    transfer,
+    isMultiSig,
+    tokenUpdate,
+    deployModule,
+    initContract,
+    isConfigured,
+    registerData,
+    toJSONString,
+    getEnergyCost,
+    isSponsorable,
+    fromJSONString,
+    updateContract,
+    builderFromJSON,
+    updateCredentials,
+    configureValidator,
+    configureDelegation,
+    toLegacyAccountTransaction,
+    fromLegacyAccountTransaction,
+    Metadata,
+} from './builder.js';
 export {
     sign,
     Signable,

@@ -33,7 +33,6 @@ import {
     TransactionExpiry,
     UpdateContractInput,
     UpdateCredentialsInput,
-    UpdateCredentialsPayload,
     calculateEnergyCost,
     deserializeTransaction,
     getAccountTransactionHandler,

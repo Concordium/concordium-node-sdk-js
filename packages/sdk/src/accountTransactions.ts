@@ -539,9 +539,7 @@ export class UpdateCredentialsHandler
             const index = serializedPayload.read(1).readUInt8(0);
 
             const cdvaluesAndProofs = deserializeCredentialDeploymentValues(serializedPayload);
-
-            //const cdProofs = deserializeCredentialDeploymentProofs(serializedPayload);
-
+=
             const newCredentialItem: IndexedCredentialDeploymentInfo = {
                 index: index,
                 cdi: cdvaluesAndProofs,

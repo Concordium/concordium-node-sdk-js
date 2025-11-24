@@ -224,7 +224,7 @@ export function deserializeCredentialDeploymentProofs(serializedPayload: Cursor)
     return proofBlock.toString('hex');
 }
 
-export function deserializeCredentialsToBeRemoved(serializedPayload: Cursor, data: Partial<UpdateCredentialsPayload>) {
+export function deserializeCredentialsToBeRemoved(serializedPayload: Cursor): Partial<UpdateCredentialsPayload> {
     //TransactionPayload.UpdateCredentials.removeLength
     //number of credentials to be removed
     const removeLength = serializedPayload.read(1).readUInt8(0);
@@ -237,13 +237,21 @@ export function deserializeCredentialsToBeRemoved(serializedPayload: Cursor, dat
         removeCredIds[a] = credentialRegistrationId.toString('hex');
     }
 
+    //return result to populate placeholder
+    return {
+        removeCredentialIds: removeCredIds,
+    };
+
+    //now need to construct the UpdateCredentialsPayload based on the partial data, so we return our way upwards to the deserialize() function
+}
+
+export function deserializeThreshold(serializedPayload: Cursor): Partial<UpdateCredentialsPayload> {
     //TransactionPayload.UpdateCredentials.newThresholdd
     //AccountThreshold
     const newThreshold = serializedPayload.read(1).readUInt8(0);
 
-    //populate placeholder
-    data.removeCredentialIds = removeCredIds;
-    data.threshold = newThreshold;
-
+    return {
+        threshold: newThreshold,
+    };
     //now need to construct the UpdateCredentialsPayload based on the partial data, so we return our way upwards to the deserialize() function
 }

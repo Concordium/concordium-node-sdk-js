@@ -1,6 +1,10 @@
 import { Buffer } from 'buffer/index.js';
 
-import { deserializeCredentialDeploymentValues, deserializeCredentialsToBeRemoved } from './deserialization.js';
+import {
+    deserializeCredentialDeploymentValues,
+    deserializeCredentialsToBeRemoved,
+    deserializeThreshold,
+} from './deserialization.js';
 import { Cursor } from './deserializationHelpers.js';
 import { Cbor, TokenId, TokenOperationType } from './plt/index.js';
 import {
@@ -543,12 +547,13 @@ export class UpdateCredentialsHandler
             partialData.newCredentials.push(newCredentialItem);
         }
 
-        deserializeCredentialsToBeRemoved(serializedPayload, partialData);
+        const { removeCredentialIds } = deserializeCredentialsToBeRemoved(serializedPayload);
+        const { threshold } = deserializeThreshold(serializedPayload);
 
         return {
             newCredentials: partialData.newCredentials,
-            removeCredentialIds: partialData.removeCredentialIds ?? [],
-            threshold: partialData.threshold ?? 0,
+            removeCredentialIds: removeCredentialIds ?? [],
+            threshold: threshold ?? 0,
         };
     }
 

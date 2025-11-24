@@ -78,22 +78,16 @@ export function deserializeAccountTransactionPayload(value: Cursor): {
 }
 
 export function deserializeCredentialDeploymentValues(serializedPayload: Cursor): CredentialDeploymentInfo {
-    //CredentialDeploymentValues.publicKeys
     const publicKeys = deserializeCredentialPublicKeys(serializedPayload);
 
-    //CredentialDeploymentValues.credId
     const credId = serializedPayload.read(48);
 
-    //CredentialDeploymentValues.ipId
     const ipId = serializedPayload.read(4).readUInt32BE(0);
 
-    //CredentialDeploymentValues.revocationThreshold
     const revocationThreshold = serializedPayload.read(1).readUInt8(0);
 
-    //CredentialDeploymentValues.arData
     const arData = deserializeArDataEntry(serializedPayload);
 
-    //CredentialDeploymentValues.policy section
     const validToYear = serializedPayload.read(2).readInt16BE(0);
     const validToMonth = serializedPayload.read(1).readUInt8(0);
     const validTo = validToYear.toString().padStart(4, '0') + validToMonth.toString().padStart(2, '0');
@@ -106,7 +100,6 @@ export function deserializeCredentialDeploymentValues(serializedPayload: Cursor)
 
     const revealedAttributes: Partial<Record<any, any>> = {};
     for (let a = 0; a < countAtrributes; a++) {
-        //AttributeEntry
         const attributeTagTemp = serializedPayload.read(1).readUInt8(0);
 
         const attributeTag = AttributesKeys[attributeTagTemp];
@@ -117,14 +110,12 @@ export function deserializeCredentialDeploymentValues(serializedPayload: Cursor)
 
         revealedAttributes[attributeTag.toString()] = attributeValue.toString();
     }
-    //end of policy section
 
     return {
         credId: credId.toString('hex'),
         revocationThreshold: revocationThreshold,
         arData: arData,
 
-        //This will be populated by the remaining bytes after reading the policy section
         proofs: deserializeCredentialDeploymentProofs(serializedPayload),
 
         ipIdentity: ipId,
@@ -139,14 +130,11 @@ export function deserializeCredentialDeploymentValues(serializedPayload: Cursor)
 
 export function deserializeArDataEntry(serializedPayload: Cursor): Record<string, ChainArData> {
     const result: Record<any, any> = {};
-    //ArData.count
+
     const count = serializedPayload.read(2).readUInt16BE(0);
 
     for (let i = 0; i < count; i++) {
-        //ArData.ArDataEntry
-        //          .arIdentity
         const arIdentity = serializedPayload.read(4);
-        //          .data
         const data = deserializeChainArData(serializedPayload);
 
         result[arIdentity.readUInt32BE(0)] = data;
@@ -156,7 +144,6 @@ export function deserializeArDataEntry(serializedPayload: Cursor): Record<string
 }
 
 export function deserializeChainArData(serializedPayload: Cursor): ChainArData {
-    //ChainArData.idCredPubShare
     const idCredPubShare = serializedPayload.read(96);
 
     return {
@@ -165,17 +152,14 @@ export function deserializeChainArData(serializedPayload: Cursor): ChainArData {
 }
 
 export function deserializeCredentialPublicKeys(serializedPayload: Cursor): CredentialPublicKeys {
-    //CredentialPublicKeys.count
     const count = serializedPayload.read(1).readUInt8(0);
 
-    //CredentialPublicKeys.keys: count x CredentialVerifyKeyEntry
     const keys: Record<any, any> = {};
     for (let i = 0; i < count; i++) {
         const credentialVerifyKeyEntry = deserializeCredentialVerifyKey(serializedPayload);
         keys[credentialVerifyKeyEntry.index] = credentialVerifyKeyEntry.key;
     }
 
-    //CredentialPublicKeys.threshold
     const threshold = serializedPayload.read(1).readUInt8(0);
 
     return {
@@ -190,12 +174,9 @@ interface CredentialVerifyKeyEntry {
 }
 
 export function deserializeCredentialVerifyKey(serializedPayload: Cursor): CredentialVerifyKeyEntry {
-    //CredentialVerifyKeyEntry.index
     const index = serializedPayload.read(1).readUInt8(0);
-    //CredentialVerifyKeyEntry.key
     const schemeTemp = serializedPayload.read(1).readUInt8(0);
 
-    //TODO: for now, enum only support Ed25519, i am converting this from 0 to Ed25519 string
     let scheme: string;
     if (SchemeId[schemeTemp] !== undefined) {
         scheme = SchemeId[schemeTemp];
@@ -217,41 +198,30 @@ export function deserializeCredentialVerifyKey(serializedPayload: Cursor): Crede
 }
 
 export function deserializeCredentialDeploymentProofs(serializedPayload: Cursor): string {
-    //based on serialize function implementation, the length of proofs is actually written in the payload, we read the proof length now
-    const lengthOfProofBytes = serializedPayload.read(4); //proofLength, not used here
+    const lengthOfProofBytes = serializedPayload.read(4);
     const proofBlock = serializedPayload.read(lengthOfProofBytes.readUInt32BE(0));
 
     return proofBlock.toString('hex');
 }
 
 export function deserializeCredentialsToBeRemoved(serializedPayload: Cursor): Partial<UpdateCredentialsPayload> {
-    //TransactionPayload.UpdateCredentials.removeLength
-    //number of credentials to be removed
     const removeLength = serializedPayload.read(1).readUInt8(0);
-
-    //TransactionPayload.UpdateCredentials.CredIds
     const removeCredIds: string[] = [];
-    //the credential IDs of the credentials to be removed, based on the removeLength value
+
     for (let a = 0; a < removeLength; a++) {
         const credentialRegistrationId = serializedPayload.read(48);
         removeCredIds[a] = credentialRegistrationId.toString('hex');
     }
 
-    //return result to populate placeholder
     return {
         removeCredentialIds: removeCredIds,
     };
-
-    //now need to construct the UpdateCredentialsPayload based on the partial data, so we return our way upwards to the deserialize() function
 }
 
 export function deserializeThreshold(serializedPayload: Cursor): Partial<UpdateCredentialsPayload> {
-    //TransactionPayload.UpdateCredentials.newThresholdd
-    //AccountThreshold
     const newThreshold = serializedPayload.read(1).readUInt8(0);
 
     return {
         threshold: newThreshold,
     };
-    //now need to construct the UpdateCredentialsPayload based on the partial data, so we return our way upwards to the deserialize() function
 }

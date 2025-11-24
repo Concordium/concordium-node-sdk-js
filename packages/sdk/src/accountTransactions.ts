@@ -1,7 +1,6 @@
 import { Buffer } from 'buffer/index.js';
 
 import {
-    deserializeCredentialDeploymentProofs,
     deserializeCredentialDeploymentValues,
     deserializeCredentialsToBeRemoved,
 } from './deserialization.js';
@@ -539,7 +538,7 @@ export class UpdateCredentialsHandler
             const index = serializedPayload.read(1).readUInt8(0);
 
             const cdvaluesAndProofs = deserializeCredentialDeploymentValues(serializedPayload);
-=
+
             const newCredentialItem: IndexedCredentialDeploymentInfo = {
                 index: index,
                 cdi: cdvaluesAndProofs,

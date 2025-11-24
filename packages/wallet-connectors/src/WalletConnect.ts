@@ -286,10 +286,7 @@ function serializePayloadParameters(
                 ),
             } as UpdateContractInput;
         } case AccountTransactionType.UpdateCredentials: {
-            return {
-                ...payload,
-                currentNumberOfCredentials: BigInt(0), //TODO: placeholder value, to be populated by wallet calling the account info?
-            } as UpdateCredentialsInput;
+            return payload as UpdateCredentialsInput;
         }
         default: {
             if (typedParams) {

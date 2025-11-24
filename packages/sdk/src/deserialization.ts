@@ -80,7 +80,7 @@ export function deserializeAccountTransactionPayload(value: Cursor): {
 
 export function deserializeCredentialDeploymentValues(
     serializedPayload: Cursor,
-): Partial<CredentialDeploymentInfo> {    
+): CredentialDeploymentInfo {    
     //CredentialDeploymentValues.publicKeys
     const publicKeys = deserializeCredentialPublicKeys(serializedPayload);
 
@@ -128,6 +128,8 @@ export function deserializeCredentialDeploymentValues(
             arData: arData,
 
             //This will be populated by the remaining bytes after this function returns
+            //as we are dealing with cursor movements, we need to wait until the bytes before proofs are fully read
+            //this section for proofs will be read after deployment values are completely read
             proofs: '',
 
             ipIdentity: ipId,
@@ -226,97 +228,6 @@ export function deserializeCredentialDeploymentProofs(serializedPayload: Cursor)
     const proofBlock = serializedPayload.read(lengthOfProofBytes.readUInt32BE(0));
 
     return proofBlock.toString('hex');
-
-    /*
-    //CredentialDeploymentProofs.idProofs
-    //  IdOwnershipProofs.sig
-    const blindedSignature =  serializedPayload.read(96);
-    
-    //  IdOwnershipProofs.commitments
-    const prf = serializedPayload.read(48);
-    const credCounter = serializedPayload.read(48);
-    const maxAccounts = serializedPayload.read(48);
-
-    const combined = Buffer.concat([blindedSignature, prf, credCounter, maxAccounts]);
-
-    const attributeCommitmentRecords: Record<any, any> = {};
-    const buffersToConcat: Buffer[] = [];
-    const lengthAttributes = serializedPayload.read(2).readUInt16BE(0);
-    for(let a = 0; a < lengthAttributes; a++) {
-        //AttributeCommitment
-        const attributeTag = serializedPayload.read(1).readUInt8(0);
-        const attributeCommitment = serializedPayload.read(48);
-        attributeCommitmentRecords[attributeTag] = attributeCommitment;
-
-        buffersToConcat.push(attributeCommitment);
-    }
-
-    Buffer.concat([combined, ...buffersToConcat]);
-
-    const sharingCoeffsLength = serializedPayload.read(8).readBigUInt64BE(0);
-    for(let a = 0; a < sharingCoeffsLength; a++) {
-        const sharingCoeffs = serializedPayload.read(48); //sharingCoeffs being read, not stored anywhere
-
-        Buffer.concat([combined, sharingCoeffs]);
-    }
-
-    //  IdOwnershipProofs.challenge
-    const challenge = serializedPayload.read(32);
-    Buffer.concat([combined, challenge]);
-
-    //  IdOwnershipProofs.proofIdCredPub
-    const proofIdCredPubLength = serializedPayload.read(4).readUInt32BE(0);
-    for(let a = 0; a < proofIdCredPubLength; a++) {
-        const arIdentity = serializedPayload.read(4);
-        const comEncEqResponse = serializedPayload.read(96);
-        Buffer.concat([combined, arIdentity, comEncEqResponse]);
-    }
-
-    //  start of IdOwnershipProofs.proofIpSig
-    const responseRho = serializedPayload.read(32);
-    Buffer.concat([combined, responseRho]);
-
-    const proofLength = serializedPayload.read(4).readUInt32BE(0);
-    //length x (F, F)
-    for(let a = 0; a < proofLength; a++) {
-        const firstF = serializedPayload.read(32);
-        const secondF = serializedPayload.read(32);
-        Buffer.concat([combined, firstF, secondF]);
-    }
-    //  end of IdOwnershipProofs.proofIpSig
-
-    //IdOwnershipProofs.proofRegId
-    const proofRegId = serializedPayload.read(160);
-    Buffer.concat([combined, proofRegId]);
-
-    //IdOwnershipProofs.proofCredCounter
-    const g1Elements = serializedPayload.read(48*4); //4 times 48, g1Elements
-    const scalars1 = serializedPayload.read(32*3); //3 times 32, scalars1
-    Buffer.concat([combined, g1Elements, scalars1]);
-
-    const groupElementLength = serializedPayload.read(4).readUInt32BE(0);
-    for(let a = 0; a < groupElementLength; a++) {
-        const g1 = serializedPayload.read(48);
-        const g2 = serializedPayload.read(48);
-        Buffer.concat([combined, g1, g2]);
-    }
-
-    const scalars2 = serializedPayload.read(32*2) //2 times 32, scalars2
-    Buffer.concat([combined, scalars2]);
-
-    //AccountOwnershipProof
-    const numberOfSignatures = serializedPayload.read(1).readUInt8(0);
-
-    for(let a = 0; a < numberOfSignatures; a++) {
-        //AccountOwnershipProofEntry
-        const index = serializedPayload.read(1);
-        const sig = serializedPayload.read(64);
-        Buffer.concat([combined, index, sig]);
-    }
-
-    //return Buffer, go back to the for loop in deserialize() and read next CredentialDeploymentInformation, if any    
-    return combined.toString('hex');
-    */
 }
 
 export function deserializeCredentialsToBeRemoved(serializedPayload: Cursor, data: Partial<UpdateCredentialsPayload>) {
@@ -328,7 +239,6 @@ export function deserializeCredentialsToBeRemoved(serializedPayload: Cursor, dat
     const removeCredIds: string[] = [];
     //the credential IDs of the credentials to be removed, based on the removeLength value
     for (let a = 0; a < removeLength; a++) {
-        //TODO: bluepaper says 48 bytes, but I don't see this being 48 in the serialize and I am experimenting by padding in serialize locally??
         const credentialRegistrationId = serializedPayload.read(48); 
         removeCredIds[a] = credentialRegistrationId.toString('hex');
     }

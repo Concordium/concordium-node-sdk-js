@@ -510,7 +510,7 @@ export class UpdateCredentialsHandler
             }
         );
 
-        //TODO: assuming credId should be 96 characters long (48 bytes)
+        //bluepaper specified credId should be 96 characters long (48 bytes)
         const serializedRemovedCredIds = serializeList(
             updateCredentials.removeCredentialIds,
             encodeWord8,

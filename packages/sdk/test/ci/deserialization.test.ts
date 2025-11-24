@@ -66,52 +66,14 @@ function deserializeAccountTransactionBase(transaction: AccountTransaction) {
         energyAmount,
     };
     // Filter out input values, as they will not be included in deserialized values
-    const { maxContractExecutionEnergy, ...expectedPayload } = transaction.payload as any;
+    const { maxContractExecutionEnergy, currentNumberOfCredentials, ...expectedPayload } = transaction.payload as any;
     const { type, ...payload } = deserialized.transaction.payload;
 
     expect(deserialized.transaction.signature).toEqual(signatures);
     expect(deserialized.transaction.header).toEqual(expectedHeader);
     expect(deserialized.transaction.payload.type).toEqual(transaction.type);
 
-    if(transaction.type !== AccountTransactionType.UpdateCredentials)
-        expect(payload).toEqual(expectedPayload);
-    else {
-        //UpdateCredentials.newCredInfos.cdiLength
-        expect((payload as UpdateCredentialsPayload).newCredentials.length).toEqual((expectedPayload as UpdateCredentialsPayload).newCredentials.length);
-
-        //UpdateCredentials.newCredInfos.index (Index, CredentialDeploymentInformation)
-        const actualIndices = (payload as UpdateCredentialsPayload).newCredentials.map(cred => cred.index);
-        const expectedIndices = [0];
-        expect(actualIndices).toEqual(expectedIndices);
-        
-        (payload as UpdateCredentialsPayload).newCredentials.map((cred, i) => {
-            console.log(`Expect comparing newCredential at index ${i}:`, cred);
-
-            //CredentialDeploymentInformation.credentialDeploymentValues
-            expect(cred.index).toEqual((expectedPayload as UpdateCredentialsPayload).newCredentials[i].index);            
-            expect(cred.cdi.arData).toEqual((expectedPayload as UpdateCredentialsPayload).newCredentials[i].cdi.arData);
-            expect(cred.cdi.credentialPublicKeys).toEqual((expectedPayload as UpdateCredentialsPayload).newCredentials[i].cdi.credentialPublicKeys);
-            expect(cred.cdi.credId).toEqual((expectedPayload as UpdateCredentialsPayload).newCredentials[i].cdi.credId);
-            expect(cred.cdi.ipIdentity).toEqual((expectedPayload as UpdateCredentialsPayload).newCredentials[i].cdi.ipIdentity);
-            expect(cred.cdi.revocationThreshold).toEqual((expectedPayload as UpdateCredentialsPayload).newCredentials[i].cdi.revocationThreshold);              
-            expect(cred.cdi.policy.createdAt).toEqual((expectedPayload as UpdateCredentialsPayload).newCredentials[i].cdi.policy.createdAt);
-            expect(cred.cdi.policy.validTo).toEqual((expectedPayload as UpdateCredentialsPayload).newCredentials[i].cdi.policy.validTo);
-            expect(cred.cdi.policy.revealedAttributes).toEqual((expectedPayload as UpdateCredentialsPayload).newCredentials[i].cdi.policy.revealedAttributes);
-
-            //CredentialDeploymentInformation.CredentialDeploymentProofs
-            expect(cred.cdi.proofs).toEqual((expectedPayload as UpdateCredentialsPayload).newCredentials[i].cdi.proofs);            
-        });                
-
-        //UpdateCredentials.removeLength
-        expect((payload as UpdateCredentialsPayload).removeCredentialIds.length).toEqual((expectedPayload as UpdateCredentialsPayload).removeCredentialIds.length);
-
-        //UpdateCredentials.CredentialRegistrationId.removeCredIds
-        expect((payload as UpdateCredentialsPayload).removeCredentialIds.map(id => id)).toEqual((expectedPayload as UpdateCredentialsPayload).removeCredentialIds.map(id => id));
-
-        //UpdateCredentials.AccountThreshold
-        expect((payload as UpdateCredentialsPayload).threshold).toEqual((expectedPayload as UpdateCredentialsPayload).threshold);   
-
-    }
+    expect(payload).toEqual(expectedPayload);
 }
 
 const header: AccountTransactionHeader = {
@@ -306,8 +268,6 @@ test('test deserialize UpdateCredential', () => {
            cdi,
     };
 
-    //console.log('CredentialDeploymentInformation to be deserialized:', credentialDeploymentInfo);
-
     const payload: UpdateCredentialsInput = {
         newCredentials: [credentialDeploymentInfo],
         removeCredentialIds: 
@@ -316,8 +276,6 @@ test('test deserialize UpdateCredential', () => {
         threshold: 5,
         currentNumberOfCredentials: 2n,
     };
-
-    //console.log('UpdateCredentialsPayload payload to be deserialized:', payload);
 
     const transaction: AccountTransaction = {
         header,

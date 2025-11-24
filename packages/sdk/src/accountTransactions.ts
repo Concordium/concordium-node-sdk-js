@@ -1,6 +1,10 @@
 import { Buffer } from 'buffer/index.js';
 
-import { deserializeCredentialDeploymentProofs, deserializeCredentialDeploymentValues, deserializeCredentialsToBeRemoved } from './deserialization.js';
+import {
+    deserializeCredentialDeploymentProofs,
+    deserializeCredentialDeploymentValues,
+    deserializeCredentialsToBeRemoved,
+} from './deserialization.js';
 import { Cursor } from './deserializationHelpers.js';
 import { Cbor, TokenId, TokenOperationType } from './plt/index.js';
 import {
@@ -488,7 +492,6 @@ export class UpdateCredentialsHandler
     implements AccountTransactionHandler<UpdateCredentialsPayload, UpdateCredentialsPayload, UpdateCredentialsInput>
 {
     getBaseEnergyCost(payload: UpdateCredentialsInput): bigint {
-
         const newCredentialsCost = payload.newCredentials
             .map((credential) => {
                 const numberOfKeys = BigInt(Object.keys(credential.cdi.credentialPublicKeys.keys).length);
@@ -533,7 +536,7 @@ export class UpdateCredentialsHandler
         partialData.newCredentials = [];
         //the following for loop is to read the CredentialDeploymentInformation
         for (let i = 0; i < cdiLength; i++) {
-            const index = serializedPayload.read(1).readUInt8(0)
+            const index = serializedPayload.read(1).readUInt8(0);
 
             const cdvalues = deserializeCredentialDeploymentValues(serializedPayload);
 
@@ -549,7 +552,7 @@ export class UpdateCredentialsHandler
                     credentialPublicKeys: cdvalues.credentialPublicKeys!,
                     policy: cdvalues.policy!,
                     proofs: cdProofs,
-                }
+                },
             };
             partialData.newCredentials.push(newCredentialItem);
         }
@@ -563,7 +566,12 @@ export class UpdateCredentialsHandler
         };
     }
 
-    toJSON(updateCredentials: UpdateCredentialsPayload): UpdateCredentialsPayload {
+    toJSON(updateCredentials: UpdateCredentialsPayload): UpdateCredentialsPayload;
+    toJSON(updateCredentials: UpdateCredentialsInput): UpdateCredentialsInput;
+
+    toJSON(
+        updateCredentials: UpdateCredentialsPayload | UpdateCredentialsInput
+    ): UpdateCredentialsPayload | UpdateCredentialsInput {
         return updateCredentials;
     }
 

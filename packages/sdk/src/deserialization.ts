@@ -1,19 +1,18 @@
 import { getAccountTransactionHandler } from './accountTransactions.js';
 import { Cursor } from './deserializationHelpers.js';
-
+import { SchemeId } from './serializationHelpers.js';
 import {
     AccountTransactionPayload,
     AccountTransactionSignature,
     AccountTransactionType,
+    AttributesKeys,
     ChainArData,
-    CredentialPublicKeys,
     CredentialDeploymentInfo,
+    CredentialPublicKeys,
     UpdateCredentialsPayload,
     VerifyKey,
     isAccountTransactionType,
-    AttributesKeys,
 } from './types.js';
-import { SchemeId } from './serializationHelpers.js';
 
 /**
  * Reads an unsigned 8-bit integer from the given {@link Cursor}.
@@ -78,9 +77,7 @@ export function deserializeAccountTransactionPayload(value: Cursor): {
     return { type, payload };
 }
 
-export function deserializeCredentialDeploymentValues(
-    serializedPayload: Cursor,
-): CredentialDeploymentInfo {    
+export function deserializeCredentialDeploymentValues(serializedPayload: Cursor): CredentialDeploymentInfo {
     //CredentialDeploymentValues.publicKeys
     const publicKeys = deserializeCredentialPublicKeys(serializedPayload);
 
@@ -92,54 +89,54 @@ export function deserializeCredentialDeploymentValues(
 
     //CredentialDeploymentValues.revocationThreshold
     const revocationThreshold = serializedPayload.read(1).readUInt8(0);
- 
+
     //CredentialDeploymentValues.arData
     const arData = deserializeArDataEntry(serializedPayload);
- 
+
     //CredentialDeploymentValues.policy section
     const validToYear = serializedPayload.read(2).readInt16BE(0);
     const validToMonth = serializedPayload.read(1).readUInt8(0);
     const validTo = validToYear.toString().padStart(4, '0') + validToMonth.toString().padStart(2, '0');
- 
+
     const createdAtYear = serializedPayload.read(2).readInt16BE(0);
     const createdAtMonth = serializedPayload.read(1).readUInt8(0);
     const createdAt = createdAtYear.toString().padStart(4, '0') + createdAtMonth.toString().padStart(2, '0');
- 
+
     const countAtrributes = serializedPayload.read(2).readUInt16BE(0);
- 
+
     const revealedAttributes: Partial<Record<any, any>> = {};
     for (let a = 0; a < countAtrributes; a++) {
         //AttributeEntry
         const attributeTagTemp = serializedPayload.read(1).readUInt8(0);
- 
-        const attributeTag = AttributesKeys[attributeTagTemp]  
- 
+
+        const attributeTag = AttributesKeys[attributeTagTemp];
+
         const countAttributeValue = serializedPayload.read(1).readUInt8(0);
- 
+
         const attributeValue = serializedPayload.read(countAttributeValue);
 
         revealedAttributes[attributeTag.toString()] = attributeValue.toString();
     }
     //end of policy section
 
-    return {        
-            credId: credId.toString('hex'),
-            revocationThreshold: revocationThreshold,
-            arData: arData,
+    return {
+        credId: credId.toString('hex'),
+        revocationThreshold: revocationThreshold,
+        arData: arData,
 
-            //This will be populated by the remaining bytes after this function returns
-            //as we are dealing with cursor movements, we need to wait until the bytes before proofs are fully read
-            //this section for proofs will be read after deployment values are completely read
-            proofs: '',
+        //This will be populated by the remaining bytes after this function returns
+        //as we are dealing with cursor movements, we need to wait until the bytes before proofs are fully read
+        //this section for proofs will be read after deployment values are completely read
+        proofs: '',
 
-            ipIdentity: ipId,
-            credentialPublicKeys: publicKeys,
-            policy: {
-                validTo: validTo,
-                createdAt: createdAt,
-                revealedAttributes: revealedAttributes,
-            },        
-    }
+        ipIdentity: ipId,
+        credentialPublicKeys: publicKeys,
+        policy: {
+            validTo: validTo,
+            createdAt: createdAt,
+            revealedAttributes: revealedAttributes,
+        },
+    };
 }
 
 export function deserializeArDataEntry(serializedPayload: Cursor): Record<string, ChainArData> {
@@ -200,7 +197,7 @@ export function deserializeCredentialVerifyKey(serializedPayload: Cursor): Crede
     //CredentialVerifyKeyEntry.key
     const schemeTemp = serializedPayload.read(1).readUInt8(0);
 
-    //TODO: for now, enum only support Ed25519, i am converting this from 0 to Ed25519 string    
+    //TODO: for now, enum only support Ed25519, i am converting this from 0 to Ed25519 string
     let scheme: string;
     if (SchemeId[schemeTemp] !== undefined) {
         scheme = SchemeId[schemeTemp];
@@ -222,7 +219,6 @@ export function deserializeCredentialVerifyKey(serializedPayload: Cursor): Crede
 }
 
 export function deserializeCredentialDeploymentProofs(serializedPayload: Cursor): string {
-    
     //based on serialize function implementation, the length of proofs is actually written in the payload, we read the proof length now
     const lengthOfProofBytes = serializedPayload.read(4); //proofLength, not used here
     const proofBlock = serializedPayload.read(lengthOfProofBytes.readUInt32BE(0));
@@ -239,7 +235,7 @@ export function deserializeCredentialsToBeRemoved(serializedPayload: Cursor, dat
     const removeCredIds: string[] = [];
     //the credential IDs of the credentials to be removed, based on the removeLength value
     for (let a = 0; a < removeLength; a++) {
-        const credentialRegistrationId = serializedPayload.read(48); 
+        const credentialRegistrationId = serializedPayload.read(48);
         removeCredIds[a] = credentialRegistrationId.toString('hex');
     }
 

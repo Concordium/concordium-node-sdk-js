@@ -427,11 +427,12 @@ export function updateCredentials(
     currentNumberOfCredentials: bigint
 ): Initial<Payload.UpdateCredentials> {
     //TODO: double check with Soren here, isn't current number of credentials actually a total that we get from chain?
-    if (!isPayloadWithType(payload)) return updateCredentials(Payload.updateCredentials(payload), currentNumberOfCredentials);
+    if (!isPayloadWithType(payload))
+        return updateCredentials(Payload.updateCredentials(payload), currentNumberOfCredentials);
 
     const handler = new UpdateCredentialsHandler();
     return new TransactionBuilder(
-        { executionEnergyAmount: Energy.create(handler.getBaseEnergyCost({...payload, currentNumberOfCredentials})) },
+        { executionEnergyAmount: Energy.create(handler.getBaseEnergyCost({ ...payload, currentNumberOfCredentials })) },
         payload
     );
 }

@@ -257,21 +257,20 @@ test('Test parsing of Token Addresses', () => {
     expect(rebase58).toEqual(base58);
 });
 
-
 test('test deserialize UpdateCredential', () => {
-
     const cdi = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'resources/cdi.json')).toString());
 
     const credentialDeploymentInfo: IndexedCredentialDeploymentInfo = {
-           index: 0,
-           cdi,
+        index: 0,
+        cdi,
     };
 
     const payload: UpdateCredentialsInput = {
         newCredentials: [credentialDeploymentInfo],
-        removeCredentialIds: 
-        ['123000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000', 
-            '456000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'], ///make these 48 bytes
+        removeCredentialIds: [
+            '123000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
+            '456000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
+        ], ///make these 48 bytes
         threshold: 5,
         currentNumberOfCredentials: 2n,
     };

@@ -16,6 +16,8 @@ import {
     Parameter,
     UpdateContractInput,
     UpdateContractPayload,
+    UpdateCredentialsInput,
+    UpdateCredentialsPayload,
     VerifiablePresentation,
     getTransactionKindString,
     jsonUnwrapStringify,
@@ -23,8 +25,6 @@ import {
     serializeTypeValue,
     serializeUpdateContractParameters,
     toBuffer,
-    UpdateCredentialsInput,
-    UpdateCredentialsPayload,
 } from '@concordium/web-sdk';
 import { WalletConnectModal, WalletConnectModalConfig } from '@walletconnect/modal';
 import { MobileWallet } from '@walletconnect/modal-core';
@@ -285,7 +285,8 @@ function serializePayloadParameters(
                     typedParams
                 ),
             } as UpdateContractInput;
-        } case AccountTransactionType.UpdateCredentials: {
+        }
+        case AccountTransactionType.UpdateCredentials: {
             return payload as UpdateCredentialsInput;
         }
         default: {

@@ -211,7 +211,7 @@ function serializeCredentialDeploymentValues(credential: CredentialDeploymentVal
     buffers.push(Buffer.from(credential.credId, 'hex'));
     buffers.push(encodeWord32(credential.ipIdentity));
     buffers.push(encodeWord8(credential.revocationThreshold));
-    
+
     buffers.push(
         serializeMap(
             credential.arData,
@@ -225,11 +225,9 @@ function serializeCredentialDeploymentValues(credential: CredentialDeploymentVal
     const revealedAttributes = Object.entries(credential.policy.revealedAttributes);
     buffers.push(encodeWord16(revealedAttributes.length));
 
-    const revealedAttributeTags: [number, string][] = revealedAttributes.map(([tagName, value]) => { 
-        return [
-        AttributesKeys[tagName as keyof typeof AttributesKeys],
-        value,
-    ]; });
+    const revealedAttributeTags: [number, string][] = revealedAttributes.map(([tagName, value]) => {
+        return [AttributesKeys[tagName as keyof typeof AttributesKeys], value];
+    });
     revealedAttributeTags
         .sort((a, b) => a[0] - b[0])
         .forEach(([tag, value]) => {

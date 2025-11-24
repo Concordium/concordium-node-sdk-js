@@ -20,7 +20,10 @@ function deserializeCredentialDeployment(serializedDeployment: Cursor) {
 }
 
 /**
+ * @deprecated use {@linkcode deserializeBlockItem} instead.
+ *
  * Deserializes a transaction, from the binary format used to send it to the node, back into an js object.
+ *
  * @param serializedTransaction A buffer containing the binary transaction. It is expected to start with the version and blockItemKind.
  * @returns An object specifiying the blockItemKind that the transaction has. The object also contains the actual transaction under the transaction field.
  **/
@@ -50,4 +53,39 @@ export function deserializeTransaction(serializedTransaction: ArrayBuffer): Bloc
         default:
             throw new Error('Invalid blockItemKind');
     }
+}
+
+/**
+ * Deserializes a block item its encoding.
+ * @param buffer the buffer to deserialize.
+ * @returns the block item corresonding to the encoding.
+ */
+export function deserializeBlockItem(value: ArrayBuffer | Cursor): BlockItem {
+    const isRawBuffer = !(value instanceof Cursor);
+    const cursor = isRawBuffer ? Cursor.fromBuffer(value) : value;
+
+    const blockItemKind = deserializeUint8(cursor);
+    let blockItem: BlockItem;
+    switch (blockItemKind) {
+        case BlockItemKind.AccountTransactionKind:
+            blockItem = {
+                kind: BlockItemKind.AccountTransactionKind,
+                transaction: AccountTransactionV0.deserialize(cursor),
+            };
+            break;
+        case BlockItemKind.CredentialDeploymentKind:
+            blockItem = {
+                kind: BlockItemKind.CredentialDeploymentKind,
+                transaction: deserializeCredentialDeployment(cursor),
+            };
+            break;
+        case BlockItemKind.UpdateInstructionKind:
+            throw new Error('deserialization of UpdateInstructions is not supported');
+        default:
+            throw new Error('Invalid blockItemKind');
+    }
+
+    if (isRawBuffer && cursor.remainingBytes.length !== 0)
+        throw new Error('Deserializing the transaction did not exhaust the buffer');
+    return blockItem;
 }

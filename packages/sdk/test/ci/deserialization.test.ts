@@ -30,15 +30,12 @@ import {
     TransactionExpiry,
     UpdateContractInput,
     calculateEnergyCost,
-    deserializeTransaction,
+    deserializeBlockItem,
     getAccountTransactionHandler,
     tokenAddressFromBase58,
     tokenAddressToBase58,
 } from '../../src/index.js';
-import {
-    serializeAccountTransactionForSubmission,
-    serializeAccountTransactionPayload,
-} from '../../src/serialization.js';
+import { serializeAccountTransaction, serializeAccountTransactionPayload } from '../../src/serialization.js';
 
 function deserializeAccountTransactionBase(transaction: AccountTransaction) {
     const signatures: AccountTransactionSignature = {
@@ -47,7 +44,7 @@ function deserializeAccountTransactionBase(transaction: AccountTransaction) {
         },
     };
 
-    const deserialized = deserializeTransaction(serializeAccountTransactionForSubmission(transaction, signatures));
+    const deserialized = deserializeBlockItem(serializeAccountTransaction(transaction, signatures));
     assert(deserialized.kind === BlockItemKind.AccountTransactionKind, 'Expected account transaction');
     const payloadSize = serializeAccountTransactionPayload(transaction).length;
     const baseEnergy = getAccountTransactionHandler(transaction.type).getBaseEnergyCost(transaction.payload);

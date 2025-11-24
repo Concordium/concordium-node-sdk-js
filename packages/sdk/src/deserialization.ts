@@ -124,10 +124,8 @@ export function deserializeCredentialDeploymentValues(serializedPayload: Cursor)
         revocationThreshold: revocationThreshold,
         arData: arData,
 
-        //This will be populated by the remaining bytes after this function returns
-        //as we are dealing with cursor movements, we need to wait until the bytes before proofs are fully read
-        //this section for proofs will be read after deployment values are completely read
-        proofs: '',
+        //This will be populated by the remaining bytes after reading the policy section
+        proofs: deserializeCredentialDeploymentProofs(serializedPayload),
 
         ipIdentity: ipId,
         credentialPublicKeys: publicKeys,

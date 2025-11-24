@@ -538,21 +538,13 @@ export class UpdateCredentialsHandler
         for (let i = 0; i < cdiLength; i++) {
             const index = serializedPayload.read(1).readUInt8(0);
 
-            const cdvalues = deserializeCredentialDeploymentValues(serializedPayload);
+            const cdvaluesAndProofs = deserializeCredentialDeploymentValues(serializedPayload);
 
-            const cdProofs = deserializeCredentialDeploymentProofs(serializedPayload);
+            //const cdProofs = deserializeCredentialDeploymentProofs(serializedPayload);
 
             const newCredentialItem: IndexedCredentialDeploymentInfo = {
                 index: index,
-                cdi: {
-                    credId: cdvalues.credId!,
-                    revocationThreshold: cdvalues.revocationThreshold!,
-                    arData: cdvalues.arData!,
-                    ipIdentity: cdvalues.ipIdentity!,
-                    credentialPublicKeys: cdvalues.credentialPublicKeys!,
-                    policy: cdvalues.policy!,
-                    proofs: cdProofs,
-                },
+                cdi: cdvaluesAndProofs,
             };
             partialData.newCredentials.push(newCredentialItem);
         }

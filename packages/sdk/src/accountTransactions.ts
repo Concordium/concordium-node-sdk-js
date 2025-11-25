@@ -681,7 +681,7 @@ export class TransferToPublicHandler
 
         return {
             data: {
-                remainingAmount: CcdAmount.fromMicroCcd(transferAmount), //TODO: how do i put the bytes of this remainingAmount?
+                remainingAmount: CcdAmount.fromMicroCcd(remainingAmount.toString('hex')), //TODO: how do i put the bytes of this remainingAmount?
                 transferAmount: CcdAmount.fromMicroCcd(transferAmount),
                 index: index,
                 proofs: proofs,

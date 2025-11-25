@@ -32,6 +32,7 @@ import {
     type TokenUpdatePayload,
     TokenUpdatePayloadJSON,
     TransactionKindString,
+    TransferToPublicPayload,
     UpdateContractHandler,
     type UpdateContractPayload,
     UpdateContractPayloadJSON,
@@ -115,6 +116,21 @@ function transferWithMemoFromJSON({ type, ...json }: ReturnType<typeof transferW
     const handler = new SimpleTransferWithMemoHandler();
     return transfer(handler.fromJSON(json));
 }
+
+
+export type TransferToPublic = TransferToPublicPayload & {
+    readonly type: AccountTransactionType.TransferToPublic;
+};
+/**
+ * Creates a transfer to public payload.
+ * @param payload the transfer to public
+ * @returns a transfer to public payload
+ */
+export function transferToPublic(payload: TransferToPublicPayload): TransferToPublic;
+export function transferToPublic(payload: TransferToPublicPayload): TransferToPublic {
+    return { type: AccountTransactionType.TransferToPublic, ...payload };
+}
+
 
 /**
  * A deploy module transaction payload.
@@ -364,7 +380,8 @@ type Payload =
     | RegisterData
     | ConfigureDelegation
     | ConfigureValidator
-    | TokenUpdate;
+    | TokenUpdate
+    | TransferToPublic;
 
 /**
  * Union type of all supported transaction payloads.
@@ -574,6 +591,9 @@ export function deserialize(value: Cursor | ArrayBuffer): Payload {
             break;
         case AccountTransactionType.TransferWithMemo:
             payload = transfer(getAccountTransactionHandler(type).deserialize(cursor));
+            break;
+        case AccountTransactionType.TransferToPublic:
+            payload = transferToPublic(getAccountTransactionHandler(type).deserialize(cursor));
             break;
         case AccountTransactionType.DeployModule:
             payload = deployModule(getAccountTransactionHandler(type).deserialize(cursor));

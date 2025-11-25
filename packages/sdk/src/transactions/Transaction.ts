@@ -25,6 +25,8 @@ import {
     SimpleTransferWithMemoPayload,
     TokenUpdateHandler,
     TokenUpdatePayload,
+    TransferToPublicHandler,
+    TransferToPublicPayload,
     UpdateContractHandler,
     UpdateContractInput,
     UpdateContractPayload,
@@ -37,6 +39,7 @@ import * as JSONBig from '../json-bigint.js';
 import { AccountAddress, DataBlob, Energy, SequenceNumber, TransactionExpiry } from '../types/index.js';
 import { countSignatures, isDefined, orUndefined } from '../util.js';
 import { AccountTransactionV0, Payload } from './index.js';
+import { TransferToPublic } from './Payload.ts';
 
 // --- Core types ---
 
@@ -315,6 +318,8 @@ export function create(type: AccountTransactionType, payload: AccountTransaction
             return configureValidator(payload as ConfigureBakerPayload);
         case AccountTransactionType.TokenUpdate:
             return tokenUpdate(payload as TokenUpdatePayload);
+        case AccountTransactionType.TransferToPublic:
+            return transferToPublic(payload as TransferToPublicPayload);
         default:
             throw new Error('The provided type is not supported: ' + type);
     }
@@ -416,6 +421,22 @@ export function transfer(
         payload
     );
 }
+
+/**
+ * Creates a transfer to public transaction
+ * @param payload the transfer to public payload
+ * @returns a transfer to public transaction
+ */
+export function transferToPublic(payload: TransferToPublicPayload | Payload.TransferToPublic): Initial<Payload.TransferToPublic> {
+    if (!isPayloadWithType(payload)) return transferToPublic(Payload.transferToPublic(payload));
+
+    const handler = new TransferToPublicHandler();
+    return new TransactionBuilder(
+        { executionEnergyAmount: Energy.create(handler.getBaseEnergyCost()) },
+        payload
+    );
+}
+
 
 /**
  * Creates a transaction to update account credentials.

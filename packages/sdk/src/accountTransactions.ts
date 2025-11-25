@@ -14,6 +14,7 @@ import {
     IndexedCredentialDeploymentInfo,
     InitContractInput,
     ModuleReference,
+    TransferToPublicPayload,
     UpdateContractInput,
     UpdateCredentialsInput,
 } from './pub/types.js';
@@ -635,6 +636,68 @@ export class RegisterDataHandler
     }
 }
 
+
+export interface TransferToPublicPayloadJSON {
+    data: 
+    {
+        remainingAmount: CcdAmount.Type;
+        transferAmount: CcdAmount.Type;
+        index: bigint;
+        proofs: string;
+    }
+}
+
+export class TransferToPublicHandler 
+    implements AccountTransactionHandler<TransferToPublicPayload, TransferToPublicPayloadJSON, TransferToPublicPayload> 
+{
+    getBaseEnergyCost(): bigint {
+        return 14850n;
+    }
+
+    serialize(payload: TransferToPublicPayload): Buffer {
+        
+        //TODO: how do i serialize exactly the 192 bytes for remaining amount here
+        const currentRemainingAmount = payload.data.remainingAmount.toString();
+        if(currentRemainingAmount.length !== 192) {
+            throw new Error(`Length of Remaining Amount must be 192 bytes`);
+        }
+        const serializedRemainingAmount = Buffer.from(currentRemainingAmount, 'hex');
+
+        const serializedTransferAmount = encodeWord64(payload.data.transferAmount.microCcdAmount);
+        const serializedIndex = encodeWord64(payload.data.index);
+
+        //TODO: hex string for the proofs?
+        const serializedProofs = Buffer.from(payload.data.proofs, 'hex');
+    
+        return Buffer.concat([serializedRemainingAmount, serializedTransferAmount, serializedIndex, serializedProofs]);
+    }
+
+    deserialize(serializedPayload: Cursor): TransferToPublicPayload {
+
+        const remainingAmount = serializedPayload.read(192);
+        const transferAmount = serializedPayload.read(8).readBigUInt64BE(0);
+        const index = serializedPayload.read(8).readBigUInt64BE(0);
+        const proofs = serializedPayload.remainingBytes.toString('hex');
+
+        return {
+            data: {
+                remainingAmount: CcdAmount.fromMicroCcd(transferAmount), //TODO: how do i put the bytes of this remainingAmount?
+                transferAmount: CcdAmount.fromMicroCcd(transferAmount),
+                index: index,
+                proofs: proofs,
+            }
+        };
+    }
+
+    toJSON(payload: TransferToPublicPayload): TransferToPublicPayload {
+        return payload;
+    }
+    
+    fromJSON(json: TransferToPublicPayload): TransferToPublicPayload {
+        return json;
+    }
+}
+
 export interface ConfigureBakerPayloadJSON {
     stake?: string;
     restakeEarnings?: boolean;
@@ -848,6 +911,7 @@ export function getAccountTransactionHandler(
 ): ConfigureDelegationHandler;
 export function getAccountTransactionHandler(type: AccountTransactionType.ConfigureBaker): ConfigureBakerHandler;
 export function getAccountTransactionHandler(type: AccountTransactionType.TokenUpdate): TokenUpdateHandler;
+export function getAccountTransactionHandler(type: AccountTransactionType.TransferToPublic): TransferToPublicHandler;
 export function getAccountTransactionHandler(
     type: AccountTransactionType
 ): AccountTransactionHandler<AccountTransactionPayload, AccountTransactionPayloadJSON, AccountTransactionInput>;
@@ -876,6 +940,8 @@ export function getAccountTransactionHandler(
             return new ConfigureBakerHandler(); //TODO
         case AccountTransactionType.TokenUpdate:
             return new TokenUpdateHandler();
+        case AccountTransactionType.TransferToPublic:
+            return new TransferToPublicHandler();
         default:
             throw new Error('The provided type does not have a handler: ' + type);
     }

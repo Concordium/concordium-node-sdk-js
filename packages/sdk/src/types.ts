@@ -1455,6 +1455,17 @@ export interface SimpleTransferWithMemoPayload extends SimpleTransferPayload {
     memo: DataBlob;
 }
 
+export interface TransferToPublicPayload {
+    data: SecToPubAmountTransferData;
+}
+
+export interface SecToPubAmountTransferData {
+    remainingAmount: CcdAmount.Type;
+    transferAmount: CcdAmount.Type;
+    index: bigint;
+    proofs: string;
+}
+
 export interface RegisterDataPayload {
     /** The byte representation of the data to be registered  */
     data: DataBlob;
@@ -1570,7 +1581,8 @@ export type AccountTransactionPayload =
     | UpdateCredentialsPayload
     | ConfigureBakerPayload
     | ConfigureDelegationPayload
-    | TokenUpdatePayload;
+    | TokenUpdatePayload
+    | TransferToPublicPayload;
 
 export type AccountTransactionInput =
     | Exclude<AccountTransactionPayload, InitContractPayload | UpdateContractPayload | UpdateCredentialsPayload>

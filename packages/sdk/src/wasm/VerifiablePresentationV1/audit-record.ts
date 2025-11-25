@@ -4,7 +4,6 @@ import _JB from 'json-bigint';
 
 import { ConcordiumGRPCClient, isKnown } from '../../grpc/index.js';
 import {
-    AtomicStatementV2,
     CredentialStatus,
     HexString,
     TransactionKindString,
@@ -32,7 +31,8 @@ import {
 import { bail } from '../../util.js';
 import { VerifiablePresentationV1, VerificationRequestV1 } from './index.js';
 import { AnchorTransactionMetadata, contextEquals } from './internal.js';
-import { VerificationResult, isAccountClaims } from './proof.js';
+import { AtomicStatementV3, VerificationResult, isAccountClaims } from './proof.js';
+import { RequestedStatement } from './request.js';
 
 const JSONBig = _JB({ alwaysParseAsBig: true, useNativeBigInt: true });
 
@@ -174,57 +174,67 @@ async function compareContexts(
 }
 
 /**
- * Verifies that two lists of atomic statements match in structure and content.
+ * Verifies a list of requested statements match in structure and content with a list statements
+ * from a presentation.
  *
- * @param a - First list of atomic statements to compare
- * @param b - Second list of atomic statements to compare
+ * @param requested - First list of atomic statements to compare.
+ * @param presentation - Second list of atomic statements to compare.
  *
- * @throws Error if statements differ in length, order, type, or content
+ * @throws Error if statements differ in length, order, type, or content.
  */
-function verifyAtomicStatements<A>(a: AtomicStatementV2<A>[], b: AtomicStatementV2<A>[]): void {
-    if (a.length !== b.length) throw new Error('Mismatch in number of atomic statements for statement/claim');
+function verifyAtomicStatements<A>(requested: RequestedStatement<A>[], presentation: AtomicStatementV3<A>[]): void {
+    if (requested.length !== presentation.length)
+        throw new Error('Mismatch in number of atomic statements for statement/claim');
 
     const atomicError = new Error(
         'Mismatch found when comparing atomic statements for verification/presentation request.'
     );
 
-    // We expect the order or statements to be identical.
-    a.forEach((as, i) => {
-        const bs = b[i];
-        if (as.attributeTag !== bs.attributeTag) throw atomicError;
+    // We expect the order of statements to be identical.
+    requested.forEach((requestedStatement, i) => {
+        const presentationStatement = presentation[i];
+        if (requestedStatement.attributeTag !== presentationStatement.attributeTag) throw atomicError;
 
-        switch (as.type) {
+        switch (requestedStatement.type) {
             case 'AttributeInSet': {
-                if (bs.type !== 'AttributeInSet') throw atomicError;
-                if (as.set.length !== bs.set.length) throw atomicError;
+                if (presentationStatement.type !== 'AttributeInSet') throw atomicError;
+                if (requestedStatement.set.length !== presentationStatement.set.length) throw atomicError;
                 // For the sets, not all implementations used lists where the order items are added
                 // is enforced (i.e. some use Sets).
                 //
                 // This is O(2*n^2), but we don't expect a lot of elements to compare.
                 const setEqual =
-                    as.set.every((asv) => bs.set.some((bsv) => attributeTypeEquals(asv, bsv))) &&
-                    bs.set.every((bsv) => as.set.some((asv) => attributeTypeEquals(asv, bsv)));
+                    requestedStatement.set.every((asv) =>
+                        presentationStatement.set.some((bsv) => attributeTypeEquals(asv, bsv))
+                    ) &&
+                    presentationStatement.set.every((bsv) =>
+                        requestedStatement.set.some((asv) => attributeTypeEquals(asv, bsv))
+                    );
                 if (!setEqual) throw atomicError;
                 break;
             }
             case 'AttributeNotInSet': {
-                if (bs.type !== 'AttributeNotInSet') throw atomicError;
-                if (as.set.length !== bs.set.length) throw atomicError;
+                if (presentationStatement.type !== 'AttributeNotInSet') throw atomicError;
+                if (requestedStatement.set.length !== presentationStatement.set.length) throw atomicError;
 
                 const setEqual =
-                    as.set.every((asv) => bs.set.some((bsv) => attributeTypeEquals(asv, bsv))) &&
-                    bs.set.every((bsv) => as.set.some((asv) => attributeTypeEquals(asv, bsv)));
+                    requestedStatement.set.every((asv) =>
+                        presentationStatement.set.some((bsv) => attributeTypeEquals(asv, bsv))
+                    ) &&
+                    presentationStatement.set.every((bsv) =>
+                        requestedStatement.set.some((asv) => attributeTypeEquals(asv, bsv))
+                    );
                 if (!setEqual) throw atomicError;
                 break;
             }
             case 'RevealAttribute': {
-                if (bs.type !== 'RevealAttribute') throw atomicError;
+                if (presentationStatement.type !== 'AttributeValue') throw atomicError;
                 break;
             }
             case 'AttributeInRange': {
-                if (bs.type !== 'AttributeInRange') throw atomicError;
-                if (!attributeTypeEquals(as.lower, bs.lower)) throw atomicError;
-                if (!attributeTypeEquals(as.upper, bs.upper)) throw atomicError;
+                if (presentationStatement.type !== 'AttributeInRange') throw atomicError;
+                if (!attributeTypeEquals(requestedStatement.lower, presentationStatement.lower)) throw atomicError;
+                if (!attributeTypeEquals(requestedStatement.upper, presentationStatement.upper)) throw atomicError;
                 break;
             }
         }
@@ -234,8 +244,8 @@ function verifyAtomicStatements<A>(a: AtomicStatementV2<A>[], b: AtomicStatement
 /**
  * Verifies verifiable presentation account claims against a verification request identity claims.
  *
- * @param vpClaims - Account claims from the verifiable presentation
- * @param vrClaims - Verification request claims to validate against
+ * @param presentationClaims - Account claims from the verifiable presentation
+ * @param requestedClaims - Verification request claims to validate against
  * @param grpc - gRPC client for querying account information
  *
  * @throws Error if:
@@ -245,20 +255,20 @@ function verifyAtomicStatements<A>(a: AtomicStatementV2<A>[], b: AtomicStatement
  * - issuer is not valid
  */
 async function verifyAccountClaims(
-    vpClaims: VerifiablePresentationV1.AccountClaims,
-    vrClaims: VerificationRequestV1.IdentityClaims,
+    presentationClaims: VerifiablePresentationV1.AccountClaims,
+    requestedClaims: VerificationRequestV1.IdentityClaims,
     grpc: ConcordiumGRPCClient
 ) {
-    if (vrClaims.type !== 'identity')
-        throw new Error(`Request statement of type ${vrClaims.type} does not match account claims`);
-    if (!vrClaims.source.includes('accountCredential'))
+    if (requestedClaims.type !== 'identity')
+        throw new Error(`Request statement of type ${requestedClaims.type} does not match account claims`);
+    if (!requestedClaims.source.includes('accountCredential'))
         throw new Error(`Request statement does not include "account" source`);
 
-    verifyAtomicStatements(vrClaims.statements, vpClaims.statement);
+    verifyAtomicStatements(requestedClaims.statements, presentationClaims.statement);
 
     // check that the selected credential for the claim is issued by a valid IDP
-    const validIdpIndices = vrClaims.issuers.map((i) => i.index);
-    const [, credId] = vpClaims.id.split(':cred:');
+    const validIdpIndices = requestedClaims.issuers.map((i) => i.index);
+    const [, credId] = presentationClaims.id.split(':cred:');
     const ai = await grpc.getAccountInfo(CredentialRegistrationId.fromHexString(credId));
     const cred = Object.values(ai.accountCredentials).find(
         (c) => c.value.type === 'normal' && c.value.contents.credId === credId

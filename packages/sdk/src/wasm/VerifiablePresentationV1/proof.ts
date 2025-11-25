@@ -2,17 +2,19 @@ import * as wasm from '@concordium/rust-bindings/wallet';
 import _JB from 'json-bigint';
 
 import {
-    AttributeKey,
     BlockHash,
     ConcordiumGRPCClient,
     CredentialRegistrationId,
     CryptographicParameters,
+    GenericMembershipStatement,
+    GenericNonMembershipStatement,
+    GenericRangeStatement,
     Network,
 } from '../../index.js';
 import { bail } from '../../util.js';
 import {
     AccountCommitmentInput,
-    AtomicStatementV2,
+    AttributeType,
     CredentialStatus,
     DIDString,
     IdentityCommitmentInput,
@@ -63,8 +65,12 @@ function proofContextFromJSON(context: ContextJSON): Context {
  */
 export type AccountClaims = {
     type: ['ConcordiumSubjectClaimsV1', 'ConcordiumAccountBasedSubjectClaims'];
+    /** Account registration id. */
     id: DIDString;
-    statement: AtomicStatementV2<AttributeKey>[];
+    /** Identity provider which issued the credentials. */
+    issuer: DIDString;
+    /** Attribute statements. */
+    statement: AtomicStatementV3[];
 };
 
 /**
@@ -73,16 +79,19 @@ export type AccountClaims = {
  * @param network - The network the account credential exists on.
  * @param credRegId - The credential registration ID of the account.
  * @param statement - The atomic statements to prove for the account credential.
+ * @param issuer - Identity provider which issued the credentials.
  * @returns The account claims to be used in the presentation input for the verifiable credential.
  */
 export function createAccountClaims(
     network: Network,
     credRegId: CredentialRegistrationId.Type,
-    statement: AtomicStatementV2<AttributeKey>[]
+    issuer: number,
+    statement: AtomicStatementV3[]
 ): AccountClaims {
     return {
         type: ['ConcordiumSubjectClaimsV1', 'ConcordiumAccountBasedSubjectClaims'],
         id: createAccountDID(network, credRegId.toString()),
+        issuer: createIdentityStatementDID(network, issuer),
         statement,
     };
 }
@@ -93,8 +102,10 @@ export function createAccountClaims(
  */
 export type IdentityClaims = {
     type: ['ConcordiumSubjectClaimsV1', 'ConcordiumIdBasedSubjectClaims'];
+    /** Identity provider which issued the credentials. */
     issuer: DIDString;
-    statement: AtomicStatementV2<AttributeKey>[];
+    /** Attribute statements. */
+    statement: AtomicStatementV3[];
 };
 
 /**
@@ -108,7 +119,7 @@ export type IdentityClaims = {
 export function createIdentityClaims(
     network: Network,
     idpIndex: number,
-    statement: AtomicStatementV2<AttributeKey>[]
+    statement: AtomicStatementV3[]
 ): IdentityClaims {
     return {
         type: ['ConcordiumSubjectClaimsV1', 'ConcordiumIdBasedSubjectClaims'],
@@ -296,7 +307,7 @@ type RequestJSON = {
 /**
  * Matches the corresponding type in rust-bindings/wallet
  */
-type PresenationV1Input = {
+type PresentationV1Input = {
     request: RequestJSON;
     global: CryptographicParameters;
     inputs: CommitmentInput[];
@@ -326,7 +337,7 @@ export function create(
         context: proofContextToJSON(context),
         subjectClaims: subjectClaims,
     };
-    const input: PresenationV1Input = {
+    const input: PresentationV1Input = {
         request: requestJson,
         global: globalContext,
         inputs,
@@ -448,3 +459,27 @@ export async function verifyWithNode(
         return { type: 'failed', error };
     }
 }
+
+/**
+ * For the case where the verifier wants the user to prove that an attribute is equal to a public
+ * value. The statement is that the attribute value is equal to `attributeValue`.
+ */
+// This type must match the JSON serialization format of `AtomicStatementV1::AttributeValue` in
+// concordium-base.
+export type GenericAttributeValueStatement<TagType, ValueType> = {
+    type: 'AttributeValue';
+    /** The attribute that the verifier wants the user to prove equal to a value. */
+    attributeTag: TagType;
+    /** The value the attribute must be proven equal to. */
+    attributeValue: ValueType;
+};
+
+/**
+ * The type of statements that can be used in subject claims.
+ */
+// This type must match the JSON serialization format of `AtomicStatementV1` in concordium-base.
+export type AtomicStatementV3<AttributeKey = string> =
+    | GenericAttributeValueStatement<AttributeKey, AttributeType>
+    | GenericMembershipStatement<AttributeKey, AttributeType>
+    | GenericNonMembershipStatement<AttributeKey, AttributeType>
+    | GenericRangeStatement<AttributeKey, AttributeType>;

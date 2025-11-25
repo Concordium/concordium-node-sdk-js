@@ -44,6 +44,7 @@ describe('VerifiablePresentationV1', () => {
         const claims: VerifiablePresentationV1.SubjectClaims = VerifiablePresentationV1.createAccountClaims(
             'Testnet',
             CredentialRegistrationId.fromHexString(credRegId.toString('hex')),
+            0,
             [
                 {
                     attributeTag: AttributeKeyString.dob,
@@ -79,6 +80,7 @@ describe('VerifiablePresentationV1', () => {
 
         const publicData: VerifiableCredentialV1.AccountVerificationMaterial = {
             type: 'account',
+            issuer: 0,
             commitments: PUBLIC_0_0_0.commitments.cmmAttributes,
         };
 

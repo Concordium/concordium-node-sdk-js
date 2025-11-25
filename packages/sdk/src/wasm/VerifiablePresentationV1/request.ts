@@ -237,6 +237,9 @@ export type JSON = {
  */
 type IdentityCredType = 'identityCredential' | 'accountCredential';
 
+// This type must match the JSON serialization format of `RequestedStatement` in concordium-base.
+export type RequestedStatement<AttributeKey> = AtomicStatementV2<AttributeKey>;
+
 /**
  * Statement requesting proofs from identity credentials issued by identity providers.
  * Can specify whether to accept proofs from identity credentials, account credentials, or both.
@@ -247,7 +250,7 @@ export type IdentityClaims = {
     /** Source types accepted for this statement (identity credential, account credential, or both) */
     source: IdentityCredType[];
     /** Atomic statements about identity attributes to prove */
-    statements: AtomicStatementV2<AttributeKey>[];
+    statements: RequestedStatement<AttributeKey>[];
     /** Valid identity provider issuers for this statement */
     issuers: IdentityProviderDID[];
 };

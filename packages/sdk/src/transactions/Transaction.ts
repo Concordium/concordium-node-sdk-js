@@ -39,7 +39,6 @@ import * as JSONBig from '../json-bigint.js';
 import { AccountAddress, DataBlob, Energy, SequenceNumber, TransactionExpiry } from '../types/index.js';
 import { countSignatures, isDefined, orUndefined } from '../util.js';
 import { AccountTransactionV0, Payload } from './index.js';
-import { TransferToPublic } from './Payload.ts';
 
 // --- Core types ---
 

@@ -45,7 +45,7 @@ export async function submitSponsoredTransaction(transaction: Transaction.Signab
     assert(isSponsored, 'Expected a sponsored transaction');
     assert(AccountAddress.equals(sender, walletAccount), 'Invalid transaction sender');
     assert(SequenceNumber.equals(nonce, senderNonce.nonce), 'Invalid nonce for sender');
-    assert(TransactionExpiry.toDate(expiry) < new Date(), 'Transaction has expired');
+    assert(TransactionExpiry.toDate(expiry) > new Date(), 'Transaction has expired');
 
     // Additionally, sender application would perform normal transaction validation here (except for being able to cover the
     // transaction fee):

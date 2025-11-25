@@ -426,16 +426,14 @@ export function transfer(
  * @param payload the transfer to public payload
  * @returns a transfer to public transaction
  */
-export function transferToPublic(payload: TransferToPublicPayload | Payload.TransferToPublic): Initial<Payload.TransferToPublic> {
+export function transferToPublic(
+    payload: TransferToPublicPayload | Payload.TransferToPublic
+): Initial<Payload.TransferToPublic> {
     if (!isPayloadWithType(payload)) return transferToPublic(Payload.transferToPublic(payload));
 
     const handler = new TransferToPublicHandler();
-    return new TransactionBuilder(
-        { executionEnergyAmount: Energy.create(handler.getBaseEnergyCost()) },
-        payload
-    );
+    return new TransactionBuilder({ executionEnergyAmount: Energy.create(handler.getBaseEnergyCost()) }, payload);
 }
-
 
 /**
  * Creates a transaction to update account credentials.

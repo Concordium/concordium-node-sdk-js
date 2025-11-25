@@ -636,29 +636,26 @@ export class RegisterDataHandler
     }
 }
 
-
 export interface TransferToPublicPayloadJSON {
-    data: 
-    {
+    data: {
         remainingAmount: CcdAmount.Type;
         transferAmount: CcdAmount.Type;
         index: bigint;
         proofs: string;
-    }
+    };
 }
 
-export class TransferToPublicHandler 
-    implements AccountTransactionHandler<TransferToPublicPayload, TransferToPublicPayloadJSON, TransferToPublicPayload> 
+export class TransferToPublicHandler
+    implements AccountTransactionHandler<TransferToPublicPayload, TransferToPublicPayloadJSON, TransferToPublicPayload>
 {
     getBaseEnergyCost(): bigint {
         return 14850n;
     }
 
     serialize(payload: TransferToPublicPayload): Buffer {
-        
         //TODO: how do i serialize exactly the 192 bytes for remaining amount here
         const currentRemainingAmount = payload.data.remainingAmount.toString();
-        if(currentRemainingAmount.length !== 192) {
+        if (currentRemainingAmount.length !== 192) {
             throw new Error(`Length of Remaining Amount must be 192 bytes`);
         }
         const serializedRemainingAmount = Buffer.from(currentRemainingAmount, 'hex');
@@ -668,12 +665,11 @@ export class TransferToPublicHandler
 
         //TODO: hex string for the proofs?
         const serializedProofs = Buffer.from(payload.data.proofs, 'hex');
-    
+
         return Buffer.concat([serializedRemainingAmount, serializedTransferAmount, serializedIndex, serializedProofs]);
     }
 
     deserialize(serializedPayload: Cursor): TransferToPublicPayload {
-
         const remainingAmount = serializedPayload.read(192);
         const transferAmount = serializedPayload.read(8).readBigUInt64BE(0);
         const index = serializedPayload.read(8).readBigUInt64BE(0);
@@ -685,14 +681,14 @@ export class TransferToPublicHandler
                 transferAmount: CcdAmount.fromMicroCcd(transferAmount),
                 index: index,
                 proofs: proofs,
-            }
+            },
         };
     }
 
     toJSON(payload: TransferToPublicPayload): TransferToPublicPayload {
         return payload;
     }
-    
+
     fromJSON(json: TransferToPublicPayload): TransferToPublicPayload {
         return json;
     }

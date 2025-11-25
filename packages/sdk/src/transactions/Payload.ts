@@ -117,7 +117,6 @@ function transferWithMemoFromJSON({ type, ...json }: ReturnType<typeof transferW
     return transfer(handler.fromJSON(json));
 }
 
-
 export type TransferToPublic = TransferToPublicPayload & {
     readonly type: AccountTransactionType.TransferToPublic;
 };
@@ -130,7 +129,6 @@ export function transferToPublic(payload: TransferToPublicPayload): TransferToPu
 export function transferToPublic(payload: TransferToPublicPayload): TransferToPublic {
     return { type: AccountTransactionType.TransferToPublic, ...payload };
 }
-
 
 /**
  * A deploy module transaction payload.

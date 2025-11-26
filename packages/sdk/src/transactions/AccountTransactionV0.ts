@@ -274,16 +274,12 @@ export function deserialize(value: Cursor | ArrayBuffer): AccountTransactionV0 {
     const cursor = isRawBuffer ? Cursor.fromBuffer(value) : value;
 
     const signature = deserializeAccountTransactionSignature(cursor);
-    console.log('signature ---> ', signature);
     const header = deserializeHeader(cursor);
-    console.log('header ---->', header);
     const payload = Payload.deserialize(cursor);
-    console.log('payload ---->', payload);
 
     if (isRawBuffer && cursor.remainingBytes.length !== 0)
         throw new Error('Deserializing the transaction did not exhaust the buffer');
 
-    console.log('finished AccountTransactionV0.deserialize, returning result');
     return { version: 0, signature, header, payload };
 }
 

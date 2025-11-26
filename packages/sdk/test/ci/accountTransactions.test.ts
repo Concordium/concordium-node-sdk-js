@@ -409,9 +409,3 @@ test('TransferToPublicPayload serializes to JSON correctly', async () => {
     // ID test
     expect(handler.fromJSON(json)).toEqual(payload);
 });
-
-const stripWhitespace = (str: string): string => {
-    // \s matches any whitespace character (space, tab, newline)
-    // g flag means global (match all occurrences)
-    return str.replace(/\s/g, '');
-};

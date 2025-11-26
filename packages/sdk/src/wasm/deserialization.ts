@@ -65,6 +65,7 @@ export function deserializeBlockItem(value: ArrayBuffer | Cursor): BlockItem {
     const cursor = isRawBuffer ? Cursor.fromBuffer(value) : value;
 
     const blockItemKind = deserializeUint8(cursor);
+    console.log('---> ', blockItemKind);
     let blockItem: BlockItem;
     switch (blockItemKind) {
         case BlockItemKind.AccountTransactionKind:
@@ -85,6 +86,10 @@ export function deserializeBlockItem(value: ArrayBuffer | Cursor): BlockItem {
             throw new Error('Invalid blockItemKind');
     }
 
+    console.log(
+        'Why in deserialization wasm we still have more bytes, remaining bytes length:',
+        cursor.remainingBytes.length
+    );
     if (isRawBuffer && cursor.remainingBytes.length !== 0)
         throw new Error('Deserializing the transaction did not exhaust the buffer');
     return blockItem;

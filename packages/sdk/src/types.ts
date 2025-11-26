@@ -1460,7 +1460,7 @@ export interface TransferToPublicPayload {
 }
 
 export interface SecToPubAmountTransferData {
-    remainingAmount: CcdAmount.Type;
+    remainingAmount: string;
     transferAmount: CcdAmount.Type;
     index: bigint;
     proofs: string;

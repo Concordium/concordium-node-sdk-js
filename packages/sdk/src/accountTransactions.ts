@@ -638,7 +638,7 @@ export class RegisterDataHandler
 
 export interface TransferToPublicPayloadJSON {
     data: {
-        remainingAmount: CcdAmount.Type;
+        remainingAmount: string;
         transferAmount: CcdAmount.Type;
         index: bigint;
         proofs: string;
@@ -654,30 +654,30 @@ export class TransferToPublicHandler
 
     serialize(payload: TransferToPublicPayload): Buffer {
         //TODO: how do i serialize exactly the 192 bytes for remaining amount here
-        const currentRemainingAmount = payload.data.remainingAmount.toString();
-        if (currentRemainingAmount.length !== 192) {
-            throw new Error(`Length of Remaining Amount must be 192 bytes`);
+        const encryptedAmountString = payload.data.remainingAmount;
+        if (encryptedAmountString.length !== 384) {
+            throw new Error('EncryptedAmount must be 192 bytes/384 hex chars');
         }
-        const serializedRemainingAmount = Buffer.from(currentRemainingAmount, 'hex');
+        const serializedRemainingAmount = Buffer.from(encryptedAmountString, 'hex');
 
         const serializedTransferAmount = encodeWord64(payload.data.transferAmount.microCcdAmount);
         const serializedIndex = encodeWord64(payload.data.index);
 
-        //TODO: hex string for the proofs?
-        const serializedProofs = Buffer.from(payload.data.proofs, 'hex');
+        //TODO: string for the proofs?
+        const serializedProofs = Buffer.from(payload.data.proofs);
 
         return Buffer.concat([serializedRemainingAmount, serializedTransferAmount, serializedIndex, serializedProofs]);
     }
 
     deserialize(serializedPayload: Cursor): TransferToPublicPayload {
-        const remainingAmount = serializedPayload.read(192);
+        const amount = serializedPayload.read(192);
         const transferAmount = serializedPayload.read(8).readBigUInt64BE(0);
         const index = serializedPayload.read(8).readBigUInt64BE(0);
-        const proofs = serializedPayload.remainingBytes.toString('hex');
+        const proofs = serializedPayload.read(serializedPayload.remainingBytes.length).toString(); //TODO: read remaining bytes for proofs
 
         return {
             data: {
-                remainingAmount: CcdAmount.fromMicroCcd(remainingAmount.toString('hex')), //TODO: how do i put the bytes of this remainingAmount?
+                remainingAmount: amount.toString('hex'), //TODO: how do i put the bytes of this remainingAmount?
                 transferAmount: CcdAmount.fromMicroCcd(transferAmount),
                 index: index,
                 proofs: proofs,
@@ -685,11 +685,11 @@ export class TransferToPublicHandler
         };
     }
 
-    toJSON(payload: TransferToPublicPayload): TransferToPublicPayload {
+    toJSON(payload: TransferToPublicPayload): TransferToPublicPayloadJSON {
         return payload;
     }
 
-    fromJSON(json: TransferToPublicPayload): TransferToPublicPayload {
+    fromJSON(json: TransferToPublicPayloadJSON): TransferToPublicPayload {
         return json;
     }
 }

@@ -31,6 +31,7 @@ import {
     TokenOperation,
     TokenUpdatePayload,
     TransactionExpiry,
+    TransferToPublicPayload,
     UpdateContractInput,
     UpdateCredentialsInput,
     calculateEnergyCost,
@@ -275,6 +276,32 @@ test('test deserialize UpdateCredential', () => {
     const transaction: AccountTransaction = {
         header,
         type: AccountTransactionType.UpdateCredentials,
+        payload,
+    };
+    deserializeAccountTransactionBase(transaction);
+});
+
+test('test deserialize TransferToPublic ', () => {
+    const payload: TransferToPublicPayload = {
+        data: {
+            remainingAmount:
+                '8f91a4e7c3b22f9a77c0d4d2ebf91a66c4b9f03a1b2d' +
+                'c94f0a773ab1e7f549cd1aa8c0eff34dd9fcad120ca6' +
+                '5f72b9440b7b772c3ac8e95ff1fc625eb42603e977f1' +
+                'a81d54f0bc99e89d3fdc1c5aef884b9442de8efad21a' +
+                '3cc4cb6aa91e5f0bc1d40fa26ee062a995be0c8dc494' +
+                '73db9e36b3f244f46ef4bc0e5f119d74a3cca77e23bd' +
+                'f6a908cbb5c1dd2e983af550f3e7bc65bb0de612aa1d' +
+                '0c9f020e7bd23bf9d105e7a9b7f4c0aa59debc21f41a66c1efb2dcf8a7e5cd42a19fc3c779b0',
+            transferAmount: CcdAmount.fromMicroCcd(100000),
+            index: 123n,
+            proofs: '0123456789abcdeffedcba9876543210aabbccdd',
+        },
+    };
+
+    const transaction: AccountTransaction = {
+        header,
+        type: AccountTransactionType.TransferToPublic,
         payload,
     };
     deserializeAccountTransactionBase(transaction);

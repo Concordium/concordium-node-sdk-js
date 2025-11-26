@@ -1560,6 +1560,21 @@ export type TokenUpdatePayload = {
     operations: Cbor.Type;
 };
 
+export interface UpdateCredentialKeysPayload {
+    credId: CredentialRegistrationId.Type;
+    keys: CredentialPublicKeys;
+}
+
+export interface UpdateCredentialKeysInput extends UpdateCredentialKeysPayload {
+    /**
+     * the current number of credentials on the account. This
+     * is required to be able to calculate the energy cost, but
+     * is not part of the actual transaction.
+     */
+    currentNumberOfCredentials: bigint;
+}
+
+
 export type AccountTransactionPayload =
     | SimpleTransferPayload
     | SimpleTransferWithMemoPayload
@@ -1570,13 +1585,15 @@ export type AccountTransactionPayload =
     | UpdateCredentialsPayload
     | ConfigureBakerPayload
     | ConfigureDelegationPayload
-    | TokenUpdatePayload;
+    | TokenUpdatePayload
+    | UpdateCredentialKeysPayload;
 
 export type AccountTransactionInput =
-    | Exclude<AccountTransactionPayload, InitContractPayload | UpdateContractPayload | UpdateCredentialsPayload>
+    | Exclude<AccountTransactionPayload, InitContractPayload | UpdateContractPayload | UpdateCredentialsPayload | UpdateCredentialKeysPayload>
     | InitContractInput
     | UpdateContractInput
-    | UpdateCredentialsInput;
+    | UpdateCredentialsInput
+    | UpdateCredentialKeysInput;
 
 /**
  * Describes account transactions. This does _not_ describe the transaction format that is serialized

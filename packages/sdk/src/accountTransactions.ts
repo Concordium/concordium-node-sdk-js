@@ -15,7 +15,10 @@ import {
     InitContractInput,
     ModuleReference,
     UpdateContractInput,
+    UpdateCredentialKeysInput,
+    UpdateCredentialKeysPayload,
     UpdateCredentialsInput,
+    VerifyKey,
 } from './pub/types.js';
 import { serializeCredentialDeploymentInfo } from './serialization.js';
 import {
@@ -29,6 +32,8 @@ import {
     serializeConfigureBakerPayload,
     serializeConfigureDelegationPayload,
     serializeList,
+    encodeWord8FromString,
+    serializeMap,
 } from './serializationHelpers.js';
 import {
     AccountTransactionHeader,
@@ -58,7 +63,8 @@ import { DataBlob } from './types/DataBlob.js';
 import * as InitName from './types/InitName.js';
 import * as Parameter from './types/Parameter.js';
 import * as ReceiveName from './types/ReceiveName.js';
-import { Energy } from './types/index.js';
+import { CredentialRegistrationId, Energy } from './types/index.js';
+import { Upward, isKnown } from './index.ts';
 
 export interface AccountTransactionHandler<
     Payload extends AccountTransactionPayload,
@@ -819,6 +825,124 @@ export class TokenUpdateHandler
     }
 }
 
+export type UpdateCredentialKeysPayloadJSON = {
+    credId: string;
+    keys: string; 
+};
+
+export class UpdateCredentialKeysHandler implements AccountTransactionHandler<UpdateCredentialKeysPayload, UpdateCredentialKeysPayloadJSON, UpdateCredentialKeysInput>
+{
+    getBaseEnergyCost(payload: UpdateCredentialKeysInput): bigint {
+        const numberOfKeys = BigInt(Object.keys(payload.keys.keys).length);
+
+        return 500n * payload.currentNumberOfCredentials + 100n * numberOfKeys;
+    }
+
+    serialize(payload: UpdateCredentialKeysPayload): Buffer {
+        //TODO: assume this is going to be 48 bytes?
+        const credId =  CredentialRegistrationId.toHexString(payload.credId);
+        if(credId.length != 96) {
+            throw new Error("CredId length must be 48 bytes/96 hex chars");
+        }
+        const serializedCredId = Buffer.from(credId);
+
+        const keys = payload.keys.keys;
+
+        const putCredentialVerifyKey = (credentialVerifyKey: Upward<VerifyKey>)  => {
+            if(isKnown(credentialVerifyKey)) {
+                const serializedSchemeId = encodeWord8FromString(credentialVerifyKey.schemeId);
+                const serializedKey = Buffer.from(credentialVerifyKey.verifyKey);
+                return Buffer.concat([serializedSchemeId, serializedKey]);
+            }
+            return Buffer.alloc(0); //TODO: we are dealing with Upward, would this be ok?
+        }
+
+        const serializedKeys =  serializeMap(keys, encodeWord8, encodeWord8FromString,  putCredentialVerifyKey); //TODO: the map key is of type number, would the encodeWord8FromString work?
+
+        return Buffer.concat([serializedCredId, serializedKeys]);
+    }
+
+    deserialize(serializedPayload: Cursor): UpdateCredentialKeysPayload {
+
+        //TODO: is this correct?
+        const credId = serializedPayload.read(48).toString('hex');
+        
+        const resultMap: Record<number, Upward<VerifyKey>> = {}; 
+        const credVerifyKeyEntryCount = serializedPayload.read(1).readUInt8(0);
+        for(let a = 0; a < credVerifyKeyEntryCount; a++) {
+            const index = serializedPayload.read(1).readUInt8(0);
+
+            const scheme = serializedPayload.read(1).readUInt8(0);
+            const key = serializedPayload.read(32);
+
+            const currentVerifyKey = {
+                schemeId: scheme.toString(),
+                verifyKey: key.toString('hex'), //TODO: is this correct, i do toString hex?
+            }
+
+            resultMap[index]= currentVerifyKey;
+        }
+
+        const threshold = serializedPayload.read(1).readUInt8(0);
+
+        const credPublicKeys = {
+            count: credVerifyKeyEntryCount,
+            keys: resultMap,
+            threshold: threshold,
+        }
+
+        return {
+            credId: CredentialRegistrationId.fromHexString(credId),
+            keys: credPublicKeys,
+        }
+    }
+
+    toJSON(payload: UpdateCredentialKeysPayload): UpdateCredentialKeysPayloadJSON {
+
+        return {
+            credId: JSON.stringify(payload.credId),
+            keys: JSON.stringify({
+                count: Object.keys(payload.keys.keys).length,
+                keys: Object.entries(payload.keys.keys)
+                    .map(([index, key]) => 
+                            ({
+                                index: Number(index),
+                                key: key,
+                            })
+                        ),
+                threshold: payload.keys.threshold,
+            }),
+        }
+    }
+
+    /*
+    const json: UpdateCredentialKeysPayloadJSON = {
+    credId: "abc123",
+    keys: '{"keys":[{"index":0,"key":{"some":"value"}}],"threshold":2}'
+};
+     */
+    fromJSON(json: UpdateCredentialKeysPayloadJSON): UpdateCredentialKeysPayload {
+
+        const keysObj = JSON.parse(json.keys) as {
+            keys: { index: number; key: any }[];
+            threshold: number;
+        }
+
+        const keysRecord: Record<number, Upward<VerifyKey>> = {};
+        for(const {index, key} of keysObj.keys) {
+            keysRecord[index] = key;
+        }
+
+        return {
+            credId: CredentialRegistrationId.fromJSON(json.credId),
+            keys: {
+                keys: keysRecord,
+                threshold: keysObj.threshold,
+            },
+        }
+    }
+}
+
 export type AccountTransactionPayloadJSON =
     | SimpleTransferPayloadJSON
     | SimpleTransferWithMemoPayloadJSON
@@ -829,7 +953,8 @@ export type AccountTransactionPayloadJSON =
     | RegisterDataPayloadJSON
     | ConfigureDelegationPayloadJSON
     | ConfigureBakerPayloadJSON
-    | TokenUpdatePayloadJSON;
+    | TokenUpdatePayloadJSON
+    | UpdateCredentialKeysPayloadJSON;
 
 /**
  * @deprecated use `Transaction` and `Payload` APIs instead.

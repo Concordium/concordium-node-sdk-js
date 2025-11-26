@@ -65,7 +65,6 @@ export function deserializeBlockItem(value: ArrayBuffer | Cursor): BlockItem {
     const cursor = isRawBuffer ? Cursor.fromBuffer(value) : value;
 
     const blockItemKind = deserializeUint8(cursor);
-
     let blockItem: BlockItem;
     switch (blockItemKind) {
         case BlockItemKind.AccountTransactionKind:

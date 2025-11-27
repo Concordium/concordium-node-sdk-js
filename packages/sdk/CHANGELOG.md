@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+## 11.1.0-alpha.5
+
+### Breaking changes
+
+- `VerifiablePresentationV1.createAccountClaims` now takes the index of the Identity Provider of the account.
+- Update of rust-bindings changing the internal proof format. Making the proofs generated using previous alpha releases incompatible with this one.
+
+### Added
+
+- `VerifiablePresentationV1.revealRequestedStatements` convenience function for converting requested statements into the claim statements, specifically extracting the attribute values from the chosen attributes of the ID object.
+- `VerifiablePresentationV1.noRevealRequestedStatements` convenience function for converting requested statements into the claim statements, producing an error for requests of revealing an attribute.
+- Type `RequestedStatement` for statements being requested.
+- Type `AtomicStatementV1` for statements part of a presentation.
+
 ## 11.1.0-alpha.4
 
 ### Breaking changes

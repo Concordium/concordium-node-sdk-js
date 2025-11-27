@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 4.0.0-alpha.2
+
+### Breaking changes
+
+- Update of `concordium-base` dependency, changing the JSON format and internals of verifiable presentation.
+
 ## 4.0.0-alpha.1
 
 ### Added

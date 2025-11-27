@@ -845,31 +845,26 @@ export class UpdateCredentialKeysHandler
     }
 
     serialize(payload: UpdateCredentialKeysPayload): Buffer {
-        //TODO: assume this is going to be 48 bytes?
-        const credId = CredentialRegistrationId.toHexString(payload.credId);
-        if (credId.length != 96) {
-            throw new Error('CredId length must be 48 bytes/96 hex chars');
-        }
-        const serializedCredId = Buffer.from(credId);
+        const serializedCredId = CredentialRegistrationId.toBuffer(payload.credId);
 
         const keys = payload.keys.keys;
 
         const putCredentialVerifyKey = (credentialVerifyKey: Upward<VerifyKey>) => {
-            if (isKnown(credentialVerifyKey)) {
-                const serializedSchemeId = encodeWord8FromString(credentialVerifyKey.schemeId);
-                const serializedKey = Buffer.from(credentialVerifyKey.verifyKey);
-                return Buffer.concat([serializedSchemeId, serializedKey]);
-            }
-            return Buffer.alloc(0); //TODO: we are dealing with Upward, would this be ok?
+            if (!isKnown(credentialVerifyKey)) throw new Error('Verify keys must be known when serializing');
+
+            const serializedSchemeId = encodeWord8FromString(credentialVerifyKey.schemeId);
+            const serializedKey = Buffer.from(credentialVerifyKey.verifyKey);
+            return Buffer.concat([serializedSchemeId, serializedKey]);
         };
 
-        const serializedKeys = serializeMap(keys, encodeWord8, encodeWord8FromString, putCredentialVerifyKey); //TODO: the map key is of type number, would the encodeWord8FromString work?
+        const serializedKeys = serializeMap(keys, encodeWord8, encodeWord8FromString, putCredentialVerifyKey);
 
-        return Buffer.concat([serializedCredId, serializedKeys]);
+        const serializedThreshold = Buffer.from([payload.keys.threshold]);
+
+        return Buffer.concat([serializedCredId, serializedKeys, serializedThreshold]);
     }
 
     deserialize(serializedPayload: Cursor): UpdateCredentialKeysPayload {
-        //TODO: is this correct?
         const credId = serializedPayload.read(48).toString('hex');
 
         const resultMap: Record<number, Upward<VerifyKey>> = {};
@@ -878,12 +873,13 @@ export class UpdateCredentialKeysHandler
             const index = serializedPayload.read(1).readUInt8(0);
 
             const scheme = serializedPayload.read(1).readUInt8(0);
-            const key = serializedPayload.read(32);
-
-            const currentVerifyKey = {
-                schemeId: scheme.toString(),
-                verifyKey: key.toString('hex'), //TODO: is this correct, i do toString hex?
-            };
+            let currentVerifyKey: Upward<VerifyKey> = null;
+            if (scheme === 0) {
+                currentVerifyKey = {
+                    schemeId: 'Ed25519',
+                    verifyKey: serializedPayload.read(32).toString('hex'),
+                };
+            }
 
             resultMap[index] = currentVerifyKey;
         }

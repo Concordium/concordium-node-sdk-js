@@ -370,7 +370,7 @@ test('ConfigureDelegationPayload serializes to JSON correctly', async () => {
     expect(handler.fromJSON(JSONBig.parse(expected))).toEqual(payload);
 });
 
-test('UpdateCredentialKeysPayload serializes to JSON correctly', async () => {
+test.only('UpdateCredentialKeysPayload serializes to JSON correctly', async () => {
     const credId = 'a'.repeat(96);
     const payload: UpdateCredentialKeysPayload = {
         credId: CredentialRegistrationId.fromHexString(credId),

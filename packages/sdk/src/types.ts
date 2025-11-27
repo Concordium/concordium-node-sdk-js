@@ -1574,7 +1574,6 @@ export interface UpdateCredentialKeysInput extends UpdateCredentialKeysPayload {
     currentNumberOfCredentials: bigint;
 }
 
-
 export type AccountTransactionPayload =
     | SimpleTransferPayload
     | SimpleTransferWithMemoPayload
@@ -1589,7 +1588,10 @@ export type AccountTransactionPayload =
     | UpdateCredentialKeysPayload;
 
 export type AccountTransactionInput =
-    | Exclude<AccountTransactionPayload, InitContractPayload | UpdateContractPayload | UpdateCredentialsPayload | UpdateCredentialKeysPayload>
+    | Exclude<
+          AccountTransactionPayload,
+          InitContractPayload | UpdateContractPayload | UpdateCredentialsPayload | UpdateCredentialKeysPayload
+      >
     | InitContractInput
     | UpdateContractInput
     | UpdateCredentialsInput

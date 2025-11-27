@@ -45,18 +45,21 @@ describe('VerifiablePresentationV1', () => {
             'Testnet',
             CredentialRegistrationId.fromHexString(credRegId.toString('hex')),
             0,
-            [
-                {
-                    attributeTag: AttributeKeyString.dob,
-                    lower: '19500101',
-                    type: 'AttributeInRange',
-                    upper: '20000101',
-                },
-                {
-                    attributeTag: AttributeKeyString.firstName,
-                    type: 'RevealAttribute',
-                },
-            ]
+            VerifiablePresentationV1.revealRequestedStatements(
+                [
+                    {
+                        attributeTag: AttributeKeyString.dob,
+                        lower: '19500101',
+                        type: 'AttributeInRange',
+                        upper: '20000101',
+                    },
+                    {
+                        attributeTag: AttributeKeyString.firstName,
+                        type: 'RevealAttribute',
+                    },
+                ],
+                values
+            )
         );
         const inputs: VerifiablePresentationV1.CommitmentInput = {
             type: 'account',
@@ -109,18 +112,25 @@ describe('VerifiablePresentationV1', () => {
         const input = createIdentityCommitmentInputWithHdWallet(idObject, inputContext, 0, wallet);
 
         const statements: VerifiablePresentationV1.SubjectClaims[] = [
-            VerifiablePresentationV1.createIdentityClaims('Testnet', 0, [
-                {
-                    attributeTag: AttributeKeyString.dob,
-                    lower: '19500101',
-                    type: 'AttributeInRange',
-                    upper: '20000101',
-                },
-                {
-                    attributeTag: AttributeKeyString.firstName,
-                    type: 'RevealAttribute',
-                },
-            ]),
+            VerifiablePresentationV1.createIdentityClaims(
+                'Testnet',
+                0,
+                VerifiablePresentationV1.revealRequestedStatements(
+                    [
+                        {
+                            attributeTag: AttributeKeyString.dob,
+                            lower: '19500101',
+                            type: 'AttributeInRange',
+                            upper: '20000101',
+                        },
+                        {
+                            attributeTag: AttributeKeyString.firstName,
+                            type: 'RevealAttribute',
+                        },
+                    ],
+                    idObject.attributeList.chosenAttributes
+                )
+            ),
         ];
 
         const presentation = VerifiablePresentationV1.create(

@@ -140,8 +140,8 @@ export type AccountClaims = {
  *
  * @param network - The network the account credential exists on.
  * @param credRegId - The credential registration ID of the account.
- * @param statement - The atomic statements to prove for the account credential.
  * @param issuer - Identity provider which issued the credentials.
+ * @param statement - The atomic statements to prove for the account credential.
  * @returns The account claims to be used in the presentation input for the verifiable credential.
  */
 export function createAccountClaims(

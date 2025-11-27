@@ -2,13 +2,7 @@ import { ConcordiumGRPCClient } from '../../grpc/index.js';
 import { ArInfo, AttributeKey, HexString, IpInfo, Network } from '../../types.js';
 import { BlockHash, CredentialRegistrationId } from '../../types/index.js';
 import { bail } from '../../util.js';
-import {
-    CredentialStatus,
-    CredentialsInputsAccount,
-    CredentialsInputsIdentity,
-    DIDString,
-    parseYearMonth,
-} from '../../web3-id/index.js';
+import { CredentialStatus, CredentialsInputsIdentity, DIDString, parseYearMonth } from '../../web3-id/index.js';
 import { VerifiableCredentialV1 } from './index.js';
 import { AtomicStatementV3 } from './proof.js';
 import { ZKProofV4 } from './types.js';

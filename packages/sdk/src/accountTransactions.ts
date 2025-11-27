@@ -6,7 +6,7 @@ import {
     deserializeThreshold,
 } from './deserialization.js';
 import { Cursor } from './deserializationHelpers.js';
-import { Upward, isKnown } from './index.ts';
+import { Upward, isKnown } from './index.js';
 import { Cbor, TokenId, TokenOperationType } from './plt/index.js';
 import {
     AccountTransactionInput,

@@ -1560,8 +1560,15 @@ export type TokenUpdatePayload = {
     operations: Cbor.Type;
 };
 
+/**
+ * The payload for UpdateCredentialKeys transaction
+ * new set of credential keys to be replaced with the existing ones including updating the threshold
+ * 
+ */
 export interface UpdateCredentialKeysPayload {
+    /** account credential identifier */
     credId: CredentialRegistrationId.Type;
+    /** public keys of a credential*/
     keys: CredentialPublicKeys;
 }
 

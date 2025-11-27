@@ -17,13 +17,6 @@
         "threshold": 2
     },
     "credId": "a5727a5f217a0abaa6bba7f6037478051a49d5011e045eb0d86fce393e0c7b4a96382c60e09a489ebb6d800dc0d88d05",
-    "commitments": {
-        "cmmPrf": "abcdef",
-        "cmmCredCounter": "2",
-        "cmmIdCredSecSharingCoeff": ["1", "2", "3", "4", "5"],
-        "cmmAttributes": {},
-        "cmmMaxAccounts": "3"
-    },
     "ipIdentity": 0,
     "revocationThreshold": 5,
     "arData": {

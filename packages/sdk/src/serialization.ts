@@ -23,7 +23,7 @@ import {
     BlockItemKind,
     CredentialDeploymentDetails,
     CredentialDeploymentInfo,
-    CredentialDeploymentValues,
+    CredentialDeploymentValuesPayload,
     CredentialSignature,
     IdOwnershipProofs,
     UnsignedCredentialDeploymentInformation,
@@ -170,11 +170,15 @@ export function getAccountTransactionSignDigest(accountTransaction: AccountTrans
 }
 
 /**
+ * @deprecated describes an unused serialization format - use {@linkcode serializeAccountTransaction} instead.
+ *
  * Serializes an account transaction so that it is ready for being submitted
  * to the node. This consists of the standard serialization of an account transaction
  * prefixed by a version byte.
+ *
  * @param accountTransaction the transaction to serialize
  * @param signatures the signatures on the hash of the account transaction
+ *
  * @returns the serialization of the account transaction ready for being submitted to a node
  */
 export function serializeAccountTransactionForSubmission(
@@ -192,7 +196,7 @@ export function serializeAccountTransactionForSubmission(
  * @param credential the credential deployment values to serialize
  * @returns the serialization of CredentialDeploymentValues
  */
-function serializeCredentialDeploymentValues(credential: CredentialDeploymentValues) {
+function serializeCredentialDeploymentValues(credential: CredentialDeploymentValuesPayload) {
     // Check that we don't attempt to serialize unknown variants
     if (Object.values(credential.credentialPublicKeys.keys).some((v) => !isKnown(v)))
         throw new Error('Cannot serialize unknown key variants');
@@ -211,6 +215,7 @@ function serializeCredentialDeploymentValues(credential: CredentialDeploymentVal
     buffers.push(Buffer.from(credential.credId, 'hex'));
     buffers.push(encodeWord32(credential.ipIdentity));
     buffers.push(encodeWord8(credential.revocationThreshold));
+
     buffers.push(
         serializeMap(
             credential.arData,
@@ -224,10 +229,9 @@ function serializeCredentialDeploymentValues(credential: CredentialDeploymentVal
     const revealedAttributes = Object.entries(credential.policy.revealedAttributes);
     buffers.push(encodeWord16(revealedAttributes.length));
 
-    const revealedAttributeTags: [number, string][] = revealedAttributes.map(([tagName, value]) => [
-        AttributesKeys[tagName as keyof typeof AttributesKeys],
-        value,
-    ]);
+    const revealedAttributeTags: [number, string][] = revealedAttributes.map(([tagName, value]) => {
+        return [AttributesKeys[tagName as keyof typeof AttributesKeys], value];
+    });
     revealedAttributeTags
         .sort((a, b) => a[0] - b[0])
         .forEach(([tag, value]) => {

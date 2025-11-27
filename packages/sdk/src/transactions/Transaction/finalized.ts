@@ -20,22 +20,6 @@ export function preFinalized(transaction: Signable): PreFinalized {
         header: { ...transaction.header, numSignatures },
     });
 
-    if (transaction.version === 1) {
-        const v1Header: AccountTransactionV1.Header = {
-            expiry,
-            sender,
-            nonce,
-            payloadSize: Payload.sizeOf(transaction.payload),
-            energyAmount,
-            sponsor: transaction.header.sponsor?.account,
-        };
-        return {
-            version: 1,
-            header: v1Header,
-            payload: transaction.payload,
-        };
-    }
-
     const v0Header: AccountTransactionV0.Header = {
         expiry,
         sender,
@@ -43,9 +27,22 @@ export function preFinalized(transaction: Signable): PreFinalized {
         payloadSize: Payload.sizeOf(transaction.payload),
         energyAmount,
     };
+
+    if (transaction.version === 0) {
+        return {
+            version: 0,
+            header: v0Header,
+            payload: transaction.payload,
+        };
+    }
+
+    const v1Header: AccountTransactionV1.Header = {
+        ...v0Header,
+        sponsor: transaction.header.sponsor?.account,
+    };
     return {
-        version: 0,
-        header: v0Header,
+        version: 1,
+        header: v1Header,
         payload: transaction.payload,
     };
 }

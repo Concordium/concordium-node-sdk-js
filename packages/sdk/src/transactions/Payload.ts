@@ -566,8 +566,6 @@ export function deserialize(value: Cursor | ArrayBuffer): Payload {
     const isRawBuffer = !(value instanceof Cursor);
     const cursor = isRawBuffer ? Cursor.fromBuffer(value) : value;
 
-    const bufferForConfigureDelegation = isRawBuffer ? Buffer.from(value) : value;
-
     const type = deserializeUint8(cursor);
     let payload: Payload;
     switch (type) {

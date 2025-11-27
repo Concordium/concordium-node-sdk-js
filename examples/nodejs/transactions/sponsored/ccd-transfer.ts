@@ -105,7 +105,7 @@ const sponsoredTransaction = Transaction.signableFromJSON(response);
 // 4.
 // Submit the sponsored transaction through the application signing on behalf of the sender.
 const transactionHash = await wallet.submitSponsoredTransaction(sponsoredTransaction);
-console.log(`Transaction submitted with hash: ${transaction}`);
+console.log(`Transaction submitted with hash: ${transactionHash.toString()}`);
 
 const result = await grpcClient.waitForTransactionFinalization(transactionHash);
 console.log('Transaction finalized:', result);

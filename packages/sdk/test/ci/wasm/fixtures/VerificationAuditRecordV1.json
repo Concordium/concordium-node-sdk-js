@@ -17,18 +17,12 @@
                     "context": "Example VP"
                 }
             ],
-            "requested": [
-                "BlockHash",
-                "ResourceID"
-            ]
+            "requested": ["BlockHash", "ResourceID"]
         },
         "subjectClaims": [
             {
                 "type": "identity",
-                "source": [
-                    "accountCredential",
-                    "identityCredential"
-                ],
+                "source": ["accountCredential", "identityCredential"],
                 "statements": [
                     {
                         "type": "AttributeInSet",
@@ -74,18 +68,13 @@
                         "attributeTag": "firstName"
                     }
                 ],
-                "issuers": [
-                    "did:ccd:testnet:idp:0"
-                ]
+                "issuers": ["did:ccd:testnet:idp:0"]
             }
         ],
         "transactionRef": "220b1466d0eca4160eb95a24d44cfdc4908dcb36419c0a554cb0779f534d8a6d"
     },
     "presentation": {
-        "type": [
-            "VerifiablePresentation",
-            "ConcordiumVerifiablePresentationV1"
-        ],
+        "type": ["VerifiablePresentation", "ConcordiumVerifiablePresentationV1"],
         "presentationContext": {
             "type": "ConcordiumContextInformationV1",
             "given": [
@@ -115,11 +104,7 @@
         },
         "verifiableCredential": [
             {
-                "type": [
-                    "VerifiableCredential",
-                    "ConcordiumVerifiableCredentialV1",
-                    "ConcordiumIdBasedCredential"
-                ],
+                "type": ["VerifiableCredential", "ConcordiumVerifiableCredentialV1", "ConcordiumIdBasedCredential"],
                 "credentialSubject": {
                     "id": "did:ccd:testnet:encidcred:02000300000001b17cce6ad298408db582fcbea4c9f7c4a4d6394265d314953aa9a681cb9446f4ce96af6a761544deffca40d3fb6b0ad7a9dd1d2014a0a4be6abc0369f858f5b5107ec6915863ba4c47aa6011cb8dab80e6f1ac2c85de656e3bd4ae29669e7c9a0000000289a0087bb41eeb873aec3f09010e646e8c2b3d52a3ed0ec0c6b8d9d4ba772fe1201845759263e30fe968acbe6b5462ac952fc2b53b772e34b2df674f605ee125a6a81439dc4d598c37dc5d8d2323d18e4188918a80502f5ec2a0dfc7d7c7751300000003a68ceeda9ef6896ffcf9bd59b4944406c76846b4140aabcd7901cd1522db27b6dd8445af73d473faf894bd242ca564b8a1ef9049625088e92e5129cbb2fe5e4e45f0a9935ac7718fbfbf567172a430bced6554e3541f91375d0758becf15b763",
                     "statement": [

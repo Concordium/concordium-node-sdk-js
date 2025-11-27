@@ -23,6 +23,7 @@ import {
 } from '../../web3-id/index.js';
 import { VerifiableCredentialV1, VerificationRequestV1 } from './index.js';
 import { GivenContextJSON, givenContextFromJSON, givenContextToJSON } from './internal.js';
+import { RequestedStatement } from './request.js';
 import { GivenContext } from './types.js';
 
 const JSONBig = _JB({ alwaysParseAsBig: true, useNativeBigInt: true });
@@ -57,6 +58,67 @@ function proofContextFromJSON(context: ContextJSON): Context {
         given: context.given.map(givenContextFromJSON),
         requested: context.requested.map(givenContextFromJSON),
     };
+}
+
+/**
+ * Map the requested statements into statements used as part of the verifiable presentation.
+ *
+ * Statements such as `RevealAttribute` are converted into `AttributeValueStatement` with the value
+ * from the chosen attributes.
+ *
+ * @see {@link noRevealRequestedStatements} when `RevealAttribute` statements are not supported.
+ *
+ * @param statements - The requested statements to prove for the account credential.
+ * @param chosenAttributes - The list of attributes in the ID object.
+ * @returns The atomic statements to be used in a verifiable presentation
+ * @throws If requested statements contains reveal attribute for attribute tag not found in chosen
+ * attributes.
+ */
+export function revealRequestedStatements<AttributeTag extends string>(
+    statements: RequestedStatement<AttributeTag>[],
+    chosenAttributes: Partial<Record<AttributeTag, string>>
+): AtomicStatementV3<AttributeTag>[] {
+    return statements.map((statement) => {
+        if (statement.type === 'RevealAttribute') {
+            const attributeValue = chosenAttributes[statement.attributeTag];
+            if (attributeValue === undefined) {
+                throw new Error(
+                    `Requested statements contained reveal of attribute '${statement.attributeTag}', and is not found among the chosen attributes.`
+                );
+            }
+            return {
+                type: 'AttributeValue',
+                attributeTag: statement.attributeTag,
+                attributeValue,
+            } satisfies AtomicStatementV3<AttributeTag>;
+        } else {
+            return statement;
+        }
+    });
+}
+
+/**
+ * Map the requested statements into statements used as part of the verifiable presentation, but
+ * assume `RevealAttribute` are not requested.
+ *
+ * @see {@link revealRequestedStatements} for support of `RevealAttribute` statements.
+ *
+ * @param statements - The requested statements to prove for the account credential.
+ * @returns The atomic statements to be used in a verifiable presentation
+ * @throws If requested statements includes a reveal attribute request.
+ */
+export function noRevealRequestedStatements<AttributeTag extends string>(
+    statements: RequestedStatement<AttributeTag>[]
+): AtomicStatementV3<AttributeTag>[] {
+    return statements.map((statement) => {
+        if (statement.type === 'RevealAttribute') {
+            throw new Error(
+                `Requested statements contained reveal of attribute '${statement.attributeTag}', and is not found among the chosen attributes.`
+            );
+        } else {
+            return statement;
+        }
+    });
 }
 
 /**

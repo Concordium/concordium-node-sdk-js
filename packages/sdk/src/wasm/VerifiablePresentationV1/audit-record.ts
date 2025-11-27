@@ -448,7 +448,7 @@ type VerificationAuditV1Input = {
 };
 
 /**
- * Converts a verification audit record to its corresopnding anchor representation encoding.
+ * Converts a verification audit record to its corresponding anchor representation encoding.
  *
  * This function creates a privacy-preserving public record that contains only
  * a hash of the record data, suitable for publishing on-chain while

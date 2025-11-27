@@ -258,6 +258,7 @@ export type IdentityClaims = {
 /**
  * Union type representing all supported statement types in a verification request.
  */
+// This type must match the JSON serialization format of `RequestedSubjectClaims` in concordium-base.
 export type SubjectClaims = IdentityClaims;
 
 /**

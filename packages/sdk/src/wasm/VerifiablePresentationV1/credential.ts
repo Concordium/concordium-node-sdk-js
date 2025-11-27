@@ -2,15 +2,9 @@ import { ConcordiumGRPCClient } from '../../grpc/index.js';
 import { ArInfo, AttributeKey, HexString, IpInfo, Network } from '../../types.js';
 import { BlockHash, CredentialRegistrationId } from '../../types/index.js';
 import { bail } from '../../util.js';
-import {
-    AtomicStatementV2,
-    CredentialStatus,
-    CredentialsInputsAccount,
-    CredentialsInputsIdentity,
-    DIDString,
-    parseYearMonth,
-} from '../../web3-id/index.js';
+import { CredentialStatus, CredentialsInputsIdentity, DIDString, parseYearMonth } from '../../web3-id/index.js';
 import { VerifiableCredentialV1 } from './index.js';
+import { AtomicStatementV1 } from './proof.js';
 import { ZKProofV4 } from './types.js';
 
 /**
@@ -26,7 +20,7 @@ type IdentityCredential = {
         /** The identity disclosure information also acts as ephemeral ID */
         id: HexString;
         /** Statements about identity attributes (should match request) */
-        statement: AtomicStatementV2<AttributeKey>[];
+        statement: AtomicStatementV1<AttributeKey>[];
     };
     /** ISO formatted datetime specifying when the credential is valid from */
     validFrom: string;
@@ -58,7 +52,7 @@ type AccountCredential = {
         /** The account credential identifier as a DID */
         id: DIDString;
         /** Statements about account attributes (should match request) */
-        statement: AtomicStatementV2<AttributeKey>[];
+        statement: AtomicStatementV1<AttributeKey>[];
     };
     /** The zero-knowledge proof for attestation */
     proof: ZKProofV4;
@@ -102,17 +96,30 @@ export function isAccountCredential(credential: Credential): credential is Accou
 /**
  * The public data needed to verify an account based verifiable credential.
  */
-export type AccountVerificationMaterial = CredentialsInputsAccount;
+// This type must match the JSON serialization format of `CredentialVerificationMaterial::Account` in
+// concordium-base.
+export type AccountVerificationMaterial = {
+    /** Union tag */
+    type: 'account';
+    /** Issuer of the credential. */
+    issuer: number;
+    /** Commitments for the ID attributes of the account */
+    commitments: Partial<Record<AttributeKey, HexString>>;
+};
 
 /**
  * The public data needed to verify an identity based verifiable credential.
  */
+// This type must match the JSON serialization format of `CredentialVerificationMaterial::Identity`
+// in concordium-base.
 export type IdentityVerificationMaterial = CredentialsInputsIdentity;
 
 /**
  * Union type of all verification material types used for verification.
  * These inputs contain the public credential data needed to verify proofs.
  */
+// This type must match the JSON serialization format of `CredentialVerificationMaterial` in
+// concordium-base.
 export type VerificationMaterial = AccountVerificationMaterial | IdentityVerificationMaterial;
 
 function parseAccountProofMetadata(cred: AccountCredential): {
@@ -182,7 +189,7 @@ async function verifyAccountMetadata(
     grpc: ConcordiumGRPCClient,
     blockHash?: BlockHash.Type
 ): Promise<{ status: CredentialStatus; inputs: AccountVerificationMaterial }> {
-    const { credId, issuer } = parseAccountProofMetadata(credential);
+    const { credId } = parseAccountProofMetadata(credential);
     const ai = await grpc.getAccountInfo(credId, blockHash);
 
     const cred =
@@ -195,9 +202,6 @@ async function verifyAccountMetadata(
         throw new Error(`Initial credential ${cred.value.contents.regId} cannot be used`);
     }
     const { ipIdentity, policy, commitments } = cred.value.contents;
-    if (ipIdentity !== issuer) {
-        throw new Error('Mismatch between expected issuer and found issuer for credential');
-    }
 
     // At this point, we know we're dealing with a "normal" account credential.
     const validFrom = parseYearMonth(policy.createdAt);
@@ -210,6 +214,7 @@ async function verifyAccountMetadata(
 
     const inputs: AccountVerificationMaterial = {
         type: 'account',
+        issuer: ipIdentity,
         commitments: commitments.cmmAttributes,
     };
     return { status, inputs };

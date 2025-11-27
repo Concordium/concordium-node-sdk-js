@@ -2,17 +2,19 @@ import * as wasm from '@concordium/rust-bindings/wallet';
 import _JB from 'json-bigint';
 
 import {
-    AttributeKey,
     BlockHash,
     ConcordiumGRPCClient,
     CredentialRegistrationId,
     CryptographicParameters,
+    GenericMembershipStatement,
+    GenericNonMembershipStatement,
+    GenericRangeStatement,
     Network,
 } from '../../index.js';
 import { bail } from '../../util.js';
 import {
     AccountCommitmentInput,
-    AtomicStatementV2,
+    AttributeType,
     CredentialStatus,
     DIDString,
     IdentityCommitmentInput,
@@ -21,6 +23,7 @@ import {
 } from '../../web3-id/index.js';
 import { VerifiableCredentialV1, VerificationRequestV1 } from './index.js';
 import { GivenContextJSON, givenContextFromJSON, givenContextToJSON } from './internal.js';
+import { RequestedStatement } from './request.js';
 import { GivenContext } from './types.js';
 
 const JSONBig = _JB({ alwaysParseAsBig: true, useNativeBigInt: true });
@@ -58,13 +61,78 @@ function proofContextFromJSON(context: ContextJSON): Context {
 }
 
 /**
+ * Map the requested statements into statements used as part of the verifiable presentation.
+ *
+ * Statements such as `RevealAttribute` are converted into `AttributeValueStatement` with the value
+ * from the chosen attributes.
+ *
+ * @see {@link noRevealRequestedStatements} when `RevealAttribute` statements are not supported.
+ *
+ * @param statements - The requested statements to prove for the account credential.
+ * @param chosenAttributes - The list of attributes in the ID object.
+ * @returns The atomic statements to be used in a verifiable presentation
+ * @throws If requested statements contains reveal attribute for attribute tag not found in chosen
+ * attributes.
+ */
+export function revealRequestedStatements<AttributeTag extends string>(
+    statements: RequestedStatement<AttributeTag>[],
+    chosenAttributes: Partial<Record<AttributeTag, string>>
+): AtomicStatementV1<AttributeTag>[] {
+    return statements.map((statement) => {
+        if (statement.type === 'RevealAttribute') {
+            const attributeValue = chosenAttributes[statement.attributeTag];
+            if (attributeValue === undefined) {
+                throw new Error(
+                    `Requested statements contained reveal of attribute '${statement.attributeTag}', and is not found among the chosen attributes.`
+                );
+            }
+            return {
+                type: 'AttributeValue',
+                attributeTag: statement.attributeTag,
+                attributeValue,
+            } satisfies AtomicStatementV1<AttributeTag>;
+        } else {
+            return statement;
+        }
+    });
+}
+
+/**
+ * Map the requested statements into statements used as part of the verifiable presentation, but
+ * assume `RevealAttribute` are not requested.
+ *
+ * @see {@link revealRequestedStatements} for support of `RevealAttribute` statements.
+ *
+ * @param statements - The requested statements to prove for the account credential.
+ * @returns The atomic statements to be used in a verifiable presentation
+ * @throws If requested statements includes a reveal attribute request.
+ */
+export function noRevealRequestedStatements<AttributeTag extends string>(
+    statements: RequestedStatement<AttributeTag>[]
+): AtomicStatementV1<AttributeTag>[] {
+    return statements.map((statement) => {
+        if (statement.type === 'RevealAttribute') {
+            throw new Error(
+                `Requested statements contained reveal of attribute '${statement.attributeTag}', and is not found among the chosen attributes.`
+            );
+        } else {
+            return statement;
+        }
+    });
+}
+
+/**
  * Claims to be proven about an account credential.
  * Contains the account credential DID and atomic statements about account attributes.
  */
 export type AccountClaims = {
     type: ['ConcordiumSubjectClaimsV1', 'ConcordiumAccountBasedSubjectClaims'];
+    /** Account registration id. */
     id: DIDString;
-    statement: AtomicStatementV2<AttributeKey>[];
+    /** Identity provider which issued the credentials. */
+    issuer: DIDString;
+    /** Attribute statements. */
+    statement: AtomicStatementV1[];
 };
 
 /**
@@ -72,17 +140,20 @@ export type AccountClaims = {
  *
  * @param network - The network the account credential exists on.
  * @param credRegId - The credential registration ID of the account.
+ * @param issuer - Identity provider which issued the credentials.
  * @param statement - The atomic statements to prove for the account credential.
  * @returns The account claims to be used in the presentation input for the verifiable credential.
  */
 export function createAccountClaims(
     network: Network,
     credRegId: CredentialRegistrationId.Type,
-    statement: AtomicStatementV2<AttributeKey>[]
+    issuer: number,
+    statement: AtomicStatementV1[]
 ): AccountClaims {
     return {
         type: ['ConcordiumSubjectClaimsV1', 'ConcordiumAccountBasedSubjectClaims'],
         id: createAccountDID(network, credRegId.toString()),
+        issuer: createIdentityStatementDID(network, issuer),
         statement,
     };
 }
@@ -93,8 +164,10 @@ export function createAccountClaims(
  */
 export type IdentityClaims = {
     type: ['ConcordiumSubjectClaimsV1', 'ConcordiumIdBasedSubjectClaims'];
+    /** Identity provider which issued the credentials. */
     issuer: DIDString;
-    statement: AtomicStatementV2<AttributeKey>[];
+    /** Attribute statements. */
+    statement: AtomicStatementV1[];
 };
 
 /**
@@ -108,7 +181,7 @@ export type IdentityClaims = {
 export function createIdentityClaims(
     network: Network,
     idpIndex: number,
-    statement: AtomicStatementV2<AttributeKey>[]
+    statement: AtomicStatementV1[]
 ): IdentityClaims {
     return {
         type: ['ConcordiumSubjectClaimsV1', 'ConcordiumIdBasedSubjectClaims'],
@@ -296,7 +369,7 @@ type RequestJSON = {
 /**
  * Matches the corresponding type in rust-bindings/wallet
  */
-type PresenationV1Input = {
+type PresentationV1Input = {
     request: RequestJSON;
     global: CryptographicParameters;
     inputs: CommitmentInput[];
@@ -326,7 +399,7 @@ export function create(
         context: proofContextToJSON(context),
         subjectClaims: subjectClaims,
     };
-    const input: PresenationV1Input = {
+    const input: PresentationV1Input = {
         request: requestJson,
         global: globalContext,
         inputs,
@@ -448,3 +521,27 @@ export async function verifyWithNode(
         return { type: 'failed', error };
     }
 }
+
+/**
+ * For the case where the verifier wants the user to prove that an attribute is equal to a public
+ * value. The statement is that the attribute value is equal to `attributeValue`.
+ */
+// This type must match the JSON serialization format of `AtomicStatementV1::AttributeValue` in
+// concordium-base.
+export type GenericAttributeValueStatement<TagType, ValueType> = {
+    type: 'AttributeValue';
+    /** The attribute that the verifier wants the user to prove equal to a value. */
+    attributeTag: TagType;
+    /** The value the attribute must be proven equal to. */
+    attributeValue: ValueType;
+};
+
+/**
+ * The type of statements that can be used in subject claims.
+ */
+// This type must match the JSON serialization format of `AtomicStatementV1` in concordium-base.
+export type AtomicStatementV1<AttributeKey = string> =
+    | GenericAttributeValueStatement<AttributeKey, AttributeType>
+    | GenericMembershipStatement<AttributeKey, AttributeType>
+    | GenericNonMembershipStatement<AttributeKey, AttributeType>
+    | GenericRangeStatement<AttributeKey, AttributeType>;

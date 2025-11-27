@@ -2,12 +2,7 @@ import _JB from 'json-bigint';
 import fs from 'node:fs';
 import path from 'node:path';
 
-import {
-    IdentityProviderDID,
-    VerifiablePresentationV1,
-    VerificationAuditRecordV1,
-    VerificationRequestV1,
-} from '../../../src/index.ts';
+import { VerifiablePresentationV1, VerificationAuditRecordV1, VerificationRequestV1 } from '../../../src/index.ts';
 
 const JSONBig = _JB({ alwaysParseAsBig: true, useNativeBigInt: true });
 
@@ -26,56 +21,128 @@ const VERIFICATION_REQUEST = VerificationRequestV1.fromJSON({
     context: {
         type: 'ConcordiumUnfilledContextInformationV1',
         given: [
-            { label: 'Nonce', context: '0102010201020102010201020102010201020102010201020102010201020102' },
-            { label: 'ConnectionID', context: '0102010201020102010201020102010201020102010201020102010201020102' },
-            { label: 'ContextString', context: 'Wine payment' },
+            { label: 'Nonce', context: 'e08a450f681dea08303659800b33f92572ef0b6b912b60cb31fce6758374f5e7' },
+            { label: 'ConnectionID', context: '4b409b05-4478-4271-97b8-d36e97ed19fd' },
+            { label: 'ContextString', context: 'Example VP' },
         ],
         requested: ['BlockHash', 'ResourceID'],
     },
     subjectClaims: [
         {
             type: 'identity',
-            source: ['identityCredential'],
-            issuers: [
-                new IdentityProviderDID('Testnet', 0).toJSON(),
-                new IdentityProviderDID('Testnet', 1).toJSON(),
-                new IdentityProviderDID('Testnet', 2).toJSON(),
+            source: ['accountCredential', 'identityCredential'],
+            statements: [
+                {
+                    type: 'AttributeInSet',
+                    attributeTag: 'countryOfResidence',
+                    set: [
+                        'AT',
+                        'BE',
+                        'BG',
+                        'CY',
+                        'CZ',
+                        'DK',
+                        'EE',
+                        'FI',
+                        'FR',
+                        'DE',
+                        'GR',
+                        'HU',
+                        'IE',
+                        'IT',
+                        'LV',
+                        'LT',
+                        'LU',
+                        'MT',
+                        'NL',
+                        'PL',
+                        'PT',
+                        'RO',
+                        'SK',
+                        'SI',
+                        'ES',
+                        'SE',
+                        'HR',
+                    ],
+                },
+                { type: 'AttributeInRange', attributeTag: 'dob', lower: '18000101', upper: '20071128' },
+                { type: 'RevealAttribute', attributeTag: 'firstName' },
             ],
-            statements: [{ type: 'RevealAttribute', attributeTag: 'firstName' }],
+            issuers: ['did:ccd:testnet:idp:0'],
         },
     ],
-    transactionRef: '0102030401020304010203040102030401020304010203040102030401020304',
+    transactionRef: '220b1466d0eca4160eb95a24d44cfdc4908dcb36419c0a554cb0779f534d8a6d',
 });
 
 const PRESENTATION = VerifiablePresentationV1.fromJSON({
     type: ['VerifiablePresentation', 'ConcordiumVerifiablePresentationV1'],
     presentationContext: {
         type: 'ConcordiumContextInformationV1',
-        given: [{ label: 'Nonce', context: '000102' }],
+        given: [
+            { label: 'Nonce', context: 'e08a450f681dea08303659800b33f92572ef0b6b912b60cb31fce6758374f5e7' },
+            { label: 'ConnectionID', context: '4b409b05-4478-4271-97b8-d36e97ed19fd' },
+            { label: 'ContextString', context: 'Example VP' },
+        ],
         requested: [
-            { label: 'BlockHash', context: '0101010101010101010101010101010101010101010101010101010101010101' },
+            { label: 'ResourceID', context: 'Example VP use-case' },
+            { label: 'BlockHash', context: '8ca2c521eb9e4c51422210d5858e0cf221bbeed18af4cb5e02c36160d5d19ff7' },
         ],
     },
     verifiableCredential: [
         {
-            type: ['VerifiableCredential', 'ConcordiumVerifiableCredentialV1', 'ConcordiumAccountBasedCredential'],
+            type: ['VerifiableCredential', 'ConcordiumVerifiableCredentialV1', 'ConcordiumIdBasedCredential'],
             credentialSubject: {
-                id: 'did:ccd:testnet:cred:a7d3493e18302a7d1c796e08babad5c70e538db7174592738e459ed2c8682aa4171f25c947bc70a58a224d53da142fb5',
+                id: 'did:ccd:testnet:encidcred:02000300000001b17cce6ad298408db582fcbea4c9f7c4a4d6394265d314953aa9a681cb9446f4ce96af6a761544deffca40d3fb6b0ad7a9dd1d2014a0a4be6abc0369f858f5b5107ec6915863ba4c47aa6011cb8dab80e6f1ac2c85de656e3bd4ae29669e7c9a0000000289a0087bb41eeb873aec3f09010e646e8c2b3d52a3ed0ec0c6b8d9d4ba772fe1201845759263e30fe968acbe6b5462ac952fc2b53b772e34b2df674f605ee125a6a81439dc4d598c37dc5d8d2323d18e4188918a80502f5ec2a0dfc7d7c7751300000003a68ceeda9ef6896ffcf9bd59b4944406c76846b4140aabcd7901cd1522db27b6dd8445af73d473faf894bd242ca564b8a1ef9049625088e92e5129cbb2fe5e4e45f0a9935ac7718fbfbf567172a430bced6554e3541f91375d0758becf15b763',
                 statement: [
-                    { type: 'AttributeInRange', attributeTag: 'dob', lower: '19500101', upper: '20000101' },
-                    { type: 'RevealAttribute', attributeTag: 'firstName' },
+                    {
+                        type: 'AttributeInSet',
+                        attributeTag: 'countryOfResidence',
+                        set: [
+                            'AT',
+                            'BE',
+                            'BG',
+                            'CY',
+                            'CZ',
+                            'DE',
+                            'DK',
+                            'EE',
+                            'ES',
+                            'FI',
+                            'FR',
+                            'GR',
+                            'HR',
+                            'HU',
+                            'IE',
+                            'IT',
+                            'LT',
+                            'LU',
+                            'LV',
+                            'MT',
+                            'NL',
+                            'PL',
+                            'PT',
+                            'RO',
+                            'SE',
+                            'SI',
+                            'SK',
+                        ],
+                    },
+                    { type: 'AttributeInRange', attributeTag: 'dob', lower: '18000101', upper: '20071128' },
+                    { type: 'AttributeValue', attributeTag: 'firstName', attributeValue: 'Jesus' },
                 ],
             },
+            validFrom: '2025-11-01T00:00:00Z',
+            validUntil: '2050-01-31T23:59:59Z',
             issuer: 'did:ccd:testnet:idp:0',
             proof: {
-                created: '2025-11-13T15:46:38.259Z',
+                created: '2025-11-27T10:31:35.537Z',
                 proofValue:
-                    '0000000000000002018d93736e12c272d97ff36c064634f225b94cf5adc5deb21ad6c42a595d5e8949d79782ba34c82f561c6642e8635d56429669a6c45abbe09a04cc471ceadf4c0fb1bedad77c4ff8572bc2eed1a36c6608f052ac6c646394c56d7887065e5631ff8f55211f69b9de9cf9da6da777791a9cf088c29f1457a4f7a629619e1da745f1edad438d6b95dafe2df413ef52c56685b8ecd938eb72803feea02c757380bb4b7a1d3b0d5968267d415d81aaf53652943f0008455cdc55569a03bcffd2de226512ac0dc4e704420a4fc1c2184ac4e84ba07387daffdf4a1b29ccb40d3679036415d267e2ee4813e9c6ab1763c6797544c0012cf511c61526dd51bc9679a752866682ab84766b2996108caafbc035b96dcb3818d3879166d44de6896390f823ff0000000789908ab6b54fa411cc90d4eb55747dd114d63eaecc109904f903f0cf3d5a4371284579bb41cfbf7fa44b0eabeeb548ca8a05aa999fccc8800c9c54948bce0cfca652ffafb64a08d2be5839d71d060bdc0c94737623c7d50a0da6fb44414ac6ac90a43416551637311b3fbf308092d0f81a393484d986ef5e1cf4fd9e0b54dfe6e7c1983f68967bc1938e1eb37961baf5939096c9152e5632acada142ee4c4215d6bad13a2eb3fbf4b56bb1ab134d82533b6c5abec4382195c2ccb9f8631298b0b5276491fc55c8a039d44f3852b8125dafff3da030e166a9ddafe352cf2647fafd9e3c0e591b7775a747cc89107eb04eb327d7cda59bc115442e41035b0bfc70372178a13307040f1a2ca5763735a8670ef987535264ba085ca61fb886f69bd1911a9bff8b227f1bc7d9bc72489beb5a0585fa72f55b10feb3edeb14f12687eaf801ac66ce9e761981b9377c3ef37f36b9b295fc7568d04611abb5905b5d6536a549cce2b2037049315bb9ba2f6d6fe47b914574e23820d9275ad0067364c84c9008fb2a297cec2f2c695812f32c29aa3dad82e3e715d4da0369e64822ca5968571c1663df9b7f104c30d281e1e842cb8b0584dbbffdfc0388baca5cf6ffdc9948e3217634b3fa36e6013cc9ae76c8b2502f7ff77030f7ac2cf1e8b0217307e3996168a33014c19dd5d4a1409fc9efd488066e0f839ef4753e055bfb64426d8be08afcf9f5d95d7ae4db66c59484b9c39038bfd16ecae9081ecb43783e0e67b6671eebf20dc27c6265a2d70fb9b3d5d6d3e756f674575fb763c275d73d3ea698b5e58aee741e4388707575c39c6d1a7d10c2262705f61e1628c4a42a89766701f4af70fe98dcd5128dd5aecefdc87f89a435d7b42c13ab26e0168bad8da7c006fa369bd7624bafc5aa04fb819dddeccb3ae4a5293e8ca12a1b39b7c0e2555ff9651294b159ac3be3989a1fb3433b399cc4b754093887a126376366aec0dc0f160efff0b10349e2c593be720a561552c9a635fd6e3eeae849dd070a53764791ca0000054a65737573e4040addac6205e8fe4f0546a4baea977d80c928f0e7c3a6fca04c7db80c544650073e02411bf0ff7d50f93fb467bb5b56940b1b164c24e9cc73b8916466a2bc',
+                    '000000000000000d000100054a65737573010202020300b189093a69e016860236a192604b4ef301a784d84a473bc77190b7d8b5b89d50e4c4b4a5029106102745eaf6a66c1ec60400a09477f46c9d3129d102793e94d4055244a17a54a070a060b33ce203520a8194853dc3e2469e483834319fd8e110ca5d050206020702080209020a020b020c02951bc09c32730229aa6c66ed6c8db609ebce7468f9948040b8413f5a1871c99a5d4467e24875298d562a6c66c9bbccf1994ae504a788ce96894296c874e8e014ae01fc03d7a0369cc5ac7ef12a14fd446400e51903ca1074cf6e18f69b2ba4100000000000000002b18575414c54f0653709d1500c8676870bd1551f245b6cab9ae84e83cac5495666915da1ddacf848efafd83025029af2b920ad4e62358c6dcd483339dc490b2510b1b4285db25d00a1e4d0cda6c1dca51e5e4c9b7d483dfaa673d38fe0470bbf3aa9897aa9bfca1a610f14c6736928809e848da9146dfe413041894a22447c1d00000003000000016f4154206670a688f30db54d23442a44cb55f107c45f134649f5eb3299069e770948004e9fc6cee15ba25cf86111cacb2ff4358694a4067e374b36542fc360c93024b42a88ce5018cc742fce506527bae32413b0b2955b2f44e0a63b8dc43d030000000271b15e83d48bf3d83ddd439e6697793b1d61fae3829a67d8a9c0ba48f59ebad7562d35aac152c44e2b32d6b94bcb518be4986729d0a81c9b8deeaa3a3baad03a12f8aeba86ae660522460f52f7cafb04cbf442ecf3ef22a4408e18aa5727451500000003478cd3901ab8b31772e78680a26f2d37475036380c160c5f22cb1ca6d0e1117c41670085dccff5982ce0c27df1ee3e9dd87b1647265da30124b33bd69628c03b4a9112f2daf315ae5accd4f14aa598aded4ce473b473282f9c42416f109df4aa6efcbc04fbf24764c8821ad6b5fc516642cc009f2da1ebb6277460a29d574f140000001300029736595ad36f598a8779738f393cab9181dfb13d9a0518ebfabb08ac6d1aa9025ea6b93351e21beb419ca6bb4a4f53431b0de2c44ff628891914dc8dabd9c20203fc9c33e76fd5b54ad3af0789b76d1d0c8a06c718a5267fb30204ba065a9b0201010102238a20d3e50a0e7970afd51384ce9a0d7bf4946f6b876c3adf5b5ed0ca44c5c201022d89eed066306232499f8f4625c6635bed30e1508fa3f9dde1761134ad22b57a02126a75dd4c878269c94ed804e1646d02965750d840fc7bf388e150058c0e33a1004734db6af1453221409e24140adaf6230aa640785555ad74a7ab5dd4f9cf7d681cc21fd6718c206d7f9820e7aee6f8388a5fbf0caf3b7d21d3ecb8065f56671a003444488632834c60f1372b4f1e36984002b1eb2c6acdc4fd2b03644731e6c343707b87f7112321f08bed587cc6001e1f01bc901582fd326b4b4e87f08af09aec0245efa2ff3df0b4c944d58fe27ff7218448d591d4bd851adaed3b40947a118053023ac92f105c960ba9a208261de93ddf0256b01906026bf47e5f6f08ec38367d260251a65e38223606da677955b32e959c7b20d24e36e6c41d1d6385ee4e4732a4d20273d1d142a8a47f3eb11166e31d508d7e579e0f1d6a544e6462dc98323db17dc6026b3890f7c473361b9b52911c152041e7d3ad4f708abd5081167cc63d81ae3127026620a9e07edf8f791829b9228f8bdca373dd6afcdfad52c844f5942d9866f558026c626842657339662356af2f013047593bc228e51260b8399086d9f6746807ae021def76292efe2a2ccd329d0e8dcdfb0c2cdddb606335fcf3a68393fbc8b425f5000000000000000303809f3f7f12de84e5004a7d863a72104d1c4a55ad8e15be51cf04c87ca0066321a897e6f9e44e0a7921c799cb6c00ca7b8ad4a08ad102d8709f0a80732b5a12781d5b2fab534feb849b6247c7af38e84e799e5ecfd3c00d1d6c7ba7ef49acd1838ede9d2064ce976d51a8383fdc9a2108ad7b9be2ddb74989769399f727f1af09fd1e7021070f67dcbaf2fd10c1274e5bae83a92e5bbcbf4c762994da1e4ee97352893fad157254a073afef03269e71d06d0db21706167733aeac3ad6b0fc2de61b5baa3c91458b39c2de2ae8e4b46d2f6e0e14757d1aa38f49790a28bc8a5efc019361a4f4ef6d4a87e4ff9ea0367f394a1f91806e191ecb5bf8c5eee055c95c58bfceee7f74e72686042f44f4e44ece334ae5de6ef3d9561b1ababc79012c6d00000005b7bce75666c290673bd1046aaf3822dcd723849d1be5b8588b3d8354f686d63d46d96da309acd8a1a0d31cd838c28bd7a68af5300885d58a6b234e7acabe3cfe77ed66492c7f5ae07dad5f56b652d307993ddcdd4fd6953ac8da9b5c90f6d15f862f00ddbe6fa9d536a3555228d0f67943d0afec2a3331b8ace2f6a64fff4e8bd15b7bc6fc2bab7c699b76d6646965aead2a4b4da4d8734fca31bfb840b495305af731d4a14e75e32f7f3cbb79d07ef147368a090fa1b92ba9ebaac69494c76a871c4b35a99cd58ad8d005dc7b122d0d2996fc106ec98fba830ee7915f11d2e64aa314ea174112a9c0158079af913736a9692de42d0376cf9c1cd6837b5b17a4b63a48468a6f95ede88e38ca6c5bff3715f9f30179a0b295fd79560e2dfadc93af9365b6cf7ca9b8c729f74fe9b349465cc53e2f3600e67c481e088243aa33c809ee03b3695fd591cd16cf015c604e9bac987548fac97188aadc6c49a6d618e6d61b76da2be143b185ea510770f15fb065afea67f2c4448f0a16d6acd28fb02bb1fc273ed21d524858cd100bbba99d1ae4fba1fb80b78121cab895a3d692b730ed04d54869c35cf29b3b23331049ff4090ea4557f30caa2549e842bc838cf40b6fe3893cdc2967b2a0461ae4c7d56b3c485d23b6bcb93531b0b01e36d22224504cb07f4716467517b87551ca3fffdbd8ca17084411ef27cd6f73b3e65d92c3221bddaa3a7c1c87e199d845bf6404bf60e5fb73a0c9b2950d95b0f9cf3e5bb99902afde7f79eb6fc000a0edc00e69bddcf5a775eb19459ef97f8623469fc629beb455ba264319128a8ba3dadde537f5580782bf1b2ceb18bc8d9795c5fe45315a26bf5ffcdfb89190990a06afb02d98b842a95cf4b9a446bc02c28917939bb826ac9188ac21bf77d1942711b93943c7d19773f53bb0bee5107a38232b97b9fef05535d3575d453b03c0cdfdc8a994efac8686323ea1005a84a5b2d2a715395b1653f0998c3d498ae5dc42a509976c888fb7f6bbb1fdf931b2954a7394b2119c569a57c8040f93998ed04df185b5102c67f15fc276a45710692286e88b77d7544dc519f94968d186a00a3545ebeeb45503741d558d76f11b815763ab35d3c9d742316c9802ebb0b9d4aed848960d99f59751dbd562f8029bdbcc7dae89acc75bd39900000007aa64d206e0ae6874f391cab8179eb08b427e698a92c8462f92695ffc4444bdce4292f5f1a97918e4ccf737d5e12f847ca67ddea8c30c2a91a7e8872e7b18b0d5b13094860d1fec205b3505aa50c70ae1023550a0038200bc86d654c041cbe653ad14d809d7218dd119e7e4b5b0e0cb00f97eaad7ccbe16483fbf3c7982c77ac11d08e47e320ca16cca069a319166db8698bbb22d7a65d6b97daeba133443aeb5fe568adf99dc14751742d7fb15dce076ffaf3d32ad784dc5c77b6e8b5d079d2ca29f66af31c1f53041c37b3d9e0857a93ec741c5099a5ce62b2c7253db640bf791b6f1f491c4dec2fc32706e7cf55605886609d60f34013a93f3669b6573e09411be6574504fac8cf2c1c613f9659369e58f1116ac2fe6665dce8429a97cc0a996ff2b2098f4c96c2f217860103c53a34933017ce64f6b8a05e27f6ea529d71ecc65e4ba6b816fcfa967bd6fbd6ae2b090c9b592c40ba3c55dccf812b8cb23e42e6aa4881852a131e70de9a959d0a096783817ac07b071b27d140a3fe55064e49951e52b2d5f801fb5e937bf086769e2db62fa40a3dbc6a0714f50540bae8e1d82f70314158c9187f5a238991e8a6d79a5b51eeb0f718a6d2f56dfa5e04ea7bea3e5d48174901e12d38cfe8e410d3b1d178315aa2602eceaa7d55393a74fa75aab62fde7baf9e63f4e5adebb0867dfa9b1229f2e984bb401ea24398afc3f39133ae240dd0c56500b9222fce7af227ef489c082bae332f3222d7be65121fe81f893f4a6b620e7dd5f05d5a7e56e0891534dd7d5880ffffb51918c25cc835f9aa3a83c5f83d9cacaa214077453a5349fd34fdfac043642b3338e59a2b160aa118ec536ef631ba39c454e6554cd43546281a5f3a2f60c752d969239ae62cda49e94d52f19fdca5a780d3a23006072cdebe5519d5d17b8ca8ac72df3f702cf4afb0160b94c9b5c063e8b555542b5842552d5278339dbf52fab54c7d1305e115649f92a0470794c490462dc5cc0579450b9dd5791ab683f6e545fb310a571effdded901',
                 type: 'ConcordiumZKProofV4',
             },
         },
     ],
-    proof: { created: '2025-11-13T15:46:38.259Z', proofValue: '', type: 'ConcordiumWeakLinkingProofV1' },
+    proof: { created: '2025-11-27T10:31:35.537Z', proofValue: '', type: 'ConcordiumWeakLinkingProofV1' },
 });
 
 const PRIVATE_RECORD = VerificationAuditRecordV1.create('VERY unique ID', VERIFICATION_REQUEST, PRESENTATION);
@@ -109,7 +176,7 @@ describe('VerificationAuditRecordV1.Anchor', () => {
     it('creates expected anchor', () => {
         const anchor = VerificationAuditRecordV1.createAnchor(PRIVATE_RECORD, { info: 'some public info?' });
         const expected =
-            'a4646861736858204b1d8223c9826820b6119058695bb71ef8a6ae5a04225b23ca7a47fbbf3c8dcc647479706566434344564141667075626c6963a164696e666f71736f6d65207075626c696320696e666f3f6776657273696f6e01';
+            'a4646861736858202c6c14fcbc0f4b0582de7a47758e6d72e7966c5f7ff7a303d83682f61e2dcdde647479706566434344564141667075626c6963a164696e666f71736f6d65207075626c696320696e666f3f6776657273696f6e01';
         expect(Buffer.from(anchor).toString('hex')).toEqual(expected);
     });
 

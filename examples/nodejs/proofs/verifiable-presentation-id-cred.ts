@@ -176,7 +176,14 @@ const proofInput = createIdentityCommitmentInputWithHdWallet(idObject, idp, iden
 const idClaims = requestParsed.subjectClaims.find(
     (s) => s.type === 'identity'
 )! as VerificationRequestV1.IdentityClaims; // we unwrap here, as we know the claims exists (we created it just above)
-const proofClaims = VerifiablePresentationV1.createIdentityClaims(network, idp.ipInfo.ipIdentity, idClaims.statements);
+
+// Convert requested statements into claim statements, by adding attribute values for reveal
+// attribute statements.
+const idClaimStatements = VerifiablePresentationV1.revealRequestedStatements(
+    idClaims.statements,
+    idObject.attributeList.chosenAttributes
+);
+const proofClaims = VerifiablePresentationV1.createIdentityClaims(network, idp.ipInfo.ipIdentity, idClaimStatements);
 
 console.log(
     'Waiting for verification request anchor transaction to finalize:',

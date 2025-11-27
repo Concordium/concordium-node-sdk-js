@@ -8,6 +8,7 @@
 
 - `deserializeBlockItem` to deserialize block items from their encoding as received by concordium nodes.
 - Deserialize function for `UpdateCredentialsPayload` implemented instead of throwing an exception of not supporting deserialize
+- Deserialize and serialize functions for `UpdateCredentialKeysPayload`implemented
 
 ### Removed
 

@@ -2,6 +2,25 @@
 
 ## Unreleased
 
+## 12.0.0-alpha.3
+
+### Added
+
+- `deserializeBlockItem` to deserialize block items from their encoding as received by concordium nodes.
+- Deserialize function for `UpdateCredentialsPayload` implemented instead of throwing an exception of not supporting deserialize
+
+### Removed
+
+- Remove the `currentNumberOfCredentials` from `UpdateCredentialsPayload`. This field is needed to calculate the base energy amount
+  and it must be passed in manually instead of deriving from payload. 
+  - A corresponding replacement type `UpdateCredentialsInput` has been added, which can be used in place of the
+    old type definition.
+
+### Deprecated
+
+- `deserializeTransaction` (it deserializes an unsupported format). Instead `deserializeBlockItem` should be used.
+- `serializeAccountTransactionForSubmission` (it serializes an unsupported format). Instead `serializeAccountTransaction` should be used.
+
 ## 12.0.0-alpha.2
 
 ### Added
@@ -49,8 +68,6 @@
 - `ConcordiumGRPCClient.sendAccountTransaction`. Instead `ConcordiumGRPCClient.sendTransaction`
 - `AccountTransactionHandler` implementations and the dynamic `getAccountTransactionHandler`. Instead, the new `Transaction` API
   should be used.
-- `deserializeTransaction` (it deserializes an unsupported format). Instead `deserializeBlockItem` should be used.
-- `serializeAccountTransactionForSubmission` (it serializes an unsupported format). Instead `serializeAccountTransaction` should be used.
 
 ## 12.0.0-alpha.1 [YANKED]
 

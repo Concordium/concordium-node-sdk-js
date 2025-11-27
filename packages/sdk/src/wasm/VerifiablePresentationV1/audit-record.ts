@@ -31,7 +31,7 @@ import {
 import { bail } from '../../util.js';
 import { VerifiablePresentationV1, VerificationRequestV1 } from './index.js';
 import { AnchorTransactionMetadata, contextEquals } from './internal.js';
-import { AtomicStatementV3, VerificationResult, isAccountClaims } from './proof.js';
+import { AtomicStatementV1, VerificationResult, isAccountClaims } from './proof.js';
 import { RequestedStatement } from './request.js';
 
 const JSONBig = _JB({ alwaysParseAsBig: true, useNativeBigInt: true });
@@ -182,7 +182,7 @@ async function compareContexts(
  *
  * @throws Error if statements differ in length, order, type, or content.
  */
-function verifyAtomicStatements<A>(requested: RequestedStatement<A>[], presentation: AtomicStatementV3<A>[]): void {
+function verifyAtomicStatements<A>(requested: RequestedStatement<A>[], presentation: AtomicStatementV1<A>[]): void {
     if (requested.length !== presentation.length)
         throw new Error('Mismatch in number of atomic statements for statement/claim');
 

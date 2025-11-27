@@ -4,7 +4,7 @@ import { BlockHash, CredentialRegistrationId } from '../../types/index.js';
 import { bail } from '../../util.js';
 import { CredentialStatus, CredentialsInputsIdentity, DIDString, parseYearMonth } from '../../web3-id/index.js';
 import { VerifiableCredentialV1 } from './index.js';
-import { AtomicStatementV3 } from './proof.js';
+import { AtomicStatementV1 } from './proof.js';
 import { ZKProofV4 } from './types.js';
 
 /**
@@ -20,7 +20,7 @@ type IdentityCredential = {
         /** The identity disclosure information also acts as ephemeral ID */
         id: HexString;
         /** Statements about identity attributes (should match request) */
-        statement: AtomicStatementV3<AttributeKey>[];
+        statement: AtomicStatementV1<AttributeKey>[];
     };
     /** ISO formatted datetime specifying when the credential is valid from */
     validFrom: string;
@@ -52,7 +52,7 @@ type AccountCredential = {
         /** The account credential identifier as a DID */
         id: DIDString;
         /** Statements about account attributes (should match request) */
-        statement: AtomicStatementV3<AttributeKey>[];
+        statement: AtomicStatementV1<AttributeKey>[];
     };
     /** The zero-knowledge proof for attestation */
     proof: ZKProofV4;

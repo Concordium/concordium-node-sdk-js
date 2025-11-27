@@ -77,7 +77,7 @@ function proofContextFromJSON(context: ContextJSON): Context {
 export function revealRequestedStatements<AttributeTag extends string>(
     statements: RequestedStatement<AttributeTag>[],
     chosenAttributes: Partial<Record<AttributeTag, string>>
-): AtomicStatementV3<AttributeTag>[] {
+): AtomicStatementV1<AttributeTag>[] {
     return statements.map((statement) => {
         if (statement.type === 'RevealAttribute') {
             const attributeValue = chosenAttributes[statement.attributeTag];
@@ -90,7 +90,7 @@ export function revealRequestedStatements<AttributeTag extends string>(
                 type: 'AttributeValue',
                 attributeTag: statement.attributeTag,
                 attributeValue,
-            } satisfies AtomicStatementV3<AttributeTag>;
+            } satisfies AtomicStatementV1<AttributeTag>;
         } else {
             return statement;
         }
@@ -109,7 +109,7 @@ export function revealRequestedStatements<AttributeTag extends string>(
  */
 export function noRevealRequestedStatements<AttributeTag extends string>(
     statements: RequestedStatement<AttributeTag>[]
-): AtomicStatementV3<AttributeTag>[] {
+): AtomicStatementV1<AttributeTag>[] {
     return statements.map((statement) => {
         if (statement.type === 'RevealAttribute') {
             throw new Error(
@@ -132,7 +132,7 @@ export type AccountClaims = {
     /** Identity provider which issued the credentials. */
     issuer: DIDString;
     /** Attribute statements. */
-    statement: AtomicStatementV3[];
+    statement: AtomicStatementV1[];
 };
 
 /**
@@ -148,7 +148,7 @@ export function createAccountClaims(
     network: Network,
     credRegId: CredentialRegistrationId.Type,
     issuer: number,
-    statement: AtomicStatementV3[]
+    statement: AtomicStatementV1[]
 ): AccountClaims {
     return {
         type: ['ConcordiumSubjectClaimsV1', 'ConcordiumAccountBasedSubjectClaims'],
@@ -167,7 +167,7 @@ export type IdentityClaims = {
     /** Identity provider which issued the credentials. */
     issuer: DIDString;
     /** Attribute statements. */
-    statement: AtomicStatementV3[];
+    statement: AtomicStatementV1[];
 };
 
 /**
@@ -181,7 +181,7 @@ export type IdentityClaims = {
 export function createIdentityClaims(
     network: Network,
     idpIndex: number,
-    statement: AtomicStatementV3[]
+    statement: AtomicStatementV1[]
 ): IdentityClaims {
     return {
         type: ['ConcordiumSubjectClaimsV1', 'ConcordiumIdBasedSubjectClaims'],
@@ -540,7 +540,7 @@ export type GenericAttributeValueStatement<TagType, ValueType> = {
  * The type of statements that can be used in subject claims.
  */
 // This type must match the JSON serialization format of `AtomicStatementV1` in concordium-base.
-export type AtomicStatementV3<AttributeKey = string> =
+export type AtomicStatementV1<AttributeKey = string> =
     | GenericAttributeValueStatement<AttributeKey, AttributeType>
     | GenericMembershipStatement<AttributeKey, AttributeType>
     | GenericNonMembershipStatement<AttributeKey, AttributeType>

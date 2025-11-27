@@ -707,6 +707,12 @@ export class ConfigureDelegationHandler
             ConfigureDelegationPayload
         >
 {
+    ALLOWED_BITS = 0x0007;
+    VALIDATION_MASK = 0xffff - this.ALLOWED_BITS;
+    HAS_DELEGATION_TARGET = 0x0004;
+    HAS_RESTAKE_EARNINGS = 0x0002;
+    HAS_CAPITAL = 0x0001
+
     getBaseEnergyCost(): bigint {
         return 300n;
     }
@@ -715,8 +721,53 @@ export class ConfigureDelegationHandler
         return serializeConfigureDelegationPayload(payload);
     }
 
-    deserialize(): ConfigureDelegationPayload {
-        throw new Error('deserialize not supported');
+    /*
+    TODO: the bluepaper says something like 
+      bitmap.hasCapital x AMOUNT
+      bitmap.hasRestakeEarnings x BOOL
+      bitmap.hasDelegationTarget x DelegationTarget
+    they don't mean an actual multiplication, right? they are just saying if bit hasCapital is set, there is an amount to read?
+
+    if bitmap.hasCapital is false, does this mean, the serializedPayload.read(...) would be reading the BOOL of hasRestakeEarnings?
+
+    */
+    deserialize(serializedPayload: Cursor): ConfigureDelegationPayload {
+        
+        const serializedBitmap = serializedPayload.read(2).readUInt16BE(0);
+        
+        if ((serializedBitmap & this.VALIDATION_MASK) !== 0) throw new Error('Found unsupported bits in bitmap')
+        
+        const hasDelegationTarget = (serializedBitmap & this.HAS_DELEGATION_TARGET) !== 0;
+        const hasRestakeEarnings = (serializedBitmap & this.HAS_RESTAKE_EARNINGS) !== 0;
+        const hasCapital = (serializedBitmap & this.HAS_RESTAKE_EARNINGS) !== 0;
+
+        const capital = hasCapital ? CcdAmount.fromMicroCcd(serializedPayload.read(8).readBigUInt64BE(0)) : CcdAmount.zero();
+
+        const restakeEarnings = hasRestakeEarnings ? serializedPayload.read(1).readUInt8(0) !== 0 : false;
+
+        let delegationTarget: DelegationTarget;
+        if(hasDelegationTarget) {
+            const tag = serializedPayload.read(0).readUInt8(0);
+
+            if(tag === 1) {
+                const validatorId = serializedPayload.read(8).readBigUInt64BE(0);
+                delegationTarget = {
+                    delegateType: DelegationTargetType.Baker,
+                    bakerId: validatorId,
+                };
+            } else {
+                throw new Error(`Unknown delegation target tag: ${tag}`);
+            }
+
+        } else {
+            delegationTarget = { delegateType: DelegationTargetType.PassiveDelegation, };
+        }
+
+        return {
+            stake: capital,
+            restakeEarnings: restakeEarnings,
+            delegationTarget: delegationTarget,
+        }
     }
 
     toJSON(payload: ConfigureDelegationPayload): ConfigureDelegationPayloadJSON {

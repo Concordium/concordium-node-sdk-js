@@ -853,10 +853,11 @@ export class UpdateCredentialKeysHandler
             if (!isKnown(credentialVerifyKey)) throw new Error('Verify keys must be known when serializing');
 
             const serializedSchemeId = encodeWord8FromString(credentialVerifyKey.schemeId);
-            const serializedKey = Buffer.from(credentialVerifyKey.verifyKey);
+            const serializedKey = Buffer.from(credentialVerifyKey.verifyKey, "hex");
             return Buffer.concat([serializedSchemeId, serializedKey]);
         };
-
+console.log('----> about to serializeMap');
+console.log('===', keys);
         const serializedKeys = serializeMap(keys, encodeWord8, encodeWord8FromString, putCredentialVerifyKey);
 
         const serializedThreshold = Buffer.from([payload.keys.threshold]);
@@ -866,26 +867,28 @@ export class UpdateCredentialKeysHandler
 
     deserialize(serializedPayload: Cursor): UpdateCredentialKeysPayload {
         const credId = serializedPayload.read(48).toString('hex');
-
+console.log('----> credId: ', credId);
         const resultMap: Record<number, Upward<VerifyKey>> = {};
         const credVerifyKeyEntryCount = serializedPayload.read(1).readUInt8(0);
+        console.log('----> count: ', credVerifyKeyEntryCount);
         for (let a = 0; a < credVerifyKeyEntryCount; a++) {
             const index = serializedPayload.read(1).readUInt8(0);
-
+console.log('----> index:', index);
             const scheme = serializedPayload.read(1).readUInt8(0);
+console.log('----> schemeId: ', scheme);
             let currentVerifyKey: Upward<VerifyKey> = null;
-            if (scheme === 0) {
+            if (scheme === 0) {                
                 currentVerifyKey = {
-                    schemeId: 'Ed25519',
+                    schemeId: '0',  //TODO: are we passing in 0 or Ed25519 during serialization or do we convert Ed25519 to 0 and vice versa?
                     verifyKey: serializedPayload.read(32).toString('hex'),
                 };
             }
-
+console.log(`putting at index ${index}, the verify key ${currentVerifyKey?.verifyKey}`);
             resultMap[index] = currentVerifyKey;
         }
 
         const threshold = serializedPayload.read(1).readUInt8(0);
-
+console.log('-----> ', threshold);
         const credPublicKeys = {
             keys: resultMap,
             threshold: threshold,
@@ -972,6 +975,7 @@ export function getAccountTransactionHandler(
 ): ConfigureDelegationHandler;
 export function getAccountTransactionHandler(type: AccountTransactionType.ConfigureBaker): ConfigureBakerHandler;
 export function getAccountTransactionHandler(type: AccountTransactionType.TokenUpdate): TokenUpdateHandler;
+export function getAccountTransactionHandler(type: AccountTransactionType.UpdateCredentialKeys): UpdateCredentialKeysHandler;
 export function getAccountTransactionHandler(
     type: AccountTransactionType
 ): AccountTransactionHandler<AccountTransactionPayload, AccountTransactionPayloadJSON, AccountTransactionInput>;
@@ -1000,6 +1004,8 @@ export function getAccountTransactionHandler(
             return new ConfigureBakerHandler(); //TODO
         case AccountTransactionType.TokenUpdate:
             return new TokenUpdateHandler();
+        case AccountTransactionType.UpdateCredentialKeys:
+            return new UpdateCredentialKeysHandler();
         default:
             throw new Error('The provided type does not have a handler: ' + type);
     }

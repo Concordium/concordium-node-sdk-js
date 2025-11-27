@@ -11,6 +11,7 @@
 - Deserialize function for `UpdateContractPayload` implemented instead of throwing an exception of not supporting deserialize
 - Deserialize function for `UpdateCredentialsPayload` implemented instead of throwing an exception of not supporting deserialize
 - `deserializeBlockItem` to deserialize block items from their encoding as received by concordium nodes.
+- Move out `CdiRandomness` from `CredentialDeploymentPayload` to ensure payload is as per bluepaper and still support wallet in constructing credential information with CdiRandomness
 
 #### `Transaction` API
 

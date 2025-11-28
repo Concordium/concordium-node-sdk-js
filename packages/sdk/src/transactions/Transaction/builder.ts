@@ -176,6 +176,7 @@ export function isMultiSig<P extends Payload.Type>(transaction: Transaction<P>):
 type SponsorableAPI<P extends Payload.Type> = {
     /**
      * Configures the transaction for sponsorring by specifying the sponsor account.
+     * NOTE: this can be used from protocol version 10.
      *
      * @template T - the transaction builder type
      * @param account - the sponsor account to use for sponsorring the transaction.

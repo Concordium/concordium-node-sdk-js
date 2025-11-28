@@ -35,7 +35,6 @@ import {
     UpdateContractHandler,
     type UpdateContractPayload,
     UpdateContractPayloadJSON,
-    UpdateCredentialKeysInput,
     UpdateCredentialKeysPayload,
     UpdateCredentialsHandler,
     type UpdateCredentialsPayload,

@@ -320,7 +320,7 @@ test('test deserialize UpdateCredentialKeys', () => {
     deserializeAccountTransactionBase(transaction);
 });
 
-test.only('test deserialize ConfigureDelegation', () => {
+test('test deserialize ConfigureDelegation', () => {
     const payload: ConfigureDelegationPayload = {
         stake: CcdAmount.fromMicroCcd(0),
 

@@ -11,6 +11,7 @@ import {
     ArInfo,
     AttributeKey,
     AttributesKeys,
+    CdiRandomness,
     CredentialDeploymentDetails,
     CredentialDeploymentInfo,
     CredentialDeploymentPayload,
@@ -105,7 +106,7 @@ export function createCredentialDeploymentPayload(
     credentialIndex: number,
     revealedAttributes: AttributeKey[],
     expiry: TransactionExpiry.Type
-): CredentialDeploymentPayload {
+): CredentialDeploymentPayload & CdiRandomness {
     const unsignedCredentialInfo = createUnsignedCredentialInfo(
         identity,
         cryptographicParameters,
@@ -211,7 +212,7 @@ export type CredentialInputNoSeed = CredentialInputCommon & {
 export function createCredentialPayload(
     input: CredentialInput,
     expiry: TransactionExpiry.Type
-): CredentialDeploymentPayload {
+): CredentialDeploymentPayload & CdiRandomness {
     const wallet = ConcordiumHdWallet.fromHex(input.seedAsHex, input.net);
     const publicKey = wallet
         .getAccountPublicKey(input.ipInfo.ipIdentity, input.identityIndex, input.credNumber)
@@ -263,7 +264,7 @@ export function createCredentialPayload(
 export function createCredentialPayloadNoSeed(
     input: CredentialInputNoSeed,
     expiry: TransactionExpiry.Type
-): CredentialDeploymentPayload {
+): CredentialDeploymentPayload & CdiRandomness {
     const { sigRetrievelRandomness, ...other } = input;
     const internalInput = {
         ...other,

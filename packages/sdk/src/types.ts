@@ -1726,11 +1726,21 @@ export interface CommitmentsRandomness {
     attributesRand: AttributesRandomness;
 }
 
-interface CdiRandomness {
+/**
+ * An object meant for composing commitment randomness with other structures such as the
+ * {@linkcode CredentialDeploymentPayload} upon creation of this.
+ */
+export interface CdiRandomness {
+    /**
+     * Randomness that is generated to commit to attributes when creating a
+     * credential. This randomness is needed later on if the user wishes to do
+     * something with those commitments, for example reveal the committed value, or
+     * prove a property of the value.
+     */
     randomness: CommitmentsRandomness;
 }
 
-export type CredentialDeploymentPayload = CredentialDeploymentDetails & CdiRandomness;
+export type CredentialDeploymentPayload = CredentialDeploymentDetails;
 /** Internal type used when building credentials */
 export type UnsignedCdiWithRandomness = {
     unsignedCdi: Known<UnsignedCredentialDeploymentInformation>;

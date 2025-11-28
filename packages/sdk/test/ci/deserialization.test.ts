@@ -15,6 +15,8 @@ import {
     CcdAmount,
     ContractAddress,
     ContractName,
+    CredentialPublicKeys,
+    CredentialRegistrationId,
     DataBlob,
     DeployModulePayload,
     Energy,
@@ -32,6 +34,7 @@ import {
     TokenUpdatePayload,
     TransactionExpiry,
     UpdateContractInput,
+    UpdateCredentialKeysInput,
     UpdateCredentialsInput,
     calculateEnergyCost,
     deserializeBlockItem,
@@ -275,6 +278,41 @@ test('test deserialize UpdateCredential', () => {
     const transaction: AccountTransaction = {
         header,
         type: AccountTransactionType.UpdateCredentials,
+        payload,
+    };
+    deserializeAccountTransactionBase(transaction);
+});
+
+test('test deserialize UpdateCredentialKeys', () => {
+    const credentialPublicKeys: CredentialPublicKeys = {
+        keys: {
+            '0': {
+                schemeId: 'Ed25519',
+                verifyKey: 'd684ac5fd786d33c82701ce9f05017bb6f3114bec77c0e836e7d5c211de9acc6',
+            },
+            '1': {
+                schemeId: 'Ed25519',
+                verifyKey: 'df70d598d7cf8954b7b6d27bee2b94c4f2f5540219573bca70600c7cde39e92d',
+            },
+            '2': {
+                schemeId: 'Ed25519',
+                verifyKey: '6f2da81a8f7d6965d720527d31c05efdb197129ed54fee51500b2c1742b3a43a',
+            },
+        },
+        threshold: 2,
+    };
+
+    const payload: UpdateCredentialKeysInput = {
+        credId: CredentialRegistrationId.fromHexString(
+            'a5727a5f217a0abaa6bba7f6037478051a49d5011e045eb0d86fce393e0c7b4a96382c60e09a489ebb6d800dc0d88d05'
+        ),
+        keys: credentialPublicKeys,
+        currentNumberOfCredentials: 10n,
+    };
+
+    const transaction: AccountTransaction = {
+        header,
+        type: AccountTransactionType.UpdateCredentialKeys,
         payload,
     };
     deserializeAccountTransactionBase(transaction);

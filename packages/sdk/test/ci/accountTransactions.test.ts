@@ -14,6 +14,7 @@ import {
     ConfigureDelegationPayload,
     ContractAddress,
     ContractName,
+    CredentialRegistrationId,
     DataBlob,
     DelegationTargetType,
     DeployModuleHandler,
@@ -35,6 +36,8 @@ import {
     SimpleTransferWithMemoPayload,
     UpdateContractHandler,
     UpdateContractInput,
+    UpdateCredentialKeysHandler,
+    UpdateCredentialKeysPayload,
     UpdateCredentialsHandler,
     UpdateCredentialsInput,
     UpdateCredentialsPayload,
@@ -365,4 +368,42 @@ test('ConfigureDelegationPayload serializes to JSON correctly', async () => {
 
     // ID test
     expect(handler.fromJSON(JSONBig.parse(expected))).toEqual(payload);
+});
+
+test('UpdateCredentialKeysPayload serializes to JSON correctly', async () => {
+    const credId = 'a'.repeat(96);
+    const payload: UpdateCredentialKeysPayload = {
+        credId: CredentialRegistrationId.fromHexString(credId),
+        keys: {
+            keys: {
+                0: {
+                    schemeId: '0',
+                    verifyKey: '111',
+                },
+                1: {
+                    schemeId: '1',
+                    verifyKey: '222',
+                },
+            },
+            threshold: 10,
+        },
+    };
+
+    const handler = new UpdateCredentialKeysHandler();
+    const json = handler.toJSON(payload);
+
+    const expected = {
+        credId: credId,
+        keys: JSON.stringify({
+            keys: [
+                { index: 0, key: { schemeId: '0', verifyKey: '111' } },
+                { index: 1, key: { schemeId: '1', verifyKey: '222' } },
+            ],
+            threshold: 10,
+        }),
+    };
+
+    expect(json).toEqual(expected);
+
+    expect(handler.fromJSON(expected)).toEqual(payload);
 });

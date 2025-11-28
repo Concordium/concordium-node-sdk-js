@@ -6,7 +6,7 @@ import {
     deserializeThreshold,
 } from './deserialization.js';
 import { Cursor } from './deserializationHelpers.js';
-import { Upward, isKnown } from './index.js';
+import { DelegationTargetTypeNumeric, Upward, isKnown, mapTagToType } from './index.js';
 import { Cbor, TokenId, TokenOperationType } from './plt/index.js';
 import {
     AccountTransactionInput,
@@ -755,17 +755,16 @@ export class ConfigureDelegationHandler
 
         let delegationTarget: DelegationTarget;
         if (hasDelegationTarget) {
-            const tag = serializedPayload.read(0).readUInt8(0);
+            const tag = serializedPayload.read(1).readUInt8(0);
 
-            if (tag === 1) {
-                const validatorId = serializedPayload.read(8).readBigUInt64BE(0);
-                delegationTarget = {
-                    delegateType: DelegationTargetType.Baker,
-                    bakerId: validatorId,
-                };
-            } else {
-                throw new Error(`Unknown delegation target tag: ${tag}`);
-            }
+            const tagMapping = DelegationTargetTypeNumeric[tag];
+            if (tagMapping === undefined) throw new Error(`Unknown tag id ${tag}`);
+
+            const validatorId = serializedPayload.read(8).readBigUInt64BE(0);
+            delegationTarget = {
+                delegateType: mapTagToType[tag],
+                bakerId: validatorId,
+            };
         } else {
             delegationTarget = { delegateType: DelegationTargetType.PassiveDelegation };
         }

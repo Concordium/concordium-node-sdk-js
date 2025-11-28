@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- `UpdateCredentialKeysPayload` and corresponding deserialize and serialize functions implemented
+
 ## 12.0.0-alpha.3
 
 ### Added

@@ -17,6 +17,8 @@ Nodejs and Web SDK's.
   - [Update Contract](#update-contract)
   - [Smart contract parameters](#smart-contract-parameters)
   - [Serialize parameters with only the specific type's schema](#serialize-parameters-with-only-the-specific-types-schema)
+- [Multi-sig transactions](#multi-sig-transactions)
+- [Sponsoring transactions](#sponsoring-transactions)
 <!--toc:end-->
 
 ## Constructing transactions
@@ -33,19 +35,15 @@ The following example demonstrates how a register data transaction can
 be created.
 
 ```ts
-    const header: AccountTransactionHeader = {
-        expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
-        nonce: 1n,              // the next nonce for this account, can be found using getNextAccountNonce
-        sender: new AccountAddress("4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M"),
-    };
-    const registerData: RegisterDataPayload = {
-        data: new DataBlob(Buffer.from('6B68656C6C6F20776F726C64', 'hex')) // Add the bytes you wish to register as a DataBlob
-    };
-    const registerDataAccountTransaction: AccountTransaction = {
-        header: header,
-        payload: registerData,
-        type: AccountTransactionType.RegisterData,
-    };
+    const transaction = Transaction
+        .registerData({
+            data: new DataBlob(Buffer.from('6B68656C6C6F20776F726C64', 'hex')) // Add the bytes you wish to register as a DataBlob
+        })
+        .addMetadata({
+            sender: AccountAddress.fromBase58("4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M"),
+            nonce: SequenceNumber.create(1), // the next nonce for this account, can be found using getNextAccountNonce
+        })
+        .build();
 ```
 
 ### Create a configure delegation transaction
@@ -127,7 +125,7 @@ transaction payload using the output from the example below:
     // The next step creates an unsigned credential for an existing account.
     // Note that unsignedCredentialForExistingAccount also contains the randomness used,
     // which should be saved to later be able to reveal attributes, or prove properties about them.
-    const existingAccountAddress = new AccountAddress("3sAHwfehRNEnXk28W7A3XB3GzyBiuQkXLNRmDwDGPUe8JsoAcU");
+    const existingAccountAddress = AccountAddress.fromBase58("3sAHwfehRNEnXk28W7A3XB3GzyBiuQkXLNRmDwDGPUe8JsoAcU");
     const unsignedCredentialForExistingAccount = createUnsignedCredentialForExistingAccount(
         identityInput,
         cryptographicParameters.value,
@@ -193,6 +191,7 @@ account. Note that the initial credential with index 0 cannot be removed.
         threshold: threshold,
         currentNumberOfCredentials: currentNumberOfCredentials,
     };
+    const transaction = Transaction.updateCredentials(updateCredentialsPayload).addMetadata(...).build();
 ```
 
 ### Deploy module
@@ -352,3 +351,133 @@ And for the initialization:
             schemaVersion
     )
 ```
+
+## Signing transactions
+
+Transaction signatures are added to transactions after they have been properly built with all the required information.
+
+```typescript
+const sender: AccountAddress.Type = ...
+const receiver: AccountAddress.Type = ...
+
+const senderSigner: AccountSigner = ... // the keys of the sender, typically held by a wallet
+
+// here we construct a simple transfer transaction just to serve as an example.
+const transaction = Transaction
+    .transfer({amount: CcdAmount.fromCcd(100), toAddress: receiver})
+    .addMetadata({ sender, nonce })
+    .build();
+// Sign (and make final) the transaction for submission. Alternatively, if multiple signatures must be added to the
+// transaction, `Transaction.sign` can be used, followed by a final `Transaction.finalize`.
+const signed = Transaction.signAndFinalize(transaction, senderSigner);
+```
+
+### Multi-sig transactions
+
+If multiple signatures on the transaction is required by the account used, this can be acheived by the following
+approach:
+
+```typescript
+const sender: AccountAddress.Type = ...
+const receiver: AccountAddress.Type = ...
+
+// here we construct a simple transfer transaction just to serve as an example.
+const transaction = Transaction
+    .transfer({amount: CcdAmount.fromCcd(100), toAddress: receiver})
+    .addMetadata({ sender, nonce })
+    .multiSig(2)
+    .build();
+const json = Transaction.toJSON(transaction); // convert to JSON to distribute it to signing parties
+
+// In an application holding the keys for the first signer
+const signer1: AccountSigner = ... // the keys of one of the credentials of the sender
+const signed1 = Transaction.sign(Transaction.signableFromJSON(json), signer1);
+const json1 = Transaction.toJSON(signed1);
+
+// In an application holding the keys for the second signer
+const signer2: AccountSigner = ... // the keys of another of the credentials of the sender
+const signed2 = Transaction.sign(Transaction.signableFromJSON(json), signer2);
+const json2 = Transaction.toJSON(signed2);
+
+// Take the signed transaction from both parties and combine them.
+const fullySigned = Transaction.mergeSignaturesInto(
+    Transaction.signableFromJSON(json1),
+    Transaction.signableFromJSON(json2)
+);
+
+const finalized = Transaction.finalize(fullySigned); // ready to be submitted to chain.
+```
+
+
+## Sponsoring transactions
+
+It's possible to sponsor transactions by using the _extended_ transaction format to add in a sponsor for the
+transaction. This is done by submitting a `AccountTransactionV1` formatted transaction which is configured for
+sponsoring. The `Transaction` builder API can be used to achieve this:
+
+```typescript
+// The 3 entities involved in the transaction.
+const sender: AccountAddress.Type = ...
+const receiver: AccountAddress.Type = ...
+const sponsor: AccountAddress.Type = ...
+
+const senderSigner: AccountSigner = ... // the keys of the sender, typically held by a wallet
+const sponsorSigner: AccountSigner = ... // the keys of the sponsor, typically added to a service
+
+// This can be done for any account transaction type, here we use a token update with a transfer operation as
+// an example.
+const tokenId: TokenId.Type = ...
+const transfer: TokenTransferOperation = {
+    transfer: {
+        recipient: CborAccountAddress.fromAccountAddress(recipient),
+        amount,
+        memo,
+    },
+};
+const payload = createTokenUpdatePayload(tokenId, transfer);
+const transaction = Transaction.tokenUpdate(payload);
+
+// Fill in the metadata required for the transaction header to prepare for signing.
+// Here we allow this specific transaction to be sponsored until 30 minutes from now.
+const { nonce } = await grpcClient.getNextAccountNonce(sender);
+let signableTransaction = builder
+    .addMetadata({ sender, nonce, expiry: TransactionExpiry.futureMinutes(30) })
+    .addSponsor(sponsor)
+    .build();
+// Add the sponsor signature on the transaction.
+signableTransaction = await Transaction.sponsor(signableTransaction, sponsorSigner);
+
+// Add the sender signature on the transaction and submit to chain.
+const finalTransaction = await Transaction.signAndFinalize(signableTransaction, senderSigner);
+const transactionHash = await grpcClient.sendTransaction(finalTransaction);
+```
+
+In a real world scenario, this would not all happen in the same place. The following shows the example of an application
+that wants to sponsor transactions. This consists of 3 components:
+
+1. [Application frontend](#application-frontend) - acts like a bridge between the sponsor service and the wallet.
+2. [Sponsor service (application backend)](#sponsor-service-application-backend) - signing on behalf of the sponsor
+3. [Wallet](#wallet) - signing on behalf of the sender
+
+### Application frontend
+
+In this specific example, the transaction payload is constructed in the application frontend to be generic. You could
+also imagine a scenario where the entire transaction is constructed on the backend, e.g. constructing a transaction that pays for the items in the
+"shopping basket" on a web shop.
+
+{@codeblock ~~:nodejs/transactions/sponsored/plt-transfer.ts#documentation-snippet}
+
+### Sponsor service (application backend)
+
+The keys of the sponsor used to add the sponsor signatures on the transaction are held in this component. The "signable"
+transaction is constructed, signed by the sponsor, and returned to the application frontend to be propagated to the
+wallet where the user (transaction sender) interacting with the application will sign the transaction.
+
+{@codeblock ~~:nodejs/transactions/sponsored/sponsor.ts#documentation-snippet}
+
+### Wallet
+
+The wallet holds the user keys, where the sender signature on the transaction will be added and the transaction
+submitted to chain.
+
+{@codeblock ~~:nodejs/transactions/sponsored/wallet.ts#documentation-snippet}

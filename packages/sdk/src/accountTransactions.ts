@@ -728,16 +728,6 @@ export class ConfigureDelegationHandler
         return serializeConfigureDelegationPayload(payload);
     }
 
-    /*
-    TODO: the bluepaper says something like 
-      bitmap.hasCapital x AMOUNT
-      bitmap.hasRestakeEarnings x BOOL
-      bitmap.hasDelegationTarget x DelegationTarget
-    they don't mean an actual multiplication, right? they are just saying if bit hasCapital is set, there is an amount to read?
-
-    if bitmap.hasCapital is false, does this mean, the serializedPayload.read(...) would be reading the BOOL of hasRestakeEarnings?
-
-    */
     deserialize(serializedPayload: Cursor): ConfigureDelegationPayload {
         const serializedBitmap = serializedPayload.read(2).readUInt16BE(0);
 
@@ -753,7 +743,7 @@ export class ConfigureDelegationHandler
 
         const restakeEarnings = hasRestakeEarnings ? serializedPayload.read(1).readUInt8(0) !== 0 : false;
 
-        let delegationTarget: DelegationTarget;
+        let delegationTarget;
         if (hasDelegationTarget) {
             const tag = serializedPayload.read(1).readUInt8(0);
 
@@ -765,14 +755,12 @@ export class ConfigureDelegationHandler
                 delegateType: mapTagToType[tag],
                 bakerId: validatorId,
             };
-        } else {
-            delegationTarget = { delegateType: DelegationTargetType.PassiveDelegation };
         }
 
         return {
-            stake: capital,
-            restakeEarnings: restakeEarnings,
-            delegationTarget: delegationTarget,
+            ...(hasCapital && { stake: capital }),
+            ...(hasRestakeEarnings && { restakeEarnings }),
+            ...(hasDelegationTarget && { delegationTarget }),
         };
     }
 

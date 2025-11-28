@@ -339,3 +339,36 @@ test('test deserialize ConfigureDelegation', () => {
     };
     deserializeAccountTransactionBase(transaction);
 });
+
+test('test deserialize ConfigureDelegation with no restake', () => {
+    const payload: ConfigureDelegationPayload = {
+        stake: CcdAmount.fromMicroCcd(0),
+
+        restakeEarnings: false,
+
+        delegationTarget: {
+            delegateType: DelegationTargetType.Baker,
+            bakerId: 1n,
+        },
+    };
+
+    const transaction: AccountTransaction = {
+        header,
+        type: AccountTransactionType.ConfigureDelegation,
+        payload,
+    };
+    deserializeAccountTransactionBase(transaction);
+});
+
+test('test deserialize ConfigureDelegation with no delegation', () => {
+    const payload: ConfigureDelegationPayload = {
+        stake: CcdAmount.fromMicroCcd(0),
+    };
+
+    const transaction: AccountTransaction = {
+        header,
+        type: AccountTransactionType.ConfigureDelegation,
+        payload,
+    };
+    deserializeAccountTransactionBase(transaction);
+});

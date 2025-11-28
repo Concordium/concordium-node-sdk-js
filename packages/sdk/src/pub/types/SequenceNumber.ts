@@ -9,6 +9,7 @@ export {
     fromTypedJSON,
     instanceOf,
     create,
+    equals,
     toSerializable,
     fromSerializable,
 } from '../../types/SequenceNumber.js';

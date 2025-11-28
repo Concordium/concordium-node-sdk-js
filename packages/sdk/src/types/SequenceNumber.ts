@@ -94,6 +94,18 @@ export function create(sequenceNumber: bigint | number): SequenceNumber {
 }
 
 /**
+ * Checks whether two sequence numbers are equal.
+ *
+ * @param a - the first sequence number
+ * @param b - the second sequence number
+ *
+ * @returns whether the two are equal.
+ */
+export function equals(a: SequenceNumber, b: SequenceNumber): boolean {
+    return a.value === b.value;
+}
+
+/**
  * Convert a SequenceNumber from its protobuf encoding.
  * @param {Proto.SequenceNumber} sequenceNumber The sequence number in protobuf.
  * @returns {SequenceNumber} The sequence number.

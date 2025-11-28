@@ -612,7 +612,7 @@ export function deserialize(value: Cursor | ArrayBuffer): Payload {
             payload = configureDelegation(getAccountTransactionHandler(type).deserialize());
             break;
         case AccountTransactionType.ConfigureBaker:
-            payload = configureValidator(getAccountTransactionHandler(type).deserialize());
+            payload = configureValidator(getAccountTransactionHandler(type).deserialize(cursor));
             break;
         case AccountTransactionType.TokenUpdate:
             payload = tokenUpdate(getAccountTransactionHandler(type).deserialize(cursor));

@@ -659,6 +659,20 @@ export interface ConfigureBakerPayloadJSON {
 export class ConfigureBakerHandler
     implements AccountTransactionHandler<ConfigureBakerPayload, ConfigureBakerPayloadJSON, ConfigureBakerPayload>
 {
+    //TODO: need to figure out what to do with the versions and hasSuspended
+    //for now assume version 8 only onwards
+    ALLOWED_BITS = 0x100;
+    VALIDATION_MASK = 0xffff - this.ALLOWED_BITS;
+    HAS_SUSPENDED = 0x0200;
+    HAS_FINALIZATION_REWARD_COMMISSION = 0x0080;
+    HAS_BAKING_REWARD_COMMISSION = 0x0040;
+    HAS_TRANSACTION_FEE_COMMISSION = 0x0020;
+    HAS_METADATA_URL = 0x0010;
+    HAS_KEYS_WITH_PROOF = 0x0008;
+    HAS_OPEN_FOR_DELEGATION = 0x004;
+    HAS_RESTAKE_EARNINGS = 0x0002;
+    HAS_CAPITAL = 0x0001;
+
     getBaseEnergyCost(payload: ConfigureBakerPayload): bigint {
         if (payload.keys) {
             return 4050n;
@@ -671,8 +685,82 @@ export class ConfigureBakerHandler
         return serializeConfigureBakerPayload(payload);
     }
 
-    deserialize(): ConfigureBakerPayload {
-        throw new Error('deserialize not supported');
+    deserialize(serializedPayload: Cursor): ConfigureBakerPayload {
+        const serializedBitmap = serializedPayload.read(2).readUInt16BE(0);
+
+        if ((serializedBitmap & this.VALIDATION_MASK) !== 0)
+            throw new Error('Found unsupported bits in bitmap, only version 8 onwards');
+
+        const hasCapital = (serializedBitmap & this.HAS_CAPITAL) !== 0;
+        const hasRestakeEarnings = (serializedBitmap & this.HAS_RESTAKE_EARNINGS) !== 0;
+        const hasOpenForDelegation = (serializedBitmap & this.HAS_OPEN_FOR_DELEGATION) !== 0;
+        const hasKeysWithProof = (serializedBitmap & this.HAS_KEYS_WITH_PROOF) !== 0;
+        const hasMetadataUrl = (serializedBitmap & this.HAS_METADATA_URL) !== 0;
+        const hasTransactionFeeCommission = (serializedBitmap & this.HAS_TRANSACTION_FEE_COMMISSION) !== 0;
+        const hasBakingRewardCommission = (serializedBitmap & this.HAS_BAKING_REWARD_COMMISSION) !== 0;
+        const hasFinalizationRewardCommission = (serializedBitmap & this.HAS_FINALIZATION_REWARD_COMMISSION) !== 0;
+        const hasSuspended = (serializedBitmap & this.HAS_SUSPENDED) !== 0;
+
+        const result: any = {};
+
+        const capital = hasCapital
+            ? CcdAmount.fromMicroCcd(serializedPayload.read(8).readBigUInt64BE(0))
+            : CcdAmount.zero();
+        result.capital = capital;
+
+        const restakeEarnings = hasRestakeEarnings ? serializedPayload.read(1).readUInt8(0) !== 0 : false;
+        result.restakeEarnings = restakeEarnings;
+
+        const openForDelegation = hasOpenForDelegation ? serializedPayload.read(1).readUInt8(0) : undefined;
+        let currentOpenStatus;
+        if (openForDelegation !== undefined) {
+            result.openForDelegation = OpenStatus[openForDelegation];
+        }
+
+        if (hasKeysWithProof) {
+            result.electionVerifyKey = serializedPayload.read(32).toString('hex');
+
+            result.proofElection = serializedPayload.read(64).toString('hex');
+            //TODO: bluepaper has these two below, i am combining for the above
+            //result.proofElection.challenge = serializedPayload.read(32).toString('hex');
+            //result.proofElection.response = serializedPayload.read(32).toString('hex');
+
+            result.signatureVerifyKey.key = serializedPayload.read(32).toString('hex');
+
+            result.proofSig = serializedPayload.read(64).toString('hex');
+            //TODO: bluepaper has these two below, i am combining for the above
+            //const proofSigChallenge = serializedPayload.read(32);
+            //const proofSigResponse = serializedPayload.read(32);
+
+            result.aggregationVerifyKey = serializedPayload.read(96).toString('hex');
+
+            result.proofAggregation = serializedPayload.read(64).toString('hex');
+        }
+
+        if (hasMetadataUrl) {
+            const urlLength = serializedPayload.read(2).readUInt16BE(0);
+
+            const url = serializedPayload.read(urlLength);
+            result.metadataUrl = url;
+        }
+
+        if (hasTransactionFeeCommission) {
+            result.transactionFeeCommission = serializedPayload.read(4).readUInt32BE(0);
+        }
+
+        if (hasBakingRewardCommission) {
+            result.bakingRewardCommission = serializedPayload.read(4).readUInt32BE(0);
+        }
+
+        if (hasFinalizationRewardCommission) {
+            result.finalizationCommission = serializedPayload.read(4).readUInt32BE(0);
+        }
+
+        if (hasSuspended) {
+            result.suspended = serializedPayload.read(1).readUInt8(0);
+        }
+
+        return result;
     }
 
     toJSON(payload: ConfigureBakerPayload): ConfigureBakerPayloadJSON {

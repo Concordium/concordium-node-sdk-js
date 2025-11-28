@@ -838,7 +838,13 @@ interface SharedCredentialDeploymentValues {
     policy: Policy;
 }
 
-export interface CredentialDeploymentValues extends SharedCredentialDeploymentValues {
+export type CredentialDeploymentValuesPayload = SharedCredentialDeploymentValues & {
+    credId: string;
+    revocationThreshold: number;
+    arData: Record<string, ChainArData>;
+};
+
+export interface NormalCredentialValues extends SharedCredentialDeploymentValues {
     credId: string;
     revocationThreshold: number;
     arData: Record<string, ChainArData>;
@@ -848,6 +854,8 @@ export interface CredentialDeploymentValues extends SharedCredentialDeploymentVa
 export interface InitialCredentialDeploymentValues extends SharedCredentialDeploymentValues {
     regId: string;
 }
+
+export type InitialCredentialValues = InitialCredentialDeploymentValues;
 
 export interface CredentialDeploymentCommitments {
     cmmPrf: string;
@@ -859,12 +867,12 @@ export interface CredentialDeploymentCommitments {
 
 export interface NormalAccountCredential {
     type: 'normal';
-    contents: CredentialDeploymentValues;
+    contents: NormalCredentialValues;
 }
 
 export interface InitialAccountCredential {
     type: 'initial';
-    contents: InitialCredentialDeploymentValues;
+    contents: InitialCredentialValues;
 }
 
 export enum StakePendingChangeType {
@@ -1470,7 +1478,9 @@ export interface UpdateCredentialsPayload {
 
     /** the new credential threshold required to sign transactions */
     threshold: number;
+}
 
+export interface UpdateCredentialsInput extends UpdateCredentialsPayload {
     /**
      * the current number of credentials on the account. This
      * is required to be able to calculate the energy cost, but
@@ -1564,9 +1574,10 @@ export type AccountTransactionPayload =
     | TokenUpdatePayload;
 
 export type AccountTransactionInput =
-    | Exclude<AccountTransactionPayload, InitContractPayload | UpdateContractPayload>
+    | Exclude<AccountTransactionPayload, InitContractPayload | UpdateContractPayload | UpdateCredentialsPayload>
     | InitContractInput
-    | UpdateContractInput;
+    | UpdateContractInput
+    | UpdateCredentialsInput;
 
 /**
  * Describes account transactions. This does _not_ describe the transaction format that is serialized
@@ -1702,7 +1713,7 @@ export interface IdOwnershipProofs {
     sig: string;
 }
 
-export interface UnsignedCredentialDeploymentInformation extends CredentialDeploymentValues {
+export interface UnsignedCredentialDeploymentInformation extends CredentialDeploymentValuesPayload {
     proofs: IdOwnershipProofs;
 }
 
@@ -1726,7 +1737,7 @@ export type UnsignedCdiWithRandomness = {
     unsignedCdi: Known<UnsignedCredentialDeploymentInformation>;
 } & CdiRandomness;
 
-export interface CredentialDeploymentInfo extends CredentialDeploymentValues {
+export interface CredentialDeploymentInfo extends CredentialDeploymentValuesPayload {
     proofs: string;
 }
 

@@ -7,6 +7,7 @@ import {
     CcdAmount,
     SequenceNumber,
     TransactionExpiry,
+    deserializeBlockItem,
     isKnown,
 } from '../../../../src/index.js';
 import { buildBasicAccountSigner } from '../../../../src/signHelpers.js';
@@ -55,7 +56,7 @@ describe('Transaction.Finalized', () => {
             const finalized = Transaction.finalize(signed);
 
             const serialized = Transaction.serializeBlockItem(finalized);
-            const deserialized = Transaction.deserializeBlockItem(serialized);
+            const deserialized = deserializeBlockItem(serialized);
 
             expect(deserialized).toEqual({
                 kind: 0,
@@ -82,7 +83,7 @@ describe('Transaction.Finalized', () => {
             const finalized = Transaction.finalize(sponsored);
 
             const serialized = Transaction.serializeBlockItem(finalized);
-            const deserialized = Transaction.deserializeBlockItem(serialized);
+            const deserialized = deserializeBlockItem(serialized);
 
             expect(deserialized).toEqual({
                 kind: 3,
@@ -105,7 +106,7 @@ describe('Transaction.Finalized', () => {
             const finalized = Transaction.finalize(signed);
 
             const serialized = Transaction.serializeBlockItem(finalized);
-            const deserialized = Transaction.deserializeBlockItem(serialized);
+            const deserialized = deserializeBlockItem(serialized);
 
             assert(isKnown(deserialized));
             assert(deserialized.kind === BlockItemKind.AccountTransactionKind);
@@ -134,7 +135,7 @@ describe('Transaction.Finalized', () => {
                 const finalized = Transaction.finalize(sponsored);
 
                 const serialized = Transaction.serializeBlockItem(finalized);
-                const deserialized = Transaction.deserializeBlockItem(serialized);
+                const deserialized = deserializeBlockItem(serialized);
                 assert(isKnown(deserialized));
                 assert(deserialized.kind === BlockItemKind.AccountTransactionV1Kind);
 

@@ -277,12 +277,14 @@ describe('Transaction.Builder', () => {
             proofs: 'abc123',
         };
 
-        const tx = Transaction.updateCredentials({
-            newCredentials: [{ index: 1, cdi }],
-            removeCredentialIds: [],
-            threshold: 1,
-            currentNumberOfCredentials: 1n,
-        });
+        const tx = Transaction.updateCredentials(
+            {
+                newCredentials: [{ index: 1, cdi }],
+                removeCredentialIds: [],
+                threshold: 1,
+            },
+            1n
+        );
 
         test('creates update credentials transaction', () => {
             expect(tx.payload.type).toBe(20);
@@ -294,15 +296,17 @@ describe('Transaction.Builder', () => {
         });
 
         test('calculates fixed energy cost (multiple credentials)', () => {
-            const tx = Transaction.updateCredentials({
-                newCredentials: [
-                    { index: 1, cdi },
-                    { index: 2, cdi },
-                ],
-                removeCredentialIds: [],
-                threshold: 1,
-                currentNumberOfCredentials: 1n,
-            });
+            const tx = Transaction.updateCredentials(
+                {
+                    newCredentials: [
+                        { index: 1, cdi },
+                        { index: 2, cdi },
+                    ],
+                    removeCredentialIds: [],
+                    threshold: 1,
+                },
+                1n
+            );
             const energy = Transaction.getEnergyCost(tx);
             expect(energy.value).toBe(109778n);
         });

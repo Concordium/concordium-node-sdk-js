@@ -1,4 +1,6 @@
 import assert from 'assert';
+import fs from 'fs';
+import path from 'path';
 
 import {
     AccountAddress,
@@ -16,6 +18,7 @@ import {
     DataBlob,
     DeployModulePayload,
     Energy,
+    IndexedCredentialDeploymentInfo,
     InitContractInput,
     ModuleReference,
     Parameter,
@@ -29,16 +32,15 @@ import {
     TokenUpdatePayload,
     TransactionExpiry,
     UpdateContractInput,
+    UpdateCredentialsInput,
     calculateEnergyCost,
-    deserializeTransaction,
+    deserializeBlockItem,
     getAccountTransactionHandler,
+    isKnown,
     tokenAddressFromBase58,
     tokenAddressToBase58,
 } from '../../src/index.js';
-import {
-    serializeAccountTransactionForSubmission,
-    serializeAccountTransactionPayload,
-} from '../../src/serialization.js';
+import { serializeAccountTransaction, serializeAccountTransactionPayload } from '../../src/serialization.js';
 
 function deserializeAccountTransactionBase(transaction: AccountTransaction) {
     const signatures: AccountTransactionSignature = {
@@ -47,7 +49,9 @@ function deserializeAccountTransactionBase(transaction: AccountTransaction) {
         },
     };
 
-    const deserialized = deserializeTransaction(serializeAccountTransactionForSubmission(transaction, signatures));
+    const deserialized = deserializeBlockItem(serializeAccountTransaction(transaction, signatures));
+    assert(isKnown(deserialized));
+
     assert(deserialized.kind === BlockItemKind.AccountTransactionKind, 'Expected account transaction');
     const payloadSize = serializeAccountTransactionPayload(transaction).length;
     const baseEnergy = getAccountTransactionHandler(transaction.type).getBaseEnergyCost(transaction.payload);
@@ -61,12 +65,13 @@ function deserializeAccountTransactionBase(transaction: AccountTransaction) {
         energyAmount,
     };
     // Filter out input values, as they will not be included in deserialized values
-    const { maxContractExecutionEnergy, ...expectedPayload } = transaction.payload as any;
+    const { maxContractExecutionEnergy, currentNumberOfCredentials, ...expectedPayload } = transaction.payload as any;
     const { type, ...payload } = deserialized.transaction.payload;
 
     expect(deserialized.transaction.signature).toEqual(signatures);
     expect(deserialized.transaction.header).toEqual(expectedHeader);
     expect(deserialized.transaction.payload.type).toEqual(transaction.type);
+
     expect(payload).toEqual(expectedPayload);
 }
 
@@ -250,4 +255,30 @@ test('Test parsing of Token Addresses', () => {
     };
     expect(address).toEqual(expectedAddress);
     expect(rebase58).toEqual(base58);
+});
+
+test('test deserialize UpdateCredential', () => {
+    const cdi = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'resources/cdi.json')).toString());
+
+    const credentialDeploymentInfo: IndexedCredentialDeploymentInfo = {
+        index: 0,
+        cdi,
+    };
+
+    const payload: UpdateCredentialsInput = {
+        newCredentials: [credentialDeploymentInfo],
+        removeCredentialIds: [
+            '123000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
+            '456000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
+        ], ///make these 48 bytes
+        threshold: 5,
+        currentNumberOfCredentials: 2n,
+    };
+
+    const transaction: AccountTransaction = {
+        header,
+        type: AccountTransactionType.UpdateCredentials,
+        payload,
+    };
+    deserializeAccountTransactionBase(transaction);
 });

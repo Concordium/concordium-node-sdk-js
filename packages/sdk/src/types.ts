@@ -1563,7 +1563,7 @@ export type TokenUpdatePayload = {
 /**
  * The payload for UpdateCredentialKeys transaction
  * new set of credential keys to be replaced with the existing ones including updating the threshold
- * 
+ *
  */
 export interface UpdateCredentialKeysPayload {
     /** account credential identifier */

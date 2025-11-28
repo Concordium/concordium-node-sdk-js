@@ -23,6 +23,7 @@ import {
 } from './pub/types.js';
 import { serializeCredentialDeploymentInfo } from './serialization.js';
 import {
+    SchemeId,
     encodeDataBlob,
     encodeWord8,
     encodeWord8FromString,
@@ -852,12 +853,16 @@ export class UpdateCredentialKeysHandler
         const putCredentialVerifyKey = (credentialVerifyKey: Upward<VerifyKey>) => {
             if (!isKnown(credentialVerifyKey)) throw new Error('Verify keys must be known when serializing');
 
-            const serializedSchemeId = encodeWord8FromString(credentialVerifyKey.schemeId);
+            if (credentialVerifyKey.schemeId !== 'Ed25519')
+                throw new Error(`Unknown scheme ID ${credentialVerifyKey.schemeId}`);
+
+            const numeric = SchemeId[credentialVerifyKey.schemeId as keyof typeof SchemeId];
+            const serializedSchemeId = encodeWord8(numeric);
+
             const serializedKey = Buffer.from(credentialVerifyKey.verifyKey, 'hex');
             return Buffer.concat([serializedSchemeId, serializedKey]);
         };
-        console.log('----> about to serializeMap');
-        console.log('===', keys);
+
         const serializedKeys = serializeMap(keys, encodeWord8, encodeWord8FromString, putCredentialVerifyKey);
 
         const serializedThreshold = Buffer.from([payload.keys.threshold]);
@@ -867,28 +872,31 @@ export class UpdateCredentialKeysHandler
 
     deserialize(serializedPayload: Cursor): UpdateCredentialKeysPayload {
         const credId = serializedPayload.read(48).toString('hex');
-        console.log('----> credId: ', credId);
+
         const resultMap: Record<number, Upward<VerifyKey>> = {};
         const credVerifyKeyEntryCount = serializedPayload.read(1).readUInt8(0);
-        console.log('----> count: ', credVerifyKeyEntryCount);
+
         for (let a = 0; a < credVerifyKeyEntryCount; a++) {
             const index = serializedPayload.read(1).readUInt8(0);
-            console.log('----> index:', index);
+
             const scheme = serializedPayload.read(1).readUInt8(0);
-            console.log('----> schemeId: ', scheme);
+            const schemeName = SchemeId[scheme];
+
+            if (schemeName === undefined) throw new Error('Unknown schemeId: ' + scheme);
+
             let currentVerifyKey: Upward<VerifyKey> = null;
             if (scheme === 0) {
                 currentVerifyKey = {
-                    schemeId: '0', //TODO: are we passing in 0 or Ed25519 during serialization or do we convert Ed25519 to 0 and vice versa?
+                    schemeId: schemeName,
                     verifyKey: serializedPayload.read(32).toString('hex'),
                 };
             }
-            console.log(`putting at index ${index}, the verify key ${currentVerifyKey?.verifyKey}`);
+
             resultMap[index] = currentVerifyKey;
         }
 
         const threshold = serializedPayload.read(1).readUInt8(0);
-        console.log('-----> ', threshold);
+
         const credPublicKeys = {
             keys: resultMap,
             threshold: threshold,
@@ -930,7 +938,6 @@ export class UpdateCredentialKeysHandler
                     verifyKey: key.verifyKey,
                 };
             } else {
-                console.log('unknown found');
                 throw new Error('unknown encountered when iterating the keys');
             }
         }

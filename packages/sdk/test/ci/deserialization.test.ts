@@ -287,15 +287,15 @@ test('test deserialize UpdateCredentialKeys', () => {
     const credentialPublicKeys: CredentialPublicKeys = {
         keys: {
             '0': {
-                schemeId: '0',
+                schemeId: 'Ed25519',
                 verifyKey: 'd684ac5fd786d33c82701ce9f05017bb6f3114bec77c0e836e7d5c211de9acc6',
             },
             '1': {
-                schemeId: '0',
+                schemeId: 'Ed25519',
                 verifyKey: 'df70d598d7cf8954b7b6d27bee2b94c4f2f5540219573bca70600c7cde39e92d',
             },
             '2': {
-                schemeId: '0',
+                schemeId: 'Ed25519',
                 verifyKey: '6f2da81a8f7d6965d720527d31c05efdb197129ed54fee51500b2c1742b3a43a',
             },
         },

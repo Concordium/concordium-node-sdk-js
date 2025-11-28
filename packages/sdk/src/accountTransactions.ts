@@ -745,7 +745,7 @@ export class ConfigureDelegationHandler
 
         const hasDelegationTarget = (serializedBitmap & this.HAS_DELEGATION_TARGET) !== 0;
         const hasRestakeEarnings = (serializedBitmap & this.HAS_RESTAKE_EARNINGS) !== 0;
-        const hasCapital = (serializedBitmap & this.HAS_RESTAKE_EARNINGS) !== 0;
+        const hasCapital = (serializedBitmap & this.HAS_CAPITAL) !== 0;
 
         const capital = hasCapital
             ? CcdAmount.fromMicroCcd(serializedPayload.read(8).readBigUInt64BE(0))

@@ -2,10 +2,11 @@ import * as wasm from '@concordium/rust-bindings/wallet';
 
 import { deserializeUint8 } from '../deserialization.js';
 import { Cursor } from '../deserializationHelpers.js';
-import { AccountTransactionV0 } from '../transactions/index.js';
+import { Upward } from '../grpc/upward.js';
+import { AccountTransactionV0, AccountTransactionV1 } from '../transactions/index.js';
 import { BlockItem, BlockItemKind } from '../types.js';
 
-function deserializeCredentialDeployment(serializedDeployment: Cursor) {
+export function deserializeCredentialDeployment(serializedDeployment: Cursor) {
     const raw = wasm.deserializeCredentialDeployment(serializedDeployment.read().toString('hex'));
     try {
         const parsed = JSON.parse(raw);
@@ -56,13 +57,13 @@ export function deserializeTransaction(serializedTransaction: ArrayBuffer): Bloc
 }
 
 /**
- * Deserializes a block item its encoding.
- * @param buffer the buffer to deserialize.
- * @returns the block item corresonding to the encoding.
- */
-export function deserializeBlockItem(value: ArrayBuffer | Cursor): BlockItem {
-    const isRawBuffer = !(value instanceof Cursor);
-    const cursor = isRawBuffer ? Cursor.fromBuffer(value) : value;
+ * Deserializes a transaction from the block item encoding used to send it to a node.
+ *
+ * @param buffer A buffer containing transaction encoding. It is expected to start the _block item kind_.
+ * @returns a block item.
+ **/
+export function deserializeBlockItem(buffer: ArrayBuffer): Upward<BlockItem> {
+    const cursor = Cursor.fromBuffer(buffer);
 
     const blockItemKind = deserializeUint8(cursor);
     let blockItem: BlockItem;
@@ -81,11 +82,16 @@ export function deserializeBlockItem(value: ArrayBuffer | Cursor): BlockItem {
             break;
         case BlockItemKind.UpdateInstructionKind:
             throw new Error('deserialization of UpdateInstructions is not supported');
+        case BlockItemKind.AccountTransactionV1Kind:
+            blockItem = {
+                kind: BlockItemKind.AccountTransactionV1Kind,
+                transaction: AccountTransactionV1.deserialize(cursor),
+            };
+            break;
         default:
-            throw new Error('Invalid blockItemKind');
+            return null;
     }
 
-    if (isRawBuffer && cursor.remainingBytes.length !== 0)
-        throw new Error('Deserializing the transaction did not exhaust the buffer');
+    if (cursor.remainingBytes.length !== 0) throw new Error('Deserializing the transaction did not exhaust the buffer');
     return blockItem;
 }

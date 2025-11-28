@@ -1,11 +1,8 @@
 import { Buffer } from 'buffer/index.js';
-import _JSONBig from 'json-bigint';
 
 import { CcdAmount, Energy, SequenceNumber } from '../../../src/index.js';
 import { AccountAddress, TransactionExpiry } from '../../../src/pub/types.js';
 import { AccountTransactionV0, Payload } from '../../../src/transactions/index.js';
-
-const JSONBig = _JSONBig({ useNativeBigInt: true });
 
 describe('AccountTransactionV0', () => {
     const senderAddress = AccountAddress.fromBase58('3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt');
@@ -50,23 +47,6 @@ describe('AccountTransactionV0', () => {
             expect(hex).toBe(
                 '010001000040893f2e4a230bcbeee24675454c4ca95a2f55fd33f328958b626c6fa368341e07902c9ffe7864c3bee23b2b2300ed0922eb814ea41fdee25035be8cddc5c3980f49176df18432686c93c61ca89dafbe1cb383bfe6eb3a301ef8907f852643d98d000000000000000100000000000001f400000029000000006553f10003d46bbc5fbbbbabb07752d4acb86892d7a2479856d414182f703e21065dad046d00000000000f4240'
             );
-        });
-    });
-
-    describe('toJSON/fromJSON', () => {
-        test('roundtrip for transfer transaction', () => {
-            const json = AccountTransactionV0.toJSON(transaction);
-            const expectedHeader = {
-                sender: '3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt',
-                nonce: 1n,
-                expiry: 1700000000,
-                energyAmount: 500n,
-                payloadSize: Payload.sizeOf(transferPayload),
-            };
-            expect(json.header).toEqual(expectedHeader);
-
-            const roundtrip = AccountTransactionV0.fromJSON(JSONBig.parse(JSONBig.stringify(json)));
-            expect(roundtrip).toEqual(transaction);
         });
     });
 

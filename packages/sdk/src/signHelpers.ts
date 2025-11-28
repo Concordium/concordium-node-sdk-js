@@ -251,6 +251,58 @@ export function signTransaction(
 }
 
 /**
+ * Helper function to verify an account signature on a signed digest.
+ *
+ * @param digest the digest to verify the signature in the context of.
+ * @param signature the signature on the transaction, from a specific account.
+ * @param accountInfo the address and credentials of the account
+ *
+ * @returns whether the signature is valid.
+ */
+export async function verifyAccountSignature(
+    digest: Uint8Array,
+    signature: AccountTransactionSignature,
+    accountInfo: Pick<AccountInfo, 'accountThreshold' | 'accountCredentials' | 'accountAddress'>
+): Promise<boolean> {
+    if (Object.keys(signature).length < accountInfo.accountThreshold) {
+        // Not enough credentials have signed;
+        return false;
+    }
+
+    for (const credentialIndex of Object.keys(signature)) {
+        const credential = accountInfo.accountCredentials[Number(credentialIndex)];
+        if (!credential) {
+            throw new Error('Signature contains signature for non-existing credential');
+        }
+        const credentialSignature = signature[Number(credentialIndex)];
+        const credentialKeys = credential.value.contents.credentialPublicKeys;
+
+        if (Object.keys(credentialSignature).length < credentialKeys.threshold) {
+            // Not enough signatures for the current credential;
+            return false;
+        }
+
+        for (const keyIndex of Object.keys(credentialSignature)) {
+            const key = credentialKeys.keys[Number(keyIndex)];
+            switch (key) {
+                case undefined:
+                    throw new Error('Signature contains signature for non-existing keyIndex');
+                case null:
+                    throw new Error('Found "null" (represents unknown key variants) in credential keys');
+                default:
+                    break;
+            }
+
+            if (!(await ed.verifyAsync(credentialSignature[Number(keyIndex)], digest, key.verifyKey))) {
+                // Incorrect signature;
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+/**
  * @param account the address of the account that will sign this message.
  * @param message the message to sign, assumed to be utf8 encoded string or a Uint8Array/buffer.
  */
@@ -286,42 +338,6 @@ export async function verifyMessageSignature(
     signature: AccountTransactionSignature,
     accountInfo: Pick<AccountInfo, 'accountThreshold' | 'accountCredentials' | 'accountAddress'>
 ): Promise<boolean> {
-    if (Object.keys(signature).length < accountInfo.accountThreshold) {
-        // Not enough credentials have signed;
-        return false;
-    }
-
     const digest = getMessageDigest(accountInfo.accountAddress, message);
-
-    for (const credentialIndex of Object.keys(signature)) {
-        const credential = accountInfo.accountCredentials[Number(credentialIndex)];
-        if (!credential) {
-            throw new Error('Signature contains signature for non-existing credential');
-        }
-        const credentialSignature = signature[Number(credentialIndex)];
-        const credentialKeys = credential.value.contents.credentialPublicKeys;
-
-        if (Object.keys(credentialSignature).length < credentialKeys.threshold) {
-            // Not enough signatures for the current credential;
-            return false;
-        }
-
-        for (const keyIndex of Object.keys(credentialSignature)) {
-            const key = credentialKeys.keys[Number(keyIndex)];
-            switch (key) {
-                case undefined:
-                    throw new Error('Signature contains signature for non-existing keyIndex');
-                case null:
-                    throw new Error('Found "null" (represents unknown key variants) in credential keys');
-                default:
-                    break;
-            }
-
-            if (!(await ed.verifyAsync(credentialSignature[Number(keyIndex)], digest, key.verifyKey))) {
-                // Incorrect signature;
-                return false;
-            }
-        }
-    }
-    return true;
+    return verifyAccountSignature(digest, signature, accountInfo);
 }

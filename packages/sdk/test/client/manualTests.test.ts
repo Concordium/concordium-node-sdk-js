@@ -28,7 +28,7 @@ describe.skip('Manual test suite', () => {
             toAddress: testAccount,
         };
 
-        const accountTransaction = Transaction.transfer(simpleTransfer).addMetadata(header);
+        const accountTransaction = Transaction.transfer(simpleTransfer).addMetadata(header).build();
 
         // Sign transaction
         const signer = buildBasicAccountSigner(senderAccountPrivateKey);

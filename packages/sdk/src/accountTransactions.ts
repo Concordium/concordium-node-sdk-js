@@ -660,17 +660,28 @@ export class ConfigureBakerHandler
     implements AccountTransactionHandler<ConfigureBakerPayload, ConfigureBakerPayloadJSON, ConfigureBakerPayload>
 {
     //support version 8 only onwards
-    ALLOWED_BITS = 0x1ff;
+    HAS_CAPITAL = 1 << 0; // bit 0
+    HAS_RESTAKE_EARNINGS = 1 << 1; // bit 1
+    HAS_OPEN_FOR_DELEGATION = 1 << 2; // bit 2
+    HAS_KEYS_WITH_PROOF = 1 << 3; // bit 3
+    HAS_METADATA_URL = 1 << 4; // bit 4
+    HAS_TRANSACTION_FEE_COMMISSION = 1 << 5; // bit 5
+    HAS_BAKING_REWARD_COMMISSION = 1 << 6; // bit 6
+    HAS_FINALIZATION_REWARD_COMMISSION = 1 << 7; // bit 7
+    HAS_SUSPENDED = 1 << 8; // bit 8
+
+    ALLOWED_BITS =
+        this.HAS_CAPITAL |
+        this.HAS_RESTAKE_EARNINGS |
+        this.HAS_OPEN_FOR_DELEGATION |
+        this.HAS_KEYS_WITH_PROOF |
+        this.HAS_METADATA_URL |
+        this.HAS_TRANSACTION_FEE_COMMISSION |
+        this.HAS_BAKING_REWARD_COMMISSION |
+        this.HAS_FINALIZATION_REWARD_COMMISSION |
+        this.HAS_SUSPENDED;
+
     VALIDATION_MASK = 0xffff - this.ALLOWED_BITS;
-    HAS_SUSPENDED = 0x0100;
-    HAS_FINALIZATION_REWARD_COMMISSION = 0x0080;
-    HAS_BAKING_REWARD_COMMISSION = 0x0040;
-    HAS_TRANSACTION_FEE_COMMISSION = 0x0020;
-    HAS_METADATA_URL = 0x0010;
-    HAS_KEYS_WITH_PROOF = 0x0008;
-    HAS_OPEN_FOR_DELEGATION = 0x004;
-    HAS_RESTAKE_EARNINGS = 0x0002;
-    HAS_CAPITAL = 0x0001;
 
     getBaseEnergyCost(payload: ConfigureBakerPayload): bigint {
         if (payload.keys) {

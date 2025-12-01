@@ -6,7 +6,7 @@ import {
     deserializeThreshold,
 } from './deserialization.js';
 import { Cursor } from './deserializationHelpers.js';
-import { Upward, isKnown } from './index.js';
+import { DelegationTargetTypeNumeric, Upward, isKnown } from './index.js';
 import { Cbor, TokenId, TokenOperationType } from './plt/index.js';
 import {
     AccountTransactionInput,
@@ -29,6 +29,7 @@ import {
     encodeWord8FromString,
     encodeWord32,
     encodeWord64,
+    mapTagToType,
     packBufferWithWord8Length,
     packBufferWithWord16Length,
     packBufferWithWord32Length,
@@ -714,6 +715,12 @@ export class ConfigureDelegationHandler
             ConfigureDelegationPayload
         >
 {
+    ALLOWED_BITS = 0x0007;
+    VALIDATION_MASK = 0xffff - this.ALLOWED_BITS;
+    HAS_DELEGATION_TARGET = 0x0004;
+    HAS_RESTAKE_EARNINGS = 0x0002;
+    HAS_CAPITAL = 0x0001;
+
     getBaseEnergyCost(): bigint {
         return 300n;
     }
@@ -722,8 +729,40 @@ export class ConfigureDelegationHandler
         return serializeConfigureDelegationPayload(payload);
     }
 
-    deserialize(): ConfigureDelegationPayload {
-        throw new Error('deserialize not supported');
+    deserialize(serializedPayload: Cursor): ConfigureDelegationPayload {
+        const serializedBitmap = serializedPayload.read(2).readUInt16BE(0);
+
+        if ((serializedBitmap & this.VALIDATION_MASK) !== 0) throw new Error('Found unsupported bits in bitmap');
+
+        const hasDelegationTarget = (serializedBitmap & this.HAS_DELEGATION_TARGET) !== 0;
+        const hasRestakeEarnings = (serializedBitmap & this.HAS_RESTAKE_EARNINGS) !== 0;
+        const hasCapital = (serializedBitmap & this.HAS_CAPITAL) !== 0;
+
+        const capital = hasCapital
+            ? CcdAmount.fromMicroCcd(serializedPayload.read(8).readBigUInt64BE(0))
+            : CcdAmount.zero();
+
+        const restakeEarnings = hasRestakeEarnings ? serializedPayload.read(1).readUInt8(0) !== 0 : false;
+
+        let delegationTarget;
+        if (hasDelegationTarget) {
+            const tag = serializedPayload.read(1).readUInt8(0);
+
+            const tagMapping = DelegationTargetTypeNumeric[tag];
+            if (tagMapping === undefined) throw new Error(`Unknown tag id ${tag}`);
+
+            const validatorId = serializedPayload.read(8).readBigUInt64BE(0);
+            delegationTarget = {
+                delegateType: mapTagToType[tag],
+                bakerId: validatorId,
+            };
+        }
+
+        return {
+            ...(hasCapital && { stake: capital }),
+            ...(hasRestakeEarnings && { restakeEarnings }),
+            ...(hasDelegationTarget && { delegationTarget }),
+        };
     }
 
     toJSON(payload: ConfigureDelegationPayload): ConfigureDelegationPayloadJSON {

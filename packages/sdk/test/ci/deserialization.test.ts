@@ -13,11 +13,13 @@ import {
     CIS2,
     Cbor,
     CcdAmount,
+    ConfigureDelegationPayload,
     ContractAddress,
     ContractName,
     CredentialPublicKeys,
     CredentialRegistrationId,
     DataBlob,
+    DelegationTargetType,
     DeployModulePayload,
     Energy,
     IndexedCredentialDeploymentInfo,
@@ -313,6 +315,59 @@ test('test deserialize UpdateCredentialKeys', () => {
     const transaction: AccountTransaction = {
         header,
         type: AccountTransactionType.UpdateCredentialKeys,
+        payload,
+    };
+    deserializeAccountTransactionBase(transaction);
+});
+
+test('test deserialize ConfigureDelegation', () => {
+    const payload: ConfigureDelegationPayload = {
+        stake: CcdAmount.fromMicroCcd(0),
+
+        restakeEarnings: true,
+
+        delegationTarget: {
+            delegateType: DelegationTargetType.Baker,
+            bakerId: 1n,
+        },
+    };
+
+    const transaction: AccountTransaction = {
+        header,
+        type: AccountTransactionType.ConfigureDelegation,
+        payload,
+    };
+    deserializeAccountTransactionBase(transaction);
+});
+
+test('test deserialize ConfigureDelegation with no restake', () => {
+    const payload: ConfigureDelegationPayload = {
+        stake: CcdAmount.fromMicroCcd(0),
+
+        restakeEarnings: false,
+
+        delegationTarget: {
+            delegateType: DelegationTargetType.Baker,
+            bakerId: 1n,
+        },
+    };
+
+    const transaction: AccountTransaction = {
+        header,
+        type: AccountTransactionType.ConfigureDelegation,
+        payload,
+    };
+    deserializeAccountTransactionBase(transaction);
+});
+
+test('test deserialize ConfigureDelegation with no delegation', () => {
+    const payload: ConfigureDelegationPayload = {
+        stake: CcdAmount.fromMicroCcd(0),
+    };
+
+    const transaction: AccountTransaction = {
+        header,
+        type: AccountTransactionType.ConfigureDelegation,
         payload,
     };
     deserializeAccountTransactionBase(transaction);

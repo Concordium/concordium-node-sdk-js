@@ -609,7 +609,7 @@ export function deserialize(value: Cursor | ArrayBuffer): Payload {
             payload = registerData(getAccountTransactionHandler(type).deserialize(cursor));
             break;
         case AccountTransactionType.ConfigureDelegation:
-            payload = configureDelegation(getAccountTransactionHandler(type).deserialize());
+            payload = configureDelegation(getAccountTransactionHandler(type).deserialize(cursor));
             break;
         case AccountTransactionType.ConfigureBaker:
             payload = configureValidator(getAccountTransactionHandler(type).deserialize());

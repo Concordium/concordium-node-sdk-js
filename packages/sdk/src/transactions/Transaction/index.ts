@@ -2,6 +2,7 @@ export { Header } from './shared.js';
 export {
     JSON,
     Type,
+    Builder,
     create,
     toJSON,
     transfer,

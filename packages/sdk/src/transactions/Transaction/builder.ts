@@ -63,7 +63,7 @@ export type JSON = BuilderJSON | SignableJSON;
  */
 export type Metadata = MakeOptional<AccountTransactionHeader, 'expiry'>;
 
-type Initial<P extends Payload.Type = Payload.Type> = Builder<P> & {
+type Initial<P extends Payload.Type = Payload.Type> = BuilderAPI<P> & {
     /**
      * The transaction input header of the initial transaction stage, i.e. without metadata.
      */
@@ -221,7 +221,7 @@ type Sponsorable<P extends Payload.Type = Payload.Type, T extends Transaction<P>
  * Describes an account transaction in its unprocessed form, i.e. defining the input required
  * to create a transaction which can be signed
  */
-export type Builder<P extends Payload.Type = Payload.Type> = Readonly<Transaction<P>> &
+type BuilderAPI<P extends Payload.Type = Payload.Type> = Readonly<Transaction<P>> &
     ConfiguredAPI<P> &
     MultiSigAPI<P> &
     SponsorableAPI<P> & {
@@ -249,7 +249,11 @@ export function isSponsorable<P extends Payload.Type>(transaction: Transaction<P
     return 'sponsor' in transaction.header && isDefined(transaction.header.sponsor);
 }
 
-class TransactionBuilder<P extends Payload.Type = Payload.Type> implements Builder<P> {
+/**
+ * Describes an account transaction in its unprocessed form, i.e. defining the input required
+ * to create a transaction which can be signed
+ */
+export class Builder<P extends Payload.Type = Payload.Type> implements BuilderAPI<P> {
     constructor(
         public readonly header: Header,
         public readonly payload: P
@@ -309,9 +313,12 @@ class TransactionBuilder<P extends Payload.Type = Payload.Type> implements Build
         }
     }
 
-    build(this: Sponsorable<P> & Configured<P>): SignableV1<P>;
-    build(this: Configured<P>): SignableV0<P>;
-    build(this: Configured<P>): Signable<P> {
+    /**
+     * Build the transaction to it's pre-finalized stage.
+     */
+    public build(this: Sponsorable<P> & Configured<P>): SignableV1<P>;
+    public build(this: Configured<P>): SignableV0<P>;
+    public build(this: Configured<P>): Signable<P> {
         const {
             header: { numSignatures = 1n },
             payload,
@@ -324,6 +331,11 @@ class TransactionBuilder<P extends Payload.Type = Payload.Type> implements Build
         return { version: 0, header, payload, signature: {} };
     }
 
+    /**
+     * Serializes the transaction to JSON format.
+     *
+     * @returns the JSON representation of the transaction
+     */
     public toJSON(): BuilderJSON {
         return toJSON(this);
     }
@@ -458,14 +470,14 @@ export function transfer(
 
     if (isWithMemo(payload)) {
         const handler = new SimpleTransferWithMemoHandler();
-        return new TransactionBuilder<Payload.TransferWithMemo>(
+        return new Builder<Payload.TransferWithMemo>(
             { executionEnergyAmount: Energy.create(handler.getBaseEnergyCost()) },
             payload
         );
     }
 
     const handler = new SimpleTransferHandler();
-    return new TransactionBuilder<Payload.Transfer>(
+    return new Builder<Payload.Transfer>(
         { executionEnergyAmount: Energy.create(handler.getBaseEnergyCost()) },
         payload
     );
@@ -485,7 +497,7 @@ export function updateCredentials(
         return updateCredentials(Payload.updateCredentials(payload), currentNumberOfCredentials);
 
     const handler = new UpdateCredentialsHandler();
-    return new TransactionBuilder(
+    return new Builder(
         { executionEnergyAmount: Energy.create(handler.getBaseEnergyCost({ ...payload, currentNumberOfCredentials })) },
         payload
     );
@@ -503,10 +515,7 @@ export function configureValidator(
     if (!isPayloadWithType(payload)) return configureValidator(Payload.configureValidator(payload));
 
     const handler = new ConfigureBakerHandler();
-    return new TransactionBuilder(
-        { executionEnergyAmount: Energy.create(handler.getBaseEnergyCost(payload)) },
-        payload
-    );
+    return new Builder({ executionEnergyAmount: Energy.create(handler.getBaseEnergyCost(payload)) }, payload);
 }
 
 /**
@@ -521,7 +530,7 @@ export function configureDelegation(
     if (!isPayloadWithType(payload)) return configureDelegation(Payload.configureDelegation(payload));
 
     const handler = new ConfigureDelegationHandler();
-    return new TransactionBuilder({ executionEnergyAmount: Energy.create(handler.getBaseEnergyCost()) }, payload);
+    return new Builder({ executionEnergyAmount: Energy.create(handler.getBaseEnergyCost()) }, payload);
 }
 
 /**
@@ -533,10 +542,7 @@ export function tokenUpdate(payload: TokenUpdatePayload | Payload.TokenUpdate): 
     if (!isPayloadWithType(payload)) return tokenUpdate(Payload.tokenUpdate(payload));
 
     const handler = new TokenUpdateHandler();
-    return new TransactionBuilder(
-        { executionEnergyAmount: Energy.create(handler.getBaseEnergyCost(payload)) },
-        payload
-    );
+    return new Builder({ executionEnergyAmount: Energy.create(handler.getBaseEnergyCost(payload)) }, payload);
 }
 
 /**
@@ -549,10 +555,7 @@ export function deployModule(payload: DeployModulePayload | Payload.DeployModule
     if (!isPayloadWithType(payload)) return deployModule(Payload.deployModule(payload));
 
     const handler = new DeployModuleHandler();
-    return new TransactionBuilder(
-        { executionEnergyAmount: Energy.create(handler.getBaseEnergyCost(payload)) },
-        payload
-    );
+    return new Builder({ executionEnergyAmount: Energy.create(handler.getBaseEnergyCost(payload)) }, payload);
 }
 
 /**
@@ -564,7 +567,7 @@ export function registerData(payload: RegisterDataPayload | Payload.RegisterData
     if (!isPayloadWithType(payload)) return registerData(Payload.registerData(payload));
 
     const handler = new RegisterDataHandler();
-    return new TransactionBuilder({ executionEnergyAmount: Energy.create(handler.getBaseEnergyCost()) }, payload);
+    return new Builder({ executionEnergyAmount: Energy.create(handler.getBaseEnergyCost()) }, payload);
 }
 
 /**
@@ -581,7 +584,7 @@ export function initContract(
     if (!isPayloadWithType(payload)) return initContract(Payload.initContract(payload), maxContractExecutionEnergy);
 
     const handler = new InitContractHandler();
-    return new TransactionBuilder(
+    return new Builder(
         { executionEnergyAmount: Energy.create(handler.getBaseEnergyCost({ ...payload, maxContractExecutionEnergy })) },
         payload
     );
@@ -601,7 +604,7 @@ export function updateContract(
     if (!isPayloadWithType(payload)) return updateContract(Payload.updateContract(payload), maxContractExecutionEnergy);
 
     const handler = new UpdateContractHandler();
-    return new TransactionBuilder(
+    return new Builder(
         { executionEnergyAmount: Energy.create(handler.getBaseEnergyCost({ ...payload, maxContractExecutionEnergy })) },
         payload
     );
@@ -627,13 +630,13 @@ export function getEnergyCost({
     return AccountTransactionV0.calculateEnergyCost(numSignatures, payload, executionEnergyAmount);
 }
 
-export function builderFromJSON(json: unknown): Builder {
+export function builderFromJSON(json: unknown): BuilderAPI {
     assertIn<BuilderJSON>(json, 'header');
     assertIn<BuilderJSON>(json, 'payload');
 
     const header = headerFromJSON(json.header);
     const payload = Payload.fromJSON(json.payload);
-    return new TransactionBuilder(header, payload);
+    return new Builder(header, payload);
 }
 
 /**
@@ -643,7 +646,7 @@ export function builderFromJSON(json: unknown): Builder {
  * @param payload the transaction payload
  * @returns the JSON representation
  */
-export function toJSON(transaction: Builder): BuilderJSON;
+export function toJSON(transaction: BuilderAPI): BuilderJSON;
 export function toJSON(transaction: Signable): SignableJSON;
 export function toJSON(transaction: Transaction): SignableJSON;
 

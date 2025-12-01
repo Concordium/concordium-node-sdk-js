@@ -4,7 +4,7 @@ module.exports = [
     {
         name: 'GRPC web client tree shaking',
         path: 'lib/esm/index.js',
-        limit: '59 KB',
+        limit: '60 KB',
         import: '{ ConcordiumGRPCWebClient }',
     },
 ] satisfies SizeLimitConfig;

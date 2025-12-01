@@ -20,7 +20,6 @@ import {
     TokenUpdatePayloadJSON,
     UpdateContractHandler,
     UpdateContractPayloadJSON,
-    UpdateCredentialKeysPayload,
     UpdateCredentialsHandler,
     getAccountTransactionHandler,
 } from '../accountTransactions.js';
@@ -41,6 +40,7 @@ import {
     type TokenUpdatePayload,
     TransactionKindString,
     type UpdateContractPayload,
+    type UpdateCredentialKeysPayload,
     type UpdateCredentialsPayload,
     getTransactionKindString,
 } from '../types.js';

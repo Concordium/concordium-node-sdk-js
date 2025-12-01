@@ -6,7 +6,7 @@ import {
     deserializeThreshold,
 } from './deserialization.js';
 import { Cursor } from './deserializationHelpers.js';
-import { DelegationTargetTypeNumeric, Upward, isKnown, mapTagToType } from './index.js';
+import { DelegationTargetTypeNumeric, Upward, isKnown } from './index.js';
 import { Cbor, TokenId, TokenOperationType } from './plt/index.js';
 import {
     AccountTransactionInput,
@@ -29,6 +29,7 @@ import {
     encodeWord8FromString,
     encodeWord32,
     encodeWord64,
+    mapTagToType,
     packBufferWithWord8Length,
     packBufferWithWord16Length,
     packBufferWithWord32Length,

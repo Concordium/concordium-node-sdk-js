@@ -1085,12 +1085,6 @@ export enum DelegationTargetTypeNumeric {
     Passive = 0,
     Baker = 1,
 }
-
-export const mapTagToType: DelegationTargetType[] = [
-    DelegationTargetType.PassiveDelegation, // index 0
-    DelegationTargetType.Baker, // index 1
-];
-
 export interface DelegationTargetPassiveDelegation {
     delegateType: DelegationTargetType.PassiveDelegation;
 }

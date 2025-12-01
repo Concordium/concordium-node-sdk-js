@@ -587,7 +587,7 @@ export function deserialize(value: Cursor | ArrayBuffer): Payload {
             payload = updateContract(getAccountTransactionHandler(type).deserialize(cursor));
             break;
         case AccountTransactionType.UpdateCredentials:
-            payload = updateCredentials(getAccountTransactionHandler(type).deserialize());
+            payload = updateCredentials(getAccountTransactionHandler(type).deserialize(cursor));
             break;
         case AccountTransactionType.RegisterData:
             payload = registerData(getAccountTransactionHandler(type).deserialize(cursor));

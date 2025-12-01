@@ -1,9 +1,4 @@
 import {
-    SendTransactionInitContractPayload,
-    SendTransactionPayload,
-    SendTransactionUpdateContractPayload,
-} from '@concordium/browser-wallet-api-helpers';
-import {
     AccountTransactionInput,
     AccountTransactionSignature,
     AccountTransactionType,
@@ -33,6 +28,9 @@ import { ISignClient, ProposalTypes, SessionTypes, SignClientTypes } from '@wall
 import {
     Network,
     Schema,
+    SendTransactionInitContractPayload,
+    SendTransactionPayload,
+    SendTransactionUpdateContractPayload,
     SignableMessage,
     TypedSmartContractParameters,
     WalletConnection,

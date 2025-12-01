@@ -1,9 +1,11 @@
-import { SendTransactionPayload, SmartContractParameters } from '@concordium/browser-wallet-api-helpers';
 import {
+    AccountTransactionInput,
     AccountTransactionSignature,
     AccountTransactionType,
     CredentialStatements,
+    InitContractInput,
     SchemaVersion,
+    UpdateContractInput,
     VerifiablePresentation,
     toBuffer,
 } from '@concordium/web-sdk';
@@ -19,6 +21,22 @@ export type TypeSchema = {
     type: 'TypeSchema';
     value: Buffer;
 };
+
+export type SendTransactionUpdateContractPayload = Omit<UpdateContractInput, 'message'>;
+export type SendTransactionInitContractPayload = Omit<InitContractInput, 'param'>;
+export type SendTransactionPayload =
+    | Exclude<AccountTransactionInput, UpdateContractInput | InitContractInput>
+    | SendTransactionUpdateContractPayload
+    | SendTransactionInitContractPayload;
+export type SmartContractParameters =
+    | {
+          [key: string]: SmartContractParameters;
+      }
+    | SmartContractParameters[]
+    | number
+    | bigint
+    | string
+    | boolean;
 
 /**
  * Discriminated union type for contract invocation schemas.

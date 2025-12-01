@@ -44,6 +44,8 @@ export type Signatures = {
 /**
  * Describes the V1 account transaction format, which compared to the original account transaction format
  * is an extensible format defining extra optional transaction header fields.
+ *
+ * NOTE: this transaction format is supported from protocol version 10.
  */
 type AccountTransactionV1 = {
     /**

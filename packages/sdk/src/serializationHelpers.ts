@@ -12,6 +12,11 @@ import {
 import { DataBlob } from './types/DataBlob.js';
 import { isDefined, orUndefined } from './util.js';
 
+export const mapTagToType: DelegationTargetType[] = [
+    DelegationTargetType.PassiveDelegation, // index 0
+    DelegationTargetType.Baker, // index 1
+];
+
 export function serializeMap<K extends string | number | symbol, T>(
     map: Record<K, T>,
     encodeSize: (size: number) => Uint8Array,

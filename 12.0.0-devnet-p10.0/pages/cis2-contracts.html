@@ -1,0 +1,267 @@
+<!DOCTYPE html><html class="default" lang="en"><head><meta charSet="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>CIS2-Contracts | Concordium JS-SDK</title><meta name="description" content="Documentation for Concordium JS-SDK"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script async src="../assets/search.js" id="search-script"></script><link rel="stylesheet" href="../assets/code-blocks.css"/><link rel="stylesheet" href="../assets/pages.css"/></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os"</script><header class="tsd-page-toolbar">
+<div class="tsd-toolbar-contents container">
+<div class="table-cell" id="tsd-search" data-base="..">
+<div class="field"><label for="tsd-search-field" class="tsd-widget tsd-toolbar-icon search no-caption"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M15.7824 13.833L12.6666 10.7177C12.5259 10.5771 12.3353 10.499 12.1353 10.499H11.6259C12.4884 9.39596 13.001 8.00859 13.001 6.49937C13.001 2.90909 10.0914 0 6.50048 0C2.90959 0 0 2.90909 0 6.49937C0 10.0896 2.90959 12.9987 6.50048 12.9987C8.00996 12.9987 9.39756 12.4863 10.5008 11.6239V12.1332C10.5008 12.3332 10.5789 12.5238 10.7195 12.6644L13.8354 15.7797C14.1292 16.0734 14.6042 16.0734 14.8948 15.7797L15.7793 14.8954C16.0731 14.6017 16.0731 14.1267 15.7824 13.833ZM6.50048 10.499C4.29094 10.499 2.50018 8.71165 2.50018 6.49937C2.50018 4.29021 4.28781 2.49976 6.50048 2.49976C8.71001 2.49976 10.5008 4.28708 10.5008 6.49937C10.5008 8.70852 8.71314 10.499 6.50048 10.499Z" fill="var(--color-text)"></path></svg></label><input type="text" id="tsd-search-field" aria-label="Search"/></div>
+<div class="field">
+<div id="tsd-toolbar-links"></div></div>
+<ul class="results">
+<li class="state loading">Preparing search index...</li>
+<li class="state failure">The search index is not available</li></ul><a href="../index.html" class="title">Concordium JS-SDK</a></div>
+<div class="table-cell" id="tsd-widgets"><a href="#" class="tsd-widget tsd-toolbar-icon menu no-caption" data-toggle="menu" aria-label="Menu"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="2" fill="var(--color-text)"></rect><rect x="1" y="7" width="14" height="2" fill="var(--color-text)"></rect><rect x="1" y="11" width="14" height="2" fill="var(--color-text)"></rect></svg></a></div></div></header>
+<div class="container container-main">
+<div class="col-8 col-content">
+<div class="tsd-page-title">
+<ul class="tsd-breadcrumb">
+<li><a href="../modules.html">Concordium JS-SDK</a></li>
+<li><span>Concordium JS-SDK</span></li>
+<li><a href="cis2-contracts.html">CIS2-Contracts</a></li></ul>
+<h1> CIS2-Contracts</h1></div>
+<div class="tsd-panel tsd-typography"><p>This document describes the helper class for working with CIS-2 contracts</p>
+<p><strong>Table of Contents:</strong></p>
+<!--toc:start-->
+<ul>
+<li><a href="#cis2contract">CIS2Contract</a><ul>
+<li><a href="#creating-a-cis2contract">Creating a CIS2Contract</a></li>
+<li><a href="#transfer-tokens">Transfer token(s)</a><ul>
+<li><a href="#create-transfer-transaction">Create transfer transaction</a></li>
+</ul>
+</li>
+<li><a href="#operator-updates">Operator update(s)</a><ul>
+<li><a href="#create-update-operator-transaction">Create update operator transaction</a></li>
+</ul>
+</li>
+<li><a href="#querying-for-balance-of-tokens">Querying for balance of token(s)</a></li>
+<li><a href="#querying-for-operator-of">Querying for operator of</a></li>
+<li><a href="#querying-for-token-metadata">Querying for token metadata</a></li>
+<li><a href="#performing-dry-run-invocations-of-contract-updates">Performing dry-run invocations of contract updates</a><ul>
+<li><a href="#token-transfers-dry-run">Token transfer(s) dry-run</a></li>
+<li><a href="#operator-updatess-dry-run">Operator updates(s) dry-run</a><!--toc:end--></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+<a href="#cis2contract" id="cis2contract" style="color: inherit; text-decoration: none;">
+  <h2>CIS2Contract</h2>
+</a>
+<p>The CIS2Contract class wraps the
+<a href="../classes/grpc.ConcordiumGRPCClient.html">ConcordiumGRPCClient</a>,
+defining an interface matching the <a href="https://proposals.concordium.software/CIS/cis-2.html">CIS-2
+standard</a>.</p>
+
+<a href="#creating-a-cis2contract" id="creating-a-cis2contract" style="color: inherit; text-decoration: none;">
+  <h3>Creating a CIS2Contract</h3>
+</a>
+<p>The contract relies on a <code>ConcordiumGRPCClient</code> instance to communicate
+with the node along with a contract address of the CIS-2 contract to invoke
+functions on.</p>
+<pre><code class="language-ts"><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">contractAddress</span><span class="hl-0"> = {</span><span class="hl-2">index:</span><span class="hl-0"> </span><span class="hl-6">1234</span><span class="hl-4">n</span><span class="hl-0">, </span><span class="hl-2">subindex:</span><span class="hl-0"> </span><span class="hl-6">0</span><span class="hl-4">n</span><span class="hl-0">};</span><br/><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">contract</span><span class="hl-0"> = </span><span class="hl-1">await</span><span class="hl-0"> </span><span class="hl-2">CIS2Contract</span><span class="hl-0">.</span><span class="hl-5">create</span><span class="hl-0">(</span><span class="hl-2">nodeClient</span><span class="hl-0">, </span><span class="hl-2">contractAddress</span><span class="hl-0">); </span><span class="hl-11">// Implied that you already have a `ConcordiumGRPCClient` instance of some form.</span>
+</code></pre>
+<p>This gets the relevant contract information from the node and checks
+that the contract is in fact a CIS-2 contract (through the <a href="utility-functions.html">Utility Functions</a>), hence why it is async. You can also instantiate
+using the <code>new</code> keyword, circumventing standard checks:</p>
+<pre><code class="language-ts"><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">contract</span><span class="hl-0"> = </span><span class="hl-4">new</span><span class="hl-0"> </span><span class="hl-5">CIS2Contract</span><span class="hl-0">(</span><span class="hl-2">nodeClient</span><span class="hl-0">, </span><span class="hl-2">contractAddress</span><span class="hl-0">, </span><span class="hl-3">&#39;my_contract_name&#39;</span><span class="hl-0">);</span>
+</code></pre>
+
+<a href="#transfer-tokens" id="transfer-tokens" style="color: inherit; text-decoration: none;">
+  <h3>Transfer token(s)</h3>
+</a>
+<p>The following example demonstrates how to send either a single/list of CIS-2
+&quot;transfer&quot; transactions using a <code>CIS2Contract</code> instance. This relies on
+using private keys for the sender account to sign the transaction before
+submitting to the node.</p>
+<p>Refer to the <a href="transactions.html">transactions page</a> to see how to create an
+<code>AccountSigner</code>.</p>
+<pre><code class="language-ts"><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">tokenId</span><span class="hl-0"> = </span><span class="hl-3">&#39;&#39;</span><span class="hl-0">; </span><span class="hl-11">// HEX string representing a token ID defined in the contract.</span><br/><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">from</span><span class="hl-0"> = </span><span class="hl-3">&#39;4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd&#39;</span><span class="hl-0">;</span><br/><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">to</span><span class="hl-0"> = </span><span class="hl-3">&#39;3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB&#39;</span><span class="hl-0">; </span><span class="hl-11">// An account receiver.</span><br/><span class="hl-0">    </span><span class="hl-11">// const to = {address: {index: 1234n, subindex: 0n}, hookName: &#39;someReceiveHookName&#39;} // A contract receiver can be specified as such.</span><br/><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">tokenAmount</span><span class="hl-0"> = </span><span class="hl-6">100</span><span class="hl-4">n</span><span class="hl-0">;</span><br/><br/><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">signer</span><span class="hl-0">: </span><span class="hl-10">AccountSigner</span><span class="hl-0"> = ...; </span><span class="hl-11">// Relies on using private keys of sender account.</span><br/><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">update</span><span class="hl-0"> = { </span><span class="hl-2">from</span><span class="hl-0">, </span><span class="hl-2">to</span><span class="hl-0">, </span><span class="hl-2">tokenAmount</span><span class="hl-0">, </span><span class="hl-2">tokenId</span><span class="hl-0"> };</span><br/><span class="hl-0">    </span><span class="hl-11">// const update [{ from, to, tokenAmount, tokenId }, { from, to, tokenAmount, tokenId }] // Example of batch update.</span><br/><br/><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">txHash</span><span class="hl-0"> = </span><span class="hl-1">await</span><span class="hl-0"> </span><span class="hl-2">contract</span><span class="hl-0">.</span><span class="hl-5">transfer</span><span class="hl-0">(</span><br/><span class="hl-0">        {</span><br/><span class="hl-0">            </span><span class="hl-2">senderAddress:</span><span class="hl-0"> </span><span class="hl-2">from</span><span class="hl-0">,</span><br/><span class="hl-0">            </span><span class="hl-2">energy:</span><span class="hl-0"> </span><span class="hl-6">10000</span><span class="hl-4">n</span><span class="hl-0">,</span><br/><span class="hl-0">        },</span><br/><span class="hl-0">        </span><span class="hl-2">update</span><span class="hl-0">,</span><br/><span class="hl-0">        </span><span class="hl-2">signer</span><br/><span class="hl-0">    );</span>
+</code></pre>
+
+<a href="#create-transfer-transaction" id="create-transfer-transaction" style="color: inherit; text-decoration: none;">
+  <h4>Create transfer transaction</h4>
+</a>
+<p>This creates a CIS-2 &quot;transfer&quot; transaction, that can then be submitted the
+transaction through a Concordium compatible wallet, which handles signing
+and submitting.</p>
+<pre><code class="language-ts"><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">tokenId</span><span class="hl-0"> = </span><span class="hl-3">&#39;&#39;</span><span class="hl-0">; </span><span class="hl-11">// HEX string representing a token ID defined in the contract.</span><br/><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">from</span><span class="hl-0"> = </span><span class="hl-3">&#39;4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd&#39;</span><span class="hl-0">;</span><br/><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">to</span><span class="hl-0"> = </span><span class="hl-3">&#39;3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB&#39;</span><span class="hl-0">; </span><span class="hl-11">// An account receiver.</span><br/><span class="hl-0">    </span><span class="hl-11">// const to = {address: {index: 1234n, subindex: 0n}, hookName: &#39;someReceiveHookName&#39;} // A contract receiver can be specified as such.</span><br/><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">tokenAmount</span><span class="hl-0"> = </span><span class="hl-6">100</span><span class="hl-4">n</span><span class="hl-0">;</span><br/><br/><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">transfer</span><span class="hl-0"> = { </span><span class="hl-2">from</span><span class="hl-0">, </span><span class="hl-2">to</span><span class="hl-0">, </span><span class="hl-2">tokenAmount</span><span class="hl-0">, </span><span class="hl-2">tokenId</span><span class="hl-0"> };</span><br/><span class="hl-0">    </span><span class="hl-11">// const transfer [{ from, to, tokenAmount, tokenId }, { from, to, tokenAmount, tokenId }] // Example of batch update.</span><br/><br/><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> {</span><br/><span class="hl-0">        </span><span class="hl-9">type</span><span class="hl-0">, </span><span class="hl-11">// The transaction type.</span><br/><span class="hl-0">        </span><span class="hl-9">payload</span><span class="hl-0">, </span><span class="hl-11">// The transaction payload</span><br/><span class="hl-0">        </span><span class="hl-2">parameter</span><span class="hl-0">: {</span><br/><span class="hl-0">            </span><span class="hl-9">json</span><span class="hl-0">, </span><span class="hl-11">// The parameter to be supplied to the contract receive function in JSON format.</span><br/><span class="hl-0">            </span><span class="hl-9">hex</span><span class="hl-0">, </span><span class="hl-11">// The parameter to be supplied to the contract receive function as a hex encoded string</span><br/><span class="hl-0">        },</span><br/><span class="hl-0">        </span><span class="hl-2">schema</span><span class="hl-0">: {</span><br/><span class="hl-0">            </span><span class="hl-9">value</span><span class="hl-0">, </span><span class="hl-11">// The contract schema for the parameter. This is needed to translate the JSON format to a byte array.</span><br/><span class="hl-0">            </span><span class="hl-9">type</span><span class="hl-0">, </span><span class="hl-11">// The type of the schema. This is always &#39;parameter&#39;, meaning it can be used for the JSON formatted parameter only.</span><br/><span class="hl-0">        }</span><br/><span class="hl-0">    } = </span><span class="hl-2">contract</span><span class="hl-0">.</span><span class="hl-5">createTransfer</span><span class="hl-0">(</span><br/><span class="hl-0">        { </span><span class="hl-2">energy:</span><span class="hl-0"> </span><span class="hl-6">10000</span><span class="hl-4">n</span><span class="hl-0"> },</span><br/><span class="hl-0">        </span><span class="hl-2">transfer</span><br/><span class="hl-0">    );</span>
+</code></pre>
+
+<a href="#operator-updates" id="operator-updates" style="color: inherit; text-decoration: none;">
+  <h3>Operator update(s)</h3>
+</a>
+<p>The following example demonstrates how to send either a single/list of CIS-2
+&quot;updateOperator&quot; transactions using a <code>CIS2Contract</code> instance.  This relies
+on using private keys for the sender account to sign the transaction before
+submitting to the node.</p>
+<p>Refer to the <a href="transactions.html">transactions page</a> to see how to create an
+<code>AccountSigner</code>.</p>
+<pre><code class="language-ts"><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">owner</span><span class="hl-0"> = </span><span class="hl-3">&#39;4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd&#39;</span><span class="hl-0">;</span><br/><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">type</span><span class="hl-0"> = </span><span class="hl-3">&#39;add&#39;</span><span class="hl-0">; </span><span class="hl-11">// or &#39;remove&#39;;</span><br/><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">address</span><span class="hl-0"> = </span><span class="hl-3">&#39;3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB&#39;</span><span class="hl-0">; </span><span class="hl-11">// Address to add as operator of owner</span><br/><span class="hl-0">    </span><span class="hl-11">// const address = {index: 1234n, 0n}; // Example of contract address operator.</span><br/><br/><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">signer</span><span class="hl-0">: </span><span class="hl-10">AccountSigner</span><span class="hl-0"> = ...; </span><span class="hl-11">// Relies on using private keys of sender account.</span><br/><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">update</span><span class="hl-0"> = { </span><span class="hl-2">type</span><span class="hl-0">, </span><span class="hl-2">address</span><span class="hl-0"> };</span><br/><span class="hl-0">    </span><span class="hl-11">// const update [{type, address}, {type, address}] // Example of batch update.</span><br/><br/><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">txHash</span><span class="hl-0"> = </span><span class="hl-1">await</span><span class="hl-0"> </span><span class="hl-2">contract</span><span class="hl-0">.</span><span class="hl-5">updateOperator</span><span class="hl-0">(</span><br/><span class="hl-0">        {</span><br/><span class="hl-0">            </span><span class="hl-2">senderAddress:</span><span class="hl-0"> </span><span class="hl-2">owner</span><span class="hl-0">,</span><br/><span class="hl-0">            </span><span class="hl-2">energy:</span><span class="hl-0"> </span><span class="hl-6">10000</span><span class="hl-4">n</span><span class="hl-0">,</span><br/><span class="hl-0">        },</span><br/><span class="hl-0">        </span><span class="hl-2">update</span><span class="hl-0">,</span><br/><span class="hl-0">        </span><span class="hl-2">signer</span><br/><span class="hl-0">    );</span>
+</code></pre>
+
+<a href="#create-update-operator-transaction" id="create-update-operator-transaction" style="color: inherit; text-decoration: none;">
+  <h4>Create update operator transaction</h4>
+</a>
+<p>This creates a CIS-2 &quot;updateOperator&quot; transaction, that can then be submitted
+the transaction through a Concordium compatible wallet, which handles signing
+and submitting.</p>
+<pre><code class="language-ts"><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">owner</span><span class="hl-0"> = </span><span class="hl-3">&#39;4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd&#39;</span><span class="hl-0">;</span><br/><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">type</span><span class="hl-0"> = </span><span class="hl-3">&#39;add&#39;</span><span class="hl-0">; </span><span class="hl-11">// or &#39;remove&#39;;</span><br/><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">address</span><span class="hl-0"> = </span><span class="hl-3">&#39;3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB&#39;</span><span class="hl-0">; </span><span class="hl-11">// Address to add as operator of owner</span><br/><span class="hl-0">    </span><span class="hl-11">// const address = {index: 1234n, 0n}; // Example of contract address operator.</span><br/><br/><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">update</span><span class="hl-0"> = { </span><span class="hl-2">type</span><span class="hl-0">, </span><span class="hl-2">address</span><span class="hl-0"> };</span><br/><span class="hl-0">    </span><span class="hl-11">// const update [{type, address}, {type, address}] // Example of batch update.</span><br/><br/><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> {</span><br/><span class="hl-0">        </span><span class="hl-9">type</span><span class="hl-0">, </span><span class="hl-11">// The transaction type.</span><br/><span class="hl-0">        </span><span class="hl-9">payload</span><span class="hl-0">, </span><span class="hl-11">// The transaction payload</span><br/><span class="hl-0">        </span><span class="hl-2">parameter</span><span class="hl-0">: {</span><br/><span class="hl-0">            </span><span class="hl-9">json</span><span class="hl-0">, </span><span class="hl-11">// The parameter to be supplied to the contract receive function in JSON format.</span><br/><span class="hl-0">            </span><span class="hl-9">hex</span><span class="hl-0">, </span><span class="hl-11">// The parameter to be supplied to the contract receive function as a hex encoded string</span><br/><span class="hl-0">        },</span><br/><span class="hl-0">        </span><span class="hl-2">schema</span><span class="hl-0">: {</span><br/><span class="hl-0">            </span><span class="hl-9">value</span><span class="hl-0">, </span><span class="hl-11">// The contract schema for the parameter. This is needed to translate the JSON format to a byte array.</span><br/><span class="hl-0">            </span><span class="hl-9">type</span><span class="hl-0">, </span><span class="hl-11">// The type of the schema. This is always &#39;parameter&#39;, meaning it can be used for the JSON formatted parameter only.</span><br/><span class="hl-0">        }</span><br/><span class="hl-0">    } = </span><span class="hl-2">contract</span><span class="hl-0">.</span><span class="hl-5">createUpdateOperator</span><span class="hl-0">(</span><br/><span class="hl-0">        { </span><span class="hl-2">energy:</span><span class="hl-0"> </span><span class="hl-6">10000</span><span class="hl-4">n</span><span class="hl-0"> },</span><br/><span class="hl-0">        </span><span class="hl-2">update</span><br/><span class="hl-0">    );</span>
+</code></pre>
+
+<a href="#querying-for-balance-of-tokens" id="querying-for-balance-of-tokens" style="color: inherit; text-decoration: none;">
+  <h3>Querying for balance of token(s)</h3>
+</a>
+<p>The following example demonstrates how to send either a single/list of CIS-2
+&quot;balanceOf&quot; queries using a <code>CIS2Contract</code> instance. The response for the query
+will be either a single/list of bigint balances corresponding to the queries.</p>
+<pre><code class="language-ts"><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">tokenId</span><span class="hl-0"> = </span><span class="hl-3">&#39;&#39;</span><span class="hl-0">; </span><span class="hl-11">// HEX string representing a token ID defined in the contract.</span><br/><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">address</span><span class="hl-0"> = </span><span class="hl-3">&#39;4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd&#39;</span><span class="hl-0">;</span><br/><br/><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">query</span><span class="hl-0"> = { </span><span class="hl-2">address</span><span class="hl-0">, </span><span class="hl-2">tokenId</span><span class="hl-0"> };</span><br/><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">balance</span><span class="hl-0"> = </span><span class="hl-1">await</span><span class="hl-0"> </span><span class="hl-2">contract</span><span class="hl-0">.</span><span class="hl-5">balanceOf</span><span class="hl-0">(</span><span class="hl-2">query</span><span class="hl-0">);</span><br/><br/><span class="hl-0">    </span><span class="hl-11">// List of queries</span><br/><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">query1</span><span class="hl-0"> = { </span><span class="hl-2">address</span><span class="hl-0">, </span><span class="hl-2">tokenId</span><span class="hl-0"> };</span><br/><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">query2</span><span class="hl-0"> = { </span><span class="hl-2">address</span><span class="hl-0">, </span><span class="hl-2">tokenId</span><span class="hl-0"> };</span><br/><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">query3</span><span class="hl-0"> = { </span><span class="hl-2">address</span><span class="hl-0">, </span><span class="hl-2">tokenId</span><span class="hl-0"> };</span><br/><br/><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> [</span><span class="hl-9">balance1</span><span class="hl-0">, </span><span class="hl-9">balance2</span><span class="hl-0">, </span><span class="hl-9">balance3</span><span class="hl-0">] = </span><span class="hl-1">await</span><span class="hl-0"> </span><span class="hl-2">contract</span><span class="hl-0">.</span><span class="hl-5">balanceOf</span><span class="hl-0">([</span><span class="hl-2">query1</span><span class="hl-0">, </span><span class="hl-2">query2</span><span class="hl-0">, </span><span class="hl-2">query3</span><span class="hl-0">]);</span>
+</code></pre>
+
+<a href="#querying-for-operator-of" id="querying-for-operator-of" style="color: inherit; text-decoration: none;">
+  <h3>Querying for operator of</h3>
+</a>
+<p>The following example demonstrates how to send either a single/list of CIS-2
+&quot;operatorOf&quot; queries using a <code>CIS2Contract</code> instance. The response for the
+query will be either a single/list of boolean values corresponding to the
+queries, each signaling whether the specified <code>address</code> is an operator of
+the specified <code>owner</code>.</p>
+<pre><code class="language-ts"><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">owner</span><span class="hl-0"> = </span><span class="hl-3">&#39;4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd&#39;</span><span class="hl-0">;</span><br/><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">address</span><span class="hl-0"> = </span><span class="hl-3">&#39;3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB&#39;</span><span class="hl-0">; </span><span class="hl-11">// Address to check if operator of owner</span><br/><span class="hl-0">    </span><span class="hl-11">// const address = {index: 1234n, 0n}; // Example of contract address operator.</span><br/><br/><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">query</span><span class="hl-0"> = { </span><span class="hl-2">owner</span><span class="hl-0">, </span><span class="hl-2">address</span><span class="hl-0"> };</span><br/><br/><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">isOperator</span><span class="hl-0"> = </span><span class="hl-1">await</span><span class="hl-0"> </span><span class="hl-2">contract</span><span class="hl-0">.</span><span class="hl-5">operatorOf</span><span class="hl-0">(</span><span class="hl-2">query</span><span class="hl-0">);</span><br/><br/><span class="hl-0">    </span><span class="hl-11">// List of queries</span><br/><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">query1</span><span class="hl-0"> = { </span><span class="hl-2">owner</span><span class="hl-0">, </span><span class="hl-2">address</span><span class="hl-0"> };</span><br/><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">query2</span><span class="hl-0"> = { </span><span class="hl-2">owner</span><span class="hl-0">, </span><span class="hl-2">address</span><span class="hl-0"> };</span><br/><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">query3</span><span class="hl-0"> = { </span><span class="hl-2">owner</span><span class="hl-0">, </span><span class="hl-2">address</span><span class="hl-0"> };</span><br/><br/><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> [</span><span class="hl-9">isOperator1</span><span class="hl-0">, </span><span class="hl-9">isOperator2</span><span class="hl-0">, </span><span class="hl-9">isOperator3</span><span class="hl-0">] = </span><span class="hl-1">await</span><span class="hl-0"> </span><span class="hl-2">contract</span><span class="hl-0">.</span><span class="hl-5">isOperatorOf</span><span class="hl-0">([</span><span class="hl-2">query1</span><span class="hl-0">, </span><span class="hl-2">query2</span><span class="hl-0">, </span><span class="hl-2">query3</span><span class="hl-0">]);</span>
+</code></pre>
+
+<a href="#querying-for-token-metadata" id="querying-for-token-metadata" style="color: inherit; text-decoration: none;">
+  <h3>Querying for token metadata</h3>
+</a>
+<p>The following example demonstrates how to send either a single/list of CIS-2
+&quot;tokenMetadata&quot; queries using a <code>CIS2Contract</code> instance. The response for
+the query will be either a single/list of <code>MetadataUrl</code> objects corresponding
+to the queries.</p>
+<p>To get the actual metadata JSON for the contract, a subsequent request to
+the URL returned would have to be made.</p>
+<pre><code class="language-ts"><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">tokenId</span><span class="hl-0"> = </span><span class="hl-3">&#39;&#39;</span><span class="hl-0">; </span><span class="hl-11">// HEX string representing a token ID defined in the contract.</span><br/><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">metadataUrl</span><span class="hl-0"> = </span><span class="hl-1">await</span><span class="hl-0"> </span><span class="hl-2">contract</span><span class="hl-0">.</span><span class="hl-5">tokenMetadata</span><span class="hl-0">(</span><span class="hl-2">tokenId</span><span class="hl-0">);</span><br/><br/><span class="hl-0">    </span><span class="hl-11">// List of queries</span><br/><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">tokenId1</span><span class="hl-0"> = </span><span class="hl-3">&#39;00&#39;</span><span class="hl-0">;</span><br/><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">tokenId2</span><span class="hl-0"> = </span><span class="hl-3">&#39;01&#39;</span><span class="hl-0">;</span><br/><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">tokenId3</span><span class="hl-0"> = </span><span class="hl-3">&#39;02&#39;</span><span class="hl-0">;</span><br/><br/><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> [</span><span class="hl-9">metadataUrl1</span><span class="hl-0">, </span><span class="hl-9">metadataUrl2</span><span class="hl-0">, </span><span class="hl-9">metadataUrl3</span><span class="hl-0">] = </span><span class="hl-1">await</span><span class="hl-0"> </span><span class="hl-2">contract</span><span class="hl-0">.</span><span class="hl-5">tokenMetadata</span><span class="hl-0">([</span><span class="hl-2">tokenId1</span><span class="hl-0">, </span><span class="hl-2">tokenId2</span><span class="hl-0">, </span><span class="hl-2">tokenId3</span><span class="hl-0">]);</span>
+</code></pre>
+
+<a href="#performing-dry-run-invocations-of-contract-updates" id="performing-dry-run-invocations-of-contract-updates" style="color: inherit; text-decoration: none;">
+  <h3>Performing dry-run invocations of contract updates</h3>
+</a>
+<p>It can be useful to perform a dry-run of contract updates sent, as it allows
+you to see the result of the update without actually performing (and the
+user paying for) it.  One common use case is to check the energy needed to
+execute the update which can be translated to a cost in CCD.</p>
+
+<a href="#token-transfers-dry-run" id="token-transfers-dry-run" style="color: inherit; text-decoration: none;">
+  <h4>Token transfer(s) dry-run</h4>
+</a>
+<p>The following example demonstrates how to perform a dry-run of CIS-2
+&quot;transfer&quot; with either a single/list of transfers using a <code>CIS2Contract</code>
+instance. The response will be an object containing information about the
+function invocation.</p>
+<pre><code class="language-ts"><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">tokenId</span><span class="hl-0"> = </span><span class="hl-3">&#39;&#39;</span><span class="hl-0">; </span><span class="hl-11">// HEX string representing a token ID defined in the contract.</span><br/><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">from</span><span class="hl-0"> = </span><span class="hl-3">&#39;4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd&#39;</span><span class="hl-0">;</span><br/><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">to</span><span class="hl-0"> = </span><span class="hl-3">&#39;3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB&#39;</span><span class="hl-0">; </span><span class="hl-11">// An account receiver.</span><br/><span class="hl-0">    </span><span class="hl-11">// const to = {address: {index: 1234n, subindex: 0n}, hookName: &#39;someReceiveHookName&#39;} // A contract receiver can be specified as such.</span><br/><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">tokenAmount</span><span class="hl-0"> = </span><span class="hl-6">100</span><span class="hl-4">n</span><span class="hl-0">;</span><br/><br/><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">update</span><span class="hl-0"> = { </span><span class="hl-2">from</span><span class="hl-0">, </span><span class="hl-2">to</span><span class="hl-0">, </span><span class="hl-2">tokenAmount</span><span class="hl-0">, </span><span class="hl-2">tokenId</span><span class="hl-0"> };</span><br/><span class="hl-0">    </span><span class="hl-11">// const update [{ from, to, tokenAmount, tokenId }, { from, to, tokenAmount, tokenId }] // Example of batch update.</span><br/><br/><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">result</span><span class="hl-0"> = </span><span class="hl-1">await</span><span class="hl-0"> </span><span class="hl-2">contract</span><span class="hl-0">.</span><span class="hl-2">dryRun</span><span class="hl-0">.</span><span class="hl-5">transfer</span><span class="hl-0">(</span><span class="hl-2">from</span><span class="hl-0">, </span><span class="hl-2">update</span><span class="hl-0">);</span>
+</code></pre>
+
+<a href="#operator-updatess-dry-run" id="operator-updatess-dry-run" style="color: inherit; text-decoration: none;">
+  <h4>Operator updates(s) dry-run</h4>
+</a>
+<p>The following example demonstrates how to perform a dry-run of CIS-2
+&quot;updateOperator&quot; with either a single/list of updates using a <code>CIS2Contract</code>
+instance. The response will be an object containing information about the
+function invocation.</p>
+<pre><code class="language-ts"><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">owner</span><span class="hl-0"> = </span><span class="hl-3">&#39;4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd&#39;</span><span class="hl-0">;</span><br/><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">type</span><span class="hl-0"> = </span><span class="hl-3">&#39;add&#39;</span><span class="hl-0">; </span><span class="hl-11">// or &#39;remove&#39;;</span><br/><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">address</span><span class="hl-0"> = </span><span class="hl-3">&#39;3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB&#39;</span><span class="hl-0">; </span><span class="hl-11">// Address to add as operator of owner</span><br/><span class="hl-0">    </span><span class="hl-11">// const address = {index: 1234n, 0n}; // Example of contract address operator.</span><br/><br/><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">update</span><span class="hl-0"> = { </span><span class="hl-2">type</span><span class="hl-0">, </span><span class="hl-2">address</span><span class="hl-0"> };</span><br/><span class="hl-0">    </span><span class="hl-11">// const update [{type, address}, {type, address}] // Example of batch update.</span><br/><br/><span class="hl-0">    </span><span class="hl-4">const</span><span class="hl-0"> </span><span class="hl-9">result</span><span class="hl-0"> = </span><span class="hl-1">await</span><span class="hl-0"> </span><span class="hl-2">contract</span><span class="hl-0">.</span><span class="hl-2">dryRun</span><span class="hl-0">.</span><span class="hl-5">updateOperator</span><span class="hl-0">(</span><span class="hl-2">from</span><span class="hl-0">, </span><span class="hl-2">update</span><span class="hl-0">);</span>
+</code></pre>
+</div></div>
+<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
+<div class="tsd-navigation settings">
+<details class="tsd-index-accordion"><summary class="tsd-accordion-summary">
+<h3><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4.93896 8.531L12 15.591L19.061 8.531L16.939 6.409L12 11.349L7.06098 6.409L4.93896 8.531Z" fill="var(--color-text)"></path></svg> Settings</h3></summary>
+<div class="tsd-accordion-details">
+<div class="tsd-filter-visibility">
+<h4 class="uppercase">Member Visibility</h4><form>
+<ul id="tsd-filter-options">
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-protected" name="protected"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Protected</span></label></li>
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-private" name="private"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Private</span></label></li>
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-inherited" name="inherited" checked/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Inherited</span></label></li>
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-external" name="external"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>External</span></label></li></ul></form></div>
+<div class="tsd-theme-toggle">
+<h4 class="uppercase">Theme</h4><select id="theme"><option value="os">OS</option><option value="light">Light</option><option value="dark">Dark</option></select></div></div></details></div>
+<nav class="tsd-navigation primary">
+<details class="tsd-index-accordion" open><summary class="tsd-accordion-summary">
+<h3><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4.93896 8.531L12 15.591L19.061 8.531L16.939 6.409L12 11.349L7.06098 6.409L4.93896 8.531Z" fill="var(--color-text)"></path></svg> Modules</h3></summary>
+<div class="tsd-accordion-details">
+<ul>
+<li class="current"><a href="../modules.html">Concordium JS-<wbr/>SDK</a>
+<ul>
+<li class="current pages-entry pages-entry-menu pages-entry-depth-1"><a>Concordium JS-<wbr/>SDK</a>
+<ul>
+<li class="current selected pages-entry pages-entry-page pages-entry-depth-2"><a href="cis2-contracts.html">CIS2-<wbr/>Contracts</a></li>
+<li class="pages-entry pages-entry-page pages-entry-depth-2"><a href="identity-proofs.html">Identity <wbr/>Proofs</a></li>
+<li class="pages-entry pages-entry-page pages-entry-depth-2"><a href="runnable-examples.html">Runnable <wbr/>Examples</a></li>
+<li class="pages-entry pages-entry-page pages-entry-depth-2"><a href="transactions.html">Transactions</a></li>
+<li class="pages-entry pages-entry-page pages-entry-depth-2"><a href="utility-functions.html">Utility <wbr/>Functions</a></li>
+<li class="pages-entry pages-entry-menu pages-entry-depth-2"><a>Miscellaneous <wbr/>Pages</a>
+<ul>
+<li class="pages-entry pages-entry-page pages-entry-depth-3"><a href="misc-pages/account-creation.html">Account <wbr/>Creation</a></li>
+<li class="pages-entry pages-entry-page pages-entry-depth-3"><a href="misc-pages/bundler-optimizations.html">Optimizing bundled applications</a></li>
+<li class="pages-entry pages-entry-page pages-entry-depth-3"><a href="misc-pages/grpc-migration.html">GRPCv1 to GRPCv2 <wbr/>Migration <wbr/>Guide</a></li>
+<li class="pages-entry pages-entry-page pages-entry-depth-3"><a href="misc-pages/grpc-v1.html">Old GRPC-<wbr/>Client</a></li>
+<li class="pages-entry pages-entry-page pages-entry-depth-3"><a href="misc-pages/upgrade-guide.html">Upgrade <wbr/>Guide</a></li>
+<li class="pages-entry pages-entry-page pages-entry-depth-3"><a href="misc-pages/react-native.html">React <wbr/>Native</a></li></ul></li></ul></li>
+<li class="tsd-kind-module"><a href="../modules/cis0.html">cis0</a>
+<ul>
+<li class="tsd-kind-namespace tsd-parent-kind-module"><a href="../modules/cis0.CIS0.html">CIS0</a></li></ul></li>
+<li class="tsd-kind-module"><a href="../modules/cis2.html">cis2</a>
+<ul>
+<li class="tsd-kind-namespace tsd-parent-kind-module"><a href="../modules/cis2.CIS2.html">CIS2</a></li></ul></li>
+<li class="tsd-kind-module"><a href="../modules/cis3.html">cis3</a>
+<ul>
+<li class="tsd-kind-namespace tsd-parent-kind-module"><a href="../modules/cis3.CIS3.html">CIS3</a></li></ul></li>
+<li class="tsd-kind-module"><a href="../modules/cis4.html">cis4</a>
+<ul>
+<li class="tsd-kind-namespace tsd-parent-kind-module"><a href="../modules/cis4.CIS4.html">CIS4</a></li></ul></li>
+<li class="tsd-kind-module"><a href="../modules/grpc.html">grpc</a></li>
+<li class="tsd-kind-module"><a href="../modules/id.html">id</a></li>
+<li class="tsd-kind-module"><a href="../modules/nodejs.html">nodejs</a></li>
+<li class="tsd-kind-module"><a href="../modules/plt.html">plt</a>
+<ul>
+<li class="tsd-kind-namespace tsd-parent-kind-module"><a href="../modules/plt.Token.html">Token</a></li></ul></li>
+<li class="tsd-kind-module"><a href="../modules/plt_Cbor.html">plt/<wbr/>Cbor</a></li>
+<li class="tsd-kind-module"><a href="../modules/plt_CborAccountAddress.html">plt/<wbr/>Cbor<wbr/>Account<wbr/>Address</a></li>
+<li class="tsd-kind-module"><a href="../modules/plt_CborContractAddress.html">plt/<wbr/>Cbor<wbr/>Contract<wbr/>Address</a></li>
+<li class="tsd-kind-module"><a href="../modules/plt_CborMemo.html">plt/<wbr/>Cbor<wbr/>Memo</a></li>
+<li class="tsd-kind-module"><a href="../modules/plt_TokenAmount.html">plt/<wbr/>Token<wbr/>Amount</a></li>
+<li class="tsd-kind-module"><a href="../modules/plt_TokenHolder.html">plt/<wbr/>Token<wbr/>Holder</a></li>
+<li class="tsd-kind-module"><a href="../modules/plt_TokenId.html">plt/<wbr/>Token<wbr/>Id</a></li>
+<li class="tsd-kind-module"><a href="../modules/plt_TokenMetadataUrl.html">plt/<wbr/>Token<wbr/>Metadata<wbr/>Url</a></li>
+<li class="tsd-kind-module"><a href="../modules/plt_TokenModuleReference.html">plt/<wbr/>Token<wbr/>Module<wbr/>Reference</a></li>
+<li class="tsd-kind-module"><a href="../modules/schema.html">schema</a></li>
+<li class="tsd-kind-module"><a href="../modules/transactions.html">transactions</a>
+<ul>
+<li class="tsd-kind-namespace tsd-parent-kind-module"><a href="../modules/transactions.AccountTransactionV0.html">Account<wbr/>Transaction<wbr/>V0</a></li>
+<li class="tsd-kind-namespace tsd-parent-kind-module"><a href="../modules/transactions.AccountTransactionV1.html">Account<wbr/>Transaction<wbr/>V1</a></li>
+<li class="tsd-kind-namespace tsd-parent-kind-module"><a href="../modules/transactions.Payload.html">Payload</a></li>
+<li class="tsd-kind-namespace tsd-parent-kind-module"><a href="../modules/transactions.Transaction.html">Transaction</a></li></ul></li>
+<li class="tsd-kind-module"><a href="../modules/types.html">types</a>
+<ul>
+<li class="tsd-kind-namespace tsd-parent-kind-module"><a href="../modules/types.ContractName.html">Contract<wbr/>Name</a></li>
+<li class="tsd-kind-namespace tsd-parent-kind-module"><a href="../modules/types.CredentialRegistrationId.html">Credential<wbr/>Registration<wbr/>Id</a></li>
+<li class="tsd-kind-namespace tsd-parent-kind-module"><a href="../modules/types.EntrypointName.html">Entrypoint<wbr/>Name</a></li>
+<li class="tsd-kind-namespace tsd-parent-kind-module"><a href="../modules/types.ModuleClient.html">Module<wbr/>Client</a></li></ul></li>
+<li class="tsd-kind-module"><a href="../modules/types_AccountAddress.html">types/<wbr/>Account<wbr/>Address</a></li>
+<li class="tsd-kind-module"><a href="../modules/types_BlockHash.html">types/<wbr/>Block<wbr/>Hash</a></li>
+<li class="tsd-kind-module"><a href="../modules/types_CcdAmount.html">types/<wbr/>Ccd<wbr/>Amount</a></li>
+<li class="tsd-kind-module"><a href="../modules/types_ContractAddress.html">types/<wbr/>Contract<wbr/>Address</a></li>
+<li class="tsd-kind-module"><a href="../modules/types_ContractEvent.html">types/<wbr/>Contract<wbr/>Event</a></li>
+<li class="tsd-kind-module"><a href="../modules/types_Duration.html">types/<wbr/>Duration</a></li>
+<li class="tsd-kind-module"><a href="../modules/types_Energy.html">types/<wbr/>Energy</a></li>
+<li class="tsd-kind-module"><a href="../modules/types_InitName.html">types/<wbr/>Init<wbr/>Name</a></li>
+<li class="tsd-kind-module"><a href="../modules/types_ModuleReference.html">types/<wbr/>Module<wbr/>Reference</a></li>
+<li class="tsd-kind-module"><a href="../modules/types_Parameter.html">types/<wbr/>Parameter</a></li>
+<li class="tsd-kind-module"><a href="../modules/types_ReceiveName.html">types/<wbr/>Receive<wbr/>Name</a></li>
+<li class="tsd-kind-module"><a href="../modules/types_ReturnValue.html">types/<wbr/>Return<wbr/>Value</a></li>
+<li class="tsd-kind-module"><a href="../modules/types_SequenceNumber.html">types/<wbr/>Sequence<wbr/>Number</a></li>
+<li class="tsd-kind-module"><a href="../modules/types_Timestamp.html">types/<wbr/>Timestamp</a></li>
+<li class="tsd-kind-module"><a href="../modules/types_TransactionExpiry.html">types/<wbr/>Transaction<wbr/>Expiry</a></li>
+<li class="tsd-kind-module"><a href="../modules/types_TransactionHash.html">types/<wbr/>Transaction<wbr/>Hash</a></li>
+<li class="tsd-kind-module"><a href="../modules/util.html">util</a></li>
+<li class="tsd-kind-module"><a href="../modules/wasm.html">wasm</a></li>
+<li class="tsd-kind-module"><a href="../modules/web3_id.html">web3-<wbr/>id</a></li></ul></li></ul></div></details></nav>
+<nav class="tsd-navigation secondary menu-sticky"></nav></div></div>
+<div class="container tsd-generator">
+<p>Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p></div>
+<div class="overlay"></div><script src="../assets/main.js"></script></body></html>

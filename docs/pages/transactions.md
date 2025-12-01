@@ -408,7 +408,6 @@ const fullySigned = Transaction.mergeSignaturesInto(
 const finalized = Transaction.finalize(fullySigned); // ready to be submitted to chain.
 ```
 
-
 ## Sponsoring transactions
 
 It's possible to sponsor transactions by using the _extended_ transaction format to add in a sponsor for the

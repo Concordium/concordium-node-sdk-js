@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 11.1.0-alpha.6
+
+### Breaking changes
+
+- Update of rust-bindings changing the internal proof format. Making the proofs generated using previous alpha releases incompatible with this one.
+
 ## 11.1.0-alpha.5
 
 ### Breaking changes

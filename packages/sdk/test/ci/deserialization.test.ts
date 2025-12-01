@@ -353,6 +353,15 @@ test('test deserialize ConfigureBaker', () => {
         finalizationRewardCommission: 2,
 
         suspended: true,
+    };
+    const transaction: AccountTransaction = {
+        header,
+        type: AccountTransactionType.ConfigureBaker,
+        payload,
+    };
+    deserializeAccountTransactionBase(transaction);
+});
+
 test('test deserialize ConfigureDelegation', () => {
     const payload: ConfigureDelegationPayload = {
         stake: CcdAmount.fromMicroCcd(0),
@@ -400,7 +409,6 @@ test('test deserialize ConfigureDelegation with no delegation', () => {
 
     const transaction: AccountTransaction = {
         header,
-        type: AccountTransactionType.ConfigureBaker,
         type: AccountTransactionType.ConfigureDelegation,
         payload,
     };

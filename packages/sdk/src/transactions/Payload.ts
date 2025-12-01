@@ -20,6 +20,7 @@ import {
     TokenUpdatePayloadJSON,
     UpdateContractHandler,
     UpdateContractPayloadJSON,
+    UpdateCredentialKeysPayload,
     UpdateCredentialsHandler,
     getAccountTransactionHandler,
 } from '../accountTransactions.js';
@@ -235,6 +236,22 @@ function updateCredentialsFromJSON({ type, ...json }: ReturnType<typeof updateCr
 }
 
 /**
+ * An update credential keys transaction payload.
+ */
+export type UpdateCredentialKeys = UpdateCredentialKeysPayload & {
+    readonly type: AccountTransactionType.UpdateCredentialKeys;
+};
+
+/**
+ * Creates an update credential keys payload.
+ * @param payload containing update credential keys payload fields
+ * @returns payload object for update credential keys
+ */
+export function updateCredentialKeys(payload: UpdateCredentialKeysPayload): UpdateCredentialKeys {
+    return { type: AccountTransactionType.UpdateCredentialKeys, ...payload };
+}
+
+/**
  * A register data transaction payload.
  */
 export type RegisterData = RegisterDataPayload & {
@@ -363,6 +380,7 @@ type Payload =
     | InitContract
     | UpdateContract
     | UpdateCredentials
+    | UpdateCredentialKeys
     | RegisterData
     | ConfigureDelegation
     | ConfigureValidator
@@ -600,6 +618,9 @@ export function deserialize(value: Cursor | ArrayBuffer): Payload {
             break;
         case AccountTransactionType.TokenUpdate:
             payload = tokenUpdate(getAccountTransactionHandler(type).deserialize(cursor));
+            break;
+        case AccountTransactionType.UpdateCredentialKeys:
+            payload = updateCredentialKeys(getAccountTransactionHandler(type).deserialize(cursor));
             break;
         default:
             throw new Error('TransactionType is not a valid value: ' + type);

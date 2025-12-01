@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Added
+
+- `UpdateCredentialKeysPayload` and corresponding deserialize and serialize functions implemented
+
+- Extended `AccountTransactionSummary` with optional sponsor details in case the transaction summary details a sponsored
+  transaction.
+
 ## 12.0.0-alpha.3
 
 ### Added
@@ -28,8 +35,10 @@
 - Deserialize function for `DeployModulePayload` implemented instead of throwing an exception of not supporting deserialize
 - Deserialize function for `InitContractPayload` implemented instead of throwing an exception of not supporting deserialize
 - Deserialize function for `UpdateContractPayload` implemented instead of throwing an exception of not supporting deserialize
-- Extended `AccountTransactionSummary` with optional sponsor details in case the transaction summary details a sponsored
-  transaction.
+- Deserialize function for `UpdateCredentialsPayload` implemented instead of throwing an exception of not supporting deserialize
+- `deserializeBlockItem` to deserialize block items from their encoding as received by concordium nodes.
+- Move out `CdiRandomness` from `CredentialDeploymentPayload` to ensure payload is as per bluepaper and still support wallet 
+  in constructing credential information with CdiRandomness.
 
 #### `Transaction` API
 

@@ -6,6 +6,7 @@ import {
     deserializeThreshold,
 } from './deserialization.js';
 import { Cursor } from './deserializationHelpers.js';
+import { Upward, isKnown } from './index.js';
 import { Cbor, TokenId, TokenOperationType } from './plt/index.js';
 import {
     AccountTransactionInput,
@@ -15,12 +16,17 @@ import {
     InitContractInput,
     ModuleReference,
     UpdateContractInput,
+    UpdateCredentialKeysInput,
+    UpdateCredentialKeysPayload,
     UpdateCredentialsInput,
+    VerifyKey,
 } from './pub/types.js';
 import { serializeCredentialDeploymentInfo } from './serialization.js';
 import {
+    SchemeId,
     encodeDataBlob,
     encodeWord8,
+    encodeWord8FromString,
     encodeWord32,
     encodeWord64,
     packBufferWithWord8Length,
@@ -29,6 +35,7 @@ import {
     serializeConfigureBakerPayload,
     serializeConfigureDelegationPayload,
     serializeList,
+    serializeMap,
 } from './serializationHelpers.js';
 import {
     AccountTransactionHeader,
@@ -58,7 +65,7 @@ import { DataBlob } from './types/DataBlob.js';
 import * as InitName from './types/InitName.js';
 import * as Parameter from './types/Parameter.js';
 import * as ReceiveName from './types/ReceiveName.js';
-import { Energy } from './types/index.js';
+import { CredentialRegistrationId, Energy } from './types/index.js';
 
 export interface AccountTransactionHandler<
     Payload extends AccountTransactionPayload,
@@ -819,6 +826,132 @@ export class TokenUpdateHandler
     }
 }
 
+export type UpdateCredentialKeysPayloadJSON = {
+    credId: string;
+    keys: string;
+};
+
+export class UpdateCredentialKeysHandler
+    implements
+        AccountTransactionHandler<
+            UpdateCredentialKeysPayload,
+            UpdateCredentialKeysPayloadJSON,
+            UpdateCredentialKeysInput
+        >
+{
+    getBaseEnergyCost(payload: UpdateCredentialKeysInput): bigint {
+        const numberOfKeys = BigInt(Object.keys(payload.keys.keys).length);
+
+        return 500n * payload.currentNumberOfCredentials + 100n * numberOfKeys;
+    }
+
+    serialize(payload: UpdateCredentialKeysPayload): Buffer {
+        const serializedCredId = CredentialRegistrationId.toBuffer(payload.credId);
+
+        const keys = payload.keys.keys;
+
+        const putCredentialVerifyKey = (credentialVerifyKey: Upward<VerifyKey>) => {
+            if (!isKnown(credentialVerifyKey)) throw new Error('Verify keys must be known when serializing');
+
+            if (credentialVerifyKey.schemeId !== 'Ed25519')
+                throw new Error(`Unknown scheme ID ${credentialVerifyKey.schemeId}`);
+
+            const numeric = SchemeId[credentialVerifyKey.schemeId as keyof typeof SchemeId];
+            const serializedSchemeId = encodeWord8(numeric);
+
+            const serializedKey = Buffer.from(credentialVerifyKey.verifyKey, 'hex');
+            return Buffer.concat([serializedSchemeId, serializedKey]);
+        };
+
+        const serializedKeys = serializeMap(keys, encodeWord8, encodeWord8FromString, putCredentialVerifyKey);
+
+        const serializedThreshold = Buffer.from([payload.keys.threshold]);
+
+        return Buffer.concat([serializedCredId, serializedKeys, serializedThreshold]);
+    }
+
+    deserialize(serializedPayload: Cursor): UpdateCredentialKeysPayload {
+        const credId = serializedPayload.read(48).toString('hex');
+
+        const resultMap: Record<number, Upward<VerifyKey>> = {};
+        const credVerifyKeyEntryCount = serializedPayload.read(1).readUInt8(0);
+
+        for (let a = 0; a < credVerifyKeyEntryCount; a++) {
+            const index = serializedPayload.read(1).readUInt8(0);
+
+            const scheme = serializedPayload.read(1).readUInt8(0);
+            const schemeName = SchemeId[scheme];
+
+            if (schemeName === undefined) throw new Error('Unknown schemeId: ' + scheme);
+
+            let currentVerifyKey: Upward<VerifyKey> = null;
+            if (scheme === 0) {
+                currentVerifyKey = {
+                    schemeId: schemeName,
+                    verifyKey: serializedPayload.read(32).toString('hex'),
+                };
+            }
+
+            resultMap[index] = currentVerifyKey;
+        }
+
+        const threshold = serializedPayload.read(1).readUInt8(0);
+
+        const credPublicKeys = {
+            keys: resultMap,
+            threshold: threshold,
+        };
+
+        return {
+            credId: CredentialRegistrationId.fromHexString(credId),
+            keys: credPublicKeys,
+        };
+    }
+
+    toJSON(payload: UpdateCredentialKeysPayload): UpdateCredentialKeysPayloadJSON {
+        return {
+            credId: payload.credId.toString(),
+            keys: JSON.stringify({
+                keys: Object.entries(payload.keys.keys).map(([index, key]) => ({
+                    index: Number(index),
+                    key: {
+                        schemeId: String(key?.schemeId),
+                        verifyKey: String(key?.verifyKey),
+                    },
+                })),
+                threshold: payload.keys.threshold,
+            }),
+        };
+    }
+
+    fromJSON(json: UpdateCredentialKeysPayloadJSON): UpdateCredentialKeysPayload {
+        const keysObj = JSON.parse(json.keys) as {
+            keys: { index: number; key: any }[];
+            threshold: number;
+        };
+
+        const keysRecord: Record<number, Upward<VerifyKey>> = {};
+        for (const { index, key } of keysObj.keys) {
+            if (isKnown(key)) {
+                keysRecord[index] = {
+                    schemeId: key.schemeId.value || key.schemeId.toString(),
+                    verifyKey: key.verifyKey,
+                };
+            } else {
+                throw new Error('unknown encountered when iterating the keys');
+            }
+        }
+
+        return {
+            credId: CredentialRegistrationId.fromJSON(json.credId),
+            keys: {
+                keys: keysRecord,
+                threshold: keysObj.threshold,
+            },
+        };
+    }
+}
+
 export type AccountTransactionPayloadJSON =
     | SimpleTransferPayloadJSON
     | SimpleTransferWithMemoPayloadJSON
@@ -829,7 +962,8 @@ export type AccountTransactionPayloadJSON =
     | RegisterDataPayloadJSON
     | ConfigureDelegationPayloadJSON
     | ConfigureBakerPayloadJSON
-    | TokenUpdatePayloadJSON;
+    | TokenUpdatePayloadJSON
+    | UpdateCredentialKeysPayloadJSON;
 
 /**
  * @deprecated use `Transaction` and `Payload` APIs instead.
@@ -848,6 +982,9 @@ export function getAccountTransactionHandler(
 ): ConfigureDelegationHandler;
 export function getAccountTransactionHandler(type: AccountTransactionType.ConfigureBaker): ConfigureBakerHandler;
 export function getAccountTransactionHandler(type: AccountTransactionType.TokenUpdate): TokenUpdateHandler;
+export function getAccountTransactionHandler(
+    type: AccountTransactionType.UpdateCredentialKeys
+): UpdateCredentialKeysHandler;
 export function getAccountTransactionHandler(
     type: AccountTransactionType
 ): AccountTransactionHandler<AccountTransactionPayload, AccountTransactionPayloadJSON, AccountTransactionInput>;
@@ -876,6 +1013,8 @@ export function getAccountTransactionHandler(
             return new ConfigureBakerHandler(); //TODO
         case AccountTransactionType.TokenUpdate:
             return new TokenUpdateHandler();
+        case AccountTransactionType.UpdateCredentialKeys:
+            return new UpdateCredentialKeysHandler();
         default:
             throw new Error('The provided type does not have a handler: ' + type);
     }

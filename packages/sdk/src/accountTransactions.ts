@@ -659,11 +659,10 @@ export interface ConfigureBakerPayloadJSON {
 export class ConfigureBakerHandler
     implements AccountTransactionHandler<ConfigureBakerPayload, ConfigureBakerPayloadJSON, ConfigureBakerPayload>
 {
-    //TODO: need to figure out what to do with the versions and hasSuspended
-    //for now assume version 8 only onwards
-    ALLOWED_BITS = 0x100;
+    //support version 8 only onwards
+    ALLOWED_BITS = 0x1ff;
     VALIDATION_MASK = 0xffff - this.ALLOWED_BITS;
-    HAS_SUSPENDED = 0x0200;
+    HAS_SUSPENDED = 0x0100;
     HAS_FINALIZATION_REWARD_COMMISSION = 0x0080;
     HAS_BAKING_REWARD_COMMISSION = 0x0040;
     HAS_TRANSACTION_FEE_COMMISSION = 0x0020;
@@ -701,46 +700,43 @@ export class ConfigureBakerHandler
         const hasFinalizationRewardCommission = (serializedBitmap & this.HAS_FINALIZATION_REWARD_COMMISSION) !== 0;
         const hasSuspended = (serializedBitmap & this.HAS_SUSPENDED) !== 0;
 
-        const result: any = {};
+        const result: ConfigureBakerPayload = {};
 
         const capital = hasCapital
             ? CcdAmount.fromMicroCcd(serializedPayload.read(8).readBigUInt64BE(0))
             : CcdAmount.zero();
-        result.capital = capital;
+        result.stake = capital;
 
         const restakeEarnings = hasRestakeEarnings ? serializedPayload.read(1).readUInt8(0) !== 0 : false;
         result.restakeEarnings = restakeEarnings;
 
         const openForDelegation = hasOpenForDelegation ? serializedPayload.read(1).readUInt8(0) : undefined;
         if (openForDelegation !== undefined) {
-            result.openForDelegation = OpenStatus[openForDelegation];
+            result.openForDelegation = openForDelegation;
         }
 
         if (hasKeysWithProof) {
-            result.electionVerifyKey = serializedPayload.read(32).toString('hex');
+            if (!result.keys) {
+                result.keys = {} as BakerKeysWithProofs;
+            }
+            result.keys.electionVerifyKey = serializedPayload.read(32).toString('hex');
 
-            result.proofElection = serializedPayload.read(64).toString('hex');
-            //TODO: bluepaper has these two below, i am combining for the above
-            //result.proofElection.challenge = serializedPayload.read(32).toString('hex');
-            //result.proofElection.response = serializedPayload.read(32).toString('hex');
+            result.keys.proofElection = serializedPayload.read(64).toString('hex');
 
-            result.signatureVerifyKey.key = serializedPayload.read(32).toString('hex');
+            result.keys.signatureVerifyKey = serializedPayload.read(32).toString('hex');
 
-            result.proofSig = serializedPayload.read(64).toString('hex');
-            //TODO: bluepaper has these two below, i am combining for the above
-            //const proofSigChallenge = serializedPayload.read(32);
-            //const proofSigResponse = serializedPayload.read(32);
+            result.keys.proofSig = serializedPayload.read(64).toString('hex');
 
-            result.aggregationVerifyKey = serializedPayload.read(96).toString('hex');
+            result.keys.aggregationVerifyKey = serializedPayload.read(96).toString('hex');
 
-            result.proofAggregation = serializedPayload.read(64).toString('hex');
+            result.keys.proofAggregation = serializedPayload.read(64).toString('hex');
         }
 
         if (hasMetadataUrl) {
             const urlLength = serializedPayload.read(2).readUInt16BE(0);
 
             const url = serializedPayload.read(urlLength);
-            result.metadataUrl = url;
+            result.metadataUrl = url.toString();
         }
 
         if (hasTransactionFeeCommission) {
@@ -752,11 +748,11 @@ export class ConfigureBakerHandler
         }
 
         if (hasFinalizationRewardCommission) {
-            result.finalizationCommission = serializedPayload.read(4).readUInt32BE(0);
+            result.finalizationRewardCommission = serializedPayload.read(4).readUInt32BE(0);
         }
 
         if (hasSuspended) {
-            result.suspended = serializedPayload.read(1).readUInt8(0);
+            result.suspended = serializedPayload.read(1).readUInt8(0) !== 0;
         }
 
         return result;

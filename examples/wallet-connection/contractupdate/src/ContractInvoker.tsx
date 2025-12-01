@@ -13,6 +13,7 @@ import {
     CcdAmount,
     ConcordiumGRPCClient,
     ContractAddress,
+    Energy,
     ReceiveName,
     SchemaVersion,
 } from '@concordium/web-sdk';
@@ -176,6 +177,7 @@ export function ContractInvoker({ rpc, network, connection, connectedAccount, co
                                 amount: CcdAmount.fromMicroCcd(amount),
                                 address: ContractAddress.create(contract.index, BigInt(0)),
                                 receiveName: ReceiveName.fromString(contract.methods[selectedMethodIndex]),
+                                maxContractExecutionEnergy: Energy.create(300000),
                             },
                             schema && { parameters, schema }
                         ),

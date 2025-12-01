@@ -26,6 +26,7 @@ import {
     UpdateContractInput,
     UpdateContractPayload,
     UpdateCredentialsHandler,
+    UpdateCredentialsInput,
     UpdateCredentialsPayload,
 } from '../../index.js';
 import * as JSONBig from '../../json-bigint.js';
@@ -175,6 +176,7 @@ export function isMultiSig<P extends Payload.Type>(transaction: Transaction<P>):
 type SponsorableAPI<P extends Payload.Type> = {
     /**
      * Configures the transaction for sponsorring by specifying the sponsor account.
+     * NOTE: this can be used from protocol version 10.
      *
      * @template T - the transaction builder type
      * @param account - the sponsor account to use for sponsorring the transaction.
@@ -369,7 +371,8 @@ export function create(type: AccountTransactionType, payload: AccountTransaction
             const { maxContractExecutionEnergy: updateEnergy, ...updatePayload } = payload as UpdateContractInput;
             return updateContract(updatePayload, updateEnergy);
         case AccountTransactionType.UpdateCredentials:
-            return updateCredentials(payload as UpdateCredentialsPayload);
+            const { currentNumberOfCredentials, ...credPayload } = payload as UpdateCredentialsInput;
+            return updateCredentials(credPayload, currentNumberOfCredentials);
         case AccountTransactionType.RegisterData:
             return registerData(payload as RegisterDataPayload);
         case AccountTransactionType.ConfigureDelegation:
@@ -486,12 +489,18 @@ export function transfer(
  * @returns an update credentials transaction
  */
 export function updateCredentials(
-    payload: UpdateCredentialsPayload | Payload.UpdateCredentials
+    payload: UpdateCredentialsPayload | Payload.UpdateCredentials,
+    currentNumberOfCredentials: bigint
 ): Initial<Payload.UpdateCredentials> {
-    if (!isPayloadWithType(payload)) return updateCredentials(Payload.updateCredentials(payload));
+    //TODO: double check with Soren here, isn't current number of credentials actually a total that we get from chain?
+    if (!isPayloadWithType(payload))
+        return updateCredentials(Payload.updateCredentials(payload), currentNumberOfCredentials);
 
     const handler = new UpdateCredentialsHandler();
-    return new Builder({ executionEnergyAmount: Energy.create(handler.getBaseEnergyCost(payload)) }, payload);
+    return new Builder(
+        { executionEnergyAmount: Energy.create(handler.getBaseEnergyCost({ ...payload, currentNumberOfCredentials })) },
+        payload
+    );
 }
 
 /**

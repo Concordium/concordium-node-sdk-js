@@ -2,11 +2,17 @@
 
 ## Unreleased
 
+## 4.0.0-alpha.3
+
+### Breaking changes
+
+- Update of `concordium-base` dependency, changing the internals of the proof in a verifiable presentation.
+
 ## 4.0.0-alpha.2
 
 ### Breaking changes
 
-- Update of `concordium-base` dependency, changing the JSON format and internals of verifiable presentation.
+- Update of `concordium-base` dependency, changing the JSON format.
 
 ## 4.0.0-alpha.1
 

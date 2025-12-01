@@ -712,7 +712,6 @@ export class ConfigureBakerHandler
         result.restakeEarnings = restakeEarnings;
 
         const openForDelegation = hasOpenForDelegation ? serializedPayload.read(1).readUInt8(0) : undefined;
-        let currentOpenStatus;
         if (openForDelegation !== undefined) {
             result.openForDelegation = OpenStatus[openForDelegation];
         }

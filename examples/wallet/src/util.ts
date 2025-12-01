@@ -356,7 +356,7 @@ async function createSimpleTransferTransaction(
         sender: senderAddress,
     };
 
-    return Transaction.transfer(payload).addMetadata(header);
+    return Transaction.transfer(payload).addMetadata(header).build();
 }
 
 export async function sendTransferTransaction(

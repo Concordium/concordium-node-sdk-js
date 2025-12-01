@@ -84,7 +84,7 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
         restakeEarnings: cli.flags.restake,
     };
 
-    const transaction = Transaction.configureDelegation(configureDelegationPayload).addMetadata(header);
+    const transaction = Transaction.configureDelegation(configureDelegationPayload).addMetadata(header).build();
     const signed = await Transaction.signAndFinalize(transaction, signer);
     const transactionHash = await client.sendTransaction(signed);
 

@@ -39,6 +39,7 @@ import {
     calculateEnergyCost,
     deserializeBlockItem,
     getAccountTransactionHandler,
+    isKnown,
     tokenAddressFromBase58,
     tokenAddressToBase58,
 } from '../../src/index.js';
@@ -52,6 +53,8 @@ function deserializeAccountTransactionBase(transaction: AccountTransaction) {
     };
 
     const deserialized = deserializeBlockItem(serializeAccountTransaction(transaction, signatures));
+    assert(isKnown(deserialized));
+
     assert(deserialized.kind === BlockItemKind.AccountTransactionKind, 'Expected account transaction');
     const payloadSize = serializeAccountTransactionPayload(transaction).length;
     const baseEnergy = getAccountTransactionHandler(transaction.type).getBaseEnergyCost(transaction.payload);

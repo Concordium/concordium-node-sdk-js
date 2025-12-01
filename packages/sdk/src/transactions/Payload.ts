@@ -1,48 +1,50 @@
 import { Buffer } from 'buffer/index.js';
 
-import { deserializeUint8 } from '../deserialization.js';
-import { Cursor } from '../deserializationHelpers.js';
 import {
-    type AccountTransactionPayload,
     AccountTransactionPayloadJSON,
-    AccountTransactionType,
     ConfigureBakerHandler,
-    type ConfigureBakerPayload,
     ConfigureBakerPayloadJSON,
     ConfigureDelegationHandler,
-    type ConfigureDelegationPayload,
     ConfigureDelegationPayloadJSON,
-    type DataBlob,
     DeployModuleHandler,
-    type DeployModulePayload,
     DeployModulePayloadJSON,
     InitContractHandler,
-    type InitContractPayload,
     InitContractPayloadJSON,
     RegisterDataHandler,
-    type RegisterDataPayload,
     RegisterDataPayloadJSON,
     SimpleTransferHandler,
-    type SimpleTransferPayload,
     SimpleTransferPayloadJSON,
     SimpleTransferWithMemoHandler,
-    type SimpleTransferWithMemoPayload,
     SimpleTransferWithMemoPayloadJSON,
     TokenUpdateHandler,
-    type TokenUpdatePayload,
     TokenUpdatePayloadJSON,
-    TransactionKindString,
     UpdateContractHandler,
-    type UpdateContractPayload,
     UpdateContractPayloadJSON,
-    UpdateCredentialKeysPayload,
     UpdateCredentialsHandler,
-    type UpdateCredentialsPayload,
     getAccountTransactionHandler,
-    getTransactionKindString,
-} from '../index.js';
+} from '../accountTransactions.js';
+import { deserializeUint8 } from '../deserialization.js';
+import { Cursor } from '../deserializationHelpers.js';
 import * as JSONBig from '../json-bigint.js';
 import { serializeAccountTransactionType } from '../serialization.js';
+import {
+    type AccountTransactionPayload,
+    AccountTransactionType,
+    type ConfigureBakerPayload,
+    type ConfigureDelegationPayload,
+    type DeployModulePayload,
+    type InitContractPayload,
+    type RegisterDataPayload,
+    type SimpleTransferPayload,
+    type SimpleTransferWithMemoPayload,
+    type TokenUpdatePayload,
+    TransactionKindString,
+    type UpdateContractPayload,
+    type UpdateCredentialKeysPayload,
+    type UpdateCredentialsPayload,
+    getTransactionKindString,
+} from '../types.js';
+import { DataBlob } from '../types/DataBlob.js';
 
 type PayloadJSON<T extends TransactionKindString, P extends AccountTransactionPayloadJSON> = { type: T } & P;
 
@@ -500,7 +502,7 @@ export function toJSON(payload: Payload): JSON {
  * @returns the transaction payload
  * @throws if the JSON is invalid or the transaction type is not supported
  */
-export function fromJSON(json: JSON): Payload {
+export function fromJSON(json: unknown): Payload {
     if (typeof json !== 'object' || json === null) throw new Error('Expected object');
     if (!('type' in json) || typeof json.type !== 'string') throw new Error('invalid transaction type');
 

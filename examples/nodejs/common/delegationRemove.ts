@@ -66,7 +66,7 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
     };
     const signer = buildAccountSigner(wallet);
 
-    const transaction = Transaction.configureDelegation(configureDelegationPayload).addMetadata(header);
+    const transaction = Transaction.configureDelegation(configureDelegationPayload).addMetadata(header).build();
     const signed = await Transaction.signAndFinalize(transaction, signer);
     const transactionHash = await client.sendTransaction(signed);
 

@@ -325,33 +325,22 @@ test('test deserialize UpdateCredentialKeys', () => {
 test('test deserialize ConfigureBaker', () => {
     const payload: ConfigureBakerPayload = {
         stake: CcdAmount.fromMicroCcd(1000),
-
         restakeEarnings: true,
-
         openForDelegation: OpenStatus.OpenForAll,
 
         keys: {
             electionVerifyKey: 'aa'.repeat(32),
-
             proofElection: 'bb'.repeat(64),
-
             signatureVerifyKey: 'cc'.repeat(32),
-
             proofSig: 'dd'.repeat(64),
-
             aggregationVerifyKey: 'ee'.repeat(96),
-
             proofAggregation: 'ff'.repeat(64),
         },
 
         metadataUrl: 'g'.repeat(16),
-
         transactionFeeCommission: 10,
-
         bakingRewardCommission: 5,
-
         finalizationRewardCommission: 2,
-
         suspended: true,
     };
     const transaction: AccountTransaction = {

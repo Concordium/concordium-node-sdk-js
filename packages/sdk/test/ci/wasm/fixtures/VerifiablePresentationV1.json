@@ -12,6 +12,10 @@
                 "context": "0102010201020102010201020102010201020102010201020102010201020102"
             },
             {
+                "label": "ResourceID",
+                "context": "www.wineShop.com"
+            },
+            {
                 "label": "ContextString",
                 "context": "Wine payment"
             }
@@ -20,10 +24,6 @@
             {
                 "label": "BlockHash",
                 "context": "0101010101010101010101010101010101010101010101010101010101010101"
-            },
-            {
-                "label": "ResourceID",
-                "context": "https://compliant.shop"
             }
         ]
     },

@@ -12,11 +12,15 @@
                 "context": "0102010201020102010201020102010201020102010201020102010201020102"
             },
             {
+                "label": "ResourceID",
+                "context": "www.wineShop.com"
+            },
+            {
                 "label": "ContextString",
                 "context": "Wine payment"
             }
         ],
-        "requested": ["BlockHash", "ResourceID"]
+        "requested": ["BlockHash"]
     },
     "subjectClaims": [
         {

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add the given context `ResourceID` as an input parameter to the `VerifiablePresentationRequestV1.createContext` function.
+
 ## 11.1.0-alpha.6
 
 ### Breaking changes

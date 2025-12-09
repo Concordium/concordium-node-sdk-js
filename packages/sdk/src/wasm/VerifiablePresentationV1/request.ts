@@ -55,13 +55,13 @@ export function createContext(context: Omit<Context, 'type'>): Context {
  *
  * This is a convenience function that creates a context with a nonce for freshness,
  * a connection ID for session tracking, a rescource ID for specifying the connected website,
- * and a context string for additional information.
+ * and an optional context string for additional information.
  * It requests the BlockHash to be provided by the presenter.
  *
  * @param nonce - Cryptographic nonce for preventing replay attacks
  * @param connectionId - Identifier for the verification session
  * @param rescourceId - Identifier for the website
- * @param contextString - Additional context information
+ * @param contextString - Optional context information
  *
  * @returns A context object configured for basic verification
  */
@@ -69,14 +69,17 @@ export function createSimpleContext(
     nonce: Uint8Array,
     connectionId: string,
     rescourceId: string,
-    contextString: string
+    contextString?: string
 ): Context {
+    let optional_context: GivenContext[] =
+        contextString !== undefined ? [{ label: 'ContextString', context: contextString }] : [];
+
     return createContext({
         given: [
             { label: 'Nonce', context: nonce },
             { label: 'ConnectionID', context: connectionId },
             { label: 'ResourceID', context: rescourceId },
-            { label: 'ContextString', context: contextString },
+            ...optional_context,
         ],
         requested: ['BlockHash'],
     });

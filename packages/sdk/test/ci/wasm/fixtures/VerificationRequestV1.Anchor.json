@@ -1,7 +1,7 @@
 {
     "type": "CCDVRA",
     "version": 1,
-    "hash": "eb2499bd1ab8f24357945bb59e05a51c4cf19631d20bf1cb1bfc2c5974083ca9",
+    "hash": "3a48d56dd8b828d738c664b9a279d96954358b1fa4927c3f29d769c5fdfac378",
     "public": {
         "purpose": "Age verification",
         "verifier": "Test Verifier"

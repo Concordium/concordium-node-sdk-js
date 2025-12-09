@@ -123,6 +123,7 @@ const [sender, signer] = parseKeysFile(walletFile);
 const requestContext = VerificationRequestV1.createSimpleContext(
     sha256([Buffer.from(Date.now().toString())]),
     randomUUID(),
+    'Example website URL',
     'Example VP'
 );
 const requestClaims = VerificationRequestV1.claimsBuilder()

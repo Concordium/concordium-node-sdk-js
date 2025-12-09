@@ -166,7 +166,8 @@ Once this is done, the request must be _anchored_ on chain with a transaction. T
 const nonce = Uint8Array.from(...) // randomly generated 32-byte value
 const connectionID = ... // e.g. a wallet-connect ID
 const contextString = 'My compliant web3 wine shop'
-const context = VerificationRequestV1.createSimpleContext(nonce, connectionID, contextString)
+const rescourceID = 'My website URL' // e.g. website URL or TLS fingerprint
+const context = VerificationRequestV1.createSimpleContext(nonce, connectionID, rescourceID, contextString)
 
 const statement = new VerificationRequestV1.claimsBuilder()...
 

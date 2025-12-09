@@ -23,6 +23,7 @@ describe('VerificationRequestV1', () => {
         const context = VerificationRequestV1.createSimpleContext(
             Uint8Array.from(Buffer.from('01'.repeat(32), 'hex')),
             '0102'.repeat(16),
+            'www.wineShop.com',
             'Wine payment'
         );
         const statement = VerificationRequestV1.claimsBuilder()
@@ -43,6 +44,7 @@ describe('VerificationRequestV1', () => {
         const context = VerificationRequestV1.createSimpleContext(
             Uint8Array.from(Buffer.from('01'.repeat(32), 'hex')),
             '0102010201020102010201020102010201020102010201020102010201020102',
+            'www.wineShop.com',
             'Wine payment'
         );
         const statement = VerificationRequestV1.claimsBuilder()
@@ -74,6 +76,7 @@ describe('VerificationRequestV1.Anchor', () => {
         const context = VerificationRequestV1.createSimpleContext(
             Uint8Array.from(Buffer.from('01'.repeat(32), 'hex')),
             '0102'.repeat(16),
+            'www.wineShop.com',
             'Wine payment'
         );
         const statement = VerificationRequestV1.claimsBuilder()
@@ -86,7 +89,7 @@ describe('VerificationRequestV1.Anchor', () => {
             somePulicInfo: 'public info',
         });
         const expectedAnchor =
-            'a464686173685820eb2499bd1ab8f24357945bb59e05a51c4cf19631d20bf1cb1bfc2c5974083ca9647479706566434344565241667075626c6963a16d736f6d6550756c6963496e666f6b7075626c696320696e666f6776657273696f6e01';
+            'a4646861736858203a48d56dd8b828d738c664b9a279d96954358b1fa4927c3f29d769c5fdfac378647479706566434344565241667075626c6963a16d736f6d6550756c6963496e666f6b7075626c696320696e666f6776657273696f6e01';
         expect(Buffer.from(anchor).toString('hex')).toEqual(expectedAnchor);
 
         const roundtrip = VerificationRequestV1.decodeAnchor(anchor);
@@ -103,6 +106,7 @@ describe('VerificationRequestV1.Anchor', () => {
         const context = VerificationRequestV1.createSimpleContext(
             Uint8Array.from(Buffer.from('01'.repeat(32), 'hex')),
             '0102'.repeat(16),
+            'www.wineShop.com',
             'Wine payment'
         );
         const statement = VerificationRequestV1.claimsBuilder()

@@ -23,9 +23,10 @@ const VERIFICATION_REQUEST = VerificationRequestV1.fromJSON({
         given: [
             { label: 'Nonce', context: 'e08a450f681dea08303659800b33f92572ef0b6b912b60cb31fce6758374f5e7' },
             { label: 'ConnectionID', context: '4b409b05-4478-4271-97b8-d36e97ed19fd' },
+            { label: 'ResourceID', context: 'Example rescource id' },
             { label: 'ContextString', context: 'Example VP' },
         ],
-        requested: ['BlockHash', 'ResourceID'],
+        requested: ['BlockHash'],
     },
     subjectClaims: [
         {
@@ -81,10 +82,10 @@ const PRESENTATION = VerifiablePresentationV1.fromJSON({
         given: [
             { label: 'Nonce', context: 'e08a450f681dea08303659800b33f92572ef0b6b912b60cb31fce6758374f5e7' },
             { label: 'ConnectionID', context: '4b409b05-4478-4271-97b8-d36e97ed19fd' },
+            { label: 'ResourceID', context: 'Example rescource id' },
             { label: 'ContextString', context: 'Example VP' },
         ],
         requested: [
-            { label: 'ResourceID', context: 'Example VP use-case' },
             { label: 'BlockHash', context: '8ca2c521eb9e4c51422210d5858e0cf221bbeed18af4cb5e02c36160d5d19ff7' },
         ],
     },
@@ -176,7 +177,7 @@ describe('VerificationAuditRecordV1.Anchor', () => {
     it('creates expected anchor', () => {
         const anchor = VerificationAuditRecordV1.createAnchor(PRIVATE_RECORD, { info: 'some public info?' });
         const expected =
-            'a4646861736858202c6c14fcbc0f4b0582de7a47758e6d72e7966c5f7ff7a303d83682f61e2dcdde647479706566434344564141667075626c6963a164696e666f71736f6d65207075626c696320696e666f3f6776657273696f6e01';
+            'a464686173685820cc2dfd82471207678dfc2d01232434b6dea19df713425991053ce4b5cc4ab898647479706566434344564141667075626c6963a164696e666f71736f6d65207075626c696320696e666f3f6776657273696f6e01';
         expect(Buffer.from(anchor).toString('hex')).toEqual(expected);
     });
 

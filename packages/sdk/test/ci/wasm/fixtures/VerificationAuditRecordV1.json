@@ -13,11 +13,15 @@
                     "context": "4b409b05-4478-4271-97b8-d36e97ed19fd"
                 },
                 {
+                    "label": "ResourceID",
+                    "context": "Example rescource id"
+                },
+                {
                     "label": "ContextString",
                     "context": "Example VP"
                 }
             ],
-            "requested": ["BlockHash", "ResourceID"]
+            "requested": ["BlockHash"]
         },
         "subjectClaims": [
             {
@@ -87,15 +91,15 @@
                     "context": "4b409b05-4478-4271-97b8-d36e97ed19fd"
                 },
                 {
+                    "label": "ResourceID",
+                    "context": "Example rescource id"
+                },
+                {
                     "label": "ContextString",
                     "context": "Example VP"
                 }
             ],
             "requested": [
-                {
-                    "label": "ResourceID",
-                    "context": "Example VP use-case"
-                },
                 {
                     "label": "BlockHash",
                     "context": "8ca2c521eb9e4c51422210d5858e0cf221bbeed18af4cb5e02c36160d5d19ff7"

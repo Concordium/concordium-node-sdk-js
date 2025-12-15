@@ -2,8 +2,10 @@
 
 ## Unreleased
 
-- Change the `VerifiablePresentationRequestV1.createContext` function to require a `rescourceID` as input parameter and change the `contextString` input parameter to be optional. 
+## 11.1.0-alpha.7
 
+- Export type `IdentityCredType` in `VerifiablePresentationRequestV1`.
+- Change the `VerifiablePresentationRequestV1.createContext` function to require a `rescourceID` as input parameter and change the `contextString` input parameter to be optional. 
 
 ## 11.1.0-alpha.6
 

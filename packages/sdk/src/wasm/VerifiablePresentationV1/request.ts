@@ -246,7 +246,7 @@ export type JSON = {
 /**
  * Type of identity credential source that can be used for proving attributes.
  */
-type IdentityCredType = 'identityCredential' | 'accountCredential';
+export type IdentityCredType = 'identityCredential' | 'accountCredential';
 
 // This type must match the JSON serialization format of `RequestedStatement` in concordium-base.
 export type RequestedStatement<AttributeKey> = AtomicStatementV2<AttributeKey>;

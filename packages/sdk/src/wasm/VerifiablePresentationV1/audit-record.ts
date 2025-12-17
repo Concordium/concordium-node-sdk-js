@@ -406,7 +406,7 @@ export async function createChecked(
         await VerificationRequestV1.verifyAnchor(request, grpc);
 
         // 5. check the claims in presentation request in the context of the request statements
-        verifyPresentationRequest(verification.result.request, request, grpc);
+        await verifyPresentationRequest(verification.result.request, request, grpc);
     } catch (e) {
         return { type: 'failed', error: e as Error };
     }

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Ensure proper `accountCredential` verification by adding missing `await` in async function, preventing potential bypass.
+
 ## 11.1.0-alpha.7
 
 - Export type `IdentityCredType` in `VerifiablePresentationRequestV1`.

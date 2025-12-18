@@ -135,5 +135,3 @@ AppRegistry.registerComponent(appName, () => App);
 ```
 
 This ensures the native modules required by the SDK are present.
-
-

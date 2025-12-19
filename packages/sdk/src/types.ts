@@ -180,6 +180,12 @@ export enum TransactionStatusEnum {
     Committed = 'committed',
 }
 
+export const TRANSACTION_STATUS_ORDER: Record<TransactionStatusEnum, number> = {
+    [TransactionStatusEnum.Received]: 0,
+    [TransactionStatusEnum.Committed]: 1,
+    [TransactionStatusEnum.Finalized]: 2,
+};
+
 export interface AddressAccount {
     type: 'AddressAccount';
     address: AccountAddress.Type;

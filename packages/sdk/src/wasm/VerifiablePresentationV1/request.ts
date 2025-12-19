@@ -10,6 +10,7 @@ import {
     ConcordiumGRPCClient,
     HexString,
     RegisterDataPayload,
+    TRANSACTION_STATUS_ORDER,
     TransactionKindString,
     TransactionStatusEnum,
     TransactionSummaryType,
@@ -197,20 +198,29 @@ export function decodeAnchor(cbor: Uint8Array): Anchor {
  * Verifies that a verification request's anchor has been properly registered on-chain.
  *
  * This function checks that:
- * 1. The transaction referenced in the request is finalized
+ * 1. The transaction referenced has at least the `minTransactionStatus`.
  * 2. The transaction is a RegisterData transaction
  * 3. The registered anchor hash matches the computed hash of the request
  *
  * @param verificationRequest - The verification request containing the transaction reference
  * @param grpc - The gRPC client for blockchain queries
+ * @param minTransactionStatus - The minimum status the anchor transaction must reach. The transaction status progresses as: `received` → `committed` → `finalized`.
  * @returns The transaction outcome if verification succeeds
  * @throws Error if the transaction is not finalized, has wrong type, or hash mismatch
  */
-export async function verifyAnchor(verificationRequest: VerificationRequestV1, grpc: ConcordiumGRPCClient) {
+export async function verifyAnchor(verificationRequest: VerificationRequestV1, grpc: ConcordiumGRPCClient, minTransactionStatus: TransactionStatusEnum) {
     const transaction = await grpc.getBlockItemStatus(verificationRequest.transactionRef);
-    if (transaction.status !== TransactionStatusEnum.Finalized) {
-        throw new Error('presentation request anchor transaction not finalized');
+
+    const actualRank = TRANSACTION_STATUS_ORDER[transaction.status];
+    const requiredRank = TRANSACTION_STATUS_ORDER[minTransactionStatus];
+
+    if (actualRank < requiredRank) {
+        throw new Error(
+            `Request anchor transaction status is '${transaction.status}', ` +
+            `but must be at least '${minTransactionStatus}'.`
+        );
     }
+
     const { summary } = transaction.outcome;
     if (
         !isKnown(summary) ||

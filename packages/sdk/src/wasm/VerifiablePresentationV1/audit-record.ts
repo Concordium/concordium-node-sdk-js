@@ -4,6 +4,8 @@ import _JB from 'json-bigint';
 
 import { ConcordiumGRPCClient, isKnown } from '../../grpc/index.js';
 import {
+    BlockItemStatus,
+    BlockItemSummaryInBlock,
     CredentialStatus,
     HexString,
     TRANSACTION_STATUS_ORDER,
@@ -60,7 +62,7 @@ class VerificationAuditRecordV1 {
         public readonly request: VerificationRequestV1.Type,
         public readonly presentation: VerifiablePresentationV1.Type,
         public readonly id: string
-    ) {}
+    ) { }
 
     /**
      * Serializes the audit record to a JSON representation.
@@ -521,41 +523,11 @@ export function computeAnchorHash(record: VerificationAuditRecordV1, info?: Reco
     return wasm.computeVerificationAuditV1AnchorHash(JSONBig.stringify(input));
 }
 
-/**
- * Verifies that an audit record's anchor has been properly registered on-chain.
- *
- * This function checks that:
- * 1. The transaction referenced has at least the `minTransactionStatus`.
- * 2. The transaction is a RegisterData transaction
- * 3. The registered anchor hash matches the computed hash of the audit record
- *
- * @param auditRecord - The audit record to verify
- * @param anchorTransactionRef - The transaction hash of the anchor registration
- * @param grpc - The gRPC client for blockchain queries
- * @param minTransactionStatus - The minimum status the anchor transaction must reach. The transaction status progresses as: `received` → `committed` → `finalized`.
- *
- * @returns The transaction outcome if verification succeeds
- * @throws Error if the transaction is not finalized, has wrong type, or hash mismatch
- */
-export async function verifyAnchor(
+function verifyAnchorInTransactionOutcome(
     auditRecord: VerificationAuditRecordV1,
-    anchorTransactionRef: TransactionHash.Type,
-    grpc: ConcordiumGRPCClient,
-    minTransactionStatus: TransactionStatusEnum,
+    blockItemSummary: BlockItemSummaryInBlock,
 ) {
-    const transaction = await grpc.getBlockItemStatus(anchorTransactionRef);
-
-    const actualRank = TRANSACTION_STATUS_ORDER[transaction.status];
-    const requiredRank = TRANSACTION_STATUS_ORDER[minTransactionStatus];
-
-    if (actualRank < requiredRank) {
-        throw new Error(
-            `Audit anchor transaction status is '${transaction.status}', ` +
-            `but must be at least '${minTransactionStatus}'.`
-        );
-    }
-
-    const { summary } = transaction.outcome;
+    const { summary } = blockItemSummary;
     if (
         !isKnown(summary) ||
         summary.type !== TransactionSummaryType.AccountTransaction ||
@@ -569,8 +541,74 @@ export async function verifyAnchor(
     if (Buffer.from(expectedAnchorHash).toString('hex') !== Buffer.from(transactionAnchor.hash).toString('hex')) {
         throw new Error('presentation anchor verification failed.');
     }
+}
 
-    return transaction.outcome;
+function verifyAnchorInTransactionOutcomes(
+    auditRecord: VerificationAuditRecordV1,
+    transaction: BlockItemStatus,
+): BlockItemSummaryInBlock {
+    if (transaction.status == TransactionStatusEnum.Committed) {
+        // Find at least one outcome that satisfies all checks
+        const matchingOutcome = transaction.outcomes?.find((blockItemSummary) => {
+            try {
+                verifyAnchorInTransactionOutcome(auditRecord, blockItemSummary);
+                return true;
+            } catch {
+                return false;
+            }
+        });
+
+        if (!matchingOutcome) {
+            throw new Error(
+                'No outcome found in committed transaction outcomes that satisfies all anchor verification conditions.'
+            );
+        }
+
+        return matchingOutcome
+    } else if (transaction.status == TransactionStatusEnum.Finalized) {
+        verifyAnchorInTransactionOutcome(auditRecord, transaction.outcome);
+        return transaction.outcome
+    } else {
+        throw new Error(
+            'Verification of anchor transaction status `received` is not supported.'
+        );
+    }
+}
+
+/**
+ * Verifies that an audit record's anchor has been properly registered on-chain.
+ *
+ * This function checks that:
+ * 1. The transaction referenced has at least the `minTransactionStatus`.
+ * 2. The transaction is a RegisterData transaction
+ * 3. The registered anchor hash matches the computed hash of the audit record
+ *
+ * @param auditRecord - The audit record to verify
+ * @param anchorTransactionRef - The transaction hash of the anchor registration
+ * @param grpc - The gRPC client for blockchain queries
+ * @param minTransactionStatus - An optional minimum status the anchor transaction must reach where `committed` or `finalized` can be choosen. The transaction status progresses as: `received` → `committed` → `finalized`.
+ *
+ * @throws Error if the transaction is not finalized, has wrong type, or hash mismatch
+ */
+export async function verifyAnchor(
+    auditRecord: VerificationAuditRecordV1,
+    anchorTransactionRef: TransactionHash.Type,
+    grpc: ConcordiumGRPCClient,
+    minTransactionStatus?: TransactionStatusEnum.Committed | TransactionStatusEnum.Finalized,
+): Promise<BlockItemSummaryInBlock> {
+    const transaction = await grpc.getBlockItemStatus(anchorTransactionRef);
+
+    const actualRank = TRANSACTION_STATUS_ORDER[transaction.status];
+    const requiredRank = TRANSACTION_STATUS_ORDER[minTransactionStatus ?? TransactionStatusEnum.Finalized];
+
+    if (actualRank < requiredRank) {
+        throw new Error(
+            `Audit anchor transaction status is '${transaction.status}', ` +
+            `but must be at least '${minTransactionStatus}'.`
+        );
+    }
+
+    return verifyAnchorInTransactionOutcomes(auditRecord, transaction)
 }
 
 type AnchorData = {

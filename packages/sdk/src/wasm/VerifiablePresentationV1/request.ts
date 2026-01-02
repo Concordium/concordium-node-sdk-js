@@ -247,29 +247,35 @@ function verifyAnchorInTransactionOutcomes(
     verificationRequest: VerificationRequestV1,
     transaction: BlockItemStatus
 ): BlockItemSummaryInBlock {
-    if (transaction.status == TransactionStatusEnum.Committed) {
-        // Find at least one outcome that satisfies all checks
-        const matchingOutcome = transaction.outcomes?.find((blockItemSummary) => {
-            try {
-                verifyAnchorInTransactionOutcome(verificationRequest, blockItemSummary);
-                return true;
-            } catch {
-                return false;
-            }
-        });
+    switch (transaction.status) {
+        case TransactionStatusEnum.Committed: {
+            // Find at least one outcome that satisfies all checks
+            const matchingOutcome = transaction.outcomes.find((blockItemSummary) => {
+                try {
+                    verifyAnchorInTransactionOutcome(verificationRequest, blockItemSummary);
+                    return true;
+                } catch {
+                    return false;
+                }
+            });
 
-        if (!matchingOutcome) {
-            throw new Error(
-                'No outcome found in committed transaction outcomes that satisfies all anchor verification conditions.'
-            );
+            if (!matchingOutcome) {
+                throw new Error(
+                    'No outcome found in committed transaction outcomes that satisfies all anchor verification conditions.'
+                );
+            }
+
+            return matchingOutcome;
         }
 
-        return matchingOutcome;
-    } else if (transaction.status == TransactionStatusEnum.Finalized) {
-        verifyAnchorInTransactionOutcome(verificationRequest, transaction.outcome);
-        return transaction.outcome;
-    } else {
-        throw new Error('Verification of anchor transaction status `received` is not supported.');
+        case TransactionStatusEnum.Finalized: {
+            verifyAnchorInTransactionOutcome(verificationRequest, transaction.outcome);
+            return transaction.outcome;
+        }
+
+        case TransactionStatusEnum.Received: {
+            throw new Error('Verification of request anchor transaction status `received` is not possible.');
+        }
     }
 }
 

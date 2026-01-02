@@ -601,7 +601,7 @@ function verifyAnchorInTransactionOutcomes(
         }
 
         case TransactionStatusEnum.Received: {
-            throw new Error('Verification of anchor transaction status `received` is not supported.');
+            throw new Error('Verification of audit anchor transaction status `received` is not possible.');
         }
     }
 }

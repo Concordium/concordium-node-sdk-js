@@ -351,7 +351,11 @@ export async function createFromAnchor(
     additionalContext: GivenContext[]
 ): Promise<VerifiablePresentationV1> {
     const globalContext = await grpc.getCryptographicParameters();
-    const { blockHash } = await VerificationRequestV1.verifyAnchor(verificationRequest, grpc, TransactionStatusEnum.Finalized);
+    const { blockHash } = await VerificationRequestV1.verifyAnchor(
+        verificationRequest,
+        grpc,
+        TransactionStatusEnum.Finalized
+    );
 
     const blockContext: GivenContext = { label: 'BlockHash', context: blockHash };
     const proofContext = createContext(verificationRequest.context, [...additionalContext, blockContext]);

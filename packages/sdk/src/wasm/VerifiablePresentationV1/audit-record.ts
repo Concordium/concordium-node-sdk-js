@@ -62,7 +62,7 @@ class VerificationAuditRecordV1 {
         public readonly request: VerificationRequestV1.Type,
         public readonly presentation: VerifiablePresentationV1.Type,
         public readonly id: string
-    ) { }
+    ) {}
 
     /**
      * Serializes the audit record to a JSON representation.
@@ -525,7 +525,7 @@ export function computeAnchorHash(record: VerificationAuditRecordV1, info?: Reco
 
 function verifyAnchorInTransactionOutcome(
     auditRecord: VerificationAuditRecordV1,
-    blockItemSummary: BlockItemSummaryInBlock,
+    blockItemSummary: BlockItemSummaryInBlock
 ) {
     const { summary } = blockItemSummary;
     if (
@@ -545,11 +545,11 @@ function verifyAnchorInTransactionOutcome(
 
 function verifyAnchorInTransactionOutcomes(
     auditRecord: VerificationAuditRecordV1,
-    transaction: BlockItemStatus,
+    transaction: BlockItemStatus
 ): BlockItemSummaryInBlock {
     if (transaction.status == TransactionStatusEnum.Committed) {
         // Find at least one outcome that satisfies all checks
-        const matchingOutcome = transaction.outcomes?.find((blockItemSummary) => {
+        const matchingOutcome = transaction.outcomes.find((blockItemSummary) => {
             try {
                 verifyAnchorInTransactionOutcome(auditRecord, blockItemSummary);
                 return true;
@@ -564,14 +564,12 @@ function verifyAnchorInTransactionOutcomes(
             );
         }
 
-        return matchingOutcome
+        return matchingOutcome;
     } else if (transaction.status == TransactionStatusEnum.Finalized) {
         verifyAnchorInTransactionOutcome(auditRecord, transaction.outcome);
-        return transaction.outcome
+        return transaction.outcome;
     } else {
-        throw new Error(
-            'Verification of anchor transaction status `received` is not supported.'
-        );
+        throw new Error('Verification of anchor transaction status `received` is not supported.');
     }
 }
 
@@ -594,7 +592,7 @@ export async function verifyAnchor(
     auditRecord: VerificationAuditRecordV1,
     anchorTransactionRef: TransactionHash.Type,
     grpc: ConcordiumGRPCClient,
-    minTransactionStatus?: TransactionStatusEnum.Committed | TransactionStatusEnum.Finalized,
+    minTransactionStatus?: TransactionStatusEnum.Committed | TransactionStatusEnum.Finalized
 ): Promise<BlockItemSummaryInBlock> {
     const transaction = await grpc.getBlockItemStatus(anchorTransactionRef);
 
@@ -604,11 +602,11 @@ export async function verifyAnchor(
     if (actualRank < requiredRank) {
         throw new Error(
             `Audit anchor transaction status is '${transaction.status}', ` +
-            `but must be at least '${minTransactionStatus}'.`
+                `but must be at least '${minTransactionStatus}'.`
         );
     }
 
-    return verifyAnchorInTransactionOutcomes(auditRecord, transaction)
+    return verifyAnchorInTransactionOutcomes(auditRecord, transaction);
 }
 
 type AnchorData = {

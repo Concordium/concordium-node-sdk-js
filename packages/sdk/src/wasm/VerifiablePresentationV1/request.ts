@@ -196,6 +196,18 @@ export function decodeAnchor(cbor: Uint8Array): Anchor {
     return value as Anchor;
 }
 
+/**
+ * Verifies that a verification request anchor has been properly registered on-chain.
+ *
+ * This function checks that:
+ * 1. The transaction is a RegisterData transaction
+ * 2. The registered anchor hash matches the computed hash of the request
+ *
+ * @param verificationRequest - The request to verify against
+ * @param blockItemSummary - The block item summary where the anchor is present in
+ *
+ * @throws Error if the transaction has a wrong type, or a hash mismatch.
+ */
 function verifyAnchorInTransactionOutcome(
     verificationRequest: VerificationRequestV1,
     blockItemSummary: BlockItemSummaryInBlock
@@ -206,16 +218,31 @@ function verifyAnchorInTransactionOutcome(
         summary.type !== TransactionSummaryType.AccountTransaction ||
         summary.transactionType !== TransactionKindString.RegisterData
     ) {
-        throw new Error('Unexpected transaction type found for presentation request anchor transaction');
+        throw new Error('Unexpected transaction type found for request anchor transaction');
     }
 
     const expectedAnchorHash = computeAnchorHash(verificationRequest.context, verificationRequest.subjectClaims);
     const transactionAnchor = decodeAnchor(Buffer.from(summary.dataRegistered.data, 'hex'));
     if (Buffer.from(expectedAnchorHash).toString('hex') !== Buffer.from(transactionAnchor.hash).toString('hex')) {
-        throw new Error('presentation anchor verification failed.');
+        throw new Error('Request anchor hash verification failed.');
     }
 }
 
+/**
+ * Verifies that a verification request anchor has been properly registered on-chain.
+ * If the given transaction referenced has a status `TransactionStatusEnum.Committed`, this function verifies that at least one of the transaction outcomes satisfies all checks.
+ * If the given transaction has a status `TransactionStatusEnum.Finalized`, this function verifies that the transaction outcome satisfies all checks.
+ * If the given transaction has a status `TransactionStatusEnum.Received`, this function cannot verify the anchor.
+ *
+ * This function checks on the transaction outcome:
+ * 1. The transaction is a RegisterData transaction
+ * 2. The registered anchor hash matches the computed hash of the request
+ *
+ * @param verificationRequest - The request to verify against
+ * @param transaction - The block item status where the anchor is present in
+ *
+ * @throws Error if the transaction status is `Received`, the transaction outcome has a wrong type, or a hash mismatch.
+ */
 function verifyAnchorInTransactionOutcomes(
     verificationRequest: VerificationRequestV1,
     transaction: BlockItemStatus
@@ -250,7 +277,8 @@ function verifyAnchorInTransactionOutcomes(
  * Verifies that a verification request's anchor has been properly registered on-chain.
  *
  * This function checks that:
- * 1. The transaction referenced has at least the `minTransactionStatus`.
+ * 1. The given transaction referenced has at least the `minTransactionStatus`.
+ * If the input parameter is not present, the given transaction has at least the `TransactionStatusEnum.Finalized`.
  * 2. The transaction is a RegisterData transaction
  * 3. The registered anchor hash matches the computed hash of the request
  *
@@ -272,7 +300,7 @@ export async function verifyAnchor(
 
     if (actualRank < requiredRank) {
         throw new Error(
-            `Audit anchor transaction status is '${transaction.status}', ` +
+            `Verification request anchor transaction status is '${transaction.status}', ` +
                 `but must be at least '${minTransactionStatus}'.`
         );
     }

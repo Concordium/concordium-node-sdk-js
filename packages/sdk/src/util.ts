@@ -1,6 +1,6 @@
 import { Buffer } from 'buffer/index.js';
 
-import { AccountTransactionSignature, HexString, IpAddressString } from './types.js';
+import { AccountTransactionSignature, HexString, IpAddressString, TransactionStatusEnum } from './types.js';
 
 /**
  * Replaces a string in a JSON string with the same string as a
@@ -19,6 +19,16 @@ export function stringToInt(jsonStruct: string, keys: string[]): string {
     }
     return result;
 }
+
+/**
+ * Transaction statuses in chronological order: a transaction is first received by the node,
+ * then committed, and finally finalized on-chain.
+ */
+export const TRANSACTION_STATUS_ORDER: Record<TransactionStatusEnum, number> = {
+    [TransactionStatusEnum.Received]: 0,
+    [TransactionStatusEnum.Committed]: 1,
+    [TransactionStatusEnum.Finalized]: 2,
+};
 
 /**
  * Checks if the input string is a valid hexadecimal string.

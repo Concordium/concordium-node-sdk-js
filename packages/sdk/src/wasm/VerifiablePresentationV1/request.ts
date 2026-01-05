@@ -12,7 +12,6 @@ import {
     ConcordiumGRPCClient,
     HexString,
     RegisterDataPayload,
-    TRANSACTION_STATUS_ORDER,
     TransactionKindString,
     TransactionStatusEnum,
     TransactionSummaryType,
@@ -22,6 +21,7 @@ import {
     signTransaction,
 } from '../../index.js';
 import { DataBlob, SequenceNumber, TransactionExpiry, TransactionHash } from '../../types/index.js';
+import { TRANSACTION_STATUS_ORDER } from '../../util.js';
 import { AccountStatementBuild } from '../../web3-id/proofs.js';
 import { AtomicStatementV2, DIDString, IDENTITY_SUBJECT_SCHEMA, IdentityProviderDID } from '../../web3-id/types.js';
 import { AnchorTransactionMetadata, GivenContextJSON, givenContextFromJSON, givenContextToJSON } from './internal.js';
@@ -290,19 +290,23 @@ function verifyAnchorInTransactionOutcomes(
  *
  * @param verificationRequest - The verification request containing the transaction reference
  * @param grpc - The gRPC client for blockchain queries
- * @param minTransactionStatus - An optional minimum status the anchor transaction must reach where `committed` or `finalized` can be choosen. The transaction status progresses as: `received` → `committed` → `finalized`.
+ * @param minTransactionStatus - Optional minimum transaction status required for verification.
+ * Defaults to `TransactionStatusEnum.Finalized`. Allowed values are `Committed` and `Finalized`.
+ * Transaction statuses in chronological order: `received` → `committed` → `finalized`.
  * @returns The transaction outcome if verification succeeds
  * @throws Error if the transaction is not finalized, has wrong type, or hash mismatch
  */
 export async function verifyAnchor(
     verificationRequest: VerificationRequestV1,
     grpc: ConcordiumGRPCClient,
-    minTransactionStatus?: TransactionStatusEnum.Committed | TransactionStatusEnum.Finalized
+    minTransactionStatus:
+        | TransactionStatusEnum.Committed
+        | TransactionStatusEnum.Finalized = TransactionStatusEnum.Finalized
 ): Promise<BlockItemSummaryInBlock> {
     const transaction = await grpc.getBlockItemStatus(verificationRequest.transactionRef);
 
     const actualRank = TRANSACTION_STATUS_ORDER[transaction.status];
-    const requiredRank = TRANSACTION_STATUS_ORDER[minTransactionStatus ?? TransactionStatusEnum.Finalized];
+    const requiredRank = TRANSACTION_STATUS_ORDER[minTransactionStatus];
 
     if (actualRank < requiredRank) {
         throw new Error(

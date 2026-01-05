@@ -3,7 +3,7 @@
 ## Unreleased
 
 - Ensure proper `accountCredential` verification by adding missing `await` in async function, preventing potential bypass.
-- Add an optional `minTransactionStatus` parameter to the `VerificationRequestV1.verifyAnchor` and `VerificationAuditRecordV1.verifyAnchor` functions which specifies the minimum transaction status `committed` or `finalized` that the anchor transaction must reach.
+- Add an optional `minTransactionStatus` parameter to the `VerificationRequestV1.verifyAnchor` function which specifies the minimum transaction status `committed` or `finalized` that the anchor transaction must reach.
 
 ## 11.1.0-alpha.7
 

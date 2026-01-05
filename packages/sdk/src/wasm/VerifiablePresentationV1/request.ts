@@ -21,7 +21,7 @@ import {
     signTransaction,
 } from '../../index.js';
 import { DataBlob, SequenceNumber, TransactionExpiry, TransactionHash } from '../../types/index.js';
-import { TRANSACTION_STATUS_ORDER } from '../../util.js';
+import { getTransactionStatusRank } from '../../util.js';
 import { AccountStatementBuild } from '../../web3-id/proofs.js';
 import { AtomicStatementV2, DIDString, IDENTITY_SUBJECT_SCHEMA, IdentityProviderDID } from '../../web3-id/types.js';
 import { AnchorTransactionMetadata, GivenContextJSON, givenContextFromJSON, givenContextToJSON } from './internal.js';
@@ -305,8 +305,8 @@ export async function verifyAnchor(
 ): Promise<BlockItemSummaryInBlock> {
     const transaction = await grpc.getBlockItemStatus(verificationRequest.transactionRef);
 
-    const actualRank = TRANSACTION_STATUS_ORDER[transaction.status];
-    const requiredRank = TRANSACTION_STATUS_ORDER[minTransactionStatus];
+    const actualRank = getTransactionStatusRank(transaction.status);
+    const requiredRank = getTransactionStatusRank(minTransactionStatus);
 
     if (actualRank < requiredRank) {
         throw new Error(

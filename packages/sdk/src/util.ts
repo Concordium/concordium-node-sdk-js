@@ -24,11 +24,16 @@ export function stringToInt(jsonStruct: string, keys: string[]): string {
  * Transaction statuses in chronological order: a transaction is first received by the node,
  * then committed, and finally finalized on-chain.
  */
-export const TRANSACTION_STATUS_ORDER: Record<TransactionStatusEnum, number> = {
-    [TransactionStatusEnum.Received]: 0,
-    [TransactionStatusEnum.Committed]: 1,
-    [TransactionStatusEnum.Finalized]: 2,
-};
+export function getTransactionStatusRank(status: TransactionStatusEnum): number {
+    switch (status) {
+        case TransactionStatusEnum.Received:
+            return 0;
+        case TransactionStatusEnum.Committed:
+            return 1;
+        case TransactionStatusEnum.Finalized:
+            return 2;
+    }
+}
 
 /**
  * Checks if the input string is a valid hexadecimal string.

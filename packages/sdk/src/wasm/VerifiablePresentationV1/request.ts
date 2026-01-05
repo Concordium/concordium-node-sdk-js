@@ -7,6 +7,8 @@ import {
     AccountTransactionHeader,
     AccountTransactionType,
     AttributeKey,
+    BlockItemStatus,
+    BlockItemSummaryInBlock,
     ConcordiumGRPCClient,
     HexString,
     RegisterDataPayload,
@@ -19,6 +21,7 @@ import {
     signTransaction,
 } from '../../index.js';
 import { DataBlob, SequenceNumber, TransactionExpiry, TransactionHash } from '../../types/index.js';
+import { getTransactionStatusRank } from '../../util.js';
 import { AccountStatementBuild } from '../../web3-id/proofs.js';
 import { AtomicStatementV2, DIDString, IDENTITY_SUBJECT_SCHEMA, IdentityProviderDID } from '../../web3-id/types.js';
 import { AnchorTransactionMetadata, GivenContextJSON, givenContextFromJSON, givenContextToJSON } from './internal.js';
@@ -194,39 +197,125 @@ export function decodeAnchor(cbor: Uint8Array): Anchor {
 }
 
 /**
- * Verifies that a verification request's anchor has been properly registered on-chain.
+ * Verifies that a verification request anchor has been properly registered on-chain.
  *
  * This function checks that:
- * 1. The transaction referenced in the request is finalized
- * 2. The transaction is a RegisterData transaction
- * 3. The registered anchor hash matches the computed hash of the request
+ * 1. The transaction is a RegisterData transaction
+ * 2. The registered anchor hash matches the computed hash of the request
  *
- * @param verificationRequest - The verification request containing the transaction reference
- * @param grpc - The gRPC client for blockchain queries
- * @returns The transaction outcome if verification succeeds
- * @throws Error if the transaction is not finalized, has wrong type, or hash mismatch
+ * @param verificationRequest - The request to verify against
+ * @param blockItemSummary - The block item summary where the anchor is present in
+ *
+ * @throws Error if the transaction has a wrong type, or a hash mismatch.
  */
-export async function verifyAnchor(verificationRequest: VerificationRequestV1, grpc: ConcordiumGRPCClient) {
-    const transaction = await grpc.getBlockItemStatus(verificationRequest.transactionRef);
-    if (transaction.status !== TransactionStatusEnum.Finalized) {
-        throw new Error('presentation request anchor transaction not finalized');
-    }
-    const { summary } = transaction.outcome;
+function verifyAnchorInTransactionOutcome(
+    verificationRequest: VerificationRequestV1,
+    blockItemSummary: BlockItemSummaryInBlock
+) {
+    const { summary } = blockItemSummary;
     if (
         !isKnown(summary) ||
         summary.type !== TransactionSummaryType.AccountTransaction ||
         summary.transactionType !== TransactionKindString.RegisterData
     ) {
-        throw new Error('Unexpected transaction type found for presentation request anchor transaction');
+        throw new Error('Unexpected transaction type found for request anchor transaction');
     }
 
     const expectedAnchorHash = computeAnchorHash(verificationRequest.context, verificationRequest.subjectClaims);
     const transactionAnchor = decodeAnchor(Buffer.from(summary.dataRegistered.data, 'hex'));
     if (Buffer.from(expectedAnchorHash).toString('hex') !== Buffer.from(transactionAnchor.hash).toString('hex')) {
-        throw new Error('presentation anchor verification failed.');
+        throw new Error('Request anchor hash verification failed.');
+    }
+}
+
+/**
+ * Verifies that a verification request anchor has been properly registered on-chain.
+ * If the given transaction referenced has a status `TransactionStatusEnum.Committed`, this function verifies that at least one of the transaction outcomes satisfies all checks.
+ * If the given transaction has a status `TransactionStatusEnum.Finalized`, this function verifies that the transaction outcome satisfies all checks.
+ * If the given transaction has a status `TransactionStatusEnum.Received`, this function cannot verify the anchor.
+ *
+ * This function checks on the transaction outcome:
+ * 1. The transaction is a RegisterData transaction
+ * 2. The registered anchor hash matches the computed hash of the request
+ *
+ * @param verificationRequest - The request to verify against
+ * @param transaction - The block item status where the anchor is present in
+ *
+ * @throws Error if the transaction status is `Received`, the transaction outcome has a wrong type, or a hash mismatch.
+ */
+function verifyAnchorInTransactionOutcomes(
+    verificationRequest: VerificationRequestV1,
+    transaction: BlockItemStatus
+): BlockItemSummaryInBlock {
+    switch (transaction.status) {
+        case TransactionStatusEnum.Committed: {
+            // Find at least one outcome that satisfies all checks
+            const matchingOutcome = transaction.outcomes.find((blockItemSummary) => {
+                try {
+                    verifyAnchorInTransactionOutcome(verificationRequest, blockItemSummary);
+                    return true;
+                } catch {
+                    return false;
+                }
+            });
+
+            if (!matchingOutcome) {
+                throw new Error(
+                    'No outcome found in committed transaction outcomes that satisfies all anchor verification conditions.'
+                );
+            }
+
+            return matchingOutcome;
+        }
+
+        case TransactionStatusEnum.Finalized: {
+            verifyAnchorInTransactionOutcome(verificationRequest, transaction.outcome);
+            return transaction.outcome;
+        }
+
+        case TransactionStatusEnum.Received: {
+            throw new Error('Verification of request anchor transaction status `received` is not possible.');
+        }
+    }
+}
+
+/**
+ * Verifies that a verification request's anchor has been properly registered on-chain.
+ *
+ * This function checks that:
+ * 1. The given transaction referenced has at least the `minTransactionStatus`.
+ * If the input parameter is not present, the given transaction has at least the `TransactionStatusEnum.Finalized`.
+ * 2. The transaction is a RegisterData transaction
+ * 3. The registered anchor hash matches the computed hash of the request
+ *
+ * @param verificationRequest - The verification request containing the transaction reference
+ * @param grpc - The gRPC client for blockchain queries
+ * @param minTransactionStatus - Optional minimum transaction status required for verification.
+ * Defaults to `TransactionStatusEnum.Finalized`. Allowed values are `Committed` and `Finalized`.
+ * Transaction statuses in chronological order: `received` → `committed` → `finalized`.
+ * @returns The transaction outcome if verification succeeds
+ * @throws Error if the transaction is not finalized, has wrong type, or hash mismatch
+ */
+export async function verifyAnchor(
+    verificationRequest: VerificationRequestV1,
+    grpc: ConcordiumGRPCClient,
+    minTransactionStatus:
+        | TransactionStatusEnum.Committed
+        | TransactionStatusEnum.Finalized = TransactionStatusEnum.Finalized
+): Promise<BlockItemSummaryInBlock> {
+    const transaction = await grpc.getBlockItemStatus(verificationRequest.transactionRef);
+
+    const actualRank = getTransactionStatusRank(transaction.status);
+    const requiredRank = getTransactionStatusRank(minTransactionStatus);
+
+    if (actualRank < requiredRank) {
+        throw new Error(
+            `Verification request anchor transaction status is '${transaction.status}', ` +
+                `but must be at least '${minTransactionStatus}'.`
+        );
     }
 
-    return transaction.outcome;
+    return verifyAnchorInTransactionOutcomes(verificationRequest, transaction);
 }
 
 /**

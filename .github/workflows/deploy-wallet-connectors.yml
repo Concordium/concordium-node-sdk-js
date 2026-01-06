@@ -109,7 +109,7 @@ jobs:
         run: test "${{ steps.get_tag.outputs.tag }}" = "$(jq -r ".version" packages/wallet-connectors/package.json)" || exit 1
 
       - name: Get build-output
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           path: packages/wallet-connectors
           name: build-release

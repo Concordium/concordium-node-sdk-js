@@ -87,7 +87,7 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
     const payload: SimpleTransferPayload | SimpleTransferWithMemoPayload = cli.flags.memo
         ? { memo: new DataBlob(Buffer.from(cli.flags.memo, 'hex')), amount, toAddress }
         : { toAddress, amount };
-    const transaction = Transaction.transfer(payload).addMetadata(header);
+    const transaction = Transaction.transfer(payload).addMetadata(header).build();
 
     // #region documentation-snippet-sign-transaction
     const signer = buildAccountSigner(walletExport);

@@ -2,6 +2,28 @@
 
 ## Unreleased
 
+## 12.0.0-devnet-p10.? (Unreleased)
+
+## 12.0.0-devnet-p10.0
+
+### Added
+
+- New account transaction format `AccountTransactionV1` and support for creating transactions of this format through the 
+  `Transaction` API. 
+  - For now, this only adds support for sponsoring transactions, i.e. having another party than the
+    "sender" of the transaction pay for the transaction fees.
+- `Transaction` API has been extended to support building sponsored transactions with the functions
+  - `addSponsor` and `sponsorable` on the transaction builder
+  - `Transaction.sponsor` for adding sponsor signatures to sponsorable transactions.
+- Extended `AccountTransactionSummary` with optional sponsor details in case the transaction summary details a sponsored
+  transaction.
+
+### Breaking changes
+
+- `Transaction` builder API now requires invoking `.build` before being able to sign a transaction.
+
+## 12.0.0-alpha.? (Unreleased)
+
 ### Added
 
 - `UpdateCredentialKeysPayload` and corresponding deserialize and serialize functions implemented
@@ -36,7 +58,8 @@
 - Deserialize function for `UpdateContractPayload` implemented instead of throwing an exception of not supporting deserialize
 - Deserialize function for `UpdateCredentialsPayload` implemented instead of throwing an exception of not supporting deserialize
 - `deserializeBlockItem` to deserialize block items from their encoding as received by concordium nodes.
-- Move out `CdiRandomness` from `CredentialDeploymentPayload` to ensure payload is as per bluepaper and still support wallet in constructing credential information with CdiRandomness
+- Move out `CdiRandomness` from `CredentialDeploymentPayload` to ensure payload is as per bluepaper and still support wallet 
+  in constructing credential information with CdiRandomness.
 
 #### `Transaction` API
 

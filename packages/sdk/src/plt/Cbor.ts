@@ -95,19 +95,19 @@ export function toHexString(cbor: Cbor): HexString {
 
 /**
  * Convert CBOR data from its protobuf encoding.
- * @param {Proto.CBor} cbor The protobuf encoding.
+ * @param {Proto.Cbor} cbor The protobuf encoding.
  * @returns {Cbor}
  */
-export function fromProto(cbor: Proto.CBor): Cbor {
+export function fromProto(cbor: Proto.Cbor): Cbor {
     return fromBuffer(cbor.value);
 }
 
 /**
  * Convert CBOR data into its protobuf encoding.
  * @param {Cbor} cbor module event.
- * @returns {Proto.CBor} The protobuf encoding.
+ * @returns {Proto.Cbor} The protobuf encoding.
  */
-export function toProto(cbor: Cbor): Proto.CBor {
+export function toProto(cbor: Cbor): Proto.Cbor {
     return {
         value: cbor.bytes,
     };

@@ -4,7 +4,7 @@
 import type { Known, Upward } from './grpc/index.js';
 import type { Cbor, TokenId } from './plt/index.js';
 import type { TokenAccountInfo } from './plt/types.js';
-import { AccountTransactionV0 } from './transactions/index.js';
+import { AccountTransactionV0, AccountTransactionV1 } from './transactions/index.js';
 import type * as AccountAddress from './types/AccountAddress.js';
 import type * as BlockHash from './types/BlockHash.js';
 import type * as CcdAmount from './types/CcdAmount.js';
@@ -1344,6 +1344,7 @@ export enum BlockItemKind {
     AccountTransactionKind = 0,
     CredentialDeploymentKind = 1,
     UpdateInstructionKind = 2,
+    AccountTransactionV1Kind = 3,
 }
 
 /**
@@ -2091,21 +2092,28 @@ export type HealthCheckResponse =
           message?: string;
       };
 
+export type BlockItemAccountTransaction = {
+    kind: BlockItemKind.AccountTransactionKind;
+    transaction: AccountTransactionV0.Type;
+};
+
+export type BlockItemCredentialDeployment = {
+    kind: BlockItemKind.CredentialDeploymentKind;
+    transaction: {
+        credential: TypedCredentialDeployment;
+        expiry: number;
+    };
+};
+
+export type BlockItemAccountTransactionV1 = {
+    kind: BlockItemKind.AccountTransactionV1Kind;
+    transaction: AccountTransactionV1.Type;
+};
+
 /**
  * Type representing an item which is included in a block, such as account transactions, chain updates or deployments of new credentials.
  */
-export type BlockItem =
-    | {
-          kind: BlockItemKind.AccountTransactionKind;
-          transaction: AccountTransactionV0.Type;
-      }
-    | {
-          kind: BlockItemKind.CredentialDeploymentKind;
-          transaction: {
-              credential: TypedCredentialDeployment;
-              expiry: number;
-          };
-      };
+export type BlockItem = BlockItemAccountTransaction | BlockItemCredentialDeployment | BlockItemAccountTransactionV1;
 
 /**
  * The status of a cooldown. When stake is removed from a baker or delegator

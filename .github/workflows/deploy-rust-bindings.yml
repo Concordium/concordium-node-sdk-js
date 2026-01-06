@@ -52,7 +52,7 @@ jobs:
 
       - name: Cache dependencies
         id: yarn-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ./node_modules
@@ -65,7 +65,7 @@ jobs:
 
       - name: Cache GRPC
         id: cache-grpc
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ./packages/sdk/src/grpc-api

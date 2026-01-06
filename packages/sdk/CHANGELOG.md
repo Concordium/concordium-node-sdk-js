@@ -27,6 +27,8 @@
 ### Added
 
 - `UpdateCredentialKeysPayload` and corresponding deserialize and serialize functions implemented
+- `ConfigureBakerPayload` deserialization supported
+- Deserialize function for `ConfigureDelegationPayload` implemented instead of throwing an exception of not supporting deserialize
 
 ## 12.0.0-alpha.3
 

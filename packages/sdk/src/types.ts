@@ -1078,6 +1078,13 @@ export enum DelegationTargetType {
     Baker = 'Baker',
 }
 
+/**
+ * enum to help in mapping the tag within DelegationTargetType in ConfigureDelegation
+ */
+export enum DelegationTargetTypeNumeric {
+    Passive = 0,
+    Baker = 1,
+}
 export interface DelegationTargetPassiveDelegation {
     delegateType: DelegationTargetType.PassiveDelegation;
 }

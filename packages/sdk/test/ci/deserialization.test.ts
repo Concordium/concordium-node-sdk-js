@@ -13,16 +13,20 @@ import {
     CIS2,
     Cbor,
     CcdAmount,
+    ConfigureBakerPayload,
+    ConfigureDelegationPayload,
     ContractAddress,
     ContractName,
     CredentialPublicKeys,
     CredentialRegistrationId,
     DataBlob,
+    DelegationTargetType,
     DeployModulePayload,
     Energy,
     IndexedCredentialDeploymentInfo,
     InitContractInput,
     ModuleReference,
+    OpenStatus,
     Parameter,
     ReceiveName,
     RegisterDataPayload,
@@ -316,6 +320,88 @@ test('test deserialize UpdateCredentialKeys', () => {
     const transaction: AccountTransaction = {
         header,
         type: AccountTransactionType.UpdateCredentialKeys,
+        payload,
+    };
+    deserializeAccountTransactionBase(transaction);
+});
+
+test('test deserialize ConfigureBaker', () => {
+    const payload: ConfigureBakerPayload = {
+        stake: CcdAmount.fromMicroCcd(1000),
+        restakeEarnings: true,
+        openForDelegation: OpenStatus.OpenForAll,
+
+        keys: {
+            electionVerifyKey: 'aa'.repeat(32),
+            proofElection: 'bb'.repeat(64),
+            signatureVerifyKey: 'cc'.repeat(32),
+            proofSig: 'dd'.repeat(64),
+            aggregationVerifyKey: 'ee'.repeat(96),
+            proofAggregation: 'ff'.repeat(64),
+        },
+
+        metadataUrl: 'g'.repeat(16),
+        transactionFeeCommission: 10,
+        bakingRewardCommission: 5,
+        finalizationRewardCommission: 2,
+        suspended: true,
+    };
+    const transaction: AccountTransaction = {
+        header,
+        type: AccountTransactionType.ConfigureBaker,
+        payload,
+    };
+    deserializeAccountTransactionBase(transaction);
+});
+
+test('test deserialize ConfigureDelegation', () => {
+    const payload: ConfigureDelegationPayload = {
+        stake: CcdAmount.fromMicroCcd(0),
+
+        restakeEarnings: true,
+
+        delegationTarget: {
+            delegateType: DelegationTargetType.Baker,
+            bakerId: 1n,
+        },
+    };
+
+    const transaction: AccountTransaction = {
+        header,
+        type: AccountTransactionType.ConfigureDelegation,
+        payload,
+    };
+    deserializeAccountTransactionBase(transaction);
+});
+
+test('test deserialize ConfigureDelegation with no restake', () => {
+    const payload: ConfigureDelegationPayload = {
+        stake: CcdAmount.fromMicroCcd(0),
+
+        restakeEarnings: false,
+
+        delegationTarget: {
+            delegateType: DelegationTargetType.Baker,
+            bakerId: 1n,
+        },
+    };
+
+    const transaction: AccountTransaction = {
+        header,
+        type: AccountTransactionType.ConfigureDelegation,
+        payload,
+    };
+    deserializeAccountTransactionBase(transaction);
+});
+
+test('test deserialize ConfigureDelegation with no delegation', () => {
+    const payload: ConfigureDelegationPayload = {
+        stake: CcdAmount.fromMicroCcd(0),
+    };
+
+    const transaction: AccountTransaction = {
+        header,
+        type: AccountTransactionType.ConfigureDelegation,
         payload,
     };
     deserializeAccountTransactionBase(transaction);

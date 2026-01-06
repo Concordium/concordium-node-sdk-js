@@ -407,3 +407,33 @@ test('UpdateCredentialKeysPayload serializes to JSON correctly', async () => {
 
     expect(handler.fromJSON(expected)).toEqual(payload);
 });
+
+test('ConfigureDelegationPayload serializes to JSON correctly', async () => {
+    const payload: ConfigureDelegationPayload = {
+        stake: CcdAmount.fromMicroCcd(1),
+
+        restakeEarnings: true,
+
+        delegationTarget: {
+            delegateType: DelegationTargetType.Baker,
+            bakerId: 1n,
+        },
+    };
+
+    const handler = new ConfigureDelegationHandler();
+    const json = handler.toJSON(payload);
+
+    const expected = {
+        stake: '1',
+        restakeEarnings: true,
+
+        delegationTarget: {
+            delegateType: DelegationTargetType.Baker,
+            bakerId: 1n,
+        },
+    };
+
+    expect(json).toEqual(expected);
+
+    expect(handler.fromJSON(expected)).toEqual(payload);
+});

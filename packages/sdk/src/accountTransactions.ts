@@ -6,7 +6,7 @@ import {
     deserializeThreshold,
 } from './deserialization.js';
 import { Cursor } from './deserializationHelpers.js';
-import { Upward, isKnown } from './index.js';
+import { DelegationTargetTypeNumeric, Upward, isKnown } from './index.js';
 import { Cbor, TokenId, TokenOperationType } from './plt/index.js';
 import {
     AccountTransactionInput,
@@ -29,6 +29,7 @@ import {
     encodeWord8FromString,
     encodeWord32,
     encodeWord64,
+    mapTagToType,
     packBufferWithWord8Length,
     packBufferWithWord16Length,
     packBufferWithWord32Length,
@@ -659,6 +660,30 @@ export interface ConfigureBakerPayloadJSON {
 export class ConfigureBakerHandler
     implements AccountTransactionHandler<ConfigureBakerPayload, ConfigureBakerPayloadJSON, ConfigureBakerPayload>
 {
+    //support version 8 only onwards
+    HAS_CAPITAL = 1 << 0; // bit 0
+    HAS_RESTAKE_EARNINGS = 1 << 1; // bit 1
+    HAS_OPEN_FOR_DELEGATION = 1 << 2; // bit 2
+    HAS_KEYS_WITH_PROOF = 1 << 3; // bit 3
+    HAS_METADATA_URL = 1 << 4; // bit 4
+    HAS_TRANSACTION_FEE_COMMISSION = 1 << 5; // bit 5
+    HAS_BAKING_REWARD_COMMISSION = 1 << 6; // bit 6
+    HAS_FINALIZATION_REWARD_COMMISSION = 1 << 7; // bit 7
+    HAS_SUSPENDED = 1 << 8; // bit 8
+
+    ALLOWED_BITS =
+        this.HAS_CAPITAL |
+        this.HAS_RESTAKE_EARNINGS |
+        this.HAS_OPEN_FOR_DELEGATION |
+        this.HAS_KEYS_WITH_PROOF |
+        this.HAS_METADATA_URL |
+        this.HAS_TRANSACTION_FEE_COMMISSION |
+        this.HAS_BAKING_REWARD_COMMISSION |
+        this.HAS_FINALIZATION_REWARD_COMMISSION |
+        this.HAS_SUSPENDED;
+
+    VALIDATION_MASK = 0xffff - this.ALLOWED_BITS;
+
     getBaseEnergyCost(payload: ConfigureBakerPayload): bigint {
         if (payload.keys) {
             return 4050n;
@@ -671,8 +696,78 @@ export class ConfigureBakerHandler
         return serializeConfigureBakerPayload(payload);
     }
 
-    deserialize(): ConfigureBakerPayload {
-        throw new Error('deserialize not supported');
+    deserialize(serializedPayload: Cursor): ConfigureBakerPayload {
+        const serializedBitmap = serializedPayload.read(2).readUInt16BE(0);
+
+        if ((serializedBitmap & this.VALIDATION_MASK) !== 0)
+            throw new Error('Found unsupported bits in bitmap, only version 8 onwards');
+
+        const hasCapital = (serializedBitmap & this.HAS_CAPITAL) !== 0;
+        const hasRestakeEarnings = (serializedBitmap & this.HAS_RESTAKE_EARNINGS) !== 0;
+        const hasOpenForDelegation = (serializedBitmap & this.HAS_OPEN_FOR_DELEGATION) !== 0;
+        const hasKeysWithProof = (serializedBitmap & this.HAS_KEYS_WITH_PROOF) !== 0;
+        const hasMetadataUrl = (serializedBitmap & this.HAS_METADATA_URL) !== 0;
+        const hasTransactionFeeCommission = (serializedBitmap & this.HAS_TRANSACTION_FEE_COMMISSION) !== 0;
+        const hasBakingRewardCommission = (serializedBitmap & this.HAS_BAKING_REWARD_COMMISSION) !== 0;
+        const hasFinalizationRewardCommission = (serializedBitmap & this.HAS_FINALIZATION_REWARD_COMMISSION) !== 0;
+        const hasSuspended = (serializedBitmap & this.HAS_SUSPENDED) !== 0;
+
+        const result: ConfigureBakerPayload = {};
+
+        const capital = hasCapital
+            ? CcdAmount.fromMicroCcd(serializedPayload.read(8).readBigUInt64BE(0))
+            : CcdAmount.zero();
+        result.stake = capital;
+
+        const restakeEarnings = hasRestakeEarnings ? serializedPayload.read(1).readUInt8(0) !== 0 : false;
+        result.restakeEarnings = restakeEarnings;
+
+        const openForDelegation = hasOpenForDelegation ? serializedPayload.read(1).readUInt8(0) : undefined;
+        if (openForDelegation !== undefined) {
+            result.openForDelegation = openForDelegation;
+        }
+
+        if (hasKeysWithProof) {
+            if (!result.keys) {
+                result.keys = {} as BakerKeysWithProofs;
+            }
+            result.keys.electionVerifyKey = serializedPayload.read(32).toString('hex');
+
+            result.keys.proofElection = serializedPayload.read(64).toString('hex');
+
+            result.keys.signatureVerifyKey = serializedPayload.read(32).toString('hex');
+
+            result.keys.proofSig = serializedPayload.read(64).toString('hex');
+
+            result.keys.aggregationVerifyKey = serializedPayload.read(96).toString('hex');
+
+            result.keys.proofAggregation = serializedPayload.read(64).toString('hex');
+        }
+
+        if (hasMetadataUrl) {
+            const urlLength = serializedPayload.read(2).readUInt16BE(0);
+
+            const url = serializedPayload.read(urlLength);
+            result.metadataUrl = url.toString();
+        }
+
+        if (hasTransactionFeeCommission) {
+            result.transactionFeeCommission = serializedPayload.read(4).readUInt32BE(0);
+        }
+
+        if (hasBakingRewardCommission) {
+            result.bakingRewardCommission = serializedPayload.read(4).readUInt32BE(0);
+        }
+
+        if (hasFinalizationRewardCommission) {
+            result.finalizationRewardCommission = serializedPayload.read(4).readUInt32BE(0);
+        }
+
+        if (hasSuspended) {
+            result.suspended = serializedPayload.read(1).readUInt8(0) !== 0;
+        }
+
+        return result;
     }
 
     toJSON(payload: ConfigureBakerPayload): ConfigureBakerPayloadJSON {
@@ -714,6 +809,12 @@ export class ConfigureDelegationHandler
             ConfigureDelegationPayload
         >
 {
+    ALLOWED_BITS = 0x0007;
+    VALIDATION_MASK = 0xffff - this.ALLOWED_BITS;
+    HAS_DELEGATION_TARGET = 0x0004;
+    HAS_RESTAKE_EARNINGS = 0x0002;
+    HAS_CAPITAL = 0x0001;
+
     getBaseEnergyCost(): bigint {
         return 300n;
     }
@@ -722,8 +823,40 @@ export class ConfigureDelegationHandler
         return serializeConfigureDelegationPayload(payload);
     }
 
-    deserialize(): ConfigureDelegationPayload {
-        throw new Error('deserialize not supported');
+    deserialize(serializedPayload: Cursor): ConfigureDelegationPayload {
+        const serializedBitmap = serializedPayload.read(2).readUInt16BE(0);
+
+        if ((serializedBitmap & this.VALIDATION_MASK) !== 0) throw new Error('Found unsupported bits in bitmap');
+
+        const hasDelegationTarget = (serializedBitmap & this.HAS_DELEGATION_TARGET) !== 0;
+        const hasRestakeEarnings = (serializedBitmap & this.HAS_RESTAKE_EARNINGS) !== 0;
+        const hasCapital = (serializedBitmap & this.HAS_CAPITAL) !== 0;
+
+        const capital = hasCapital
+            ? CcdAmount.fromMicroCcd(serializedPayload.read(8).readBigUInt64BE(0))
+            : CcdAmount.zero();
+
+        const restakeEarnings = hasRestakeEarnings ? serializedPayload.read(1).readUInt8(0) !== 0 : false;
+
+        let delegationTarget;
+        if (hasDelegationTarget) {
+            const tag = serializedPayload.read(1).readUInt8(0);
+
+            const tagMapping = DelegationTargetTypeNumeric[tag];
+            if (tagMapping === undefined) throw new Error(`Unknown tag id ${tag}`);
+
+            const validatorId = serializedPayload.read(8).readBigUInt64BE(0);
+            delegationTarget = {
+                delegateType: mapTagToType[tag],
+                bakerId: validatorId,
+            };
+        }
+
+        return {
+            ...(hasCapital && { stake: capital }),
+            ...(hasRestakeEarnings && { restakeEarnings }),
+            ...(hasDelegationTarget && { delegationTarget }),
+        };
     }
 
     toJSON(payload: ConfigureDelegationPayload): ConfigureDelegationPayloadJSON {

@@ -144,7 +144,7 @@ jobs:
           key: ${{ runner.os }}-yarn
 
       - name: Get build-debug
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           path: packages
           name: build-debug
@@ -175,7 +175,7 @@ jobs:
           key: ${{ runner.os }}-yarn
 
       - name: Get build-debug
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           path: packages
           name: build-debug
@@ -207,7 +207,7 @@ jobs:
           key: ${{ runner.os }}-yarn
 
       - name: Get build-debug
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           path: packages
           name: build-debug
@@ -290,7 +290,7 @@ jobs:
           key: ${{ runner.os }}-yarn
 
       - name: Get build-debug
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           path: packages
           name: build-debug

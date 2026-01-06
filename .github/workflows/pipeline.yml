@@ -34,7 +34,7 @@ jobs:
 
       - name: Cache dependencies
         id: yarn-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ./node_modules
@@ -65,7 +65,7 @@ jobs:
 
       - name: Cache GRPC
         id: cache-grpc
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ./packages/sdk/src/grpc-api
@@ -73,7 +73,7 @@ jobs:
           restore-keys: ${{ runner.os }}-grpc
 
       - name: Cache WebPack
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ./packages/web/.webpack-cache
           # These two lines ensure that a fresh cache is generated after each run
@@ -81,7 +81,7 @@ jobs:
           restore-keys: ${{ runner.os }}-webpack
 
       - name: Restore dependencies
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: |
             ./node_modules
@@ -134,7 +134,7 @@ jobs:
           cache: yarn
 
       - name: Restore dependencies
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: |
             ./node_modules
@@ -165,7 +165,7 @@ jobs:
           cache: yarn
 
       - name: Restore dependencies
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: |
             ./node_modules
@@ -197,7 +197,7 @@ jobs:
           cache: yarn
 
       - name: Restore dependencies
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: |
             ./node_modules
@@ -229,7 +229,7 @@ jobs:
           cache: yarn
 
       - name: Restore dependencies
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: |
             ./node_modules
@@ -255,7 +255,7 @@ jobs:
           cache: yarn
 
       - name: Restore dependencies
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: |
             ./node_modules
@@ -280,7 +280,7 @@ jobs:
           cache: yarn
 
       - name: Restore dependencies
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: |
             ./node_modules

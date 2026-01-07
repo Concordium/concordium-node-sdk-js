@@ -688,13 +688,13 @@ export function getAccountTransactionHandler(
         case AccountTransactionType.Update:
             return new UpdateContractHandler();
         case AccountTransactionType.UpdateCredentials:
-            return new UpdateCredentialsHandler(); //TODO:
+            return new UpdateCredentialsHandler();
         case AccountTransactionType.RegisterData:
             return new RegisterDataHandler();
         case AccountTransactionType.ConfigureDelegation:
             return new ConfigureDelegationHandler();
         case AccountTransactionType.ConfigureBaker:
-            return new ConfigureBakerHandler(); //TODO
+            return new ConfigureBakerHandler();
         case AccountTransactionType.TokenUpdate:
             return new TokenUpdateHandler();
         default:

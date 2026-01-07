@@ -2,9 +2,19 @@
 
 ## Unreleased
 
+## 4.0.0
+
 ### Breaking changes
 
 - This package is now an ESM module.
+
+### Added
+
+- `create_presentation_v1` for creating v1 verifiable presentations.
+- `verify_presentation_v1` for verifying v1 verifiable presentations.
+- `create_verification_request_v1_anchor` for creating verification request anchors.
+- `compute_verification_request_v1_anchor_hash` for computing the hash included in a verification request anchor.
+- `create_verification_audit_v1_anchor` for creating verification audit anchors.
 
 ## 3.3.0
 

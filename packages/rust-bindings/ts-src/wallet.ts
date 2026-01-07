@@ -7,6 +7,6 @@ import wasmBase64 from '../lib/wallet/web/esm/index_bg.wasm';
 // Expected to resolve to base64 encoded bytes of wasm module
 
 const bytes = Buffer.from(wasmBase64, 'base64');
-initSync(bytes);
+initSync({ module: bytes });
 
 export * from '../lib/wallet/web/esm/index.js';

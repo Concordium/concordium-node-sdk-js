@@ -2,12 +2,48 @@
 
 ## Unreleased
 
+## 11.1.0
+
 ### Added
 
+- types `IdentityCredentialQualifier`, `IdentityCommitmentInput`, and `CredentialsInputsIdentity` which have been added
+  to the respective union types that reflect the possible variants.
+- helper functions `createIdentityCommitmentInput` and `createIdentityCommitmentInputWithHdWallet`
+- helper function `createIdentityStatementDID`
+- Type `RequestedStatement` for statements being requested.
+- Type `AtomicStatementV1` for statements part of a presentation.
+
+- types `VerifiablePresentationV1` and `VerifiablePresentationRequestV1` to be used with the new zero-knowledge proof
+  protocol
+  - `VerifiablePresentationRequestV1.createContext` and `VerifiablePresentationRequestV1.createSimpleContext` for
+    creating the presentation request context.
+  - `VerifiablePresentationRequestV1.claimsBuilder` for building presentation request statements
+  - `VerifiablePresentationRequestV1.createAndAnchor` which is a GRPC helper function for creating a verifiable presentation
+    request from a minimal set of values.
+  - `VerifiablePresentationV1.createFromAnchor` which is a GRPC helper function for creating a verifiable presentation
+  from a minimal set of values. This also creates the `VerifiablePresentation.Context` from the corresponding
+  `VerifiablePresentationRequestV1.Context`.
+  - `VerifiablePresentationV1.verify`, and the corresponding GRPC helper `VerifiablePresentationV1.verifyWithNode` for
+  verification of the proof.
+  - `VerificationRequestV1.verifyAnchor` function which verifies that the transaction ref of a given verification request
+    corresponds to an anchor registration of the internal data.
+  - `VerifiablePresentationV1.revealRequestedStatements` convenience function for converting requested statements into the claim statements, specifically extracting the attribute values from the chosen attributes of the ID object.
+  - `VerifiablePresentationV1.noRevealRequestedStatements` convenience function for converting requested statements into the claim statements, producing an error for requests of revealing an attribute.
+  - `VerifiablePresentationV1.createAccountClaims` and `VerifiablePresentationV1.createIdentityClaims` to build the
+    subject claims used as input for the `VerifiablePresentationV1.create...` functions.
+
+- types `VerificationAuditRecordV1` and `VerificationAuditRecordV1.Anchor` for creating audit records.
+  - `VerificationAuditRecordV1.create` is used to create an audit record
+  - `VerificationAuditRecordV1.registerAnchor` is a grpc helper used to register the anchor representation of the record
+    on chain.
+  - `VerificationAuditRecordV1.createAndAnchor` convenience function both creates a check audit record and registers
+    the corresponding anchor on-chain.
+  - `VerificationAuditRecordV1.verifyAnchor` function which verifies that a given transaction corresponds to an anchor
+    registration of a given audit record.
+  - `VerificationAuditRecord.createChecked` which creates a verification audit record while verifying the presentation in
+the context of the verification request.
 - deserialize function for DeployModulePayload implemented instead of throwing an exception of not supporting deserialize
-
 - deserialize function for InitContractPayload implemented instead of throwing an exception of not supporting deserialize
-
 - deserialize function for UpdateContractPayload implemented instead of throwing an exception of not supporting deserialize
 
 ## 11.0.0

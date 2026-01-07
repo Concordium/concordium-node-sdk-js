@@ -98,7 +98,7 @@ export function toHexString(cbor: Cbor): HexString {
  * @param {Proto.CBor} cbor The protobuf encoding.
  * @returns {Cbor}
  */
-export function fromProto(cbor: Proto.CBor): Cbor {
+export function fromProto(cbor: Proto.Cbor): Cbor {
     return fromBuffer(cbor.value);
 }
 
@@ -107,7 +107,7 @@ export function fromProto(cbor: Proto.CBor): Cbor {
  * @param {Cbor} cbor module event.
  * @returns {Proto.CBor} The protobuf encoding.
  */
-export function toProto(cbor: Cbor): Proto.CBor {
+export function toProto(cbor: Cbor): Proto.Cbor {
     return {
         value: cbor.bytes,
     };

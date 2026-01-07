@@ -1,0 +1,39 @@
+{
+    "type": "ConcordiumVerificationRequestV1",
+    "context": {
+        "type": "ConcordiumUnfilledContextInformationV1",
+        "given": [
+            {
+                "label": "Nonce",
+                "context": "0101010101010101010101010101010101010101010101010101010101010101"
+            },
+            {
+                "label": "ConnectionID",
+                "context": "0102010201020102010201020102010201020102010201020102010201020102"
+            },
+            {
+                "label": "ResourceID",
+                "context": "www.wineShop.com"
+            },
+            {
+                "label": "ContextString",
+                "context": "Wine payment"
+            }
+        ],
+        "requested": ["BlockHash"]
+    },
+    "subjectClaims": [
+        {
+            "type": "identity",
+            "source": ["identityCredential"],
+            "statements": [
+                {
+                    "type": "RevealAttribute",
+                    "attributeTag": "firstName"
+                }
+            ],
+            "issuers": ["did:ccd:testnet:idp:0", "did:ccd:testnet:idp:1", "did:ccd:testnet:idp:2"]
+        }
+    ],
+    "transactionRef": "0102030401020304010203040102030401020304010203040102030401020304"
+}

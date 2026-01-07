@@ -41,7 +41,10 @@
   - `VerificationAuditRecordV1.verifyAnchor` function which verifies that a given transaction corresponds to an anchor
     registration of a given audit record.
   - `VerificationAuditRecord.createChecked` which creates a verification audit record while verifying the presentation in
-    the context of the verification request.
+the context of the verification request.
+- deserialize function for DeployModulePayload implemented instead of throwing an exception of not supporting deserialize
+- deserialize function for InitContractPayload implemented instead of throwing an exception of not supporting deserialize
+- deserialize function for UpdateContractPayload implemented instead of throwing an exception of not supporting deserialize
 
 ## 11.0.0
 

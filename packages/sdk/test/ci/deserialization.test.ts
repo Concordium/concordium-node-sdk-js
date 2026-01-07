@@ -7,14 +7,26 @@ import {
     AccountTransactionType,
     BlockItemKind,
     CIS2,
+    Cbor,
     CcdAmount,
     ContractAddress,
+    ContractName,
     DataBlob,
+    DeployModulePayload,
+    Energy,
+    InitContractPayload,
+    ModuleReference,
+    Parameter,
+    ReceiveName,
     RegisterDataPayload,
     SequenceNumber,
     SimpleTransferPayload,
     SimpleTransferWithMemoPayload,
+    TokenId,
+    TokenOperation,
+    TokenUpdatePayload,
     TransactionExpiry,
+    UpdateContractPayload,
     tokenAddressFromBase58,
     tokenAddressToBase58,
 } from '../../src/index.js';
@@ -78,6 +90,54 @@ test('test deserialize registerData ', () => {
         data: new DataBlob(Buffer.from('00AB5303926810EE', 'hex')),
     };
     deserializeAccountTransactionBase(AccountTransactionType.RegisterData, payload);
+});
+
+test('test deserialize DeployModule ', () => {
+    const payload: DeployModulePayload = {
+        version: 1,
+        source: new Uint8Array([0x00, 0xab, 0x53, 0x03, 0x92, 0x68, 0x10, 0xee]),
+    };
+    deserializeAccountTransactionBase(AccountTransactionType.DeployModule, payload);
+});
+
+test('test deserialize InitContract ', () => {
+    const moduleRef = ModuleReference.fromHexString('44434352ddba724930d6b1b09cd58bd1fba6ad9714cf519566d5fe72d80da0d1');
+    const contractName = ContractName.fromStringUnchecked('weather');
+
+    const deserializePayload: InitContractPayload = {
+        amount: CcdAmount.zero(),
+        moduleRef: moduleRef,
+        initName: contractName,
+        param: Parameter.fromHexString('0a'),
+        maxContractExecutionEnergy: Energy.create(0),
+    };
+
+    deserializeAccountTransactionBase(AccountTransactionType.InitContract, deserializePayload);
+});
+
+test('test deserialize UpdateContract ', () => {
+    const deserializePayload: UpdateContractPayload = {
+        amount: CcdAmount.zero(),
+        address: ContractAddress.create(0, 1),
+        receiveName: ReceiveName.fromString('method.abc'),
+        message: Parameter.fromHexString('0a'),
+        maxContractExecutionEnergy: Energy.create(0),
+    };
+
+    deserializeAccountTransactionBase(AccountTransactionType.Update, deserializePayload);
+});
+
+test('test deserialize TokenUpdate ', () => {
+    const pause = {};
+    const pauseOperation = { pause } as TokenOperation;
+    //console.log(`Specified action:`, JSON.stringify(pauseOperation, null, 2));
+
+    const deserializePayload: TokenUpdatePayload = {
+        tokenId: TokenId.fromString('123ABCToken'),
+        operations: Cbor.encode([pauseOperation]),
+    };
+
+    deserializeAccountTransactionBase(AccountTransactionType.TokenUpdate, deserializePayload);
 });
 
 test('Expired transactions can be deserialized', () => {

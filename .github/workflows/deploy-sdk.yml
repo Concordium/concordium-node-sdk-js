@@ -29,7 +29,7 @@ jobs:
   build:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: 'recursive'
 
@@ -52,7 +52,7 @@ jobs:
 
       - name: Cache dependencies
         id: yarn-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ./node_modules
@@ -65,7 +65,7 @@ jobs:
 
       - name: Cache GRPC
         id: cache-grpc
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ./packages/sdk/src/grpc-api
@@ -83,7 +83,7 @@ jobs:
         run: yarn build:docs
 
       - name: Store build-release
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: build-release
           path: |
@@ -93,7 +93,7 @@ jobs:
             packages/sdk/README.md
 
       - name: Store typedoc
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: typedoc-build
           path: typedoc
@@ -109,7 +109,7 @@ jobs:
       version: ${{ steps.get_tag.outputs.tag }}
     steps:
       - name: Checkout sources
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           submodules: recursive
 
@@ -132,7 +132,7 @@ jobs:
           echo "npm_tag=$npm_tag" >> $GITHUB_OUTPUT
 
       - name: Get build-output
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: build-release
           path: packages/sdk
@@ -165,10 +165,10 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Get typedoc
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           path: typedoc
           name: typedoc-build

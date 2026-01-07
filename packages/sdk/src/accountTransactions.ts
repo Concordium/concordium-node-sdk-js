@@ -40,6 +40,7 @@ import {
 import * as AccountAddress from './types/AccountAddress.js';
 import * as CcdAmount from './types/CcdAmount.js';
 import { DataBlob } from './types/DataBlob.js';
+import * as InitName from './types/InitName.js';
 import * as Parameter from './types/Parameter.js';
 import * as ReceiveName from './types/ReceiveName.js';
 
@@ -204,8 +205,21 @@ export class DeployModuleHandler implements AccountTransactionHandler<DeployModu
         }
     }
 
-    deserialize(): DeployModulePayload {
-        throw new Error('deserialize not supported');
+    deserialize(serializePayload: Cursor): DeployModulePayload {
+        const moduleVersion = serializePayload.read(4); // version
+        const moduleLength = serializePayload.read(4)?.readUInt32BE(0); // length
+        const moduleSource = serializePayload.read(moduleLength); // wasm module
+
+        if (moduleVersion) {
+            return {
+                source: new Uint8Array(moduleSource),
+                version: moduleVersion.readUInt32BE(0),
+            };
+        } else {
+            return {
+                source: new Uint8Array(moduleSource),
+            };
+        }
     }
 
     toJSON(payload: DeployModulePayload): DeployModulePayloadJSON {
@@ -246,8 +260,26 @@ export class InitContractHandler implements AccountTransactionHandler<InitContra
         return Buffer.concat([serializedAmount, serializedModuleRef, serializedInitName, serializedParameters]);
     }
 
-    deserialize(): InitContractPayload {
-        throw new Error('deserialize not supported');
+    deserialize(serializePayload: Cursor): InitContractPayload {
+        const amount = serializePayload.read(8).readBigUInt64BE(0);
+        const moduleRef = serializePayload.read(32);
+
+        const initNameLength = serializePayload.read(2).readUInt16BE(0);
+        const initName = serializePayload.read(initNameLength);
+        const initNameAfterConversion = InitName.fromString(initName.toString('utf8'));
+
+        const paramLength = serializePayload.read(2).readUInt16BE(0);
+        const param = serializePayload.read(paramLength);
+        const paramBuffer = Parameter.fromBuffer(param.buffer);
+
+        return {
+            amount: CcdAmount.fromMicroCcd(amount),
+            moduleRef: ModuleReference.fromBuffer(moduleRef),
+            initName: ContractName.fromInitName(initNameAfterConversion),
+            param: paramBuffer,
+            //The execution energy cannot be recovered as it is not part of the payload serialization
+            maxContractExecutionEnergy: Energy.create(0n),
+        };
     }
 
     toJSON(payload: InitContractPayload): InitContractPayloadJSON {
@@ -303,8 +335,30 @@ export class UpdateContractHandler
         ]);
     }
 
-    deserialize(): UpdateContractPayload {
-        throw new Error('deserialize not supported');
+    deserialize(serializedPayload: Cursor): UpdateContractPayload {
+        const amount = serializedPayload.read(8).readBigUInt64BE(0);
+
+        //ContractAddress is 16 bytes, two elements of Word64, reading first 8 bytes and then the other 8
+        const contractAddressIndex = serializedPayload.read(8);
+        const contractAddressSubIndex = serializedPayload.read(8);
+
+        const receiveNameLength = serializedPayload.read(2).readInt16BE(0);
+        const receiveName = serializedPayload.read(receiveNameLength);
+        const messageLength = serializedPayload.read(2).readInt16BE(0);
+        const message = serializedPayload.read(messageLength);
+
+        return {
+            amount: CcdAmount.fromMicroCcd(amount),
+            //read each contractAddressIndex and subIndex buffers for the 64 unsigned integer and create a contract address with these
+            address: ContractAddress.create(
+                contractAddressIndex.readBigUInt64BE(0),
+                contractAddressSubIndex.readBigUInt64BE(0)
+            ),
+            receiveName: ReceiveName.fromString(receiveName.toString()),
+            message: Parameter.fromBuffer(message),
+            //The execution energy cannot be recovered as it is not part of the payload serialization
+            maxContractExecutionEnergy: Energy.create(0n),
+        };
     }
 
     toJSON(payload: UpdateContractPayload): UpdateContractPayloadJSON {
@@ -539,7 +593,6 @@ export class TokenUpdateHandler implements AccountTransactionHandler<TokenUpdate
         return { tokenId, operations };
     }
     getBaseEnergyCost(payload: TokenUpdatePayload): bigint {
-        // TODO: update costs when finalized costs are determined.
         const operations = Cbor.decode(payload.operations, 'TokenOperation[]');
         // The base cost for a token transaction.
         let energyCost = 300n;
@@ -635,13 +688,13 @@ export function getAccountTransactionHandler(
         case AccountTransactionType.Update:
             return new UpdateContractHandler();
         case AccountTransactionType.UpdateCredentials:
-            return new UpdateCredentialsHandler();
+            return new UpdateCredentialsHandler(); //TODO:
         case AccountTransactionType.RegisterData:
             return new RegisterDataHandler();
         case AccountTransactionType.ConfigureDelegation:
             return new ConfigureDelegationHandler();
         case AccountTransactionType.ConfigureBaker:
-            return new ConfigureBakerHandler();
+            return new ConfigureBakerHandler(); //TODO
         case AccountTransactionType.TokenUpdate:
             return new TokenUpdateHandler();
         default:

@@ -29,7 +29,7 @@ jobs:
   build:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: 'recursive'
 
@@ -52,7 +52,7 @@ jobs:
 
       - name: Cache dependencies
         id: yarn-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ./node_modules
@@ -65,7 +65,7 @@ jobs:
 
       - name: Cache GRPC
         id: cache-grpc
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ./packages/sdk/src/grpc-api
@@ -80,7 +80,7 @@ jobs:
         run: yarn build:all
 
       - name: Store build-release
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: build-release
           path: |
@@ -98,7 +98,7 @@ jobs:
     environment: deploy
     steps:
       - name: Checkout sources
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           submodules: recursive
 
@@ -110,7 +110,7 @@ jobs:
         run: test "${{ steps.get_tag.outputs.tag }}" = "$(jq -r ".version" packages/ccd-js-gen/package.json)" || exit 1
 
       - name: Get build-output
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           path: packages/ccd-js-gen
           name: build-release

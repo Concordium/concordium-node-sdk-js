@@ -23,7 +23,7 @@ jobs:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: 'recursive'
 
@@ -34,7 +34,7 @@ jobs:
 
       - name: Cache dependencies
         id: yarn-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ./node_modules
@@ -54,7 +54,7 @@ jobs:
     runs-on: ubuntu-22.04
     needs: deps
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: 'recursive'
 
@@ -65,7 +65,7 @@ jobs:
 
       - name: Cache GRPC
         id: cache-grpc
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ./packages/sdk/src/grpc-api
@@ -73,7 +73,7 @@ jobs:
           restore-keys: ${{ runner.os }}-grpc
 
       - name: Cache WebPack
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ./packages/web/.webpack-cache
           # These two lines ensure that a fresh cache is generated after each run
@@ -81,7 +81,7 @@ jobs:
           restore-keys: ${{ runner.os }}-webpack
 
       - name: Restore dependencies
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: |
             ./node_modules
@@ -106,7 +106,7 @@ jobs:
         run: yarn build-ci
 
       - name: Store build-debug
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: build-debug
           # sdk/src is needed here because of sdk/src/grpc-api
@@ -124,7 +124,7 @@ jobs:
     needs: build
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           submodules: 'recursive'
 
@@ -134,7 +134,7 @@ jobs:
           cache: yarn
 
       - name: Restore dependencies
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: |
             ./node_modules
@@ -144,7 +144,7 @@ jobs:
           key: ${{ runner.os }}-yarn
 
       - name: Get build-debug
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           path: packages
           name: build-debug
@@ -157,7 +157,7 @@ jobs:
     runs-on: ubuntu-22.04
     needs: build
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - uses: actions/setup-node@v6
         with:
@@ -165,7 +165,7 @@ jobs:
           cache: yarn
 
       - name: Restore dependencies
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: |
             ./node_modules
@@ -175,7 +175,7 @@ jobs:
           key: ${{ runner.os }}-yarn
 
       - name: Get build-debug
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           path: packages
           name: build-debug
@@ -189,7 +189,7 @@ jobs:
     needs: build
     if: github.event.pull_request.draft == false
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - uses: actions/setup-node@v6
         with:
@@ -197,7 +197,7 @@ jobs:
           cache: yarn
 
       - name: Restore dependencies
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: |
             ./node_modules
@@ -207,7 +207,7 @@ jobs:
           key: ${{ runner.os }}-yarn
 
       - name: Get build-debug
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           path: packages
           name: build-debug
@@ -221,7 +221,7 @@ jobs:
     if: github.event.pull_request.draft == false
     needs: deps
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - uses: actions/setup-node@v6
         with:
@@ -229,7 +229,7 @@ jobs:
           cache: yarn
 
       - name: Restore dependencies
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: |
             ./node_modules
@@ -247,7 +247,7 @@ jobs:
     needs: deps
     if: github.event.pull_request.draft == false
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - uses: actions/setup-node@v6
         with:
@@ -255,7 +255,7 @@ jobs:
           cache: yarn
 
       - name: Restore dependencies
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: |
             ./node_modules
@@ -272,7 +272,7 @@ jobs:
     runs-on: ubuntu-22.04
     needs: build
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - uses: actions/setup-node@v6
         with:
@@ -280,7 +280,7 @@ jobs:
           cache: yarn
 
       - name: Restore dependencies
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: |
             ./node_modules
@@ -290,7 +290,7 @@ jobs:
           key: ${{ runner.os }}-yarn
 
       - name: Get build-debug
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           path: packages
           name: build-debug
@@ -307,7 +307,7 @@ jobs:
         working-directory: packages/rust-bindings
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           submodules: 'recursive'
 
@@ -329,7 +329,7 @@ jobs:
         working-directory: packages/rust-bindings
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           submodules: 'recursive'
 

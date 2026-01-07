@@ -2,96 +2,7 @@
 
 ## Unreleased
 
-- Ensure proper `accountCredential` verification by adding missing `await` in async function, preventing potential bypass.
-- Add an optional `minTransactionStatus` parameter to the `VerificationRequestV1.verifyAnchor` function which specifies the minimum transaction status `committed` or `finalized` that the anchor transaction must reach.
-
-## 11.1.0-alpha.7
-
-- Export type `IdentityCredType` in `VerifiablePresentationRequestV1`.
-- Change the `VerifiablePresentationRequestV1.createContext` function to require a `rescourceID` as input parameter and change the `contextString` input parameter to be optional. 
-
-## 11.1.0-alpha.6
-
-### Breaking changes
-
-- Update of rust-bindings changing the internal proof format. Making the proofs generated using previous alpha releases incompatible with this one.
-
-## 11.1.0-alpha.5
-
-### Breaking changes
-
-- `VerifiablePresentationV1.createAccountClaims` now takes the index of the Identity Provider of the account.
-- Update of rust-bindings changing the internal proof format. Making the proofs generated using previous alpha releases incompatible with this one.
-
-### Added
-
-- `VerifiablePresentationV1.revealRequestedStatements` convenience function for converting requested statements into the claim statements, specifically extracting the attribute values from the chosen attributes of the ID object.
-- `VerifiablePresentationV1.noRevealRequestedStatements` convenience function for converting requested statements into the claim statements, producing an error for requests of revealing an attribute.
-- Type `RequestedStatement` for statements being requested.
-- Type `AtomicStatementV1` for statements part of a presentation.
-
-## 11.1.0-alpha.4
-
-### Breaking changes
-
-- `VerificationRequestV1.createAndAnchor` and `VerificationAuditRecordV1.registerAnchor` now also allows for 
-  specififying a sequence number to use for the transaction.
-  The function signature has been changed to take "transaction metadata" as an object, which now includes the
-  the transaction `sender` and `signer`, in addition to an optional `sequenceNumber`.
-- Renamed `VerificationRequestV1.credentialStatements` to `VerificationRequestV1.subjectClaims`
-- Renamed `VerificationRequestV1.Statement` to `VerificationRequestV1.SubjectClaims`, and correspondingly:
-  - `VerificationRequestV1.IdentityStatement` to `VerificationRequestV1.IdentityClaims`
-- Renamed `VerificationRequestV1.statementBuilder` to `VerificationRequestV1.claimsBuilder`, and corresondingly:
-  - `SubjectClaimsBuilder.addIdentityStatement` to `SubjectClaimsBuilder.addIdentityClaims`
-  - `SubjectClaimsBuilder.addAccountStatement` to `SubjectClaimsBuilder.addAccountClaims`
-  - `SubjectClaimsBuilder.addAccountOrIdentityStatement` to `SubjectClaimsBuilder.addAccountOrIdentityClaims`
-
-### Added
-
-- `VerificationAuditRecordV1.createAndAnchor` convenience function both creates a check audit record and registers
-  the corresponding anchor on-chain.
-- `VerificationAuditRecordV1.verifyAnchor` function which verifies that a given transaction corresponds to an anchor
-  registration of a given audit record.
-- `VerificationRequestV1.verifyAnchor` function which verifies that the transaction ref of a given verification request
-  corresponds to an anchor registration of the internal data.
-
-## 11.1.0-alpha.3
-
-### Fixed
-
-- Typo in function name `VerificationRequestV1.createAndAchor`, is now `VerificationRequestV1.createAndAnchor`.
-- Update the `@concordium/rust-bindings` version to `4.0.0`.
-
-## 11.1.0-alpha.2
-
-### Added
-
-- `VerifiablePresentationV1.createAccountClaims` and `VerifiablePresentationV1.createIdentityClaims` to build the
-  subject claims used as input for the `VerifiablePresentationV1.create...` functions.
-- `VerifiableCredentialV1` module and corresponding types and associated functionality.
-- `VerificationAuditRecord.createChecked` which creates a verification audit record while verifying the presentation in
-  the context of the verification request.
-
-### Changed
-
-- `createIdentityStatementDID` now takes the index of the identity provider of the identity.
-- `VerifiablePresentationRequestV1` renamed to `VerificationRequestV1`
-
-- `VerifiablePresentationV1.Statement` renamed to `VerifiablePresentationV1.SubjectClaims` to align with the w3c VC spec
-  - `VerifiablePresentationV1.AccountStatement` -> `VerifiablePresentationV1.AccountClaims`, created with
-    `VerifiablePresentation.createAccountClaims`.
-  - `VerifiablePresentationV1.IdentityStatement` -> `VerifiablePresentationV1.IdentityClaims`, created with
-    `VerifiablePresentation.createIdentityClaims`.
-- `VerifiablePresentationV1.CredentialInputs` renamed to `VerifiablePresentationV1.VerificationMaterial`.
-- Functionality for creating and verifying v1 verifiable presentations now uses implementation from `concordium-base`
-
-## 11.1.0-alpha.1
-
-### Fixed
-
-- Missing DID method identifier in identity statement DID created from `createIdentityStatementDID`.
-
-## 11.1.0-alpha.0
+## 11.1.0
 
 ### Added
 
@@ -99,12 +10,14 @@
   to the respective union types that reflect the possible variants.
 - helper functions `createIdentityCommitmentInput` and `createIdentityCommitmentInputWithHdWallet`
 - helper function `createIdentityStatementDID`
+- Type `RequestedStatement` for statements being requested.
+- Type `AtomicStatementV1` for statements part of a presentation.
 
 - types `VerifiablePresentationV1` and `VerifiablePresentationRequestV1` to be used with the new zero-knowledge proof
   protocol
   - `VerifiablePresentationRequestV1.createContext` and `VerifiablePresentationRequestV1.createSimpleContext` for
     creating the presentation request context.
-  - `VerifiablePresentationRequestV1.statementBuilder` for building presentation request statements
+  - `VerifiablePresentationRequestV1.claimsBuilder` for building presentation request statements
   - `VerifiablePresentationRequestV1.createAndAnchor` which is a GRPC helper function for creating a verifiable presentation
     request from a minimal set of values.
   - `VerifiablePresentationV1.createFromAnchor` which is a GRPC helper function for creating a verifiable presentation
@@ -112,13 +25,23 @@
   `VerifiablePresentationRequestV1.Context`.
   - `VerifiablePresentationV1.verify`, and the corresponding GRPC helper `VerifiablePresentationV1.verifyWithNode` for
   verification of the proof.
-  - **Please note**: some functionality related to this is currently either stubbed or routed into the old verifiable
-  presentation computation functions for now.
+  - `VerificationRequestV1.verifyAnchor` function which verifies that the transaction ref of a given verification request
+    corresponds to an anchor registration of the internal data.
+  - `VerifiablePresentationV1.revealRequestedStatements` convenience function for converting requested statements into the claim statements, specifically extracting the attribute values from the chosen attributes of the ID object.
+  - `VerifiablePresentationV1.noRevealRequestedStatements` convenience function for converting requested statements into the claim statements, producing an error for requests of revealing an attribute.
+  - `VerifiablePresentationV1.createAccountClaims` and `VerifiablePresentationV1.createIdentityClaims` to build the
+    subject claims used as input for the `VerifiablePresentationV1.create...` functions.
 
 - types `VerificationAuditRecordV1` and `VerificationAuditRecordV1.Anchor` for creating audit records.
   - `VerificationAuditRecordV1.create` is used to create an audit record
   - `VerificationAuditRecordV1.registerAnchor` is a grpc helper used to register the anchor representation of the record
     on chain.
+  - `VerificationAuditRecordV1.createAndAnchor` convenience function both creates a check audit record and registers
+    the corresponding anchor on-chain.
+  - `VerificationAuditRecordV1.verifyAnchor` function which verifies that a given transaction corresponds to an anchor
+    registration of a given audit record.
+  - `VerificationAuditRecord.createChecked` which creates a verification audit record while verifying the presentation in
+    the context of the verification request.
 
 ## 11.0.0
 

@@ -1,0 +1,63 @@
+{
+    "type": ["VerifiablePresentation", "ConcordiumVerifiablePresentationV1"],
+    "presentationContext": {
+        "type": "ConcordiumContextInformationV1",
+        "given": [
+            {
+                "label": "Nonce",
+                "context": "00010203"
+            },
+            {
+                "label": "ConnectionID",
+                "context": "0102010201020102010201020102010201020102010201020102010201020102"
+            },
+            {
+                "label": "ResourceID",
+                "context": "www.wineShop.com"
+            },
+            {
+                "label": "ContextString",
+                "context": "Wine payment"
+            }
+        ],
+        "requested": [
+            {
+                "label": "BlockHash",
+                "context": "0101010101010101010101010101010101010101010101010101010101010101"
+            }
+        ]
+    },
+    "verifiableCredential": [
+        {
+            "type": ["VerifiableCredential", "ConcordiumVerifiableCredentialV1", "ConcordiumIdBasedCredential"],
+            "proof": {
+                "type": "ConcordiumZKProofV4",
+                "created": "2025-10-17T13:14:14.292Z",
+                "proofValue": "01020102010201020102010201020102010201020102010201020102010201020102010201020102010201020102010201020102010201020102010201020102"
+            },
+            "issuer": "did:ccd:testnet:idp:0",
+            "validFrom": "2000-01-01T00:00:00.000Z",
+            "validUntil": "2030-01-01T00:00:00.000Z",
+            "credentialSubject": {
+                "statement": [
+                    {
+                        "attributeTag": "dob",
+                        "lower": "81",
+                        "type": "AttributeInRange",
+                        "upper": "1231"
+                    },
+                    {
+                        "attributeTag": "firstName",
+                        "type": "RevealAttribute"
+                    }
+                ],
+                "id": "did:ccd:testnet:encidcred:123456123456123456123456123456123456123456123456"
+            }
+        }
+    ],
+    "proof": {
+        "created": "2025-10-17T13:14:14.290Z",
+        "proofValue": "",
+        "type": "ConcordiumWeakLinkingProofV1"
+    }
+}

@@ -32,6 +32,10 @@ module.exports = {
                         source: 'identity-proofs.md',
                     },
                     {
+                        name: 'Verifiable presentations',
+                        source: 'verifiable-presentations.md',
+                    },
+                    {
                         name: 'Runnable Examples',
                         source: 'runnable-examples.md',
                     },

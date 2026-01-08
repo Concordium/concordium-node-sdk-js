@@ -379,7 +379,7 @@ dependencies = [
 
 [[package]]
 name = "concordium_base"
-version = "8.0.0-alpha.3"
+version = "10.0.0-alpha.0"
 dependencies = [
  "anyhow",
  "ark-bls12-381",
@@ -399,6 +399,7 @@ dependencies = [
  "ed25519-dalek",
  "either",
  "ff 0.13.0",
+ "generic-array",
  "hex",
  "itertools 0.14.0",
  "leb128",
@@ -422,7 +423,7 @@ dependencies = [
 
 [[package]]
 name = "concordium_base_derive"
-version = "1.1.0-alpha.3"
+version = "1.2.0"
 dependencies = [
  "convert_case 0.8.0",
  "darling",

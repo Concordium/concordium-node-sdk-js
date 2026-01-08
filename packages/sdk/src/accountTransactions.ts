@@ -1143,7 +1143,7 @@ export function getAccountTransactionHandler(
         case AccountTransactionType.ConfigureDelegation:
             return new ConfigureDelegationHandler();
         case AccountTransactionType.ConfigureBaker:
-            return new ConfigureBakerHandler(); //TODO
+            return new ConfigureBakerHandler();
         case AccountTransactionType.TokenUpdate:
             return new TokenUpdateHandler();
         case AccountTransactionType.UpdateCredentialKeys:

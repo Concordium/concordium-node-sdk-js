@@ -3712,7 +3712,7 @@ __metadata:
     prettier: ^3.2.5
     typescript: ^5.2.2
   peerDependencies:
-    "@concordium/web-sdk": ">= 12.0.0-alpha.2"
+    "@concordium/web-sdk": ">= 12"
     react: ^18
   languageName: unknown
   linkType: soft
@@ -3759,7 +3759,7 @@ __metadata:
     ts-node: ^10.9.2
     typescript: ^5.2.2
   peerDependencies:
-    "@concordium/web-sdk": ">= 12.0.0-alpha.2"
+    "@concordium/web-sdk": ">= 12"
     "@walletconnect/types": ^2.13.1
   languageName: unknown
   linkType: soft

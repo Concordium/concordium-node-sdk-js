@@ -23,7 +23,7 @@ import {
     BlockItemKind,
     CredentialDeploymentDetails,
     CredentialDeploymentInfo,
-    CredentialDeploymentValues,
+    CredentialDeploymentValuesPayload,
     CredentialSignature,
     IdOwnershipProofs,
     UnsignedCredentialDeploymentInformation,
@@ -32,7 +32,7 @@ import * as AccountAddress from './types/AccountAddress.js';
 import * as Energy from './types/Energy.js';
 import { countSignatures } from './util.js';
 
-function serializeAccountTransactionType(type: AccountTransactionType): Buffer {
+export function serializeAccountTransactionType(type: AccountTransactionType): Buffer {
     return Buffer.from(Uint8Array.of(type));
 }
 
@@ -45,7 +45,7 @@ function serializeAccountTransactionType(type: AccountTransactionType): Buffer {
  * @param energyAmount dedicated amount of energy for this transaction, if it is insufficient, the transaction will fail
  * @returns the serialized account transaction header
  */
-function serializeAccountTransactionHeader(
+export function serializeAccountTransactionHeader(
     header: AccountTransactionHeader,
     payloadSize: number,
     energyAmount: Energy.Type
@@ -98,16 +98,12 @@ export function serializeAccountTransaction(
 ): Buffer {
     const serializedBlockItemKind = encodeWord8(BlockItemKind.AccountTransactionKind);
     const serializedAccountTransactionSignatures = serializeAccountTransactionSignature(signatures);
-
-    const accountTransactionHandler = getAccountTransactionHandler(accountTransaction.type);
     const serializedPayload = serializeAccountTransactionPayload(accountTransaction);
 
-    const baseEnergyCost = accountTransactionHandler.getBaseEnergyCost(accountTransaction.payload);
-    const energyCost = calculateEnergyCost(
-        countSignatures(signatures),
-        BigInt(serializedPayload.length),
-        baseEnergyCost
+    const baseEnergy = getAccountTransactionHandler(accountTransaction.type).getBaseEnergyCost(
+        accountTransaction.payload
     );
+    const energyCost = calculateEnergyCost(countSignatures(signatures), BigInt(serializedPayload.length), baseEnergy);
     const serializedHeader = serializeAccountTransactionHeader(
         accountTransaction.header,
         serializedPayload.length,
@@ -147,6 +143,7 @@ export function getAccountTransactionHash(
     signatures: AccountTransactionSignature
 ): string {
     const serializedAccountTransaction = serializeAccountTransaction(accountTransaction, signatures);
+
     return sha256([serializedAccountTransaction]).toString('hex');
 }
 
@@ -157,11 +154,12 @@ export function getAccountTransactionHash(
  * @returns the sha256 hash on the serialized header, type and payload
  */
 export function getAccountTransactionSignDigest(accountTransaction: AccountTransaction, signatureCount = 1n): Buffer {
-    const accountTransactionHandler = getAccountTransactionHandler(accountTransaction.type);
     const serializedPayload = serializeAccountTransactionPayload(accountTransaction);
+    const baseEnergy = getAccountTransactionHandler(accountTransaction.type).getBaseEnergyCost(
+        accountTransaction.payload
+    );
 
-    const baseEnergyCost = accountTransactionHandler.getBaseEnergyCost(accountTransaction.payload);
-    const energyCost = calculateEnergyCost(signatureCount, BigInt(serializedPayload.length), baseEnergyCost);
+    const energyCost = calculateEnergyCost(signatureCount, BigInt(serializedPayload.length), baseEnergy);
     const serializedHeader = serializeAccountTransactionHeader(
         accountTransaction.header,
         serializedPayload.length,
@@ -172,11 +170,15 @@ export function getAccountTransactionSignDigest(accountTransaction: AccountTrans
 }
 
 /**
+ * @deprecated describes an unused serialization format - use {@linkcode serializeAccountTransaction} instead.
+ *
  * Serializes an account transaction so that it is ready for being submitted
  * to the node. This consists of the standard serialization of an account transaction
  * prefixed by a version byte.
+ *
  * @param accountTransaction the transaction to serialize
  * @param signatures the signatures on the hash of the account transaction
+ *
  * @returns the serialization of the account transaction ready for being submitted to a node
  */
 export function serializeAccountTransactionForSubmission(
@@ -184,7 +186,6 @@ export function serializeAccountTransactionForSubmission(
     signatures: AccountTransactionSignature
 ): Buffer {
     const serializedAccountTransaction = serializeAccountTransaction(accountTransaction, signatures);
-
     const serializedVersion = encodeWord8(0);
     return Buffer.concat([serializedVersion, serializedAccountTransaction]);
 }
@@ -195,7 +196,7 @@ export function serializeAccountTransactionForSubmission(
  * @param credential the credential deployment values to serialize
  * @returns the serialization of CredentialDeploymentValues
  */
-function serializeCredentialDeploymentValues(credential: CredentialDeploymentValues) {
+function serializeCredentialDeploymentValues(credential: CredentialDeploymentValuesPayload) {
     // Check that we don't attempt to serialize unknown variants
     if (Object.values(credential.credentialPublicKeys.keys).some((v) => !isKnown(v)))
         throw new Error('Cannot serialize unknown key variants');
@@ -214,6 +215,7 @@ function serializeCredentialDeploymentValues(credential: CredentialDeploymentVal
     buffers.push(Buffer.from(credential.credId, 'hex'));
     buffers.push(encodeWord32(credential.ipIdentity));
     buffers.push(encodeWord8(credential.revocationThreshold));
+
     buffers.push(
         serializeMap(
             credential.arData,
@@ -227,10 +229,9 @@ function serializeCredentialDeploymentValues(credential: CredentialDeploymentVal
     const revealedAttributes = Object.entries(credential.policy.revealedAttributes);
     buffers.push(encodeWord16(revealedAttributes.length));
 
-    const revealedAttributeTags: [number, string][] = revealedAttributes.map(([tagName, value]) => [
-        AttributesKeys[tagName as keyof typeof AttributesKeys],
-        value,
-    ]);
+    const revealedAttributeTags: [number, string][] = revealedAttributes.map(([tagName, value]) => {
+        return [AttributesKeys[tagName as keyof typeof AttributesKeys], value];
+    });
     revealedAttributeTags
         .sort((a, b) => a[0] - b[0])
         .forEach(([tag, value]) => {

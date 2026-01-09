@@ -2,6 +2,77 @@
 
 ## Unreleased
 
+## 12.0.0
+
+This release adds compatibility with version 10 concordium nodes
+
+### Added
+
+- Deserialize function for `DeployModulePayload` implemented instead of throwing an exception of not supporting deserialize
+- Deserialize function for `InitContractPayload` implemented instead of throwing an exception of not supporting deserialize
+- Deserialize function for `UpdateContractPayload` implemented instead of throwing an exception of not supporting deserialize
+- Deserialize function for `UpdateCredentialsPayload` implemented instead of throwing an exception of not supporting deserialize
+- `deserializeBlockItem` to deserialize block items from their encoding as received by concordium nodes.
+- Move out `CdiRandomness` from `CredentialDeploymentPayload` to ensure payload is as per bluepaper and still support wallet 
+  in constructing credential information with CdiRandomness.
+- `UpdateCredentialKeysPayload` and corresponding deserialize and serialize functions implemented
+- `ConfigureBakerPayload` deserialization supported
+- Deserialize function for `ConfigureDelegationPayload` implemented instead of throwing an exception of not supporting deserialize
+- `deserializeBlockItem` to deserialize block items from their encoding as received by concordium nodes.
+- Deserialize function for `UpdateCredentialsPayload` implemented instead of throwing an exception of not supporting deserialize
+
+#### `Transaction` API
+
+- A `Transaction` module has been added as a new API for creating, signing, and (de)serializing account transactions.
+  - supports building sponsored transactions with the functions
+    - `addSponsor` and `sponsorable` on the transaction builder
+    - `Transaction.sponsor` for adding sponsor signatures to sponsorable transactions.
+- A `Payload` module has been added as a new API for creating and (de)serializing transaction payloads. The payloads
+  represent the payloads supported by concordium nodes.
+- `AccountTransactionV0` module describes the initial account transaction version. This should _not_ be used for
+  creating transactions - use `Transaction` instead.
+- `ConcordiumGRPCClient.sendTransaction` to support submitting transactions created with the new `Transaction`
+  API.
+- New account transaction format `AccountTransactionV1` and support for creating transactions of this format through the 
+  `Transaction` API. 
+  - For now, this only adds support for sponsoring transactions, i.e. having another party than the
+    "sender" of the transaction pay for the transaction fees.
+- Extended `AccountTransactionSummary` with optional sponsor details in case the transaction summary details a sponsored
+  transaction.
+
+### Breaking changes
+
+- `AccountTransactionPayload` now describes the actual transaction payloads instead of the input required to construct
+  transactions of a type.
+- `AccountTransactionInput` replaces the previous definition of `AccountTransactionPayload`.
+- Account transaction `BlockItem` variant now references `AccountTransactionV0` instead of the previous intermediary
+  `AccountTransaction` format.
+
+### Removed
+
+- Removed `deserializeAccountTransaction`, as it deserializes an intermediary account transaction format which is not supported
+  by the chain.
+- Remove the `maxContractExecutionEnergy` from `UpdateContractPayload`. This field actually represent the base energy amount
+  and it must be passed in manually instead of deriving from payload. 
+  - A corresponding replacement type `UpdateContractInput` has been added, which can be used in place of the
+    old type definition.
+- Remove the `maxContractExecutionEnergy` from `InitContractPayload`. This field actually represent the base energy amount
+  and it must be passed in manually instead of deriving from payload. 
+  - A corresponding replacement type `InitContractInput` has been added, which can be used in place of the
+    old type definition.
+- Remove the `currentNumberOfCredentials` from `UpdateCredentialsPayload`. This field is needed to calculate the base energy amount
+  and it must be passed in manually instead of deriving from payload. 
+  - A corresponding replacement type `UpdateCredentialsInput` has been added, which can be used in place of the
+    old type definition.
+
+### Deprecated
+
+- `ConcordiumGRPCClient.sendAccountTransaction`. Instead `ConcordiumGRPCClient.sendTransaction`
+- `AccountTransactionHandler` implementations and the dynamic `getAccountTransactionHandler`. Instead, the new `Transaction` API
+  should be used.
+- `deserializeTransaction` (it deserializes an unsupported format). Instead `deserializeBlockItem` should be used.
+- `serializeAccountTransactionForSubmission` (it serializes an unsupported format). Instead `serializeAccountTransaction` should be used.
+
 ## 11.1.0
 
 ### Added

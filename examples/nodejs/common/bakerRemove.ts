@@ -1,14 +1,10 @@
 import {
     AccountAddress,
-    AccountTransaction,
-    AccountTransactionHeader,
-    AccountTransactionType,
     CcdAmount,
     ConfigureBakerPayload,
-    TransactionExpiry,
+    Transaction,
     buildAccountSigner,
     parseWallet,
-    signTransaction,
 } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
@@ -61,8 +57,7 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
     const sender = AccountAddress.fromBase58(wallet.value.address);
     const signer = buildAccountSigner(wallet);
 
-    const header: AccountTransactionHeader = {
-        expiry: TransactionExpiry.futureMinutes(60),
+    const header: Transaction.Metadata = {
         nonce: (await client.getNextAccountNonce(sender)).nonce,
         sender,
     };
@@ -71,16 +66,9 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
         stake: CcdAmount.zero(),
     };
 
-    const configureBakerAccountTransaction: AccountTransaction = {
-        header: header,
-        payload: configureBakerPayload,
-        type: AccountTransactionType.ConfigureBaker,
-    };
-
-    // Sign transaction
-    const signature = await signTransaction(configureBakerAccountTransaction, signer);
-
-    const transactionHash = await client.sendAccountTransaction(configureBakerAccountTransaction, signature);
+    const transaction = Transaction.configureValidator(configureBakerPayload).addMetadata(header).build();
+    const signed = await Transaction.signAndFinalize(transaction, signer);
+    const transactionHash = await client.sendTransaction(signed);
 
     console.log('Transaction submitted, waiting for finalization...');
 

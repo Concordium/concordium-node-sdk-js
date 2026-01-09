@@ -1,4 +1,5 @@
 import type * as Proto from '../grpc-api/v2/concordium/types.js';
+import { assert } from '../util.js';
 import { TypedJson, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 
 /**
@@ -39,11 +40,12 @@ class SequenceNumber {
 
 /**
  * Converts a `bigint` to sequence number.
- * @param {bigint} json The JSON representation of the sequence number.
+ * @param {bigint | number} json The JSON representation of the sequence number.
  * @returns {SequenceNumber} The sequence number.
  */
-export function fromJSON(json: bigint): SequenceNumber {
-    return create(json);
+export function fromJSON(json: unknown): SequenceNumber {
+    assert(typeof json === 'number' || typeof json === 'string' || typeof json === 'bigint');
+    return create(BigInt(json));
 }
 
 /**
@@ -54,6 +56,15 @@ export function fromJSON(json: bigint): SequenceNumber {
  */
 export function toUnwrappedJSON(value: Type): bigint {
     return value.value;
+}
+
+/**
+ * Converts the intermediary representation created from {@linkcode toUnwrappedJSON} to a typed instance.
+ * @param json - The JSON value to parse
+ * @returns The corresponding typed instance
+ */
+export function fromUnwrappedJSON(json: bigint | string | number): SequenceNumber {
+    return create(BigInt(json));
 }
 
 /** A transaction sequence number. (Formerly refered as Nonce) */
@@ -80,6 +91,18 @@ export function create(sequenceNumber: bigint | number): SequenceNumber {
         throw new Error('Invalid account sequence number: Must be 1 or higher.');
     }
     return new SequenceNumber(BigInt(sequenceNumber));
+}
+
+/**
+ * Checks whether two sequence numbers are equal.
+ *
+ * @param a - the first sequence number
+ * @param b - the second sequence number
+ *
+ * @returns whether the two are equal.
+ */
+export function equals(a: SequenceNumber, b: SequenceNumber): boolean {
+    return a.value === b.value;
 }
 
 /**

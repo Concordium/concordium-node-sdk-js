@@ -10,7 +10,12 @@ import {
     VerifyKey,
 } from './types.js';
 import { DataBlob } from './types/DataBlob.js';
-import { isDefined } from './util.js';
+import { isDefined, orUndefined } from './util.js';
+
+export const mapTagToType: DelegationTargetType[] = [
+    DelegationTargetType.PassiveDelegation, // index 0
+    DelegationTargetType.Baker, // index 1
+];
 
 export function serializeMap<K extends string | number | symbol, T>(
     map: Record<K, T>,
@@ -215,7 +220,7 @@ export function encodeHexString(s: string): Buffer {
     return Buffer.from(s, 'hex');
 }
 
-enum SchemeId {
+export enum SchemeId {
     Ed25519 = 0,
 }
 
@@ -252,18 +257,18 @@ export function serializeYearMonth(yearMonth: string): Buffer {
 }
 
 /**
- * Makes a bitmap for transactions with optional payload fields, where each bit indicates whether a value is included or not.
+ * Makes a bitmap for types with optional fields, where each bit indicates whether a value is included or not.
  *
- * @param payload the payload to generate the bitmap for
- * @param fieldOrder the order the payload fields are serialized in. The order is represented in the bitmap from right to left, i.e index 0 of the order translates to first bit.
+ * @param value the value to generate the bitmap for
+ * @param fieldOrder the order the value fields are serialized in. The order is represented in the bitmap from right to left, i.e index 0 of the order translates to the least significant bit.
  *
  * @example
- * getPayloadBitmap<{test?: string; test2?: string}>({test2: 'yes'}, ['test', 'test2']) // returns 2 (00000010 as bits of UInt8)
- * getPayloadBitmap<{test?: string; test2?: string; test3?: number}>({test: 'yes', test3: 100}, ['test', 'test2', 'test3']) // returns 5 (00000101 as bits of UInt8)
+ * getBitmap<{test?: string; test2?: string}>({test2: 'yes'}, ['test', 'test2']) // returns 2 (00000010 as bits of UInt8)
+ * getBitmap<{test?: string; test2?: string; test3?: number}>({test: 'yes', test3: 100}, ['test', 'test2', 'test3']) // returns 5 (00000101 as bits of UInt8)
  */
-function getPayloadBitmap<T>(payload: T, fieldOrder: Array<keyof T>) {
+export function getBitmap<T>(value: T, fieldOrder: Array<keyof T>) {
     return fieldOrder
-        .map((k) => payload[k])
+        .map((k) => value[k])
         .reduceRight(
             // eslint-disable-next-line no-bitwise
             (acc, cur) => (acc << 1) | Number(cur !== undefined),
@@ -274,20 +279,20 @@ function getPayloadBitmap<T>(payload: T, fieldOrder: Array<keyof T>) {
 /**
  * Makes a type with keys from Object and values being functions that take values with types of respective original values, returning a Buffer or undefined.
  */
-type SerializationSpec<T> = Required<{
+export type SerializationSpec<T> = Required<{
     [P in keyof T]: (v: T[P]) => Uint8Array | undefined;
 }>;
 
 /**
- * Given a specification describing how to serialize the fields of a payload of type T, this function produces a function
- * that serializes payloads of type T, returning a buffer of the serialized fields by order of occurance in serialization spec.
+ * Given a specification describing how to serialize the fields of a value of type T, this function produces a function
+ * that serializes values of type T, returning a buffer of the serialized fields by order of occurance in serialization spec.
  */
-const serializeFromSpec =
+export const serializeFromSpec =
     <T>(spec: SerializationSpec<T>) =>
-    (payload: T) => {
+    (value: T) => {
         const buffers = Object.keys(spec)
             .map((k) => {
-                const v = payload[k as keyof T];
+                const v = value[k as keyof T];
                 const f = spec[k as keyof typeof spec] as (x: typeof v) => Uint8Array | undefined;
                 return f(v);
             })
@@ -295,14 +300,6 @@ const serializeFromSpec =
 
         return Buffer.concat(buffers);
     };
-
-/**
- * Takes a callback function taking 1 argument, returning a new function taking same argument, applying callback only if supplied argument is defined.
- */
-export const orUndefined =
-    <A, R>(fun: (v: A) => R) =>
-    (v: A | undefined): R | undefined =>
-        v !== undefined ? fun(v) : undefined;
 
 function serializeDelegationTarget(target: DelegationTarget) {
     if (target.delegateType === DelegationTargetType.PassiveDelegation) {
@@ -320,10 +317,7 @@ export const configureDelegationSerializationSpec: SerializationSpec<ConfigureDe
 
 export const getSerializedConfigureDelegationBitmap = (payload: ConfigureDelegationPayload): Buffer =>
     encodeWord16(
-        getPayloadBitmap(
-            payload,
-            Object.keys(configureDelegationSerializationSpec) as Array<keyof ConfigureDelegationPayload>
-        )
+        getBitmap(payload, Object.keys(configureDelegationSerializationSpec) as Array<keyof ConfigureDelegationPayload>)
     );
 
 export function serializeConfigureDelegationPayload(payload: ConfigureDelegationPayload): Buffer {
@@ -362,7 +356,7 @@ const configureBakerSerializationSpec: SerializationSpec<ConfigureBakerPayload> 
 
 const getSerializedConfigureBakerBitmap = (payload: ConfigureBakerPayload): Buffer =>
     encodeWord16(
-        getPayloadBitmap(payload, Object.keys(configureBakerSerializationSpec) as Array<keyof ConfigureBakerPayload>)
+        getBitmap(payload, Object.keys(configureBakerSerializationSpec) as Array<keyof ConfigureBakerPayload>)
     );
 
 export function serializeConfigureBakerPayload(payload: ConfigureBakerPayload): Buffer {

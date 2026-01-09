@@ -1,16 +1,13 @@
 import {
     AccountAddress,
-    AccountTransaction,
-    AccountTransactionHeader,
-    AccountTransactionSignature,
-    AccountTransactionType,
     CcdAmount,
     DataBlob,
     NextAccountNonce,
-    TransactionExpiry,
+    SimpleTransferPayload,
+    SimpleTransferWithMemoPayload,
+    Transaction,
     buildAccountSigner,
     parseWallet,
-    signTransaction,
 } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
@@ -82,39 +79,22 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
     const toAddress = AccountAddress.fromBase58(cli.flags.receiver);
     const nextNonce: NextAccountNonce = await client.getNextAccountNonce(sender);
 
-    const header: AccountTransactionHeader = {
-        expiry: TransactionExpiry.futureMinutes(60),
+    const header: Transaction.Metadata = {
         nonce: nextNonce.nonce,
         sender,
     };
-
-    // Include memo if it is given otherwise don't
-    let simpleTransfer = undefined;
-    if (cli.flags.memo) {
-        simpleTransfer = {
-            amount: CcdAmount.fromMicroCcd(cli.flags.amount),
-            toAddress,
-            memo: new DataBlob(Buffer.from(cli.flags.memo, 'hex')),
-        };
-    } else {
-        simpleTransfer = {
-            amount: CcdAmount.fromMicroCcd(cli.flags.amount),
-            toAddress,
-        };
-    }
+    const amount = CcdAmount.fromCcd(cli.flags.amount);
+    const payload: SimpleTransferPayload | SimpleTransferWithMemoPayload = cli.flags.memo
+        ? { memo: new DataBlob(Buffer.from(cli.flags.memo, 'hex')), amount, toAddress }
+        : { toAddress, amount };
+    const transaction = Transaction.transfer(payload).addMetadata(header).build();
 
     // #region documentation-snippet-sign-transaction
-    const accountTransaction: AccountTransaction = {
-        header: header,
-        payload: simpleTransfer,
-        type: AccountTransactionType.Transfer,
-    };
+    const signer = buildAccountSigner(walletExport);
 
     // Sign transaction
-    const signer = buildAccountSigner(walletExport);
-    const signature: AccountTransactionSignature = await signTransaction(accountTransaction, signer);
-
-    const transactionHash = await client.sendAccountTransaction(accountTransaction, signature);
+    const signedTransaction = await Transaction.signAndFinalize(transaction, signer);
+    const transactionHash = await client.sendTransaction(signedTransaction);
     // #endregion documentation-snippet-sign-transaction
 
     const status = await client.waitForTransactionFinalization(transactionHash);

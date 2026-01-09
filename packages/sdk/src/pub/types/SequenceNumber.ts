@@ -5,9 +5,11 @@ export {
     Serializable,
     toTypedJSON,
     toUnwrappedJSON,
+    fromUnwrappedJSON,
     fromTypedJSON,
     instanceOf,
     create,
+    equals,
     toSerializable,
     fromSerializable,
 } from '../../types/SequenceNumber.js';

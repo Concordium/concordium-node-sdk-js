@@ -1,13 +1,13 @@
 import { ContractTransactionMetadata } from '../GenericContract.js';
 import { ConcordiumGRPCClient } from '../grpc/index.js';
-import { AccountSigner, signTransaction } from '../signHelpers.js';
+import { AccountSigner } from '../signHelpers.js';
+import { Transaction } from '../transactions/index.js';
 import { AccountTransactionType, InitContractPayload, VersionedModuleSource } from '../types.js';
 import * as BlockHash from './BlockHash.js';
 import * as CcdAmount from './CcdAmount.js';
 import * as ContractName from './ContractName.js';
 import * as ModuleReference from './ModuleReference.js';
 import * as Parameter from './Parameter.js';
-import * as TransactionExpiry from './TransactionExpiry.js';
 import * as TransactionHash from './TransactionHash.js';
 
 /**
@@ -131,20 +131,16 @@ export async function createAndSendInitTransaction(
         moduleRef: moduleClient.moduleReference,
         amount: metadata.amount ?? CcdAmount.zero(),
         initName: contractName,
-        maxContractExecutionEnergy: metadata.energy,
         param: parameter,
     };
     const { nonce } = await moduleClient.grpcClient.getNextAccountNonce(metadata.senderAddress);
-    const header = {
-        expiry: metadata.expiry ?? TransactionExpiry.futureMinutes(5),
+    const header: Transaction.Metadata = {
+        expiry: metadata.expiry,
         nonce: nonce,
         sender: metadata.senderAddress,
     };
-    const transaction = {
-        type: AccountTransactionType.InitContract,
-        header,
-        payload,
-    };
-    const signature = await signTransaction(transaction, signer);
-    return moduleClient.grpcClient.sendAccountTransaction(transaction, signature);
+
+    const transaction = Transaction.initContract(payload, metadata.energy).addMetadata(header).build();
+    const signed = await Transaction.signAndFinalize(transaction, signer);
+    return moduleClient.grpcClient.sendTransaction(signed);
 }

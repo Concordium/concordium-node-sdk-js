@@ -3,7 +3,7 @@ export {
     serializeCredentialDeploymentTransactionForSubmission,
     serializeCredentialDeploymentPayload,
 } from './serialization.js';
-export { deserializeTransaction } from './deserialization.js';
+export { deserializeTransaction, deserializeBlockItem } from './deserialization.js';
 export { generateBakerKeys } from './accountHelpers.js';
 export * from './HdWallet.js';
 export * from './identity.js';

@@ -1,5 +1,5 @@
 import type * as Proto from '../grpc-api/v2/concordium/types.js';
-import { secondsSinceEpoch } from '../util.js';
+import { assert, secondsSinceEpoch } from '../util.js';
 import { TypedJson, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 
 /**
@@ -43,12 +43,31 @@ class TransactionExpiry {
 }
 
 /**
+ * Converts a JSON representation of a transaction expiry
+ * @param json - JSON representation to convert
+ * @returns Transaction expiry
+ */
+export function fromJSON(json: unknown): TransactionExpiry {
+    assert(typeof json === 'number' || typeof json === 'string' || typeof json === 'bigint');
+    return new TransactionExpiry(BigInt(json));
+}
+
+/**
  * Unwraps {@linkcode Type} value
  * @param value value to unwrap.
  * @returns the unwrapped {@linkcode bigint} value
  */
 export function toUnwrappedJSON(value: Type): bigint {
     return value.expiryEpochSeconds;
+}
+
+/**
+ * Converts the intermediary representation created from {@linkcode toUnwrappedJSON} to a typed instance.
+ * @param json - The JSON value to parse
+ * @returns The corresponding typed instance
+ */
+export function fromUnwrappedJSON(json: bigint | string | number): TransactionExpiry {
+    return fromJSON(json);
 }
 
 /**

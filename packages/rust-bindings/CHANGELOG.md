@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 4.0.1
+
+### Fixed
+
+- An issue where the browser entrypoints of the package did not work.
+
 ## 4.0.0
 
 ### Breaking changes

@@ -29,7 +29,6 @@
             },
             "browser": {
                 "types": "./lib/dapp/web/esm/index.d.ts",
-                "import": "./lib/dapp/web/esm/index.js",
                 "default": "./lib/dapp/web/umd/index.min.js"
             },
             "default": "./lib/dapp/web/umd/index.min.js"
@@ -42,7 +41,6 @@
             },
             "browser": {
                 "types": "./lib/dapp/web/esm/index.d.ts",
-                "import": "./lib/dapp/web/esm/index.js",
                 "default": "./lib/dapp/web/umd/index.min.js"
             },
             "default": "./lib/dapp/web/umd/index.min.js"
@@ -55,7 +53,6 @@
             },
             "browser": {
                 "types": "./lib/wallet/web/esm/index.d.ts",
-                "import": "./lib/wallet/web/esm/index.js",
                 "default": "./lib/wallet/web/umd/index.min.js"
             },
             "default": "./lib/wallet/web/umd/index.min.js"

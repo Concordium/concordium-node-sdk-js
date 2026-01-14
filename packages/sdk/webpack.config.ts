@@ -36,6 +36,8 @@ function configFor(target: 'web' | 'node' | 'react-native'): webpack.Configurati
             },
         },
         module: {
+            // Don't parse the rust-bindings UMD bundles - they are self-contained with WASM initialization
+            noParse: /rust-bindings\/lib\/.*\/umd\/index\.min\.js$/,
             rules: [
                 {
                     test: /\.tsx?$/,

@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 11.1.1
+
+### Fixed
+
+- An issue where WASM functionality could not be used when using the browser UMD library, orin a web context 
+  without applying the bundler optimization. 
+
 ## 11.1.0
 
 ### Added

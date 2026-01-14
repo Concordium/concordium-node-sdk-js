@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 12.0.1
+
+### Fixed
+
+- An issue where WASM functionality could not be used when using the browser UMD library, or in a web context 
+  without applying the bundler optimization. 
+
 ## 12.0.0
 
 This release adds compatibility with version 10 concordium nodes
@@ -77,7 +84,7 @@ This release adds compatibility with version 10 concordium nodes
 
 ### Fixed
 
-- An issue where WASM functionality could not be used when using the browser UMD library, orin a web context 
+- An issue where WASM functionality could not be used when using the browser UMD library, or in a web context 
   without applying the bundler optimization. 
 
 ## 11.1.0

@@ -9,7 +9,7 @@ type WebpackEnv = Partial<{
     package: string;
 }>;
 
-function configFor(target: 'web' | 'node', pkg?: string): Configuration {
+function configFor(target: 'web' | 'node', output: 'umd' | 'esm', pkg?: string): Configuration {
     const config: Configuration = {
         mode: 'production',
         cache: {
@@ -52,6 +52,32 @@ function configFor(target: 'web' | 'node', pkg?: string): Configuration {
         },
     };
 
+    switch (output) {
+        case 'umd': {
+            config.output = {
+                filename: `[name]/${target}/umd/index.min.js`,
+                path: resolve(__dirname, 'lib'),
+                library: { type: 'umd' },
+                publicPath: '',
+            };
+            break;
+        }
+        case 'esm': {
+            config.output = {
+                module: true,
+                filename: `[name]/${target}/esm/index.min.js`,
+                path: resolve(__dirname, 'lib'),
+                library: { type: 'module' },
+            };
+            config.experiments = {
+                outputModule: true,
+            };
+            break;
+        }
+        default:
+            throw new Error('Unsupported output');
+    }
+
     if (!pkg) {
         config.entry = {
             dapp: resolve(__dirname, './ts-src/dapp.ts'),
@@ -66,4 +92,8 @@ function configFor(target: 'web' | 'node', pkg?: string): Configuration {
     return config;
 }
 
-export default (env: WebpackEnv) => [configFor('web', env.package), configFor('node', env.package)];
+export default (env: WebpackEnv) => [
+    configFor('web', 'umd', env.package),
+    configFor('node', 'umd', env.package),
+    configFor('web', 'esm', env.package),
+];

@@ -206,3 +206,97 @@ export function toBuffer(s: string, encoding?: string): Buffer {
 export const bail = (error: string | Error): never => {
     throw error instanceof Error ? error : new Error(error);
 };
+
+/**
+ * Takes a callback function taking 1 argument, returning a new function taking same argument, applying callback only if supplied argument is defined.
+ */
+export const orUndefined =
+    <A, R>(fun: (v: A) => R) =>
+    (v: A | undefined): R | undefined =>
+        v !== undefined ? fun(v) : undefined;
+
+type AssertOptions = {
+    descriptor?: string;
+    error?: Error | string;
+};
+
+/**
+ * Asserts that a value is truthy, throwing an error if not.
+ *
+ * @param value - The value to check
+ * @param options - Optional descriptor or custom error message
+ *
+ * @throws {Error} If value is falsy
+ */
+export function assert(value: unknown, { descriptor }: Pick<AssertOptions, 'descriptor'>): asserts value;
+export function assert(value: unknown, { error }: Pick<AssertOptions, 'error'>): asserts value;
+export function assert(value: unknown): asserts value;
+export function assert(value: unknown, { descriptor, error }: AssertOptions = {}): asserts value {
+    if (!value) bail(error ?? `Unexpected type ${typeof value} found for ${descriptor ? `"${descriptor}"` : 'value'}`);
+}
+
+/**
+ * Asserts that a value is an object (not null), throwing an error if not. The value is
+ * asserted to contain all keys of the type `T` with `unknown` values for each key.
+ *
+ * @template T - The expected object type, defaults to generic object
+ *
+ * @param value - The value to check
+ * @param descriptor - Optional descriptor for error messages
+ *
+ * @throws {Error} If value is not an object
+ */
+export function assertObject<T extends object = object>(
+    value: unknown,
+    descriptor?: string
+): asserts value is Record<keyof T, unknown> {
+    assert(typeof value === 'object' && value !== null, {
+        error: `${descriptor ? `"${descriptor}"` : 'value'} is not an object`,
+    });
+}
+
+/**
+ * Asserts that a value is a string, throwing an error if not.
+ *
+ * @param value - The value to check
+ * @param descriptor - Optional descriptor for error messages
+ *
+ * @throws {Error} If value is not a string
+ */
+export function assertString(value: unknown, descriptor?: string): asserts value is string {
+    assert(typeof value === 'string', { error: `${descriptor ? `"${descriptor}"` : 'value'} is not a string` });
+}
+
+/**
+ * Asserts that a value is a safe integer (number or bigint), throwing an error if not.
+ *
+ * @param value - The value to check
+ * @param descriptor - Optional descriptor for error messages
+ *
+ * @throws {Error} If value is not an integer
+ */
+export function assertInteger(value: unknown, descriptor?: string): asserts value is number | bigint {
+    assert((typeof value === 'number' && Number.isSafeInteger(value)) || typeof value === 'bigint', {
+        error: `${descriptor ? `"${descriptor}"` : 'value'} is not an integer`,
+    });
+}
+
+/**
+ * Asserts that an object contains all specified properties, throwing an error if not. The value is
+ * asserted to contain all keys of the type `T` with `unknown` values for each key.
+ *
+ * @template T - The expected object type
+ * @template P - The property keys that must exist in the object
+ *
+ * @param value - The value to check
+ * @param properties - Property names that must exist in the object
+ *
+ * @throws {Error} If value is not an object or is missing any properties
+ */
+export function assertIn<T extends object, P extends keyof T = keyof T>(
+    value: unknown,
+    ...properties: P[]
+): asserts value is Record<P, unknown> {
+    assert(typeof value === 'object' && value !== null, { error: 'Expected value to be an object' });
+    if (!properties.every((p) => p in value)) bail(`Failed to find ${properties} in object ${value}`);
+}

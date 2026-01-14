@@ -1,15 +1,4 @@
-import {
-    AccountAddress,
-    AccountTransaction,
-    AccountTransactionHeader,
-    AccountTransactionSignature,
-    AccountTransactionType,
-    DeployModulePayload,
-    TransactionExpiry,
-    buildAccountSigner,
-    parseWallet,
-    signTransaction,
-} from '@concordium/web-sdk';
+import { AccountAddress, DeployModulePayload, Transaction, buildAccountSigner, parseWallet } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
@@ -76,23 +65,17 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
         source: wasmModule,
     };
 
-    const header: AccountTransactionHeader = {
-        expiry: TransactionExpiry.futureMinutes(60),
+    const header: Transaction.Metadata = {
         nonce: (await client.getNextAccountNonce(sender)).nonce,
         sender,
     };
 
-    const deployModuleTransaction: AccountTransaction = {
-        header,
-        payload: deployModule,
-        type: AccountTransactionType.DeployModule,
-    };
+    const deployModuleTransaction = Transaction.deployModule(deployModule).addMetadata(header).build();
 
     // Sign transaction
     const signer = buildAccountSigner(wallet);
-    const signature: AccountTransactionSignature = await signTransaction(deployModuleTransaction, signer);
-
-    const transactionHash = await client.sendAccountTransaction(deployModuleTransaction, signature);
+    const signedTransaction = await Transaction.signAndFinalize(deployModuleTransaction, signer);
+    const transactionHash = await client.sendTransaction(signedTransaction);
 
     console.log('Transaction submitted, waiting for finalization...');
 

@@ -1,14 +1,18 @@
 import { getAccountTransactionHandler } from './accountTransactions.js';
 import { Cursor } from './deserializationHelpers.js';
+import { SchemeId } from './serializationHelpers.js';
 import {
-    AccountTransaction,
-    AccountTransactionHeader,
+    AccountTransactionPayload,
     AccountTransactionSignature,
+    AccountTransactionType,
+    AttributesKeys,
+    ChainArData,
+    CredentialDeploymentInfo,
+    CredentialPublicKeys,
+    UpdateCredentialsPayload,
+    VerifyKey,
     isAccountTransactionType,
 } from './types.js';
-import * as AccountAddress from './types/AccountAddress.js';
-import * as AccountSequenceNumber from './types/SequenceNumber.js';
-import * as TransactionExpiry from './types/TransactionExpiry.js';
 
 /**
  * Reads an unsigned 8-bit integer from the given {@link Cursor}.
@@ -36,7 +40,13 @@ function deserializeMap<K extends string | number | symbol, T>(
     return result;
 }
 
-function deserializeAccountTransactionSignature(signatures: Cursor): AccountTransactionSignature {
+/**
+ * Deserializes account transaction signatures from a cursor.
+ *
+ * @param signatures - The cursor containing the serialized signature data.
+ * @returns A map of credential indexes to credential signatures, where each credential signature maps key indexes to signature hex strings.
+ */
+export function deserializeAccountTransactionSignature(signatures: Cursor): AccountTransactionSignature {
     const decodeSignature = (serialized: Cursor) => {
         const length = serialized.read(2).readUInt16BE(0);
         return serialized.read(length).toString('hex');
@@ -46,43 +56,172 @@ function deserializeAccountTransactionSignature(signatures: Cursor): AccountTran
     return deserializeMap(signatures, deserializeUint8, deserializeUint8, decodeCredentialSignatures);
 }
 
-function deserializeTransactionHeader(serializedHeader: Cursor): AccountTransactionHeader {
-    const sender = AccountAddress.fromBuffer(serializedHeader.read(32));
-    const nonce = AccountSequenceNumber.create(serializedHeader.read(8).readBigUInt64BE(0));
-    // TODO: extract payloadSize and energyAmount?
-    // energyAmount
-    serializedHeader.read(8).readBigUInt64BE(0);
-    // payloadSize
-    serializedHeader.read(4).readUInt32BE(0);
-    const expiry = TransactionExpiry.fromEpochSeconds(serializedHeader.read(8).readBigUInt64BE(0));
+/**
+ * Deserializes an account transaction payload from a cursor.
+ *
+ * @param value - The cursor containing the serialized payload data.
+ * @returns An object containing the transaction type and the deserialized payload.
+ * @throws {Error} If the transaction type is not valid.
+ */
+export function deserializeAccountTransactionPayload(value: Cursor): {
+    type: AccountTransactionType;
+    payload: AccountTransactionPayload;
+} {
+    const type = deserializeUint8(value);
+    if (!isAccountTransactionType(type)) {
+        throw new Error('TransactionType is not a valid value: ' + type);
+    }
+
+    const accountTransactionHandler = getAccountTransactionHandler(type);
+    const payload = accountTransactionHandler.deserialize(value);
+    return { type, payload };
+}
+
+export function deserializeCredentialDeploymentValues(serializedPayload: Cursor): CredentialDeploymentInfo {
+    const publicKeys = deserializeCredentialPublicKeys(serializedPayload);
+
+    const credId = serializedPayload.read(48);
+
+    const ipId = serializedPayload.read(4).readUInt32BE(0);
+
+    const revocationThreshold = serializedPayload.read(1).readUInt8(0);
+
+    const arData = deserializeArDataEntry(serializedPayload);
+
+    const validToYear = serializedPayload.read(2).readInt16BE(0);
+    const validToMonth = serializedPayload.read(1).readUInt8(0);
+    const validTo = validToYear.toString().padStart(4, '0') + validToMonth.toString().padStart(2, '0');
+
+    const createdAtYear = serializedPayload.read(2).readInt16BE(0);
+    const createdAtMonth = serializedPayload.read(1).readUInt8(0);
+    const createdAt = createdAtYear.toString().padStart(4, '0') + createdAtMonth.toString().padStart(2, '0');
+
+    const countAtrributes = serializedPayload.read(2).readUInt16BE(0);
+
+    const revealedAttributes: Partial<Record<any, any>> = {};
+    for (let a = 0; a < countAtrributes; a++) {
+        const attributeTagTemp = serializedPayload.read(1).readUInt8(0);
+
+        const attributeTag = AttributesKeys[attributeTagTemp];
+
+        const countAttributeValue = serializedPayload.read(1).readUInt8(0);
+
+        const attributeValue = serializedPayload.read(countAttributeValue);
+
+        revealedAttributes[attributeTag.toString()] = attributeValue.toString();
+    }
+
     return {
-        sender,
-        nonce,
-        expiry,
+        credId: credId.toString('hex'),
+        revocationThreshold: revocationThreshold,
+        arData: arData,
+
+        proofs: deserializeCredentialDeploymentProofs(serializedPayload),
+
+        ipIdentity: ipId,
+        credentialPublicKeys: publicKeys,
+        policy: {
+            validTo: validTo,
+            createdAt: createdAt,
+            revealedAttributes: revealedAttributes,
+        },
     };
 }
 
-export function deserializeAccountTransaction(serializedTransaction: Cursor): {
-    accountTransaction: AccountTransaction;
-    signatures: AccountTransactionSignature;
-} {
-    const signatures = deserializeAccountTransactionSignature(serializedTransaction);
+export function deserializeArDataEntry(serializedPayload: Cursor): Record<string, ChainArData> {
+    const result: Record<any, any> = {};
 
-    const header = deserializeTransactionHeader(serializedTransaction);
+    const count = serializedPayload.read(2).readUInt16BE(0);
 
-    const transactionType = deserializeUint8(serializedTransaction);
-    if (!isAccountTransactionType(transactionType)) {
-        throw new Error('TransactionType is not a valid value: ' + transactionType);
+    for (let i = 0; i < count; i++) {
+        const arIdentity = serializedPayload.read(4);
+        const data = deserializeChainArData(serializedPayload);
+
+        result[arIdentity.readUInt32BE(0)] = data;
     }
-    const accountTransactionHandler = getAccountTransactionHandler(transactionType);
-    const payload = accountTransactionHandler.deserialize(serializedTransaction);
+
+    return result;
+}
+
+export function deserializeChainArData(serializedPayload: Cursor): ChainArData {
+    const idCredPubShare = serializedPayload.read(96);
 
     return {
-        accountTransaction: {
-            type: transactionType,
-            payload,
-            header,
-        },
-        signatures,
+        encIdCredPubShare: idCredPubShare.toString('hex'),
+    };
+}
+
+export function deserializeCredentialPublicKeys(serializedPayload: Cursor): CredentialPublicKeys {
+    const count = serializedPayload.read(1).readUInt8(0);
+
+    const keys: Record<any, any> = {};
+    for (let i = 0; i < count; i++) {
+        const credentialVerifyKeyEntry = deserializeCredentialVerifyKey(serializedPayload);
+        keys[credentialVerifyKeyEntry.index] = credentialVerifyKeyEntry.key;
+    }
+
+    const threshold = serializedPayload.read(1).readUInt8(0);
+
+    return {
+        keys: keys,
+        threshold: threshold,
+    };
+}
+
+interface CredentialVerifyKeyEntry {
+    index: number;
+    key: VerifyKey;
+}
+
+export function deserializeCredentialVerifyKey(serializedPayload: Cursor): CredentialVerifyKeyEntry {
+    const index = serializedPayload.read(1).readUInt8(0);
+    const schemeTemp = serializedPayload.read(1).readUInt8(0);
+
+    let scheme: string;
+    if (SchemeId[schemeTemp] !== undefined) {
+        scheme = SchemeId[schemeTemp];
+    } else {
+        throw new Error('Unsupported schemeId found during deserialization');
+    }
+
+    const verifyKey = serializedPayload.read(32);
+
+    const verifyKeyObject: VerifyKey = {
+        schemeId: scheme.toString(),
+        verifyKey: verifyKey.toString('hex'),
+    };
+
+    return {
+        index: index,
+        key: verifyKeyObject,
+    };
+}
+
+export function deserializeCredentialDeploymentProofs(serializedPayload: Cursor): string {
+    const lengthOfProofBytes = serializedPayload.read(4);
+    const proofBlock = serializedPayload.read(lengthOfProofBytes.readUInt32BE(0));
+
+    return proofBlock.toString('hex');
+}
+
+export function deserializeCredentialsToBeRemoved(serializedPayload: Cursor): Partial<UpdateCredentialsPayload> {
+    const removeLength = serializedPayload.read(1).readUInt8(0);
+    const removeCredIds: string[] = [];
+
+    for (let a = 0; a < removeLength; a++) {
+        const credentialRegistrationId = serializedPayload.read(48);
+        removeCredIds[a] = credentialRegistrationId.toString('hex');
+    }
+
+    return {
+        removeCredentialIds: removeCredIds,
+    };
+}
+
+export function deserializeThreshold(serializedPayload: Cursor): Partial<UpdateCredentialsPayload> {
+    const newThreshold = serializedPayload.read(1).readUInt8(0);
+
+    return {
+        threshold: newThreshold,
     };
 }

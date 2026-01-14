@@ -35,6 +35,15 @@ export function toUnwrappedJSON(value: Type): bigint {
     return value.value;
 }
 
+/**
+ * Converts the intermediary representation created from {@linkcode toUnwrappedJSON} to a typed instance.
+ * @param json - The JSON value to parse
+ * @returns The corresponding typed instance
+ */
+export function fromUnwrappedJSON(json: bigint | string | number): Timestamp {
+    return fromMillis(BigInt(json));
+}
+
 /** Represents a timestamp. */
 export type Type = Timestamp;
 

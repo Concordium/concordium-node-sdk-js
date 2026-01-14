@@ -1,6 +1,7 @@
 // self-referencing not allowed by eslint resolver
 // eslint-disable-next-line import/no-extraneous-dependencies
 import * as ed from '@concordium/web-sdk/shims/ed25519';
+import assert from 'assert';
 
 import { QueriesClient } from '../../src/grpc-api/v2/concordium/service.client.ts';
 import * as v2 from '../../src/grpc-api/v2/concordium/types.js';
@@ -8,17 +9,13 @@ import * as v1 from '../../src/index.js';
 import {
     BlockHash,
     buildBasicAccountSigner,
-    calculateEnergyCost,
     createCredentialDeploymentPayload,
-    getAccountTransactionHandler,
     getCredentialDeploymentSignDigest,
-    serializeAccountTransaction,
-    serializeAccountTransactionPayload,
     sha256,
-    signTransaction,
     streamToList,
 } from '../../src/index.js';
 import { getModuleBuffer } from '../../src/nodejs/index.js';
+import { Transaction } from '../../src/transactions/index.ts';
 import * as AccountAddress from '../../src/types/AccountAddress.js';
 import * as Energy from '../../src/types/Energy.js';
 import * as SequenceNumber from '../../src/types/SequenceNumber.js';
@@ -249,7 +246,7 @@ test.each(clients)('sendBlockItem', async (client) => {
     const nextNonce = await client.getNextAccountNonce(senderAccount);
 
     // Create local transaction
-    const header: v1.AccountTransactionHeader = {
+    const header = {
         expiry: v1.TransactionExpiry.futureMinutes(60),
         nonce: nextNonce.nonce,
         sender: senderAccount,
@@ -258,17 +255,14 @@ test.each(clients)('sendBlockItem', async (client) => {
         amount: v1.CcdAmount.fromCcd(10_000),
         toAddress: testAccount,
     };
-    const accountTransaction: v1.AccountTransaction = {
-        header: header,
-        payload: simpleTransfer,
-        type: v1.AccountTransactionType.Transfer,
-    };
+
+    const accountTransaction = Transaction.transfer(simpleTransfer).addMetadata(header).build();
 
     // Sign transaction
     const signer = buildBasicAccountSigner(privateKey);
-    const signature: v1.AccountTransactionSignature = await signTransaction(accountTransaction, signer);
+    const signed = await Transaction.signAndFinalize(accountTransaction, signer);
 
-    expect(client.sendAccountTransaction(accountTransaction, signature)).rejects.toThrow('costs');
+    expect(client.sendTransaction(signed)).rejects.toThrow('costs');
 });
 
 test.each(clients)('transactionHash', async (client) => {
@@ -277,7 +271,7 @@ test.each(clients)('transactionHash', async (client) => {
     const nextNonce = await client.getNextAccountNonce(senderAccount);
 
     // Create local transaction
-    const headerLocal: v1.AccountTransactionHeader = {
+    const headerLocal = {
         expiry: v1.TransactionExpiry.futureMinutes(60),
         nonce: nextNonce.nonce,
         sender: senderAccount,
@@ -286,28 +280,19 @@ test.each(clients)('transactionHash', async (client) => {
         amount: v1.CcdAmount.fromCcd(10_000),
         toAddress: testAccount,
     };
-    const transaction: v1.AccountTransaction = {
-        header: headerLocal,
-        payload: simpleTransfer,
-        type: v1.AccountTransactionType.Transfer,
-    };
 
-    const rawPayload = serializeAccountTransactionPayload(transaction);
-
-    // Energy cost
-    const accountTransactionHandler = getAccountTransactionHandler(transaction.type);
-    const baseEnergyCost = accountTransactionHandler.getBaseEnergyCost(transaction.payload);
-    const energyCost = calculateEnergyCost(1n, BigInt(rawPayload.length), baseEnergyCost);
+    const transaction = Transaction.transfer(simpleTransfer).addMetadata(headerLocal).build();
+    const rawPayload = v1.Payload.serialize(transaction.payload);
 
     // Sign transaction
     const signer = buildBasicAccountSigner(privateKey);
-    const signature: v1.AccountTransactionSignature = await signTransaction(transaction, signer);
+    const signedTransction = await Transaction.signAndFinalize(transaction, signer);
 
     // Put together sendBlockItemRequest
     const header: v2.AccountTransactionHeader = {
         sender: AccountAddress.toProto(transaction.header.sender),
         sequenceNumber: SequenceNumber.toProto(transaction.header.nonce),
-        energyAmount: Energy.toProto(energyCost),
+        energyAmount: Energy.toProto(signedTransction.header.energyAmount),
         expiry: { value: transaction.header.expiry.expiryEpochSeconds },
     };
     const accountTransaction: v2.PreAccountTransaction = {
@@ -317,7 +302,9 @@ test.each(clients)('transactionHash', async (client) => {
         },
     };
 
-    const serializedAccountTransaction = serializeAccountTransaction(transaction, signature).slice(71);
+    assert(signedTransction.version === 0);
+
+    const serializedAccountTransaction = v1.AccountTransactionV0.serialize(signedTransction).slice(71);
     const localHash = Buffer.from(sha256([serializedAccountTransaction])).toString('hex');
 
     const queries: QueriesClient = (client as any).client;

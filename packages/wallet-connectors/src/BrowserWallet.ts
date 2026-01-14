@@ -1,9 +1,4 @@
-import {
-    SchemaType,
-    SendTransactionPayload,
-    WalletApi,
-    detectConcordiumProvider,
-} from '@concordium/browser-wallet-api-helpers';
+import { SchemaType, WalletApi, detectConcordiumProvider } from '@concordium/browser-wallet-api-helpers';
 import {
     AccountTransactionSignature,
     AccountTransactionType,
@@ -12,6 +7,7 @@ import {
 } from '@concordium/web-sdk';
 
 import {
+    SendTransactionPayload,
     SignableMessage,
     TypedSmartContractParameters,
     WalletConnection,

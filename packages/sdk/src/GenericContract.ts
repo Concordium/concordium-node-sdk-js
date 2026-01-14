@@ -2,7 +2,8 @@ import { Buffer } from 'buffer/index.js';
 import { stringify } from 'json-bigint';
 
 import { ConcordiumGRPCClient } from './grpc/GRPCClient.js';
-import { AccountSigner, signTransaction } from './signHelpers.js';
+import { AccountSigner } from './signHelpers.js';
+import { Transaction } from './transactions/index.js';
 import {
     AccountTransactionType,
     Base64String,
@@ -11,7 +12,7 @@ import {
     InvokeContractResult,
     MakeOptional,
     SmartContractTypeValues,
-    UpdateContractPayload,
+    UpdateContractInput,
 } from './types.js';
 import * as AccountAddress from './types/AccountAddress.js';
 import * as BlockHash from './types/BlockHash.js';
@@ -80,7 +81,7 @@ export type ContractUpdateTransaction = {
     /** The type of the transaction, which will always be of type {@link AccountTransactionType.Update} */
     type: AccountTransactionType.Update;
     /** The payload of the transaction, which will always be of type {@link UpdateContractPayload} */
-    payload: UpdateContractPayload;
+    payload: UpdateContractInput;
 };
 
 /**
@@ -347,12 +348,12 @@ class ContractBase<E extends string = string, V extends string = string> {
     ): ContractUpdateTransaction | MakeOptional<ContractUpdateTransactionWithSchema<J>, 'schema'> {
         const parameter = Parameter.fromBuffer(serializeInput(input));
 
-        const payload: UpdateContractPayload = {
+        const payload: UpdateContractInput = {
             amount,
             address: this.contractAddress,
             receiveName: ReceiveName.create(this.contractName, entrypoint),
-            maxContractExecutionEnergy: energy,
             message: parameter,
+            maxContractExecutionEnergy: energy,
         };
         const transaction: ContractUpdateTransaction = {
             type: AccountTransactionType.Update,
@@ -400,22 +401,21 @@ class ContractBase<E extends string = string, V extends string = string> {
      * @returns {TransactionHash.Type} The transaction hash of the update transaction
      */
     protected async sendUpdateTransaction(
-        transactionBase: ContractUpdateTransaction,
-        { senderAddress, expiry = getContractUpdateDefaultExpiryDate() }: ContractTransactionMetadata,
+        { payload }: ContractUpdateTransaction,
+        { senderAddress, expiry = getContractUpdateDefaultExpiryDate(), energy }: ContractTransactionMetadata,
         signer: AccountSigner
     ): Promise<TransactionHash.Type> {
         const { nonce } = await this.grpcClient.getNextAccountNonce(senderAddress);
-        const header = {
+
+        const header: Transaction.Metadata = {
             expiry,
             nonce: nonce,
             sender: senderAddress,
         };
-        const transaction = {
-            ...transactionBase,
-            header,
-        };
-        const signature = await signTransaction(transaction, signer);
-        return this.grpcClient.sendAccountTransaction(transaction, signature);
+
+        const transaction = Transaction.updateContract(payload, energy).addMetadata(header).build();
+        const signed = await Transaction.signAndFinalize(transaction, signer);
+        return this.grpcClient.sendTransaction(signed);
     }
 
     /**

@@ -4,13 +4,13 @@ import {
     BlockHash,
     CIS2Contract,
     ContractAddress,
-    Energy,
     EntrypointName,
     Parameter,
     ReceiveName,
     TransactionEventTag,
     serializeTypeValue,
 } from '../../src/index.js';
+import { Energy } from '../../src/types/index.ts';
 import { getNodeClientV2 as getNodeClient } from './testHelpers.js';
 
 const CIS2_FT_ADDRESS = ContractAddress.create(3496);
@@ -190,7 +190,7 @@ describe('createTransfer', () => {
 
     test('multiple transfers', async () => {
         const cis2 = await getCIS2Single();
-        const { parameter, schema } = cis2.createTransfer({ energy: Energy.create(10000) }, [
+        const { parameter, schema, payload } = cis2.createTransfer({ energy: Energy.create(1000000) }, [
             {
                 tokenId: '',
                 to: AccountAddress.fromBase58('3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB'),
@@ -233,6 +233,7 @@ describe('createTransfer', () => {
         ]);
         const schemaSerialized = serializeTypeValue(parameter.json, Buffer.from(schema.value, 'base64'));
         expect(Parameter.toHexString(schemaSerialized)).toEqual(expectedParameterHex);
+        expect(payload.maxContractExecutionEnergy.value).toEqual(1000000n);
     });
 });
 

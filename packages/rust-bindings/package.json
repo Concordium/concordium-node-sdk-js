@@ -90,7 +90,7 @@
         "build:rust-bindings-dapp": "yarn build-all dapp && yarn webpack --env package=dapp && tsx ./scripts/build-react-native-dapp.ts && yarn sanitize",
         "build:rust-bindings-wallet": "yarn build-all wallet && yarn webpack --env package=wallet && tsx ./scripts/build-react-native-wallet.ts && yarn sanitize",
         "build:rust-bindings": "yarn build",
-        "webpack": "tsx ../../node_modules/.bin/webpack --config webpack.config.ts",
+        "webpack": "tsx ../../node_modules/webpack/bin/webpack.js --config webpack.config.ts",
         "clean": "rimraf -- target lib .webpack-cache",
         "sanitize": "rimraf --glob -- \"lib/**/.gitignore\" \"lib/**/package.json\"",
         "lint": "eslint . --cache --ext ts,tsx --report-unused-disable-directives --max-warnings 0",

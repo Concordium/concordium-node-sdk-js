@@ -2,6 +2,8 @@ import * as wasm from '@concordium/rust-bindings/wallet';
 import { Buffer } from 'buffer/index.js';
 import JSONBig from 'json-bigint';
 
+import { ConcordiumGRPCClient, isKnown } from '../../grpc/index.js';
+import { signTransaction } from '../../signHelpers.js';
 import {
     AccountTransaction,
     AccountTransactionHeader,
@@ -9,17 +11,13 @@ import {
     AttributeKey,
     BlockItemStatus,
     BlockItemSummaryInBlock,
-    ConcordiumGRPCClient,
     HexString,
     RegisterDataPayload,
     TransactionKindString,
     TransactionStatusEnum,
     TransactionSummaryType,
-    cborDecode,
-    cborEncode,
-    isKnown,
-    signTransaction,
-} from '../../index.js';
+} from '../../types.js';
+import { cborDecode, cborEncode } from '../../types/cbor.js';
 import { DataBlob, SequenceNumber, TransactionExpiry, TransactionHash } from '../../types/index.js';
 import { getTransactionStatusRank } from '../../util.js';
 import { AccountStatementBuild } from '../../web3-id/proofs.js';

@@ -1,6 +1,6 @@
 {
     "name": "@concordium/wallet-connectors",
-    "version": "0.6.1",
+    "version": "0.7.0",
     "description": "Utility interface for dApps to interact with wallets without depending on the underlying protocol and implementations for Concordium Browser Wallet and Wallet Connect v2.",
     "author": "Concordium Software",
     "license": "Apache-2.0",
@@ -39,7 +39,7 @@
         "buffer": "^6.0.3"
     },
     "peerDependencies": {
-        "@concordium/web-sdk": ">= 7",
+        "@concordium/web-sdk": ">= 12",
         "@walletconnect/types": "^2.13.1"
     },
     "devDependencies": {

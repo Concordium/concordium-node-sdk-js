@@ -18,6 +18,7 @@ import * as GRPC from '../grpc-api/v2/concordium/types.js';
 import * as PLT from '../plt/index.js';
 import { RawModuleSchema } from '../schemaTypes.js';
 import { serializeAccountTransactionPayload } from '../serialization.js';
+import { Payload, Transaction } from '../transactions/index.js';
 import * as SDK from '../types.js';
 import { HexString, isRpcError } from '../types.js';
 import * as AccountAddress from '../types/AccountAddress.js';
@@ -279,6 +280,49 @@ export class ConcordiumGRPCClient {
     }
 
     /**
+     * Serializes and sends a signed account transaction to the node to be
+     * put in a block on the chain.
+     *
+     * Note that a transaction can still fail even if it was accepted by the node.
+     * To keep track of the transaction use getTransactionStatus.
+     *
+     * {@codeblock ~~:nodejs/common/simpleTransfer.ts#documentation-snippet}
+     *
+     * @param transaction the transaction to send to the node
+     * @returns The transaction hash as a hex-encoded string
+     */
+    async sendTransaction(transaction: Transaction.Finalized): Promise<TransactionHash.Type> {
+        const rawPayload = Payload.serialize(transaction.payload);
+        // TODO: once node v10 is out with general support for submitting raw block items, the version check can be
+        // removed.
+        switch (transaction.version) {
+            case 0:
+                return this.sendRawAccountTransaction(
+                    transaction.header,
+                    transaction.header.energyAmount,
+                    rawPayload,
+                    transaction.signature
+                );
+            case 1:
+                return this.sendRawTransaction(transaction);
+        }
+    }
+
+    private async sendRawTransaction(transaction: Transaction.Finalized): Promise<TransactionHash.Type> {
+        const rawBlockItem = Transaction.serializeBlockItem(transaction);
+        const sendBlockItemRequest: GRPC.SendBlockItemRequest = {
+            blockItem: {
+                oneofKind: 'rawBlockItem',
+                rawBlockItem,
+            },
+        };
+        const response = await this.client.sendBlockItem(sendBlockItemRequest).response;
+        return TransactionHash.fromProto(response);
+    }
+
+    /**
+     * @deprecated Use {@linkcode sendTransaction} instead
+     *
      * Serializes and sends an account transaction to the node to be
      * put in a block on the chain.
      *
@@ -295,14 +339,9 @@ export class ConcordiumGRPCClient {
         transaction: SDK.AccountTransaction,
         signature: SDK.AccountTransactionSignature
     ): Promise<TransactionHash.Type> {
-        const accountTransactionHandler = getAccountTransactionHandler(transaction.type);
-
         const rawPayload = serializeAccountTransactionPayload(transaction);
-
-        // Energy cost
-        const baseEnergyCost = accountTransactionHandler.getBaseEnergyCost(transaction.payload);
-
-        const energyCost = calculateEnergyCost(countSignatures(signature), BigInt(rawPayload.length), baseEnergyCost);
+        const baseEnergy = getAccountTransactionHandler(transaction.type).getBaseEnergyCost(transaction.payload);
+        const energyCost = calculateEnergyCost(countSignatures(signature), BigInt(rawPayload.length), baseEnergy);
 
         return this.sendRawAccountTransaction(transaction.header, energyCost, rawPayload, signature);
     }
@@ -314,7 +353,7 @@ export class ConcordiumGRPCClient {
      * Note that a transaction can still fail even if it was accepted by the node.
      * To keep track of the transaction use getTransactionStatus.
      *
-     * In general, { @link ConcordiumGRPCClient.sendAccountTransaction } is the recommended
+     * In general, { @link ConcordiumGRPCClient.sendSignedTransaction } is the recommended
      * method to send account transactions, as this does not require the caller to serialize the payload themselves.
      *
      * @param header the transactionheader to send to the node

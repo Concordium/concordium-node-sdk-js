@@ -1,6 +1,6 @@
 {
     "name": "@concordium/rust-bindings",
-    "version": "4.0.0",
+    "version": "4.0.1",
     "license": "Apache-2.0",
     "type": "module",
     "engines": {
@@ -28,8 +28,9 @@
                 "default": "./lib/dapp/node/cjs/index.cjs"
             },
             "browser": {
+                "module": "./lib/dapp/web/esm/index.min.js",
                 "types": "./lib/dapp/web/esm/index.d.ts",
-                "import": "./lib/dapp/web/esm/index.js",
+                "import": "./lib/dapp/web/esm/index.min.js",
                 "default": "./lib/dapp/web/umd/index.min.js"
             },
             "default": "./lib/dapp/web/umd/index.min.js"
@@ -41,8 +42,9 @@
                 "default": "./lib/dapp/node/cjs/index.cjs"
             },
             "browser": {
+                "module": "./lib/dapp/web/esm/index.min.js",
                 "types": "./lib/dapp/web/esm/index.d.ts",
-                "import": "./lib/dapp/web/esm/index.js",
+                "import": "./lib/dapp/web/esm/index.min.js",
                 "default": "./lib/dapp/web/umd/index.min.js"
             },
             "default": "./lib/dapp/web/umd/index.min.js"
@@ -54,8 +56,9 @@
                 "default": "./lib/wallet/node/cjs/index.cjs"
             },
             "browser": {
+                "module": "./lib/wallet/web/esm/index.min.js",
                 "types": "./lib/wallet/web/esm/index.d.ts",
-                "import": "./lib/wallet/web/esm/index.js",
+                "import": "./lib/wallet/web/esm/index.min.js",
                 "default": "./lib/wallet/web/umd/index.min.js"
             },
             "default": "./lib/wallet/web/umd/index.min.js"
@@ -79,7 +82,7 @@
     "scripts": {
         "rustfmt": "cargo +nightly-2023-04-01-x86_64-unknown-linux-gnu fmt -- --color=always",
         "clippy": "cargo +1.73 clippy --color=always --tests --benches -- -Dclippy::all",
-        "build-web": "wasm-pack build ./packages/$0 --target web --out-dir $INIT_CWD/lib/$0/web/esm --out-name index",
+        "build-web": "wasm-pack build ./packages/$0 --target web --out-dir $INIT_CWD/lib/$0/web/esm --out-name index && tsx ./scripts/web-esm-remove-init.ts $0",
         "build-node": "wasm-pack build ./packages/$0 --target nodejs --out-dir $INIT_CWD/lib/$0/node/cjs --out-name index && tsx ./scripts/fix-nodejs-ext.ts",
         "build-bundler": "wasm-pack build ./packages/$0 --target bundler --out-dir $INIT_CWD/lib/$0/bundler --out-name index",
         "build-all": "yarn build-web $0 && yarn build-node $0 && yarn build-bundler $0",

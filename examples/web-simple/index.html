@@ -1,23 +1,150 @@
 <!doctype html>
 <html>
+    <head>
+        <meta charset="utf-8" />
+        <title>Concordium SDK - Web UMD Test</title>
+        <script src="../../node_modules/@concordium/web-sdk/lib/min/concordium.web.min.js"></script>
+        <style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                max-width: 800px;
+                margin: 40px auto;
+                padding: 0 20px;
+                line-height: 1.6;
+            }
+            h1 {
+                border-bottom: 2px solid #eee;
+                padding-bottom: 10px;
+            }
+            .test {
+                padding: 10px;
+                margin: 8px 0;
+                border-radius: 4px;
+                border-left: 4px solid;
+            }
+            .test.pass {
+                background: #f0fff0;
+                border-color: #2e7d32;
+            }
+            .test.fail {
+                background: #fff0f0;
+                border-color: #c62828;
+            }
+            .test-name {
+                font-weight: 600;
+            }
+            .test-result {
+                font-family: monospace;
+                font-size: 12px;
+                color: #666;
+                margin-top: 4px;
+                word-break: break-all;
+            }
+            .status {
+                font-weight: bold;
+            }
+            .status.pass {
+                color: #2e7d32;
+            }
+            .status.fail {
+                color: #c62828;
+            }
+            #summary {
+                margin-top: 20px;
+                padding: 15px;
+                background: #f5f5f5;
+                border-radius: 4px;
+                font-weight: 600;
+            }
+        </style>
+    </head>
 
-<head>
-    <meta charset="utf-8" />
-    <script src="../../node_modules/@concordium/web-sdk/lib/min/concordium.web.min.js"></script>
-</head>
+    <body>
+        <h1>Concordium SDK - Web UMD Test</h1>
+        <div id="results"></div>
+        <div id="summary"></div>
 
-<body>
-    <div id="root"></div>
-    <script>
-        // Verifies that PLT works in UMD.
-        const account = concordiumSDK.AccountAddress.fromBase58('4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd');
-        const tokenAmount = concordiumSDK.TokenAmount.create(100, 2);
-        console.log(account, tokenAmount);
+        <script>
+            const results = document.getElementById('results');
+            const summary = document.getElementById('summary');
+            let passed = 0,
+                failed = 0;
 
-        // Verifies that UMD wasm functions work
-        const schema = concordiumSDK.toBuffer('FAACAAAABAAAAGtleXMQAR4gAAAADgAAAGF1eGlsaWFyeV9kYXRhEAEC', 'base64');
-        console.log(concordiumSDK.displayTypeSchemaTemplate(schema));
-    </script>
-</body>
+            function test(name, fn) {
+                const div = document.createElement('div');
+                div.className = 'test';
+                try {
+                    const result = fn();
+                    div.className += ' pass';
+                    div.innerHTML = `<span class="status pass">✓ PASS</span> <span class="test-name">${name}</span>`;
+                    if (result !== undefined) {
+                        div.innerHTML += `<div class="test-result">${escapeHtml(String(result))}</div>`;
+                    }
+                    passed++;
+                } catch (e) {
+                    div.className += ' fail';
+                    div.innerHTML = `<span class="status fail">✗ FAIL</span> <span class="test-name">${name}</span>`;
+                    div.innerHTML += `<div class="test-result">${escapeHtml(e.message)}</div>`;
+                    failed++;
+                }
+                results.appendChild(div);
+            }
 
+            function escapeHtml(str) {
+                return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            }
+
+            // Test: AccountAddress.fromBase58
+            test('AccountAddress.fromBase58()', () => {
+                const account = concordiumSDK.AccountAddress.fromBase58(
+                    '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd'
+                );
+                return account.address;
+            });
+
+            // Test: TokenAmount.create (PLT functionality)
+            test('TokenAmount.create() - PLT functionality', () => {
+                const tokenAmount = concordiumSDK.TokenAmount.create(100, 2);
+                return `TokenAmount: ${tokenAmount.toString()}`;
+            });
+
+            // Test: displayTypeSchemaTemplate (WASM functionality)
+            test('displayTypeSchemaTemplate() - WASM functionality', () => {
+                const schema = concordiumSDK.toBuffer(
+                    'FAACAAAABAAAAGtleXMQAR4gAAAADgAAAGF1eGlsaWFyeV9kYXRhEAEC',
+                    'base64'
+                );
+                const template = concordiumSDK.displayTypeSchemaTemplate(schema);
+                return template.substring(0, 100) + (template.length > 100 ? '...' : '');
+            });
+
+            // Test: ConcordiumGRPCWebClient exists
+            test('ConcordiumGRPCWebClient available', () => {
+                if (typeof concordiumSDK.ConcordiumGRPCWebClient !== 'function') {
+                    throw new Error('ConcordiumGRPCWebClient is not a function');
+                }
+                return 'Constructor available';
+            });
+
+            // Test: generateBakerKeys (WASM - wallet module)
+            test('generateBakerKeys() - WASM wallet module', () => {
+                const account = concordiumSDK.AccountAddress.fromBase58(
+                    '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd'
+                );
+                const keys = concordiumSDK.generateBakerKeys(account);
+                if (!keys.electionVerifyKey || !keys.signatureVerifyKey || !keys.aggregationVerifyKey) {
+                    throw new Error('Missing expected keys in result');
+                }
+                return `electionVerifyKey: ${keys.electionVerifyKey.substring(0, 20)}...`;
+            });
+
+            // Display summary
+            const total = passed + failed;
+            summary.innerHTML =
+                `Tests: ${passed}/${total} passed` +
+                (failed > 0
+                    ? ` <span style="color: #c62828">(${failed} failed)</span>`
+                    : ' <span style="color: #2e7d32">✓</span>');
+        </script>
+    </body>
 </html>

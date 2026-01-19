@@ -52,6 +52,7 @@ import { UnreachableCaseError } from './error';
  */
 export enum WalletConnectMethod {
     SignAndSendTransaction = 'sign_and_send_transaction',
+    SignAndSendSponsoredTransaction = 'sign_and_send_sponsored_transaction',
     SignMessage = 'sign_message',
     RequestVerifiablePresentation = 'request_verifiable_presentation',
 }
@@ -370,6 +371,37 @@ export class WalletConnectConnection implements WalletConnection {
                 topic: this.session.topic,
                 request: {
                     method: 'sign_and_send_transaction',
+                    params,
+                },
+                chainId: this.chainId,
+            })) as SignAndSendTransactionResult; // TODO do proper type check
+            return hash;
+        } catch (e) {
+            if (isSignAndSendTransactionError(e) && e.code === 500) {
+                throw new Error('transaction rejected in wallet');
+            }
+            throw e;
+        }
+    }
+
+    // TODO
+    async signAndSendSponsoredTransaction(
+        accountAddress: string,
+        type: AccountTransactionType,
+        payload: SendTransactionPayload,
+        typedParams?: TypedSmartContractParameters
+    ) {
+        const params = {
+            type: getTransactionKindString(type),
+            sender: accountAddress,
+            payload: accountTransactionPayloadToJson(serializePayloadParameters(type, payload, typedParams)),
+            schema: convertSchemaFormat(typedParams?.schema),
+        };
+        try {
+            const { hash } = (await this.connector.client.request({
+                topic: this.session.topic,
+                request: {
+                    method: 'sign_and_send_sponsored_transaction',
                     params,
                 },
                 chainId: this.chainId,

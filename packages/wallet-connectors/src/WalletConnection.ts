@@ -199,6 +199,30 @@ export interface WalletConnection {
         typedParams?: TypedSmartContractParameters
     ): Promise<string>;
 
+    // TODO
+    /**
+     * Assembles a transaction and sends it off to the wallet for approval and submission.
+     *
+     * The returned promise resolves to the hash of the transaction once the request is approved in the wallet and successfully submitted.
+     * If this doesn't happen, the promise rejects with an explanatory error message.
+     *
+     * If the transaction is a contract init/update, then any contract parameters and a corresponding schema
+     * must be provided in {@link typedParams} and parameters must be omitted from {@link payload}.
+     * It's an error to provide {@link typedParams} for non-contract transactions and for contract transactions with empty parameters.
+     *
+     * @param accountAddress The account whose keys are used to sign the transaction.
+     * @param type Type of the transaction (i.e. {@link AccountTransactionType.InitContract} or {@link AccountTransactionType.Update}.
+     * @param payload The payload of the transaction *not* including the parameters of the contract invocation.
+     * @param typedParams The parameters of the contract invocation and a schema describing how to serialize them. The parameters must be given as a plain JavaScript object.
+     * @return A promise for the hash of the submitted transaction.
+     */
+    signAndSendSponsoredTransaction(
+        accountAddress: string,
+        type: AccountTransactionType,
+        payload: SendTransactionPayload,
+        typedParams?: TypedSmartContractParameters
+    ): Promise<string>;
+
     /**
      * Request the wallet to sign a message using the keys of the given account.
      *

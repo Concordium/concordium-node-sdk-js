@@ -162,6 +162,42 @@ export class BrowserWalletConnector implements WalletConnector, WalletConnection
         return this.client.sendTransaction(accountAddress, type as any, payload as any); // wallet API types enforce strict coupling of transaction types and corresponding payloads.
     }
 
+    async signAndSendSponsoredTransaction(
+        accountAddress: string,
+        type: AccountTransactionType,
+        payload: SendTransactionPayload,
+        typedParams?: TypedSmartContractParameters
+    ): Promise<string> {
+        if ((type === AccountTransactionType.InitContract || type === AccountTransactionType.Update) && typedParams) {
+            const { parameters, schema } = typedParams;
+            switch (schema.type) {
+                case 'ModuleSchema':
+                    return this.client.sendTransaction(
+                        accountAddress,
+                        type as any, // wallet API types enforce strict coupling of transaction types and corresponding payloads.
+                        payload as any, // wallet API types enforce strict coupling of transaction types and corresponding payloads.
+                        parameters,
+                        {
+                            type: SchemaType.Module,
+                            value: schema.value.toString('base64'),
+                        },
+                        schema.version
+                    );
+                case 'TypeSchema':
+                    return this.client.sendTransaction(accountAddress, type as any, payload as any, parameters, {
+                        type: SchemaType.Parameter,
+                        value: schema.value.toString('base64'),
+                    });
+                default:
+                    throw new UnreachableCaseError('schema', schema);
+            }
+        }
+        if (typedParams) {
+            throw new Error(`'typedParams' must not be provided for transaction of type '${type}'`);
+        }
+        return this.client.sendTransaction(accountAddress, type as any, payload as any); // wallet API types enforce strict coupling of transaction types and corresponding payloads.
+    }
+
     async signMessage(accountAddress: string, msg: SignableMessage): Promise<AccountTransactionSignature> {
         switch (msg.type) {
             case 'StringMessage':

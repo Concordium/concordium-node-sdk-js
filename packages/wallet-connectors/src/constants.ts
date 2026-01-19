@@ -103,6 +103,7 @@ export const FULL_WALLET_CONNECT_NAMESPACE_CONFIG: WalletConnectNamespaceConfig 
     methods: [
         WalletConnectMethod.SignMessage,
         WalletConnectMethod.SignAndSendTransaction,
+        WalletConnectMethod.SignAndSendSponsoredTransaction,
         WalletConnectMethod.RequestVerifiablePresentation,
     ],
     events: [WalletConnectEvent.AccountsChanged, WalletConnectEvent.ChainChanged],

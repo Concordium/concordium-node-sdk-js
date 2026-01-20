@@ -1,12 +1,17 @@
 import { SchemaType, WalletApi, detectConcordiumProvider } from '@concordium/browser-wallet-api-helpers';
 import {
+    AccountAddress,
     AccountTransactionSignature,
     AccountTransactionType,
     CredentialStatements,
+    SequenceNumber,
+    Transaction,
+    TransactionExpiry,
     VerifiablePresentation,
 } from '@concordium/web-sdk';
 
 import {
+    SendSponsoredTransactionPayload,
     SendTransactionPayload,
     SignableMessage,
     TypedSmartContractParameters,
@@ -163,39 +168,72 @@ export class BrowserWalletConnector implements WalletConnector, WalletConnection
     }
 
     async signAndSendSponsoredTransaction(
-        accountAddress: string,
-        type: AccountTransactionType,
-        payload: SendTransactionPayload,
+        sender: AccountAddress.Type,
+        senderNonce: SequenceNumber.Type,
+        sponsor: AccountAddress.Type,
+        sponsorSignature: AccountTransactionSignature,
+        payload: SendSponsoredTransactionPayload,
+        expiry: TransactionExpiry.Type,
         typedParams?: TypedSmartContractParameters
     ): Promise<string> {
-        if ((type === AccountTransactionType.InitContract || type === AccountTransactionType.Update) && typedParams) {
-            const { parameters, schema } = typedParams;
-            switch (schema.type) {
-                case 'ModuleSchema':
-                    return this.client.sendTransaction(
-                        accountAddress,
-                        type as any, // wallet API types enforce strict coupling of transaction types and corresponding payloads.
-                        payload as any, // wallet API types enforce strict coupling of transaction types and corresponding payloads.
-                        parameters,
-                        {
-                            type: SchemaType.Module,
-                            value: schema.value.toString('base64'),
-                        },
-                        schema.version
-                    );
-                case 'TypeSchema':
-                    return this.client.sendTransaction(accountAddress, type as any, payload as any, parameters, {
-                        type: SchemaType.Parameter,
-                        value: schema.value.toString('base64'),
-                    });
-                default:
-                    throw new UnreachableCaseError('schema', schema);
-            }
+        let transaction: Transaction.Type;
+        switch (payload.type) {
+            case AccountTransactionType.Transfer:
+                if (typedParams) {
+                    throw new Error(`'typedParams' must not be provided for transaction of type '${payload.type}'`);
+                }
+                transaction = Transaction.transfer(payload);
+                break;
+            case AccountTransactionType.Update:
+                //if (typedParams) {
+                //     const { parameters, schema } = typedParams;
+                //     switch (schema.type) {
+                //         case 'ModuleSchema':
+                //             return this.client.sendTransaction(
+                //                 accountAddress,
+                //                 type as any, // wallet API types enforce strict coupling of transaction types and corresponding payloads.
+                //                 payload as any, // wallet API types enforce strict coupling of transaction types and corresponding payloads.
+                //                 parameters,
+                //                 {
+                //                     type: SchemaType.Module,
+                //                     value: schema.value.toString('base64'),
+                //                 },
+                //                 schema.version
+                //             );
+                //         case 'TypeSchema':
+                //             return this.client.sendTransaction(accountAddress, type as any, payload as any, parameters, {
+                //                 type: SchemaType.Parameter,
+                //                 value: schema.value.toString('base64'),
+                //             });
+                //         default:
+                //             throw new UnreachableCaseError('schema', schema);
+                //     }
+                // }
+                // if (typedParams) {
+                //     throw new Error(`'typedParams' must not be provided for transaction of type '${type}'`);
+                // }
+
+                // TODO: pass on schema to wallet so input-parameters can be displayed.
+                transaction = Transaction.updateContract(payload, payload.maxContractExecutionEnergy);
+                break;
+            case AccountTransactionType.TokenUpdate:
+                if (typedParams) {
+                    throw new Error(`'typedParams' must not be provided for transaction of type '${payload.type}'`);
+                }
+                transaction = Transaction.tokenUpdate(payload);
+                break;
+            default:
+                throw new Error(
+                    `Sending sponsored transactions to browser wallet is only supported for CCD transfers, protocol layer token updates, and smart contract updates.`
+                );
         }
-        if (typedParams) {
-            throw new Error(`'typedParams' must not be provided for transaction of type '${type}'`);
-        }
-        return this.client.sendTransaction(accountAddress, type as any, payload as any); // wallet API types enforce strict coupling of transaction types and corresponding payloads.
+
+        const builder = Transaction.builderFromJSON(transaction);
+        const rawTransaction = builder.addMetadata({ sender, nonce: senderNonce, expiry }).addSponsor(sponsor).build();
+
+        const sponsorableTransaction = Transaction.addSponsorSignature(rawTransaction, sponsorSignature);
+
+        return this.client.sendSponsoredTransaction(sender, sponsorableTransaction);
     }
 
     async signMessage(accountAddress: string, msg: SignableMessage): Promise<AccountTransactionSignature> {

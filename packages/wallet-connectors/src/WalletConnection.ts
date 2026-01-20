@@ -1,10 +1,16 @@
 import {
+    AccountAddress,
     AccountTransactionInput,
     AccountTransactionSignature,
     AccountTransactionType,
     CredentialStatements,
+    Energy,
     InitContractInput,
     SchemaVersion,
+    SequenceNumber,
+    SimpleTransferPayload,
+    TokenUpdatePayload,
+    TransactionExpiry,
     UpdateContractInput,
     VerifiablePresentation,
     toBuffer,
@@ -28,6 +34,12 @@ export type SendTransactionPayload =
     | Exclude<AccountTransactionInput, UpdateContractInput | InitContractInput>
     | SendTransactionUpdateContractPayload
     | SendTransactionInitContractPayload;
+
+export type SendSponsoredTransactionPayload =
+    | (SimpleTransferPayload & { type: AccountTransactionType.Transfer })
+    | (TokenUpdatePayload & { type: AccountTransactionType.TokenUpdate })
+    | (UpdateContractInput & { type: AccountTransactionType.Update; maxContractExecutionEnergy?: Energy.Type });
+
 export type SmartContractParameters =
     | {
           [key: string]: SmartContractParameters;
@@ -217,9 +229,12 @@ export interface WalletConnection {
      * @return A promise for the hash of the submitted transaction.
      */
     signAndSendSponsoredTransaction(
-        accountAddress: string,
-        type: AccountTransactionType,
-        payload: SendTransactionPayload,
+        sender: AccountAddress.Type,
+        senderNonce: SequenceNumber.Type,
+        sponsor: AccountAddress.Type,
+        sponsorSignature: AccountTransactionSignature,
+        payload: SendSponsoredTransactionPayload,
+        expiry: TransactionExpiry.Type,
         typedParams?: TypedSmartContractParameters
     ): Promise<string>;
 

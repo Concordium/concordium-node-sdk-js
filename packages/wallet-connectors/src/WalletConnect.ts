@@ -1,4 +1,5 @@
 import {
+    AccountAddress,
     AccountTransactionInput,
     AccountTransactionSignature,
     AccountTransactionType,
@@ -9,6 +10,8 @@ import {
     InitContractInput,
     InitContractPayload,
     Parameter,
+    SequenceNumber,
+    TransactionExpiry,
     UpdateContractInput,
     UpdateContractPayload,
     VerifiablePresentation,
@@ -28,6 +31,7 @@ import { ISignClient, ProposalTypes, SessionTypes, SignClientTypes } from '@wall
 import {
     Network,
     Schema,
+    SendSponsoredTransactionPayload,
     SendTransactionInitContractPayload,
     SendTransactionPayload,
     SendTransactionUpdateContractPayload,
@@ -184,9 +188,14 @@ function serializeInitContractParam(
     const { parameters, schema } = typedParams;
     switch (schema.type) {
         case 'ModuleSchema':
-            return serializeInitContractParameters(contractName, parameters, schema.value, schema.version);
+            return serializeInitContractParameters(
+                contractName,
+                parameters,
+                Uint8Array.from(schema.value).buffer,
+                schema.version
+            );
         case 'TypeSchema':
-            return serializeTypeValue(parameters, schema.value);
+            return serializeTypeValue(parameters, Uint8Array.from(schema.value).buffer);
         default:
             throw new UnreachableCaseError('schema', schema);
     }
@@ -207,11 +216,11 @@ function serializeUpdateContractMessage(
                 contractName,
                 entrypointName,
                 parameters,
-                schema.value,
+                Uint8Array.from(schema.value).buffer,
                 schema.version
             );
         case 'TypeSchema':
-            return serializeTypeValue(parameters, schema.value);
+            return serializeTypeValue(parameters, Uint8Array.from(schema.value).buffer);
         default:
             throw new UnreachableCaseError('schema', schema);
     }
@@ -386,16 +395,26 @@ export class WalletConnectConnection implements WalletConnection {
 
     // TODO
     async signAndSendSponsoredTransaction(
-        accountAddress: string,
-        type: AccountTransactionType,
-        payload: SendTransactionPayload,
+        sender: AccountAddress.Type,
+        senderNonce: SequenceNumber.Type,
+        sponsor: AccountAddress.Type,
+        sponsorSignature: AccountTransactionSignature,
+        payload: SendSponsoredTransactionPayload,
+        expiry: TransactionExpiry.Type,
         typedParams?: TypedSmartContractParameters
     ) {
+        // TODO
         const params = {
-            type: getTransactionKindString(type),
-            sender: accountAddress,
-            payload: accountTransactionPayloadToJson(serializePayloadParameters(type, payload, typedParams)),
-            schema: convertSchemaFormat(typedParams?.schema),
+            // type: getTransactionKindString(type),
+            // sender,
+            // payload – string with the HEX-encoded transaction payload bytes (type byte + payload bytes, according to the bluepaper). Supported payload types remain SIMPLE_TRANSFER(3), UPDATE_SMART_CONTRACT_INSTANCE(2) and TOKEN_UPDATE(27)
+            // payload: accountTransactionPayloadToJson(serializePayloadParameters(type, payload, typedParams)),
+            // schema – optional, the same as for sign_and_send_transaction, JSON object of the contract schema for the contract update transaction, needed for the wallet to present the called method in a human-readable way
+            // schema: convertSchemaFormat(typedParams?.schema),
+            // sponsorSignature – string with the HEX-encoded TransactionSignature
+            // sponsorSignature: Signature,
+            // header – string with the HEX-encoded TransactionHeaderV1. The wallet can now retrieve the sender account address from the decoded header, as well as the sponsor account address and max energy cost
+            // header: TransactionHeaderV1
         };
         try {
             const { hash } = (await this.connector.client.request({

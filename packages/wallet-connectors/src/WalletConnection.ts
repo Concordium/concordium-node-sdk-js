@@ -38,7 +38,6 @@ export type SendTransactionPayload =
 export type SendSponsoredTransactionPayload =
     | (SimpleTransferPayload & { type: AccountTransactionType.Transfer })
     | (TokenUpdatePayload & { type: AccountTransactionType.TokenUpdate })
-    | (UpdateContractInput & { type: AccountTransactionType.Update; maxContractExecutionEnergy?: Energy.Type });
 
 export type SmartContractParameters =
     | {
@@ -233,7 +232,7 @@ export interface WalletConnection {
         senderNonce: SequenceNumber.Type,
         sponsor: AccountAddress.Type,
         sponsorSignature: AccountTransactionSignature,
-        payload: SendSponsoredTransactionPayload,
+        payloadWithType: SendSponsoredTransactionPayload,
         expiry: TransactionExpiry.Type,
     ): Promise<string>;
 

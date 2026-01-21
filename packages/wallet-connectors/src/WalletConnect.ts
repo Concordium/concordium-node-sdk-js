@@ -6,11 +6,13 @@ import {
     BigintFormatType,
     ContractName,
     CredentialStatements,
+    Energy,
     EntrypointName,
     InitContractInput,
     InitContractPayload,
     Parameter,
     SequenceNumber,
+    Transaction,
     TransactionExpiry,
     UpdateContractInput,
     UpdateContractPayload,
@@ -50,6 +52,50 @@ import {
     WALLET_CONNECT_SESSION_NAMESPACE,
 } from './constants';
 import { UnreachableCaseError } from './error';
+
+type TransactionHeaderV1 = {
+    /** Sender account of the transaction */
+    sender: AccountAddress.Type;
+    /** Sender sequence number of the transaction */
+    senderNonce: SequenceNumber.Type;
+    /** Maximum amount of energy the transaction can take to execute */
+    energyAmount: Energy.Type;
+    /** Size of the transaction payload */
+    payloadSize: number;
+    /** Latest time the transaction can be included in a block */
+    expiry: TransactionExpiry.Type;
+    /** Optional address of the sponsor */
+    sponsor?: AccountAddress.Type;
+};
+
+// Validates that exactly one signature exists in the 2-layer map and returns the signature.
+export function extractSingleSponsorSignature(
+    sig: AccountTransactionSignature
+): string {
+    // Get all keys of the inner map
+    const outerKeys = Object.keys(sig);
+
+    // Check that there is exactly 1 key and it is '0'
+    if (outerKeys.length !== 1 || outerKeys[0] !== "0") {
+        throw new Error(
+            `Outer map must have exactly one signature at key 0, got keys: ${outerKeys}`
+        );
+    }
+
+    const innerMap = sig[0];
+
+    // Get all keys of the inner map
+    const innerKeys = Object.keys(innerMap);
+
+    // Check that there is exactly 1 key and it is '0'
+    if (innerKeys.length !== 1 || innerKeys[0] !== "0") {
+        throw new Error(
+            `Inner map at index 0 must have exactly one signature at key 0, got keys: ${innerKeys}`
+        );
+    }
+
+    return innerMap[0];
+}
 
 /**
  * Describes the possible methods to invoke
@@ -170,6 +216,16 @@ function isSignAndSendTransactionError(obj: any): obj is SignAndSendTransactionE
 
 function accountTransactionPayloadToJson(data: AccountTransactionInput) {
     return jsonUnwrapStringify(data, BigintFormatType.Integer, (_key, value) => {
+        if (value?.type === 'Buffer') {
+            // Buffer has already been transformed by its 'toJSON' method.
+            return toBuffer(value.data).toString('hex');
+        }
+        return value;
+    });
+}
+
+export function accountTransactionHeaderToJson(header: TransactionHeaderV1) {
+    return jsonUnwrapStringify(header, BigintFormatType.Integer, (_key, value) => {
         if (value?.type === 'Buffer') {
             // Buffer has already been transformed by its 'toJSON' method.
             return toBuffer(value.data).toString('hex');
@@ -393,29 +449,57 @@ export class WalletConnectConnection implements WalletConnection {
         }
     }
 
-    // TODO
     async signAndSendSponsoredTransaction(
         sender: AccountAddress.Type,
         senderNonce: SequenceNumber.Type,
         sponsor: AccountAddress.Type,
         sponsorSignature: AccountTransactionSignature,
-        payload: SendSponsoredTransactionPayload,
+        payloadWithType: SendSponsoredTransactionPayload,
         expiry: TransactionExpiry.Type,
     ) {
-        // TODO
-        const params = {
-            // type: getTransactionKindString(type),
-            // sender,
-            // payload – string with the HEX-encoded transaction payload bytes (type byte + payload bytes, according to the bluepaper). Supported payload types remain SIMPLE_TRANSFER(3), UPDATE_SMART_CONTRACT_INSTANCE(2) and TOKEN_UPDATE(27)
-            // payload: accountTransactionPayloadToJson(serializePayloadParameters(payload.type, payload)),
-            // schema – optional, the same as for sign_and_send_transaction, JSON object of the contract schema for the contract update transaction, needed for the wallet to present the called method in a human-readable way
-            // schema: convertSchemaFormat(typedParams?.schema),
-            // sponsorSignature – string with the HEX-encoded TransactionSignature
-            // sponsorSignature: Signature,
-            // header – string with the HEX-encoded TransactionHeaderV1. The wallet can now retrieve the sender account address from the decoded header, as well as the sponsor account address and max energy cost
-            // header: TransactionHeaderV1
-        };
+
+        let payload: SendTransactionPayload;
+        let transaction: Transaction.Type;
+        switch (payloadWithType.type) {
+            case AccountTransactionType.Transfer:
+                payload = {
+                    amount: payloadWithType.amount, toAddress: payloadWithType.toAddress
+                };
+                transaction = Transaction.transfer(payload);
+                break;
+            case AccountTransactionType.TokenUpdate:
+                payload = { tokenId: payloadWithType.tokenId, operations: payloadWithType.operations };
+                transaction = Transaction.tokenUpdate(payload);
+                break;
+            default:
+                throw new Error(
+                    `Sending sponsored transactions to browser wallet is only supported for CCD transfers, and protocol layer token updates.`
+                );
+        }
+
+        const builder = Transaction.builderFromJSON(Transaction.toJSON(transaction));
+        const rawTransaction = builder.addMetadata({ sender, nonce: senderNonce, expiry }).addSponsor(sponsor).build();
+
+        let header: TransactionHeaderV1 = {
+            sender,
+            senderNonce,
+            energyAmount: rawTransaction.header.executionEnergyAmount,
+            // TODO: how to get the size of the payload
+            payloadSize: 1,
+            expiry,
+            sponsor
+        }
+
         try {
+            const params = {
+                // header – string with the HEX-encoded TransactionHeaderV1. 
+                header: accountTransactionHeaderToJson(header),
+                // payload – string with the HEX-encoded transaction payload bytes (type byte + payload bytes, according to the bluepaper). Supported payload types remain SIMPLE_TRANSFER(3), and TOKEN_UPDATE(27)
+                payload: accountTransactionPayloadToJson(serializePayloadParameters(payloadWithType.type, payload, undefined)),
+                // sponsorSignature – string with the HEX-encoded TransactionSignature
+                sponsorSignature: extractSingleSponsorSignature(sponsorSignature),
+            };
+
             const { hash } = (await this.connector.client.request({
                 topic: this.session.topic,
                 request: {

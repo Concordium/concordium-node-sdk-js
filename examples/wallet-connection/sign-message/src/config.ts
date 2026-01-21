@@ -13,7 +13,7 @@ const WALLET_CONNECT_OPTS: SignClientTypes.Options = {
     projectId: CONCORDIUM_WALLET_CONNECT_PROJECT_ID,
     metadata: {
         name: 'Sign Message',
-        description: 'Example dApp for signing an arbitrary message.',
+        description: 'Example dApp for sending sponsored transactions.',
         url: '#',
         icons: ['https://walletconnect.com/walletconnect-logo.png'],
     },

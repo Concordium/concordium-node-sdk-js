@@ -172,27 +172,22 @@ export class BrowserWalletConnector implements WalletConnector, WalletConnection
         senderNonce: SequenceNumber.Type,
         sponsor: AccountAddress.Type,
         sponsorSignature: AccountTransactionSignature,
-        payload: SendSponsoredTransactionPayload,
+        payloadWithType: SendSponsoredTransactionPayload,
         expiry: TransactionExpiry.Type
     ): Promise<string> {
         let transaction: Transaction.Type;
-        switch (payload.type) {
+        switch (payloadWithType.type) {
             case AccountTransactionType.Transfer:
                 transaction = Transaction.transfer({
-                    amount: payload.amount, toAddress: payload.toAddress
+                    amount: payloadWithType.amount, toAddress: payloadWithType.toAddress
                 });
                 break;
-            case AccountTransactionType.Update:
-                transaction = Transaction.updateContract(
-                    { message: payload.message, amount: payload.amount, address: payload.address, receiveName: payload.receiveName }
-                    , payload.maxContractExecutionEnergy);
-                break;
             case AccountTransactionType.TokenUpdate:
-                transaction = Transaction.tokenUpdate({ tokenId: payload.tokenId, operations: payload.operations });
+                transaction = Transaction.tokenUpdate({ tokenId: payloadWithType.tokenId, operations: payloadWithType.operations });
                 break;
             default:
                 throw new Error(
-                    `Sending sponsored transactions to browser wallet is only supported for CCD transfers, protocol layer token updates, and smart contract updates.`
+                    `Sending sponsored transactions to browser wallet is only supported for CCD transfers, and protocol layer token updates.`
                 );
         }
 

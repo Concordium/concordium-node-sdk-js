@@ -62,7 +62,7 @@ function Main(props: WalletConnectionProps) {
 
         const senderNonce = SequenceNumber.create(senderNonceInput);
         const sponsorableTransaction = builder
-            .addMetadata({ sender, nonce: senderNonce, expiry: TransactionExpiry.futureMinutes(5) })
+            .addMetadata({ sender, nonce: senderNonce, expiry })
             .addSponsor(sponsorSignerAccount)
             .build();
 
@@ -117,7 +117,7 @@ function Main(props: WalletConnectionProps) {
                         .then((txHash) => alert("TxHash:" + JSON.stringify(txHash)))
                         .catch(alert);
                 } else {
-                    throw new Err('expect at least one siganture')
+                    throw new Err('expect at least one sponsor siganture')
                 }
 
             } else {
@@ -160,7 +160,7 @@ function Main(props: WalletConnectionProps) {
                         .then((txHash) => alert("TxHash:" + JSON.stringify(txHash)))
                         .catch(alert);
                 } else {
-                    throw new Err('expect at least one siganture')
+                    throw new Err('expect at least one sponsor siganture')
                 }
 
             } else {

@@ -173,54 +173,22 @@ export class BrowserWalletConnector implements WalletConnector, WalletConnection
         sponsor: AccountAddress.Type,
         sponsorSignature: AccountTransactionSignature,
         payload: SendSponsoredTransactionPayload,
-        expiry: TransactionExpiry.Type,
-        typedParams?: TypedSmartContractParameters
+        expiry: TransactionExpiry.Type
     ): Promise<string> {
         let transaction: Transaction.Type;
         switch (payload.type) {
             case AccountTransactionType.Transfer:
-                if (typedParams) {
-                    throw new Error(`'typedParams' must not be provided for transaction of type '${payload.type}'`);
-                }
-                transaction = Transaction.transfer(payload);
+                transaction = Transaction.transfer({
+                    amount: payload.amount, toAddress: payload.toAddress
+                });
                 break;
             case AccountTransactionType.Update:
-                //if (typedParams) {
-                //     const { parameters, schema } = typedParams;
-                //     switch (schema.type) {
-                //         case 'ModuleSchema':
-                //             return this.client.sendTransaction(
-                //                 accountAddress,
-                //                 type as any, // wallet API types enforce strict coupling of transaction types and corresponding payloads.
-                //                 payload as any, // wallet API types enforce strict coupling of transaction types and corresponding payloads.
-                //                 parameters,
-                //                 {
-                //                     type: SchemaType.Module,
-                //                     value: schema.value.toString('base64'),
-                //                 },
-                //                 schema.version
-                //             );
-                //         case 'TypeSchema':
-                //             return this.client.sendTransaction(accountAddress, type as any, payload as any, parameters, {
-                //                 type: SchemaType.Parameter,
-                //                 value: schema.value.toString('base64'),
-                //             });
-                //         default:
-                //             throw new UnreachableCaseError('schema', schema);
-                //     }
-                // }
-                // if (typedParams) {
-                //     throw new Error(`'typedParams' must not be provided for transaction of type '${type}'`);
-                // }
-
-                // TODO: pass on schema to wallet so input-parameters can be displayed.
-                transaction = Transaction.updateContract(payload, payload.maxContractExecutionEnergy);
+                transaction = Transaction.updateContract(
+                    { message: payload.message, amount: payload.amount, address: payload.address, receiveName: payload.receiveName }
+                    , payload.maxContractExecutionEnergy);
                 break;
             case AccountTransactionType.TokenUpdate:
-                if (typedParams) {
-                    throw new Error(`'typedParams' must not be provided for transaction of type '${payload.type}'`);
-                }
-                transaction = Transaction.tokenUpdate(payload);
+                transaction = Transaction.tokenUpdate({ tokenId: payload.tokenId, operations: payload.operations });
                 break;
             default:
                 throw new Error(
@@ -228,9 +196,8 @@ export class BrowserWalletConnector implements WalletConnector, WalletConnection
                 );
         }
 
-        const builder = Transaction.builderFromJSON(transaction);
+        const builder = Transaction.builderFromJSON(Transaction.toJSON(transaction));
         const rawTransaction = builder.addMetadata({ sender, nonce: senderNonce, expiry }).addSponsor(sponsor).build();
-
         const sponsorableTransaction = Transaction.addSponsorSignature(rawTransaction, sponsorSignature);
 
         return this.client.sendSponsoredTransaction(sender, sponsorableTransaction);

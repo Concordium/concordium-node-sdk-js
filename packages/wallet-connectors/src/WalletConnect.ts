@@ -401,14 +401,13 @@ export class WalletConnectConnection implements WalletConnection {
         sponsorSignature: AccountTransactionSignature,
         payload: SendSponsoredTransactionPayload,
         expiry: TransactionExpiry.Type,
-        typedParams?: TypedSmartContractParameters
     ) {
         // TODO
         const params = {
             // type: getTransactionKindString(type),
             // sender,
             // payload – string with the HEX-encoded transaction payload bytes (type byte + payload bytes, according to the bluepaper). Supported payload types remain SIMPLE_TRANSFER(3), UPDATE_SMART_CONTRACT_INSTANCE(2) and TOKEN_UPDATE(27)
-            // payload: accountTransactionPayloadToJson(serializePayloadParameters(type, payload, typedParams)),
+            // payload: accountTransactionPayloadToJson(serializePayloadParameters(payload.type, payload)),
             // schema – optional, the same as for sign_and_send_transaction, JSON object of the contract schema for the contract update transaction, needed for the wallet to present the called method in a human-readable way
             // schema: convertSchemaFormat(typedParams?.schema),
             // sponsorSignature – string with the HEX-encoded TransactionSignature
@@ -424,7 +423,7 @@ export class WalletConnectConnection implements WalletConnection {
                     params,
                 },
                 chainId: this.chainId,
-            })) as SignAndSendTransactionResult; // TODO do proper type check
+            })) as SignAndSendTransactionResult;
             return hash;
         } catch (e) {
             if (isSignAndSendTransactionError(e) && e.code === 500) {

@@ -42,8 +42,8 @@ export type SendSponsoredTransactionPayload =
 
 export type SmartContractParameters =
     | {
-          [key: string]: SmartContractParameters;
-      }
+        [key: string]: SmartContractParameters;
+    }
     | SmartContractParameters[]
     | number
     | bigint
@@ -235,7 +235,6 @@ export interface WalletConnection {
         sponsorSignature: AccountTransactionSignature,
         payload: SendSponsoredTransactionPayload,
         expiry: TransactionExpiry.Type,
-        typedParams?: TypedSmartContractParameters
     ): Promise<string>;
 
     /**

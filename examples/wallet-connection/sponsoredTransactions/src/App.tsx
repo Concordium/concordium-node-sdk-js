@@ -1,6 +1,5 @@
 import {
     STAGENET,
-    SendSponsoredTransactionPayload,
     WalletConnectionProps,
     WithWalletConnector,
     useConnect,
@@ -8,7 +7,6 @@ import {
 } from '@concordium/react-components';
 import {
     AccountAddress,
-    AccountTransactionType,
     Cbor,
     CborAccountAddress,
     CborMemo,
@@ -104,32 +102,10 @@ function Main(props: WalletConnectionProps) {
 
             console.log('sponsoredTransaction', sponsored);
 
-            if (sponsored.version == 1) {
-                if (sponsored.signatures.sponsor != undefined) {
-                    const sponsorSignature = sponsored.signatures.sponsor;
-                    const payloadWithType: SendSponsoredTransactionPayload = {
-                        type: AccountTransactionType.TokenUpdate,
-                        tokenId: payload.tokenId,
-                        operations: payload.operations,
-                    };
-
-                    return connection
-                        .signAndSendSponsoredTransaction(
-                            AccountAddress.fromBase58(account),
-                            SequenceNumber.create(senderNonceInput),
-                            AccountAddress.fromBase58(sponsorInput),
-                            sponsorSignature,
-                            payloadWithType,
-                            expiry
-                        )
-                        .then((txHash) => alert('TxHash:' + JSON.stringify(txHash)))
-                        .catch(alert);
-                } else {
-                    throw new Error('expect at least one sponsor siganture');
-                }
-            } else {
-                throw new Error('expect version 1');
-            }
+            connection
+                .signAndSendSponsoredTransaction(AccountAddress.fromBase58(account), sponsored)
+                .then((txHash) => alert('TxHash:' + JSON.stringify(txHash)))
+                .catch(alert);
         } else {
             throw new Error('Connect wallet');
         }
@@ -155,32 +131,10 @@ function Main(props: WalletConnectionProps) {
 
             console.log('sponsoredTransaction', sponsored);
 
-            if (sponsored.version == 1) {
-                if (sponsored.signatures.sponsor != undefined) {
-                    const sponsorSignature = sponsored.signatures.sponsor;
-                    const payloadWithType: SendSponsoredTransactionPayload = {
-                        type: AccountTransactionType.Transfer,
-                        amount: payload.amount,
-                        toAddress: payload.toAddress,
-                    };
-
-                    return connection
-                        .signAndSendSponsoredTransaction(
-                            AccountAddress.fromBase58(account),
-                            SequenceNumber.create(senderNonceInput),
-                            AccountAddress.fromBase58(sponsorInput),
-                            sponsorSignature,
-                            payloadWithType,
-                            expiry
-                        )
-                        .then((txHash) => alert('TxHash:' + JSON.stringify(txHash)))
-                        .catch(alert);
-                } else {
-                    throw new Error('expect at least one sponsor siganture');
-                }
-            } else {
-                throw new Error('expect version 1');
-            }
+            connection
+                .signAndSendSponsoredTransaction(AccountAddress.fromBase58(account), sponsored)
+                .then((txHash) => alert('TxHash:' + JSON.stringify(txHash)))
+                .catch(alert);
         } else {
             throw new Error('Connect wallet');
         }

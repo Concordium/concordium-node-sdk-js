@@ -4,14 +4,11 @@ import {
     AccountTransactionSignature,
     AccountTransactionType,
     CredentialStatements,
-    SequenceNumber,
     Transaction,
-    TransactionExpiry,
     VerifiablePresentation,
 } from '@concordium/web-sdk';
 
 import {
-    SendSponsoredTransactionPayload,
     SendTransactionPayload,
     SignableMessage,
     TypedSmartContractParameters,
@@ -169,37 +166,9 @@ export class BrowserWalletConnector implements WalletConnector, WalletConnection
 
     async signAndSendSponsoredTransaction(
         sender: AccountAddress.Type,
-        senderNonce: SequenceNumber.Type,
-        sponsor: AccountAddress.Type,
-        sponsorSignature: AccountTransactionSignature,
-        payloadWithType: SendSponsoredTransactionPayload,
-        expiry: TransactionExpiry.Type
+        transaction: Transaction.Signable
     ): Promise<string> {
-        let transaction: Transaction.Type;
-        switch (payloadWithType.type) {
-            case AccountTransactionType.Transfer:
-                transaction = Transaction.transfer({
-                    amount: payloadWithType.amount,
-                    toAddress: payloadWithType.toAddress,
-                });
-                break;
-            case AccountTransactionType.TokenUpdate:
-                transaction = Transaction.tokenUpdate({
-                    tokenId: payloadWithType.tokenId,
-                    operations: payloadWithType.operations,
-                });
-                break;
-            default:
-                throw new Error(
-                    `Sending sponsored transactions to browser wallet is only supported for CCD transfers, and protocol layer token updates.`
-                );
-        }
-
-        const builder = Transaction.builderFromJSON(Transaction.toJSON(transaction));
-        const rawTransaction = builder.addMetadata({ sender, nonce: senderNonce, expiry }).addSponsor(sponsor).build();
-        const sponsoredTransaction = Transaction.addSponsorSignature(rawTransaction, sponsorSignature);
-
-        return this.client.sendSponsoredTransaction(sender.address, sponsoredTransaction);
+        return this.client.sendSponsoredTransaction(sender.address, transaction);
     }
 
     async signMessage(accountAddress: string, msg: SignableMessage): Promise<AccountTransactionSignature> {

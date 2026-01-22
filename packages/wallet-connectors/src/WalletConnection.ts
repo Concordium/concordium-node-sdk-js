@@ -6,10 +6,7 @@ import {
     CredentialStatements,
     InitContractInput,
     SchemaVersion,
-    SequenceNumber,
-    SimpleTransferPayload,
-    TokenUpdatePayload,
-    TransactionExpiry,
+    Transaction,
     UpdateContractInput,
     VerifiablePresentation,
     toBuffer,
@@ -33,10 +30,6 @@ export type SendTransactionPayload =
     | Exclude<AccountTransactionInput, UpdateContractInput | InitContractInput>
     | SendTransactionUpdateContractPayload
     | SendTransactionInitContractPayload;
-
-export type SendSponsoredTransactionPayload =
-    | (SimpleTransferPayload & { type: AccountTransactionType.Transfer })
-    | (TokenUpdatePayload & { type: AccountTransactionType.TokenUpdate });
 
 export type SmartContractParameters =
     | {
@@ -226,14 +219,7 @@ export interface WalletConnection {
      * @param typedParams The parameters of the contract invocation and a schema describing how to serialize them. The parameters must be given as a plain JavaScript object.
      * @return A promise for the hash of the submitted transaction.
      */
-    signAndSendSponsoredTransaction(
-        sender: AccountAddress.Type,
-        senderNonce: SequenceNumber.Type,
-        sponsor: AccountAddress.Type,
-        sponsorSignature: AccountTransactionSignature,
-        payloadWithType: SendSponsoredTransactionPayload,
-        expiry: TransactionExpiry.Type
-    ): Promise<string>;
+    signAndSendSponsoredTransaction(sender: AccountAddress.Type, transaction: Transaction.Signable): Promise<string>;
 
     /**
      * Request the wallet to sign a message using the keys of the given account.

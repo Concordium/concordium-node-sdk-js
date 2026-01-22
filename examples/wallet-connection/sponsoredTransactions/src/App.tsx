@@ -7,20 +7,20 @@ import {
     useConnection,
 } from '@concordium/react-components';
 import {
-    CcdAmount, buildBasicAccountSigner,
     AccountAddress,
-    Transaction,
-    TransactionExpiry,
-    SequenceNumber,
     AccountTransactionType,
-    TokenOperationType,
+    Cbor,
+    CborAccountAddress,
+    CborMemo,
+    CcdAmount,
+    SequenceNumber,
     TokenAmount,
     TokenId,
-    CborMemo,
-    CborAccountAddress,
-    Cbor,
+    TokenOperationType,
+    Transaction,
+    TransactionExpiry,
+    buildBasicAccountSigner,
 } from '@concordium/web-sdk';
-import { Err, } from 'neverthrow';
 import { useCallback, useState } from 'react';
 import { Alert, Button, Col, Container, Row, Spinner } from 'react-bootstrap';
 
@@ -31,9 +31,7 @@ export default function App() {
     return (
         <Container>
             <h1>Sponsored Transactions</h1>
-            <WithWalletConnector network={STAGENET}>{(props) =>
-                <Main {...props} />
-            }</WithWalletConnector>
+            <WithWalletConnector network={STAGENET}>{(props) => <Main {...props} />}</WithWalletConnector>
         </Container>
     );
 }
@@ -43,17 +41,19 @@ function Main(props: WalletConnectionProps) {
     const { connection, setConnection, account } = useConnection(connectedAccounts, genesisHashes);
     const { connect, isConnecting, connectError } = useConnect(activeConnector, setConnection);
 
-    const [recipientInput, setRecipientInput] = useState("3tWfFAfNsyYtPRgDTpGJuqhQy92rAfLZum7HRyPkezE7PcT3KB");
-    const [sponsorInput, setSponsorInput] = useState("3tWfFAfNsyYtPRgDTpGJuqhQy92rAfLZum7HRyPkezE7PcT3KB");
-    const [privateKeyInput, setPrivateKeyInput] = useState("c2cf7fab89b86612dc5f07cd049703156d5548b43c36e1c220545bb103bba871");
-    const [senderNonceInput, setSenderNonceInput] = useState<number>(1);
+    const [recipientInput, setRecipientInput] = useState('3tWfFAfNsyYtPRgDTpGJuqhQy92rAfLZum7HRyPkezE7PcT3KB');
+    const [sponsorInput, setSponsorInput] = useState('3tWfFAfNsyYtPRgDTpGJuqhQy92rAfLZum7HRyPkezE7PcT3KB');
+    const [privateKeyInput, setPrivateKeyInput] = useState(
+        'c2cf7fab89b86612dc5f07cd049703156d5548b43c36e1c220545bb103bba871'
+    );
+    const [senderNonceInput, setSenderNonceInput] = useState<number>(6);
 
     const handleRecipientInput = useCallback((e: any) => setRecipientInput(e.target.value), []);
     const handleSponsorInput = useCallback((e: any) => setSponsorInput(e.target.value), []);
     const handlePrivateKeyInput = useCallback((e: any) => setPrivateKeyInput(e.target.value), []);
     const handleSenderNonceInput = useCallback((e: any) => setSenderNonceInput(e.target.value), []);
 
-    let expiry = TransactionExpiry.futureMinutes(5)
+    const expiry = TransactionExpiry.futureMinutes(5);
 
     async function submitPayloadToSponsor(sender: AccountAddress.Type, transaction: any) {
         const builder = Transaction.builderFromJSON(transaction);
@@ -75,12 +75,10 @@ function Main(props: WalletConnectionProps) {
                 {
                     [TokenOperationType.Transfer]: {
                         amount: TokenAmount.fromJSON({
-                            value: '1000000',
-                            decimals: 6,
+                            value: '100',
+                            decimals: 2,
                         }),
-                        recipient: CborAccountAddress.fromAccountAddress(
-                            AccountAddress.fromBase58(recipientInput),
-                        ),
+                        recipient: CborAccountAddress.fromAccountAddress(AccountAddress.fromBase58(recipientInput)),
                         memo: CborMemo.fromString('Some text for memo'),
                     },
                 },
@@ -89,7 +87,7 @@ function Main(props: WalletConnectionProps) {
             console.log(JSON.stringify(ops));
 
             const payload = {
-                tokenId: TokenId.fromString('EURtest'),
+                tokenId: TokenId.fromString('PLTLEVEL'),
                 operations: Cbor.encode(ops),
             };
 
@@ -108,29 +106,37 @@ function Main(props: WalletConnectionProps) {
 
             if (sponsored.version == 1) {
                 if (sponsored.signatures.sponsor != undefined) {
+                    const sponsorSignature = sponsored.signatures.sponsor;
+                    const payloadWithType: SendSponsoredTransactionPayload = {
+                        type: AccountTransactionType.TokenUpdate,
+                        tokenId: payload.tokenId,
+                        operations: payload.operations,
+                    };
 
-                    let sponsorSignature = sponsored.signatures.sponsor
-                    let payloadWithType: SendSponsoredTransactionPayload = { type: AccountTransactionType.TokenUpdate, tokenId: payload.tokenId, operations: payload.operations }
-
-                    return connection.
-                        signAndSendSponsoredTransaction(AccountAddress.fromBase58(account), SequenceNumber.create(senderNonceInput), AccountAddress.fromBase58(sponsorInput), sponsorSignature, payloadWithType, expiry)
-                        .then((txHash) => alert("TxHash:" + JSON.stringify(txHash)))
+                    return connection
+                        .signAndSendSponsoredTransaction(
+                            AccountAddress.fromBase58(account),
+                            SequenceNumber.create(senderNonceInput),
+                            AccountAddress.fromBase58(sponsorInput),
+                            sponsorSignature,
+                            payloadWithType,
+                            expiry
+                        )
+                        .then((txHash) => alert('TxHash:' + JSON.stringify(txHash)))
                         .catch(alert);
                 } else {
-                    throw new Err('expect at least one sponsor siganture')
+                    throw new Error('expect at least one sponsor siganture');
                 }
-
             } else {
-                throw new Err('expect version 1')
+                throw new Error('expect version 1');
             }
         } else {
-            throw new Err('Connect wallet')
+            throw new Error('Connect wallet');
         }
     }
 
     async function submitSponsoredCCD_Transfer() {
         if (connection && account) {
-
             const payload = {
                 amount: CcdAmount.fromCcd(1),
                 toAddress: AccountAddress.fromBase58(recipientInput),
@@ -151,23 +157,32 @@ function Main(props: WalletConnectionProps) {
 
             if (sponsored.version == 1) {
                 if (sponsored.signatures.sponsor != undefined) {
+                    const sponsorSignature = sponsored.signatures.sponsor;
+                    const payloadWithType: SendSponsoredTransactionPayload = {
+                        type: AccountTransactionType.Transfer,
+                        amount: payload.amount,
+                        toAddress: payload.toAddress,
+                    };
 
-                    let sponsorSignature = sponsored.signatures.sponsor
-                    let payloadWithType: SendSponsoredTransactionPayload = { type: AccountTransactionType.Transfer, amount: payload.amount, toAddress: payload.toAddress }
-
-                    return connection.
-                        signAndSendSponsoredTransaction(AccountAddress.fromBase58(account), SequenceNumber.create(senderNonceInput), AccountAddress.fromBase58(sponsorInput), sponsorSignature, payloadWithType, expiry)
-                        .then((txHash) => alert("TxHash:" + JSON.stringify(txHash)))
+                    return connection
+                        .signAndSendSponsoredTransaction(
+                            AccountAddress.fromBase58(account),
+                            SequenceNumber.create(senderNonceInput),
+                            AccountAddress.fromBase58(sponsorInput),
+                            sponsorSignature,
+                            payloadWithType,
+                            expiry
+                        )
+                        .then((txHash) => alert('TxHash:' + JSON.stringify(txHash)))
                         .catch(alert);
                 } else {
-                    throw new Err('expect at least one sponsor siganture')
+                    throw new Error('expect at least one sponsor siganture');
                 }
-
             } else {
-                throw new Err('expect version 1')
+                throw new Error('expect version 1');
             }
         } else {
-            throw new Err('Connect wallet')
+            throw new Error('Connect wallet');
         }
     }
     return (
@@ -229,10 +244,14 @@ function Main(props: WalletConnectionProps) {
             <input onChange={handleSenderNonceInput} type="text" id="senderNonce" value={senderNonceInput} />
             <br />
             <br />
-            <Button variant="primary" onClick={submitSponsoredPLT_Transfer}> Sign And Submit Sponsored PLT Transfer Transaction</Button>
+            <Button variant="primary" onClick={submitSponsoredPLT_Transfer}>
+                Sign And Submit Sponsored PLT Transfer Transaction
+            </Button>
             <br />
             <br />
-            <Button variant="primary" onClick={submitSponsoredCCD_Transfer}> Sign And Submit Simple CCD Transfer</Button>
+            <Button variant="primary" onClick={submitSponsoredCCD_Transfer}>
+                Sign And Submit Simple CCD Transfer Transaction
+            </Button>
         </>
     );
 }

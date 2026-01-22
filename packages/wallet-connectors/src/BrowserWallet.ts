@@ -179,11 +179,15 @@ export class BrowserWalletConnector implements WalletConnector, WalletConnection
         switch (payloadWithType.type) {
             case AccountTransactionType.Transfer:
                 transaction = Transaction.transfer({
-                    amount: payloadWithType.amount, toAddress: payloadWithType.toAddress
+                    amount: payloadWithType.amount,
+                    toAddress: payloadWithType.toAddress,
                 });
                 break;
             case AccountTransactionType.TokenUpdate:
-                transaction = Transaction.tokenUpdate({ tokenId: payloadWithType.tokenId, operations: payloadWithType.operations });
+                transaction = Transaction.tokenUpdate({
+                    tokenId: payloadWithType.tokenId,
+                    operations: payloadWithType.operations,
+                });
                 break;
             default:
                 throw new Error(
@@ -193,9 +197,9 @@ export class BrowserWalletConnector implements WalletConnector, WalletConnection
 
         const builder = Transaction.builderFromJSON(Transaction.toJSON(transaction));
         const rawTransaction = builder.addMetadata({ sender, nonce: senderNonce, expiry }).addSponsor(sponsor).build();
-        const sponsorableTransaction = Transaction.addSponsorSignature(rawTransaction, sponsorSignature);
+        const sponsoredTransaction = Transaction.addSponsorSignature(rawTransaction, sponsorSignature);
 
-        return this.client.sendSponsoredTransaction(sender, sponsorableTransaction);
+        return this.client.sendSponsoredTransaction(sender.address, sponsoredTransaction);
     }
 
     async signMessage(accountAddress: string, msg: SignableMessage): Promise<AccountTransactionSignature> {

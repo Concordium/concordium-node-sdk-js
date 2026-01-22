@@ -69,17 +69,13 @@ type TransactionHeaderV1 = {
 };
 
 // Validates that exactly one signature exists in the 2-layer map and returns the signature.
-export function extractSingleSponsorSignature(
-    sig: AccountTransactionSignature
-): string {
+export function extractSingleSponsorSignature(sig: AccountTransactionSignature): string {
     // Get all keys of the inner map
     const outerKeys = Object.keys(sig);
 
     // Check that there is exactly 1 key and it is '0'
-    if (outerKeys.length !== 1 || outerKeys[0] !== "0") {
-        throw new Error(
-            `Outer map must have exactly one signature at key 0, got keys: ${outerKeys}`
-        );
+    if (outerKeys.length !== 1 || outerKeys[0] !== '0') {
+        throw new Error(`Outer map must have exactly one signature at key 0, got keys: ${outerKeys}`);
     }
 
     const innerMap = sig[0];
@@ -88,10 +84,8 @@ export function extractSingleSponsorSignature(
     const innerKeys = Object.keys(innerMap);
 
     // Check that there is exactly 1 key and it is '0'
-    if (innerKeys.length !== 1 || innerKeys[0] !== "0") {
-        throw new Error(
-            `Inner map at index 0 must have exactly one signature at key 0, got keys: ${innerKeys}`
-        );
+    if (innerKeys.length !== 1 || innerKeys[0] !== '0') {
+        throw new Error(`Inner map at index 0 must have exactly one signature at key 0, got keys: ${innerKeys}`);
     }
 
     return innerMap[0];
@@ -455,15 +449,15 @@ export class WalletConnectConnection implements WalletConnection {
         sponsor: AccountAddress.Type,
         sponsorSignature: AccountTransactionSignature,
         payloadWithType: SendSponsoredTransactionPayload,
-        expiry: TransactionExpiry.Type,
+        expiry: TransactionExpiry.Type
     ) {
-
         let payload: SendTransactionPayload;
         let transaction: Transaction.Type;
         switch (payloadWithType.type) {
             case AccountTransactionType.Transfer:
                 payload = {
-                    amount: payloadWithType.amount, toAddress: payloadWithType.toAddress
+                    amount: payloadWithType.amount,
+                    toAddress: payloadWithType.toAddress,
                 };
                 transaction = Transaction.transfer(payload);
                 break;
@@ -487,15 +481,17 @@ export class WalletConnectConnection implements WalletConnection {
             // TODO: how to get the size of the payload
             payloadSize: 1,
             expiry,
-            sponsor
-        }
+            sponsor,
+        };
 
         try {
             const params = {
-                // header – string with the HEX-encoded TransactionHeaderV1. 
+                // header – string with the HEX-encoded TransactionHeaderV1.
                 header: accountTransactionHeaderToJson(header),
                 // payload – string with the HEX-encoded transaction payload bytes (type byte + payload bytes, according to the bluepaper). Supported payload types remain SIMPLE_TRANSFER(3), and TOKEN_UPDATE(27)
-                payload: accountTransactionPayloadToJson(serializePayloadParameters(payloadWithType.type, payload, undefined)),
+                payload: accountTransactionPayloadToJson(
+                    serializePayloadParameters(payloadWithType.type, payload, undefined)
+                ),
                 // sponsorSignature – string with the HEX-encoded TransactionSignature
                 sponsorSignature: extractSingleSponsorSignature(sponsorSignature),
             };

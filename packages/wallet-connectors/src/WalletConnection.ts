@@ -4,7 +4,6 @@ import {
     AccountTransactionSignature,
     AccountTransactionType,
     CredentialStatements,
-    Energy,
     InitContractInput,
     SchemaVersion,
     SequenceNumber,
@@ -37,12 +36,12 @@ export type SendTransactionPayload =
 
 export type SendSponsoredTransactionPayload =
     | (SimpleTransferPayload & { type: AccountTransactionType.Transfer })
-    | (TokenUpdatePayload & { type: AccountTransactionType.TokenUpdate })
+    | (TokenUpdatePayload & { type: AccountTransactionType.TokenUpdate });
 
 export type SmartContractParameters =
     | {
-        [key: string]: SmartContractParameters;
-    }
+          [key: string]: SmartContractParameters;
+      }
     | SmartContractParameters[]
     | number
     | bigint
@@ -233,7 +232,7 @@ export interface WalletConnection {
         sponsor: AccountAddress.Type,
         sponsorSignature: AccountTransactionSignature,
         payloadWithType: SendSponsoredTransactionPayload,
-        expiry: TransactionExpiry.Type,
+        expiry: TransactionExpiry.Type
     ): Promise<string>;
 
     /**

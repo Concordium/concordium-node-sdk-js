@@ -40,7 +40,6 @@ export {
     finalize,
     preFinalized,
     Finalized,
-    PreFinalized,
     signAndFinalize,
     serializeBlockItem,
     getAccountTransactionHash,

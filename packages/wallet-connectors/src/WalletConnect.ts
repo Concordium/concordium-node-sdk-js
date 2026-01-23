@@ -3,6 +3,7 @@ import {
     AccountTransactionInput,
     AccountTransactionSignature,
     AccountTransactionType,
+    AccountTransactionV1,
     BigintFormatType,
     ContractName,
     CredentialStatements,
@@ -10,13 +11,14 @@ import {
     InitContractInput,
     InitContractPayload,
     Parameter,
-    PreFinalized,
+    Payload,
     Transaction,
     UpdateContractInput,
     UpdateContractPayload,
     VerifiablePresentation,
     getTransactionKindString,
     jsonUnwrapStringify,
+    serializeAccountTransactionSignature,
     serializeInitContractParameters,
     serializeTypeValue,
     serializeUpdateContractParameters,
@@ -399,36 +401,41 @@ export class WalletConnectConnection implements WalletConnection {
                 `cannot send sponsored transaction to wallet with sender '${sender}' on connection for account '${connectedAccount}'`
             );
         }
-        
-        const preFinalizedTransaction = Transaction.preFinalized(transaction);
-        let serializedTransaction = undefined;
 
-        if (preFinalizedTransaction.version == 0) {
-            throw new Error('This is an `AccountTransactionV0`. Only sponsored transaction (`AccountTransactionV1`) supported for this endpoint')
-        } else if (preFinalizedTransaction.version == 1) {
-            serializedTransaction = PreFinalized.serialize(preFinalizedTransaction);
+        if (transaction.version == 1) {
+            const { header, payload } = Transaction.preFinalized(transaction);
+            const sHeader = AccountTransactionV1.serializeHeader(header);
+            const sPayload = Payload.serialize(payload);
+            const sTransactionSignature = serializeAccountTransactionSignature(transaction.signatures);
+
+            try {
+                const { hash } = (await this.connector.client.request({
+                    topic: this.session.topic,
+                    request: {
+                        method: 'sign_and_send_sponsored_transaction',
+                        params: {
+                            header: sHeader,
+                            payload: sPayload,
+                            signature: sTransactionSignature,
+                        },
+                    },
+                    chainId: this.chainId,
+                })) as SignAndSendTransactionResult;
+                return hash;
+            } catch (e) {
+                if (isSignAndSendTransactionError(e) && e.code === 500) {
+                    throw new Error('transaction rejected in wallet');
+                }
+                throw e;
+            }
+        } else if (transaction.version == 0) {
+            throw new Error(
+                'This is a `TransactionV0`. Only sponsored transactions (`TransactionV1`) supported for this endpoint'
+            );
         } else {
             throw new Error('Unsupported transaction type');
         }
-
-        try {
-            const { hash } = (await this.connector.client.request({
-                topic: this.session.topic,
-                request: {
-                    method: 'sign_and_send_sponsored_transaction',
-                    params: serializedTransaction,
-                },
-                chainId: this.chainId,
-            })) as SignAndSendTransactionResult;
-            return hash;
-        } catch (e) {
-            if (isSignAndSendTransactionError(e) && e.code === 500) {
-                throw new Error('transaction rejected in wallet');
-            }
-            throw e;
-        }
     }
-
     async signMessage(accountAddress: string, msg: SignableMessage) {
         const connectedAccount = this.getConnectedAccount();
         if (accountAddress !== connectedAccount) {

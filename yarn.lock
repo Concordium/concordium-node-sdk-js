@@ -3760,7 +3760,7 @@ __metadata:
     ts-node: ^10.9.2
     typescript: ^5.2.2
   peerDependencies:
-    "@concordium/web-sdk": "*"
+    "@concordium/web-sdk": ">= 12.0.2"
     "@walletconnect/types": ^2.13.1
   languageName: unknown
   linkType: soft

@@ -2,9 +2,14 @@
 
 ## Unreleased
 
+## 12.0.2
+
+### Changed
+
+- Export the `preFinalized` function from the `Transaction` module and the `serializeAccountTransactionSignature` function.
+
 ## 12.0.1
 
-- Export `preFinalized` function and `PreFinalized` type from `Transaction` module.
 
 ### Fixed
 

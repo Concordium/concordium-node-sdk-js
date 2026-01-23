@@ -4,6 +4,8 @@
 
 ## 12.0.1
 
+- Export `preFinalized` function and `PreFinalized` type from `Transaction` module.
+
 ### Fixed
 
 - An issue where WASM functionality could not be used when using the browser UMD library, or in a web context 

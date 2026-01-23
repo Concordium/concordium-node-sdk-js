@@ -3,8 +3,6 @@ import {
     AccountTransactionInput,
     AccountTransactionSignature,
     AccountTransactionType,
-    PreFinalized,
-    AccountTransactionV1,
     BigintFormatType,
     ContractName,
     CredentialStatements,
@@ -12,6 +10,7 @@ import {
     InitContractInput,
     InitContractPayload,
     Parameter,
+    PreFinalized,
     Transaction,
     UpdateContractInput,
     UpdateContractPayload,
@@ -401,13 +400,13 @@ export class WalletConnectConnection implements WalletConnection {
             );
         }
         
-        const finalizedTransaction = PreFinalized.prefinalized(transaction);
+        const preFinalizedTransaction = Transaction.preFinalized(transaction);
         let serializedTransaction = undefined;
 
-        if (finalizedTransaction.version == 0) {
+        if (preFinalizedTransaction.version == 0) {
             throw new Error('This is an `AccountTransactionV0`. Only sponsored transaction (`AccountTransactionV1`) supported for this endpoint')
-        } else if (finalizedTransaction.version == 1) {
-            serializedTransaction = AccountTransactionV1.serialize(finalizedTransaction);
+        } else if (preFinalizedTransaction.version == 1) {
+            serializedTransaction = PreFinalized.serialize(preFinalizedTransaction);
         } else {
             throw new Error('Unsupported transaction type');
         }

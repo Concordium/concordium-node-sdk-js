@@ -2,7 +2,7 @@ import { AccountSigner } from '../../signHelpers.js';
 import { AccountTransactionV0, AccountTransactionV1, Payload, Transaction } from '../index.js';
 import { type Signable, type SignableV0, type SignableV1, sign } from './signable.js';
 
-type PreFinalized = AccountTransactionV0.Unsigned | AccountTransactionV1.Unsigned;
+export type PreFinalized = AccountTransactionV0.Unsigned | AccountTransactionV1.Unsigned;
 
 export function preFinalized(transaction: SignableV1): AccountTransactionV1.Unsigned;
 export function preFinalized(transaction: SignableV0): AccountTransactionV0.Unsigned;

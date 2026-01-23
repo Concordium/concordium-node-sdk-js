@@ -3,7 +3,7 @@ import {
     AccountTransactionInput,
     AccountTransactionSignature,
     AccountTransactionType,
-    AccountTransactionV0,
+    PreFinalized,
     AccountTransactionV1,
     BigintFormatType,
     ContractName,
@@ -400,12 +400,12 @@ export class WalletConnectConnection implements WalletConnection {
                 `cannot send sponsored transaction to wallet with sender '${sender}' on connection for account '${connectedAccount}'`
             );
         }
-
-        const finalizedTransaction = Transaction.finalize(transaction);
+        
+        const finalizedTransaction = PreFinalized.prefinalized(transaction);
         let serializedTransaction = undefined;
 
         if (finalizedTransaction.version == 0) {
-            serializedTransaction = AccountTransactionV0.serialize(finalizedTransaction);
+            throw new Error('This is an `AccountTransactionV0`. Only sponsored transaction (`AccountTransactionV1`) supported for this endpoint')
         } else if (finalizedTransaction.version == 1) {
             serializedTransaction = AccountTransactionV1.serialize(finalizedTransaction);
         } else {

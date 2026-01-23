@@ -52,6 +52,10 @@ import {
 } from './constants';
 import { UnreachableCaseError } from './error';
 
+function bytesToHex(bytes: Uint8Array): string {
+    return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+}
+
 /**
  * Describes the possible methods to invoke
  */
@@ -412,16 +416,15 @@ export class WalletConnectConnection implements WalletConnection {
             }
 
             const sSponsorSignature = serializeAccountTransactionSignature(transaction.signatures.sponsor);
-
             try {
                 const { hash } = (await this.connector.client.request({
                     topic: this.session.topic,
                     request: {
                         method: 'sign_and_send_sponsored_transaction',
                         params: {
-                            header: sHeader,
-                            payload: sPayload,
-                            sponsorSignature: sSponsorSignature,
+                            header: bytesToHex(sHeader),
+                            payload: bytesToHex(sPayload),
+                            sponsorSignature: bytesToHex(sSponsorSignature),
                         },
                     },
                     chainId: this.chainId,

@@ -406,7 +406,12 @@ export class WalletConnectConnection implements WalletConnection {
             const { header, payload } = Transaction.preFinalized(transaction);
             const sHeader = AccountTransactionV1.serializeHeader(header);
             const sPayload = Payload.serialize(payload);
-            const sTransactionSignature = serializeAccountTransactionSignature(transaction.signatures);
+
+            if (transaction.signatures.sponsor == undefined) {
+                throw new Error('Expected a sponsor signature');
+            }
+
+            const sSponsorSignature = serializeAccountTransactionSignature(transaction.signatures.sponsor);
 
             try {
                 const { hash } = (await this.connector.client.request({
@@ -416,7 +421,7 @@ export class WalletConnectConnection implements WalletConnection {
                         params: {
                             header: sHeader,
                             payload: sPayload,
-                            signature: sTransactionSignature,
+                            sponsorSignature: sSponsorSignature,
                         },
                     },
                     chainId: this.chainId,

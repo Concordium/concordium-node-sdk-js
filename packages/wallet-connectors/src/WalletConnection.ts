@@ -208,7 +208,7 @@ export interface WalletConnection {
      * The returned promise resolves to the hash of the transaction once the request is approved in the wallet and successfully submitted.
      * If this doesn't happen, the promise rejects with an explanatory error message.
      *
-     * If the `transaction` is a `AccountTransactionV0` this function throws an error,
+     * If the `transaction` is a `AccountTransactionV0` this function throws an error in the wallet-connect connector,
      * as the endpoint is meant for sponsored transactions (`AccountTransactionV1`).
      *
      * @param sender The account address whose keys are used to sign the transaction in the wallet.

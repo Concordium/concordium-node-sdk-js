@@ -1,8 +1,10 @@
 import { SchemaType, WalletApi, detectConcordiumProvider } from '@concordium/browser-wallet-api-helpers';
 import {
+    AccountAddress,
     AccountTransactionSignature,
     AccountTransactionType,
     CredentialStatements,
+    Transaction,
     VerifiablePresentation,
 } from '@concordium/web-sdk';
 
@@ -160,6 +162,13 @@ export class BrowserWalletConnector implements WalletConnector, WalletConnection
             throw new Error(`'typedParams' must not be provided for transaction of type '${type}'`);
         }
         return this.client.sendTransaction(accountAddress, type as any, payload as any); // wallet API types enforce strict coupling of transaction types and corresponding payloads.
+    }
+
+    async signAndSendSponsoredTransaction(
+        sender: AccountAddress.Type,
+        transaction: Transaction.Signable
+    ): Promise<string> {
+        return this.client.sendSponsoredTransaction(sender.address, transaction);
     }
 
     async signMessage(accountAddress: string, msg: SignableMessage): Promise<AccountTransactionSignature> {

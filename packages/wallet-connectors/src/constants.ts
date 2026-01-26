@@ -15,6 +15,9 @@ export const CONCORDIUM_WALLET_CONNECT_PROJECT_ID = '76324905a70fe5c388bab46d3e0
 
 const TESTNET_GENESIS_BLOCK_HASH = '4221332d34e1694168c2a0c0b3fd0f273809612cb13d000d5c2e00e85f50f796';
 const MAINNET_GENESIS_BLOCK_HASH = '9dd9ca4d19e9393877d2c44b70f89acbfc0883c2243e5eeaecc0d1cd0503f478';
+// Note: Expect stagenet to be re-set occasionally.
+// Below hardcoded values may become outdated for stagenet.
+const STAGENET_GENESIS_BLOCK_HASH = '853288fa5a45554d3cbbf8a756b85abcbfddf28e752b13223eb747209a4d0d3c';
 
 /**
  * Standard configuration for the Testnet network.
@@ -26,6 +29,20 @@ export const TESTNET: Network = {
         baseUrl: 'https://grpc.testnet.concordium.com:20000',
     },
     ccdScanBaseUrl: 'https://testnet.ccdscan.io',
+};
+
+/**
+ * Standard configuration for the Stagenet network.
+ * Note: Expect stagenet to be re-set occasionally.
+ * Below hardcoded values may become outdated for stagenet.
+ */
+export const STAGENET: Network = {
+    name: 'stagenet',
+    genesisHash: STAGENET_GENESIS_BLOCK_HASH,
+    grpcOpts: {
+        baseUrl: 'https://grpc.stagenet.concordium.com:20000',
+    },
+    ccdScanBaseUrl: 'https://stagenet.ccdscan.io',
 };
 
 /**
@@ -103,6 +120,7 @@ export const FULL_WALLET_CONNECT_NAMESPACE_CONFIG: WalletConnectNamespaceConfig 
     methods: [
         WalletConnectMethod.SignMessage,
         WalletConnectMethod.SignAndSendTransaction,
+        WalletConnectMethod.SignAndSendSponsoredTransaction,
         WalletConnectMethod.RequestVerifiablePresentation,
     ],
     events: [WalletConnectEvent.AccountsChanged, WalletConnectEvent.ChainChanged],

@@ -36,4 +36,11 @@ export {
     signableFromJSON,
     verifySignature,
 } from './signable.js';
-export { finalize, Finalized, signAndFinalize, serializeBlockItem, getAccountTransactionHash } from './finalized.js';
+export {
+    finalize,
+    preFinalized,
+    Finalized,
+    signAndFinalize,
+    serializeBlockItem,
+    getAccountTransactionHash,
+} from './finalized.js';

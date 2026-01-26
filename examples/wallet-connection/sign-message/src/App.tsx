@@ -10,7 +10,7 @@ import {
 } from '@concordium/react-components';
 import { AccountTransactionSignature } from '@concordium/web-sdk';
 import { ResultAsync, err, ok } from 'neverthrow';
-import React, { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Alert, Button, Col, Container, Form, InputGroup, Row, Spinner } from 'react-bootstrap';
 
 import { WalletConnectorButton } from './WalletConnectorButton';

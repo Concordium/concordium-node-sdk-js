@@ -31,6 +31,7 @@ export {
     serializeAccountTransactionForSubmission,
     serializeAccountTransactionPayload,
     serializeAccountTransaction,
+    serializeAccountTransactionSignature,
 } from '../serialization.js';
 export { encodeHexString } from '../serializationHelpers.js';
 export { sha256 } from '../hash.js';

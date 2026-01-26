@@ -1,7 +1,9 @@
 import {
+    AccountAddress,
     AccountTransactionInput,
     AccountTransactionSignature,
     AccountTransactionType,
+    AccountTransactionV1,
     BigintFormatType,
     ContractName,
     CredentialStatements,
@@ -9,11 +11,14 @@ import {
     InitContractInput,
     InitContractPayload,
     Parameter,
+    Payload,
+    Transaction,
     UpdateContractInput,
     UpdateContractPayload,
     VerifiablePresentation,
     getTransactionKindString,
     jsonUnwrapStringify,
+    serializeAccountTransactionSignature,
     serializeInitContractParameters,
     serializeTypeValue,
     serializeUpdateContractParameters,
@@ -47,11 +52,16 @@ import {
 } from './constants';
 import { UnreachableCaseError } from './error';
 
+function bytesToHex(bytes: Uint8Array): string {
+    return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+}
+
 /**
  * Describes the possible methods to invoke
  */
 export enum WalletConnectMethod {
     SignAndSendTransaction = 'sign_and_send_transaction',
+    SignAndSendSponsoredTransaction = 'sign_and_send_sponsored_transaction',
     SignMessage = 'sign_message',
     RequestVerifiablePresentation = 'request_verifiable_presentation',
 }
@@ -183,9 +193,14 @@ function serializeInitContractParam(
     const { parameters, schema } = typedParams;
     switch (schema.type) {
         case 'ModuleSchema':
-            return serializeInitContractParameters(contractName, parameters, schema.value, schema.version);
+            return serializeInitContractParameters(
+                contractName,
+                parameters,
+                Uint8Array.from(schema.value).buffer,
+                schema.version
+            );
         case 'TypeSchema':
-            return serializeTypeValue(parameters, schema.value);
+            return serializeTypeValue(parameters, Uint8Array.from(schema.value).buffer);
         default:
             throw new UnreachableCaseError('schema', schema);
     }
@@ -206,11 +221,11 @@ function serializeUpdateContractMessage(
                 contractName,
                 entrypointName,
                 parameters,
-                schema.value,
+                Uint8Array.from(schema.value).buffer,
                 schema.version
             );
         case 'TypeSchema':
-            return serializeTypeValue(parameters, schema.value);
+            return serializeTypeValue(parameters, Uint8Array.from(schema.value).buffer);
         default:
             throw new UnreachableCaseError('schema', schema);
     }
@@ -383,6 +398,52 @@ export class WalletConnectConnection implements WalletConnection {
         }
     }
 
+    async signAndSendSponsoredTransaction(sender: AccountAddress.Type, transaction: Transaction.Signable) {
+        const connectedAccount = this.getConnectedAccount();
+        if (sender.address !== connectedAccount) {
+            throw new Error(
+                `cannot send sponsored transaction to wallet with sender '${sender}' on connection for account '${connectedAccount}'`
+            );
+        }
+
+        if (transaction.version == 1) {
+            const { header, payload } = Transaction.preFinalized(transaction);
+            const sHeader = AccountTransactionV1.serializeHeader(header);
+            const sPayload = Payload.serialize(payload);
+
+            if (transaction.signatures.sponsor == undefined) {
+                throw new Error('Expected a sponsor signature');
+            }
+
+            const sSponsorSignature = serializeAccountTransactionSignature(transaction.signatures.sponsor);
+            try {
+                const { hash } = (await this.connector.client.request({
+                    topic: this.session.topic,
+                    request: {
+                        method: 'sign_and_send_sponsored_transaction',
+                        params: {
+                            header: bytesToHex(sHeader),
+                            payload: bytesToHex(sPayload),
+                            sponsorSignature: bytesToHex(sSponsorSignature),
+                        },
+                    },
+                    chainId: this.chainId,
+                })) as SignAndSendTransactionResult;
+                return hash;
+            } catch (e) {
+                if (isSignAndSendTransactionError(e) && e.code === 500) {
+                    throw new Error('transaction rejected in wallet');
+                }
+                throw e;
+            }
+        } else if (transaction.version == 0) {
+            throw new Error(
+                'This is a `TransactionV0`. Only sponsored transactions (`TransactionV1`) supported for this endpoint'
+            );
+        } else {
+            throw new Error('Unsupported transaction type');
+        }
+    }
     async signMessage(accountAddress: string, msg: SignableMessage) {
         const connectedAccount = this.getConnectedAccount();
         if (accountAddress !== connectedAccount) {

@@ -7,7 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0]
+
 -   Add `signAndSendSponsoredTransaction` function to support sponsored transactions.
+-   Update peer depedency for `@concordium/web-sdk` to support any version above `12.0.2`
 
 ## [0.7.0]
 

@@ -35,16 +35,31 @@ jobs:
         working-directory: ${{ matrix.folder }}
         run: yarn install --immutable
 
-      - name: Run yarn audit
+      - name: Audit - Critical vulnerabilities
+        id: audit_critical
         working-directory: ${{ matrix.folder }}
         run: |
-          AUDIT_OUTPUT=$(yarn npm audit --all --recursive || true)
+          AUDIT_OUTPUT=$(yarn npm audit --all --recursive --severity critical || true)
           echo "$AUDIT_OUTPUT"
-          if echo "$AUDIT_OUTPUT" | grep -Ei "severity: (high|critical)"; then
-            echo "High or Critical vulnerabilities found!"
+          if echo "$AUDIT_OUTPUT" | grep -Ei "severity: critical"; then
+            echo "Critical vulnerabilities found!"
             exit 1
           else
-            echo "No high-risk vulnerabilities found."
+            echo "No critical vulnerabilities found."
+            exit 0
+          fi 
+
+      - name: Audit - High vulnerabilities
+        id: audit_high
+        working-directory: ${{ matrix.folder }}
+        run: |
+          AUDIT_OUTPUT=$(yarn npm audit --all --recursive --severity high || true)
+          echo "$AUDIT_OUTPUT"
+          if echo "$AUDIT_OUTPUT" | grep -Ei "severity: high"; then
+            echo "High vulnerabilities found!"
+            exit 1
+          else
+            echo "No high vulnerabilities found."
             exit 0
           fi 
 
@@ -56,7 +71,7 @@ jobs:
           SLACK_COLOR: ${{ job.status }}
           SLACK_TITLE: "Yarn Audit detected vulnerabilities on : ${{ matrix.directory }}"
           SLACK_MESSAGE: |
-              Yarn audit detected vulnerabilities for *${{ matrix.directory }}*. 
+              Yarn audit detected Critical or High vulnerabilities for *${{ matrix.directory }}*. 
               Please check the GitHub Actions logs.
               *View Logs:* <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|Click here to open the Summary page>
           SLACK_USERNAME: YarnAuditBot

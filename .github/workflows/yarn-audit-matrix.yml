@@ -48,3 +48,16 @@ jobs:
             exit 0
           fi 
 
+      - name: Report Status to Slack    # This step only runs if a previous step failed
+        if: failure()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SECURITY_ADVISORIES_SLACK_WEBHOOK_URL }}
+          SLACK_COLOR: ${{ job.status }}
+          SLACK_TITLE: "Yarn Audit detected vulnerabilities on : ${{ matrix.directory }}"
+          SLACK_MESSAGE: |
+              Yarn audit detected vulnerabilities for *${{ matrix.directory }}*. 
+              Please check the GitHub Actions logs.
+              *View Logs:* <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|Click here to open the Summary page>
+          SLACK_USERNAME: YarnAuditBot
+

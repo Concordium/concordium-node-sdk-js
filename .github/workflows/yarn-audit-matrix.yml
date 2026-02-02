@@ -3,7 +3,8 @@ name: Check subfolders in Node SDK with yarn audit
 on:
   # Triggers the workflow on push or pull request events but only for the main branch
   push:
-    branches: 
+    branches:
+      - main 
       - COR-2064/yarn-audit
   schedule:
     - cron: '0 12 * * *' # run every day at 12  
@@ -36,5 +37,14 @@ jobs:
 
       - name: Run yarn audit
         working-directory: ${{ matrix.folder }}
-        run: yarn npm audit --all --recursive --severity high
+        run: |
+          AUDIT_OUTPUT=$(yarn npm audit --all --recursive || true)
+          echo "$AUDIT_OUTPUT"
+          if echo "$AUDIT_OUTPUT" | grep -Ei "severity: (high|critical)"; then
+            echo "High or Critical vulnerabilities found!"
+            exit 1
+          else
+            echo "No high-risk vulnerabilities found."
+            exit 0
+          fi 
 

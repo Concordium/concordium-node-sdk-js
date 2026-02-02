@@ -36,7 +36,7 @@ jobs:
         run: |
           AUDIT_OUTPUT=$(yarn npm audit --all --recursive --severity critical || true)
           echo "$AUDIT_OUTPUT"
-          if echo "$AUDIT_OUTPUT" | grep -Ei "severity: critical"; then
+          if echo "$AUDIT_OUTPUT" | grep -Ei "severity: critical" > /dev/null; then
             echo "Critical vulnerabilities found!"
             exit 1
           else
@@ -49,7 +49,7 @@ jobs:
         run: |
           AUDIT_OUTPUT=$(yarn npm audit --all --recursive --severity high || true)
           echo "$AUDIT_OUTPUT"
-          if echo "$AUDIT_OUTPUT" | grep -Ei "severity: high"; then
+          if echo "$AUDIT_OUTPUT" | grep -Ei "severity: high" > /dev/null; then
             echo "High vulnerabilities found!"
             exit 1
           else

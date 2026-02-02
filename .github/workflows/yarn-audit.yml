@@ -2,7 +2,7 @@ name: Check Node SDK with yarn audit
 
 on:
   schedule:
-    - cron: '0 12 * * *' # run every day at 12  
+    - cron: '0 12 * * *' # run every day at 12
   # Allows us to run the workflow manually from the Actions tab
   workflow_dispatch:
 
@@ -37,7 +37,7 @@ jobs:
           else
             echo "No critical vulnerabilities found."
             exit 0
-          fi 
+          fi
 
       - name: Audit - High vulnerabilities
         id: audit_high
@@ -50,18 +50,17 @@ jobs:
           else
             echo "No high vulnerabilities found."
             exit 0
-          fi 
+          fi
 
-      - name: Report Status to Slack    # This step only runs if a previous step failed
+      - name: Report Status to Slack # This step only runs if a previous step failed
         if: failure()
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_WEBHOOK: ${{ secrets.SECURITY_ADVISORIES_SLACK_WEBHOOK_URL }}
           SLACK_COLOR: ${{ job.status }}
-          SLACK_TITLE: "Yarn Audit detected vulnerabilities on : ${{ github.workspace }}"
+          SLACK_TITLE: 'Yarn Audit detected vulnerabilities on : ${{ github.workspace }}'
           SLACK_MESSAGE: |
-              Yarn audit detected Critical or High vulnerabilities for *${{ github.workspace }}*. 
-              Please check the GitHub Actions logs.
-              *View Logs:* <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|Click here to open the Summary page>
+            Yarn audit detected Critical or High vulnerabilities for *${{ github.workspace }}*. 
+            Please check the GitHub Actions logs.
+            *View Logs:* <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|Click here to open the Summary page>
           SLACK_USERNAME: YarnAuditBot
-

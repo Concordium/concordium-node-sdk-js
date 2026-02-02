@@ -1,11 +1,6 @@
 name: Check Node SDK with yarn audit
 
 on:
-  # Triggers the workflow on push or pull request events but only for the main branch
-  push:
-    branches:
-      - main 
-      - COR-2064/yarn-audit
   schedule:
     - cron: '0 12 * * *' # run every day at 12  
   # Allows us to run the workflow manually from the Actions tab

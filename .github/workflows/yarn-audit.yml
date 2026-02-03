@@ -1,0 +1,66 @@
+name: Check Node SDK with yarn audit
+
+on:
+  schedule:
+    - cron: '0 12 * * *' # run every day at 12
+  # Allows us to run the workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  yarn-audit:
+    name: Yarn Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          submodules: 'recursive'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Audit - Critical vulnerabilities
+        id: audit_critical
+        run: |
+          AUDIT_OUTPUT=$(yarn npm audit --all --recursive --severity critical || true)
+          echo "$AUDIT_OUTPUT"
+          if echo "$AUDIT_OUTPUT" | grep -Ei "severity: critical" > /dev/null; then
+            echo "Critical vulnerabilities found!"
+            exit 1
+          else
+            echo "No critical vulnerabilities found."
+            exit 0
+          fi
+
+      - name: Audit - High vulnerabilities
+        id: audit_high
+        run: |
+          AUDIT_OUTPUT=$(yarn npm audit --all --recursive --severity high || true)
+          echo "$AUDIT_OUTPUT"
+          if echo "$AUDIT_OUTPUT" | grep -Ei "severity: high" > /dev/null; then
+            echo "High vulnerabilities found!"
+            exit 1
+          else
+            echo "No high vulnerabilities found."
+            exit 0
+          fi
+
+      - name: Report Status to Slack # This step only runs if a previous step failed
+        if: failure()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SECURITY_ADVISORIES_SLACK_WEBHOOK_URL }}
+          SLACK_COLOR: ${{ job.status }}
+          SLACK_TITLE: 'Yarn Audit detected vulnerabilities on : ${{ github.workspace }}'
+          SLACK_MESSAGE: |
+            Yarn audit detected Critical or High vulnerabilities for *${{ github.workspace }}*. 
+            Please check the GitHub Actions logs.
+            *View Logs:* <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|Click here to open the Summary page>
+          SLACK_USERNAME: YarnAuditBot

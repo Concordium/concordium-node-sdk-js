@@ -37,7 +37,12 @@
         "@walletconnect/types": "2.13.0",
         "@protobuf-ts/runtime-rpc": "2.9.1",
         "css-select@npm:2.1.0/nth-check": "2.1.1",
-        "resolve-url-loader@npm:4.0.0/postcss": "8.4.31"
+        "resolve-url-loader@npm:4.0.0/postcss": "8.4.31",
+        "body-parser@npm:1.20.3/qs": "6.14.1",
+        "express@npm:4.21.2/qs": "6.14.1",
+        "@mapbox/node-pre-gyp@npm:1.0.9/tar": "7.5.7",
+        "cacache@npm:16.1.1/tar": "7.5.7",
+        "node-gyp@npm:9.0.0/tar": "7.5.7"
     },
     "scripts": {
         "test-ci": "yarn workspace @concordium/web-sdk run test-ci && yarn workspaces foreach --no-private --exclude @concordium/web-sdk run test",

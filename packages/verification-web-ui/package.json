@@ -1,0 +1,79 @@
+{
+  "name": "@concordium/verification-web-ui",
+  "private": false,
+  "version": "1.0.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "style": "./dist/verification-web-ui.css",
+  "exports": {
+    ".": {
+      "style": "./dist/verification-web-ui.css",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    },
+    "./styles": {
+      "types": "./dist/styles.d.ts",
+      "default": "./dist/verification-web-ui.css"
+    },
+    "./dist/verification-web-ui.css": {
+      "default": "./dist/verification-web-ui.css"
+    },
+    "./verification-web-ui.css": {
+      "default": "./dist/verification-web-ui.css"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "concordium",
+    "wallet",
+    "blockchain",
+    "ui-library"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build:lib": "npm run build:lib:clean && vite build --mode library && npm run build:lib:assets",
+    "build:lib:clean": "rm -rf dist",
+    "build:lib:assets": "cp -r src/assets dist/ || true",
+    "link": "./setup-link.sh",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "prepublishOnly": "npm run build:lib"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.17",
+    "@types/node": "^25.0.1",
+    "@types/qrcode": "^1.5.6",
+    "autoprefixer": "^10.4.22",
+    "postcss": "^8.5.6",
+    "prettier": "^3.8.1",
+    "tailwindcss": "^4.1.17",
+    "typescript": "^5.9.3",
+    "vite": "^7.2.7",
+    "vite-plugin-dts": "^4.5.4"
+  },
+  "peerDependencies": {
+    "react": ">=16.8.0",
+    "vue": ">=3.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "vue": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "@walletconnect/sign-client": "^2.23.1",
+    "qrcode": "^1.5.4"
+  }
+}

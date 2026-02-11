@@ -11,7 +11,6 @@ on:
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
   contents: read
-  pages: write
   id-token: write
 
 # Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
@@ -71,6 +70,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      id-token: write
     environment: deploy
     steps:
       - name: Checkout sources
@@ -99,10 +99,8 @@ jobs:
 
       - name: Publish to NPM
         run: |
-          yarn config set npmAuthToken $NPM_AUTH_TOKEN
-          yarn workspace @concordium/verification-web-ui npm publish
-        env:
-          NPM_AUTH_TOKEN: '${{secrets.NPM_PUBLISH_TOKEN}}'
+          yarn workspace @concordium/verification-web-ui pack --out ../../verification-web-ui.tgz
+          NPM_AUTH_TOKEN="" npm publish ./verification-web-ui.tgz --tag ${{ steps.determine_npm_tag.outputs.npm_tag }} --access public --provenance
 
       - name: Create a GitHub release
         uses: ncipollo/release-action@v1

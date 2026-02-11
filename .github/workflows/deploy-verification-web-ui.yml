@@ -20,7 +20,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  NODE_VERSION: 18.16.0
+  NODE_VERSION: 24.13.1
 
 jobs:
   build:
@@ -41,9 +41,7 @@ jobs:
         with:
           path: |
             ./node_modules
-            ./docs/node_modules
             ./packages/*/node_modules
-            ./examples/**/node_modules
           key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
@@ -93,7 +91,7 @@ jobs:
 
       - uses: actions/setup-node@v6
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: lts/*
           cache: yarn
           registry-url: 'https://registry.npmjs.org'
 

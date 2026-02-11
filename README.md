@@ -28,6 +28,7 @@ Wrappers for interacting with the Concordium node.
     - [ccd-js-gen](#ccd-js-gen)
     - [wallet-connectors](#wallet-connectors)
     - [react-components](#react-components)
+    - [verification-web-ui](#verification-web-ui)
   - [Test](#test)
 <!--toc:end-->
 
@@ -173,6 +174,17 @@ each of the packages contained in this repository.
 - Create a pull request to merge the changes into the target branch.
 - Pull and tag the merge commit for the release.
   - Tag should be `react-components/x.y.z`.
+- Push the tag
+- Have another code owner accept the deployment
+
+### verification-web-ui
+
+- Bump the version in [package.json](./packages/verification-web-ui/package.json).
+- Update the [CHANGELOG](./packages/verification-web-ui/CHANGELOG.md) describing
+  the changes made.
+- Create a pull request to merge the changes into the target branch.
+- Pull and tag the merge commit for the release.
+  - Tag should be `verification-web-ui/x.y.z`.
 - Push the tag
 - Have another code owner accept the deployment
 

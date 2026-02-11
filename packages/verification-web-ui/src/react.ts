@@ -5,16 +5,14 @@ import {
     getConfig as baseGetConfig,
     initConcordiumModal as baseInit,
     setConfig as baseSetConfig,
-    getGlobalContainer,
 } from './index';
 import './styles/index.css';
 
 // Export all types
 export * from './types';
-export * from './index';
 
-// Export getGlobalContainer for direct access
-export { getGlobalContainer };
+// Re-export SDK class and other non-overridden exports
+export { ConcordiumVerificationWebUI, getGlobalContainer } from './index';
 
 // React wrapper with default container
 export async function initConcordiumModal(config?: Partial<ConcordiumConfig>): Promise<void> {

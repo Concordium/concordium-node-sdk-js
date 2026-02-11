@@ -88,7 +88,10 @@ export interface AppState {
 }
 
 // Wallet types enum
-export enum WalletType
+export enum WalletType {
+    ConcordiumWallet = 'concordium_wallet',
+    CryptoX = 'cryptox',
+}
 
 // Content map interface for modal states
 export interface ContentMapItem {

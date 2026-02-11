@@ -52,7 +52,6 @@ async function checkForActiveSession(): Promise<boolean> {
     const activeSessions = walletConnectService.getActiveSessions();
 
     if (activeSessions.length > 0) {
-      console.log('Found active session(s)', activeSessions.length);
       return true;
     }
 

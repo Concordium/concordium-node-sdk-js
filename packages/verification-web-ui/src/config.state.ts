@@ -20,7 +20,8 @@ export interface ConcordiumEventData {
     | 'verification-failed'
     | 'session-approval-failed'
     | 'qr-code-expired'
-    | 'qr-code-refreshed';
+    | 'qr-code-refreshed'
+    | 'repeat-verification';
   source: 'desktop' | 'mobile';
   modalType: 'processing' | 'landing' | 'scan' | 'returning-user';
   timestamp: number;

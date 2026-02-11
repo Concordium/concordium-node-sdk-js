@@ -11,7 +11,6 @@ export class ServiceFactory {
       const sdkConfig = (window as any).__CONCORDIUM_WC_CONFIG__;
 
       if (sdkConfig?.projectId) {
-        console.log('Using SDK-managed WalletConnect configuration');
 
         // Use SDK-provided configuration
         const metadata = sdkConfig.metadata || {};

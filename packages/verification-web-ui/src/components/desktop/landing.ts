@@ -1,48 +1,14 @@
 import arrowRight from '@/assets/arrow-right.svg';
 import concordiumModalLogo from '@/assets/concordium-modal-logo.svg';
-import trustLogos from '@/assets/trust-logos.svg';
-import slide1 from '@/assets/slide1.mp4';
-import slide2 from '@/assets/slide2.mp4';
-import slide3 from '@/assets/slide3.mp4';
+import modalGraphic from '@/assets/modal-graphic.svg';
+import sectionSeparator from '@/assets/section-separator.svg';
 
 import type {
-  CarouselItem,
   ModalFunction,
   ShowModalFunction,
   HideModalFunction,
 } from '@/types';
-import { createCarousel } from '@/utils/carousel';
 import { getGlobalContainer, getConfig } from '@/index';
-
-const carouselItems: CarouselItem[] = [
-  {
-    image: slide1,
-    alt: 'locked-graphic',
-    title: 'Anonymous Verification that keeps your data safe',
-    points: [],
-  },
-  {
-    image: slide2,
-    alt: 'verification-graphic',
-    title: 'Common online verification exposes your data ',
-    reduceOpacity: true,
-    points: [
-      { icon: 'exclamation', text: 'Personal data shared' },
-      { icon: 'exclamation', text: 'Stored on remote servers' },
-    ],
-  },
-  {
-    image: slide3,
-    alt: 'secure-graphic',
-    title: 'Verify and stay anonymous',
-    reduceOpacity: false,
-    points: [
-      { icon: 'check', text: 'No personal data shared' },
-      { icon: 'check', text: 'Not exposed' },
-      { icon: 'check', text: 'Not in the cloud' },
-    ],
-  },
-];
 
 export const createLandingModal: ModalFunction = () => {
   const landingHTML = `
@@ -53,57 +19,29 @@ export const createLandingModal: ModalFunction = () => {
             <img
               src="${concordiumModalLogo}"
               alt="concordium-modal-logo"
-              class="max-w-full h-auto"
+              class="max-w-full h-auto py-4"
             />
           </div>
 
-          <div class="desktop--carousel-container" data-carousel>
-            <div class="desktop--carousel-wrapper" data-carousel-wrapper>
-              <div class="desktop--carousel-track" data-carousel-track>
-                ${carouselItems
-                  .map(
-                    item => `
-                  <div class="desktop--carousel-image">
-                    <div class="flex items-center justify-center h-full">
-                      <video autoplay loop muted playsinline class="max-w-full h-auto max-h-full" style="object-fit: contain;">
-                        <source src="${item.image}" type="video/mp4" />
-                      </video>
-                    </div>
-                  </div>
-                `
-                  )
-                  .join('')}
-              </div>
-            </div>
-
-            <div class="desktop--carousel-actions">
-              ${carouselItems
-                .map(
-                  (_, index) => `
-                <div 
-                  class="desktop--carousel-action-item ${
-                    index === 0 ? 'active' : ''
-                  }" 
-                  data-carousel-bullet
-                  data-index="${index}"
-                ></div>
-              `
-                )
-                .join('')}
-            </div>
+          <div class="flex flex-col items-center gap-4 text-center px-4">
+            <img
+              src="${modalGraphic}"
+              alt="modal-graphic"
+              class="max-w-full h-auto py-4"
+            />
+            <h1 class="desktop--landing-title">Fast, one click, Anonymous Verification</h1>
+            <p class="desktop--landing-description">Connect and verify in seconds. This process uses your Concordium ID to confirm who you are without your details ever leaving your device.</p>
           </div>
 
-          <div class="flex flex-col items-center gap-3 md:gap-4">
+          <div class="flex flex-col items-center py-4">
             <button class="desktop--primary-button" id="start-verification-btn">
-              <span>Start Anonymous Verification</span>
+              <span>Start private verification</span>
               <img src="${arrowRight}" alt="arrow-right-icon" />
             </button>
           </div>
-
-          <div class="w-full max-w-[320px] mx-auto border border-muted"></div>
-
+          <img src="${sectionSeparator}" alt="" class="mx-auto" />
           <div class="flex items-center justify-center">
-            <img src="${trustLogos}" alt="trust-logos" class="max-w-full h-auto" />
+            <p class="desktop--download-text">Download & Install the <a href="#">Concordium ID App</a> and come back here to verify.</p>
           </div>
         </div>
       </div>
@@ -112,20 +50,6 @@ export const createLandingModal: ModalFunction = () => {
 
   const landingContainer = document.createElement('div');
   landingContainer.innerHTML = landingHTML;
-
-  // Initialize carousel with your existing DOM structure
-  const carouselContainer = landingContainer.querySelector(
-    '[data-carousel]'
-  ) as HTMLElement | null;
-
-  if (carouselContainer) {
-    // Initialize carousel
-    createCarousel(carouselContainer, {
-      autoPlayInterval: 5000,
-      enableAutoPlay: true,
-      enableSwipe: true,
-    });
-  }
 
   // Add event listener for the start verification button
   const startBtn = landingContainer.querySelector(
@@ -236,12 +160,6 @@ export const hideLandingModal: HideModalFunction = () => {
   if (modal) {
     // Add fade-out animation
     modal.classList.add('modal-exiting');
-
-    // Cleanup carousel
-    const container = modal.querySelector('[data-carousel]');
-    if (container && (container.parentElement as any)?.carouselInstance) {
-      (container.parentElement as any).carouselInstance.destroy();
-    }
 
     // Remove after animation completes
     setTimeout(() => {

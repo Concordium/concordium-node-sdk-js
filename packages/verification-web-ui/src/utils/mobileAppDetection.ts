@@ -194,7 +194,6 @@ export function openAppStore(
     }
   }
 
-  console.log('[Mobile] Opening app store:', storeUrl);
   window.location.href = storeUrl;
 }
 
@@ -224,11 +223,11 @@ export function openDeepLink(
       return;
     }
   } else {
-    // Concordium ID
-    deepLink = `concordiumidapp://wc?uri=${encodeURIComponent(walletConnectUri)}`;
+    // Concordium ID - with redirect to origin
+    const redirectUrl = encodeURIComponent(window.location.origin);
+    deepLink = `concordiumidapp://wc?uri=${encodeURIComponent(walletConnectUri)}&redirect=${redirectUrl}`;
   }
 
-  console.log('[Mobile] Opening deep link:', deepLink.substring(0, 50) + '...');
 
   // Attempt to open the deep link
   window.location.href = deepLink;
@@ -237,7 +236,6 @@ export function openDeepLink(
   setTimeout(() => {
     // Check if page is still visible (app didn't open)
     if (!document.hidden) {
-      console.log('[Mobile] App did not open, redirecting to store');
       openAppStore(appType);
     }
   }, 2000);
@@ -249,36 +247,25 @@ export function openDeepLink(
 export async function smartMobileRoute(
   walletConnectUri: string
 ): Promise<void> {
-  console.log('[Mobile] Starting smart route detection...');
-
   // Detect installed apps
   const detection = await detectInstalledApps();
-
-  console.log('[Mobile] Detection result:', {
-    installedApps: detection.installedApps,
-    recommendedAction: detection.recommendedAction,
-  });
 
   // Execute recommended action
   switch (detection.recommendedAction) {
     case 'open-wallet':
-      console.log('[Mobile] Opening Concordium Wallet directly');
       openDeepLink('concordium-wallet', walletConnectUri);
       break;
 
     case 'open-id':
-      console.log('[Mobile] Opening Concordium ID directly');
       openDeepLink('concordium-id', walletConnectUri);
       break;
 
     case 'show-selection':
-      console.log('[Mobile] Multiple apps detected, showing selection');
       // Return control to show selection UI
       // This will be handled by the calling component
       break;
 
     case 'show-store':
-      console.log('[Mobile] No apps detected, opening app store');
       openAppStore('concordium-wallet');
       break;
   }

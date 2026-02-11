@@ -66,7 +66,6 @@ export async function initializeWalletConnect(
       relayUrl: finalConfig.relayUrl,
     });
 
-    console.log('WalletConnect initialized successfully');
     return signClient;
   } catch (error) {
     console.error('Failed to initialize WalletConnect:', error);
@@ -100,7 +99,6 @@ export async function handleSessionApproval(
 ): Promise<SessionTypes.Struct> {
   try {
     const session = await approval;
-    console.log('WalletConnect connection session:', session);
     return session;
   } catch (error) {
     console.error('Failed to get session approval:', error);
@@ -152,7 +150,6 @@ export async function disconnectAll(): Promise<void> {
     );
 
     await Promise.all(disconnectPromises);
-    console.log('Disconnected from all sessions');
   } catch (error) {
     console.error('Failed to disconnect:', error);
     throw error;
@@ -180,7 +177,6 @@ export async function generateConnectionUri(
   namespaces: Record<string, any>
 ): Promise<string> {
   const { uri } = await connectWallet(namespaces);
-  console.log('Generated connection URI:', uri);
 
   if (!uri) {
     throw new Error('Failed to generate connection URI');

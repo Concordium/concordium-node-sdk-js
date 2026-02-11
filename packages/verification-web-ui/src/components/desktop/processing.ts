@@ -1,9 +1,10 @@
 import concordiumModalLogo from '@/assets/concordium-modal-logo.svg';
 import loadingVideo from '@/assets/Loading.mp4';
-import successVideo from '@/assets/success.mp4';
+import modalGraphicSuccess from '@/assets/modal-graphic-success.svg';
+import modalGraphicDelete from '@/assets/modal-graphic-delete.svg';
 import type { ShowModalFunction, HideModalFunction } from '@/types';
 
-type ProcessingState = 'loading' | 'success';
+type ProcessingState = 'loading' | 'success' | 'error';
 
 // Global variables for modal state management following your pattern
 let processingModalElement: HTMLElement | null = null;
@@ -25,47 +26,47 @@ export const createProcessingModal = (
                 </div>
 
                 <div class="flex items-center justify-center">
-                    ${
-                      state === 'loading'
+                    ${state === 'loading'
                         ? `<video autoplay loop muted playsinline class="max-w-full h-auto" style="max-height: 80px; object-fit: contain;">
                            <source src="${loadingVideo}" type="video/mp4" />
                          </video>`
-                        : `<video autoplay loop muted playsinline class="max-w-full h-auto" style="max-height: 80px; object-fit: contain;">
-                           <source src="${successVideo}" type="video/mp4" />
-                         </video>`
+                        : state === 'success'
+                        ? `<img src="${modalGraphicSuccess}" alt="success-graphic" class="max-w-full h-auto" style="max-height: 80px; object-fit: contain;" />`
+                        : `<img src="${modalGraphicDelete}" alt="error-graphic" class="max-w-full h-auto" style="max-height: 80px; object-fit: contain;" />`
                     }
                 </div>
 
                 <div class="flex flex-col items-center gap-2">
                     <p class="font-medium text-[20px] leading-[25px] tracking-[0.2px] font-jakarta" style="color: #0D0F11;">
-                        ${
-                          state === 'loading'
+                        ${state === 'loading'
                             ? 'Verification in Progress'
-                            : 'Success!'
+                            : state === 'success'
+                            ? 'Success!'
+                            : 'Verification Failed!'
                         }
                     </p>
-                    <p class="font-normal text-[12px] leading-[19px] tracking-[0px] font-inter" style="color: #0D0F11;">
-                        ${
-                          state === 'loading'
+                    <p class="desktop--processing-text">
+                        ${state === 'loading'
                             ? 'Approve in your ConcordiumID App'
-                            : 'Verification completed'
+                            : state === 'success'
+                            ? 'Verification completed'
+                            : 'Something went wrong with your verification. Please repeat the process'
                         }
                     </p>
                 </div>
 
                 <div class="flex items-center justify-center gap-3 mt-3">
-                    ${
-                      state === 'loading'
-                        ? `
-                                <button disabled class="desktop--disabled-button" id="approve-btn">
-                                    <span>Please wait</span>
-                                </button>
-                            `
-                        : `
-                                <button class="desktop--primary-button" id="close-btn">
-                                    <span>Close</span>
-                                </button>
-                            `
+                    ${state === 'loading'
+                        ? `<button disabled class="desktop--disabled-button" id="approve-btn">
+                               <span>Please wait</span>
+                           </button>`
+                        : state === 'success'
+                        ? `<button class="desktop--primary-button" id="close-btn">
+                               <span>Continue to site</span>
+                           </button>`
+                        : `<button class="desktop--primary-button" id="repeat-btn" style="background-color: #0D0F11;">
+                               <span>Try again</span>
+                           </button>`
                     }
                 </div>
             </div>
@@ -83,7 +84,6 @@ export const createProcessingModal = (
   ) as HTMLButtonElement | null;
 
   closeBtn?.addEventListener('click', async () => {
-    console.log('Close clicked');
 
     // Only dispatch event if this is a success state close
     if (state === 'success') {
@@ -101,6 +101,30 @@ export const createProcessingModal = (
 
     // Always just hide the modal, don't navigate anywhere
     hideProcessingModal();
+  });
+
+  // Add event listener for repeat verification button (error state)
+  const repeatBtn = processingContainer.querySelector(
+    '#repeat-btn'
+  ) as HTMLButtonElement | null;
+
+  repeatBtn?.addEventListener('click', async () => {
+
+    const { dispatchConcordiumEvent } = await import('../../index');
+    dispatchConcordiumEvent({
+      type: 'repeat-verification',
+      source: 'desktop',
+      modalType: 'processing',
+      data: {
+        state: 'error',
+        action: 'repeat',
+      },
+    });
+
+    // Hide error modal and show landing modal to restart
+    hideProcessingModal();
+    const { showLandingModal } = await import('./landing');
+    await showLandingModal();
   });
 
   return processingContainer.firstElementChild as HTMLElement;
@@ -191,7 +215,6 @@ export const showProcessingModal: ShowModalFunction = async () => {
   const handleVerificationCompleted = (event: Event) => {
     const customEvent = event as CustomEvent;
     if (customEvent.detail?.type === 'verification-completed') {
-      console.log('Verification completed event received:', customEvent.detail);
       // Show success state in processing modal
       showSuccessState();
     }
@@ -290,6 +313,70 @@ export async function showSuccessState(): Promise<void> {
     data: {
       state: 'success',
       message: 'Verification completed successfully',
+    },
+  });
+}
+
+/**
+ * Shows the error state in the processing modal.
+ * This function can be called by merchants to display an error state
+ * when verification fails or encounters an issue.
+ */
+export async function showErrorState(): Promise<void> {
+  const { getGlobalContainer } = await import('../../index');
+  const targetContainer = getGlobalContainer();
+
+  if (!targetContainer) {
+    console.error('Container not found for error modal');
+    return;
+  }
+
+  // Get current modal for crossfade (if exists)
+  const currentModal = processingModalElement;
+
+  // Create and show error modal with crossfade
+  const newModal = createProcessingModal('error');
+  newModal.id = 'processing-modal';
+
+  // Add new modal with entering class (starts hidden)
+  newModal.classList.add('modal-entering');
+  targetContainer.appendChild(newModal);
+
+  // Use requestAnimationFrame to ensure DOM is ready
+  requestAnimationFrame(() => {
+    // Start crossfade: fade out old, fade in new simultaneously
+    if (currentModal) {
+      currentModal.classList.add('modal-exiting');
+    }
+
+    // Trigger animation by removing entering class and adding visible
+    requestAnimationFrame(() => {
+      newModal.classList.remove('modal-entering');
+      newModal.classList.add('modal-visible');
+    });
+  });
+
+  // Update reference
+  processingModalElement = newModal;
+
+  // Remove old modal after transition completes
+  if (currentModal) {
+    setTimeout(() => {
+      if (currentModal.parentNode) {
+        currentModal.parentNode.removeChild(currentModal);
+      }
+    }, 300);
+  }
+
+  // Dispatch error event
+  const { dispatchConcordiumEvent } = await import('../../index');
+  dispatchConcordiumEvent({
+    type: 'error',
+    source: 'desktop',
+    modalType: 'processing',
+    data: {
+      state: 'error',
+      message: 'Verification failed',
     },
   });
 }

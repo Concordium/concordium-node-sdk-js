@@ -182,7 +182,6 @@ export class ConcordiumVerificationWebUI {
           const activeSessions = wcService.getActiveSessions();
 
           if (activeSessions.length > 0) {
-            console.log('✓ Active SDK-managed session detected');
             await ConcordiumVerificationWebUI.showReturningUserModal();
 
             if (onClose) {
@@ -205,7 +204,6 @@ export class ConcordiumVerificationWebUI {
           const activeSessions = wcService.getActiveSessions();
 
           if (activeSessions.length > 0) {
-            console.log('✓ Active SDK-managed session detected');
             await ConcordiumVerificationWebUI.showReturningUserModal();
 
             if (onClose) {
@@ -229,9 +227,6 @@ export class ConcordiumVerificationWebUI {
     } else {
       // No config provided - just show landing modal
       // Merchant can provide URI later via setWalletConnectUri()
-      console.log(' Merchant-Managed WalletConnect Mode');
-      console.log('   → Showing landing modal');
-      console.log('   → Use setWalletConnectUri() to provide URI when ready');
 
       // Set merchant-provided mode (URI will be provided later)
       localStorage.setItem(
@@ -271,12 +266,6 @@ export class ConcordiumVerificationWebUI {
     }
 
     try {
-      console.log(' Merchant-Provided WalletConnect Mode');
-      console.log(
-        '   → Using merchant-provided URI:',
-        walletConnectUri.substring(0, 20) + '...'
-      );
-
       // Store the URI for use in modals
       this.storeWalletConnectUri(walletConnectUri);
 
@@ -338,14 +327,6 @@ export class ConcordiumVerificationWebUI {
     }
 
     try {
-      console.log(' SDK-Managed WalletConnect Mode');
-      console.log('   → SDK will handle WalletConnect initialization');
-      console.log(
-        '   → Project ID:',
-        config.projectId.substring(0, 20) + '...'
-      );
-      console.log('   → SDK will generate QR code automatically');
-
       // Reset any existing WalletConnect service to ensure clean state
       const { ServiceFactory } = await import('./services/service.factory');
       ServiceFactory.resetServices();
@@ -477,6 +458,20 @@ export class ConcordiumVerificationWebUI {
     const { showSuccessState } =
       await import('./components/desktop/processing');
     await showSuccessState();
+  }
+
+  /**
+   * Show error state in processing modal
+   * Call this when verification fails or encounters an error
+   * @example
+   * ```typescript
+   * const sdk = new ConcordiumVerificationWebUI();
+   * await sdk.showErrorState();
+   * ```
+   */
+  async showErrorState(): Promise<void> {
+    const { showErrorState } = await import('./components/desktop/processing');
+    await showErrorState();
   }
 
   /**
@@ -714,14 +709,13 @@ export class ConcordiumVerificationWebUI {
    * @internal
    */
   private emitEvent(type: string, data: any): void {
-    const event = new CustomEvent('concordium-merchant-sdk-event', {
+    const event = new CustomEvent('verification-web-ui-event', {
       detail: { type, data },
       bubbles: true,
       composed: true,
     });
     window.dispatchEvent(event);
 
-    console.log(`SDK Event emitted: ${type}`, data);
   }
 }
 

@@ -3,26 +3,13 @@
 import arrowLeft from '@/assets/arrow-left.svg';
 import arrowRight from '@/assets/arrow-right.svg';
 import concordiumModalLogo from '@/assets/concordium-modal-logo.svg';
-import appstoreIcon from '@/assets/appstore-icon.svg';
-import playstoreIcon from '@/assets/playstore-icon.svg';
-import concordiumWalletIcon from '@/assets/concordium-wallet-icon.svg';
-import browserWalletIcon from '@/assets/browser-wallet-icon.svg';
-import concordiumIDIcon from '@/assets/concordium-ID-icon.svg';
-import webStoreIcon from '@/assets/web-store.svg';
-import mobileBlue from '@/assets/mobile-blue.png';
-import mobileGrey from '@/assets/mobile-grey.svg';
-import laptopBlue from '@/assets/laptop-blue.svg';
-import laptopGrey from '@/assets/laptop-grey.svg';
+import sectionSeparator from '@/assets/section-separator.svg';
 
 import type {
-  WalletOption,
-  StepConfiguration,
-  ModalElements,
   ModalFunction,
   ShowModalFunction,
   HideModalFunction,
 } from '@/types';
-import { Dropdown, createDropdownHTML } from '@/utils/dropdown';
 import { ServiceFactory } from '@/services';
 import { dispatchConcordiumEvent } from '@/index';
 import { ModalConstants } from '@/constants/modal.constants';
@@ -49,53 +36,6 @@ currentSelectedWallet = WALLET_TYPES.CONCORDIUM_ID;
 type WalletTypeKeys = keyof typeof WALLET_TYPES;
 type WalletTypeValues = (typeof WALLET_TYPES)[WalletTypeKeys];
 
-const WALLET_OPTIONS: WalletOption[] = [
-  {
-    value: WALLET_TYPES.CONCORDIUM_WALLET,
-    text: 'Concordium Wallet',
-    icon: concordiumWalletIcon,
-    checked: false,
-  },
-  {
-    value: WALLET_TYPES.BROWSER_WALLET,
-    text: 'Concordium Browser Wallet',
-    icon: browserWalletIcon,
-    checked: false,
-  },
-  {
-    value: WALLET_TYPES.CONCORDIUM_ID,
-    text: 'ConcordiumID',
-    icon: concordiumIDIcon,
-    checked: true,
-  },
-];
-
-const STEP_CONFIGURATIONS: Record<
-  WalletTypeValues | 'default',
-  StepConfiguration[]
-> = {
-  [WALLET_TYPES.CONCORDIUM_WALLET]: [
-    { count: '1', text: 'Download & set-up' },
-    { count: '2', text: 'Scan QR & approve' },
-    { count: '3', text: 'Return and finish' },
-  ],
-  [WALLET_TYPES.BROWSER_WALLET]: [
-    { count: '1', text: 'Install Concordium Browser Wallet' },
-    { count: '2', text: 'Create Account' },
-    { count: '3', text: 'Return and start verification' },
-  ],
-  [WALLET_TYPES.CONCORDIUM_ID]: [
-    { count: '1', text: 'Download Concordium ID' },
-    { count: '2', text: 'Create Account' },
-    { count: '3', text: 'Return and scan QR' },
-  ],
-  default: [
-    { count: '1', text: 'Download & set-up' },
-    { count: '2', text: 'Scan QR & approve' },
-    { count: '3', text: 'Return and finish' },
-  ],
-};
-
 const CSS_CLASSES = {
   HIDDEN: 'hidden',
   FLEX: 'flex',
@@ -107,28 +47,9 @@ const SELECTORS = {
   SCAN_MODAL: '#scan-modal',
   BACK_BTN: '#back-btn',
   QR_CONTAINER: '#qr-container',
-  POINT_LIST: '#point-list',
   BROWSER_BTN: '#browser-btn',
   BROWSER_WALLET_BTN: '#browser-wallet-btn',
-  FOOTER_ICON: '#footer-icon',
-  DROPDOWN_LIST: '[data-dropdown-list]',
 } as const;
-
-// Mobile wallet options (only 2 options)
-const MOBILE_WALLET_OPTIONS: WalletOption[] = [
-  {
-    value: WALLET_TYPES.CONCORDIUM_WALLET,
-    text: 'Concordium Wallet',
-    icon: concordiumWalletIcon,
-    checked: false,
-  },
-  {
-    value: WALLET_TYPES.CONCORDIUM_ID,
-    text: 'ConcordiumID',
-    icon: concordiumIDIcon,
-    checked: true,
-  },
-];
 
 // Helper function to create desktop HTML
 function createDesktopScanHTML(): string {
@@ -153,32 +74,11 @@ function createDesktopScanHTML(): string {
             </div>
           </div>
 
-          <div id="dropdown-wrapper" class="${CSS_CLASSES.HIDDEN}">
-            ${createDropdownHTML(WALLET_OPTIONS)}
-          </div>
-
-          <div id="point-list" class="desktop--point-list ${CSS_CLASSES.HIDDEN}" style="display: none;">
-            ${createStepHTML(STEP_CONFIGURATIONS.default)}
-          </div>
-
           <div id="browser-btn" class="${CSS_CLASSES.HIDDEN} ${CSS_CLASSES.FLEX_COL} items-center gap-4">
             <button class="desktop--primary-button" id="browser-wallet-btn">
               <span>Verify with Browser Wallet</span>
               <img src="${arrowRight}" alt="arrow-right-icon" />
             </button>
-          </div>
-
-          <div class="desktop--scan-footer ${CSS_CLASSES.HIDDEN}" style="display: none;">
-            <div id="footer-title" class="font-inter font-medium text-[16px] leading-[18px]" style="color: #0D0F11;">
-              Download Concordium ID
-            </div>
-            <div id="footer-icon" class="flex items-center justify-center gap-2">
-              <img src="${appstoreIcon}" alt="app-store-icon" />
-              <img src="${playstoreIcon}" alt="play-store-icon" />
-            </div>
-            <div class="font-normal text-[14px] leading-5" style="color: #0D0F11;">
-              Come back here and continue after installing the app.
-            </div>
           </div>
         </div>
       </div>
@@ -210,14 +110,6 @@ function createMobileScanHTML(): string {
           </div>
 
           <div id="mobile-content" class="${CSS_CLASSES.HIDDEN}">
-            <div id="dropdown-wrapper">
-              ${createDropdownHTML(MOBILE_WALLET_OPTIONS)}
-            </div>
-
-            <div id="point-list" class="mobile--point-list">
-              ${createMobileStepHTML()}
-            </div>
-
             <div id="btn-wrapper" class="flex flex-col w-full items-center gap-2 mt-4">
             <button class="mobile--primary-button w-full" id="open-in-wallet-btn">
               <span id="wallet-btn-text">Verify with ConcordiumID</span>
@@ -231,19 +123,6 @@ function createMobileScanHTML(): string {
           <div id="qr-container" class="${CSS_CLASSES.HIDDEN}" style="display: none;">
             <!-- QR code will be generated here when user clicks "Verify on Another Device" -->
           </div>
-
-          <div class="mobile--scan-footer ${CSS_CLASSES.HIDDEN}">
-            <div class="font-inter font-medium text-[16px] leading-[18px]" style="color: #0D0F11;">
-              Download Concordium ID
-            </div>
-            <div id="footer-icon" class="flex items-center justify-center gap-2">
-              <img src="${appstoreIcon}" alt="app-store-icon" />
-              <img src="${playstoreIcon}" alt="play-store-icon" />
-            </div>
-            <div class="font-normal text-[14px] leading-5" style="color: #0D0F11;">
-              Come back here and continue after installing the app.
-            </div>
-          </div>
           </div>
         </div>
       </div>
@@ -251,33 +130,9 @@ function createMobileScanHTML(): string {
   `;
 }
 
-// Helper function to create mobile steps
-function createMobileStepHTML(): string {
-  const steps = [
-    { count: '1', text: 'Open in your Concordium Wallet' },
-    { count: '2', text: 'Approve the request' },
-    { count: '3', text: 'Return and finish' },
-  ];
-
-  return steps
-    .map(
-      ({ count, text }) => `
-      <div class="flex items-center gap-4">
-        <span class="mobile--point-count">${count}</span>
-        <span class="mobile--point-text">${text}</span>
-      </div>`
-    )
-    .join('');
-}
-
 export const createScanModal: ModalFunction = () => {
   // Detect if mobile screen
   const isMobile = isMobileScreen();
-
-  console.log(
-    '[Scan Modal] Creating modal for:',
-    isMobile ? 'MOBILE' : 'DESKTOP'
-  );
 
   const scanHTML = isMobile ? createMobileScanHTML() : createDesktopScanHTML();
 
@@ -306,25 +161,18 @@ export const createScanModal: ModalFunction = () => {
 
   // Event handlers following your modal navigation pattern
   const handleBack = async (): Promise<void> => {
-    console.log('Back button clicked');
     const { showLandingModal } = await import('./landing');
     hideScanModal();
     await showLandingModal();
   };
 
   const handleBrowserWallet = async (): Promise<void> => {
-    console.log('Browser wallet button clicked');
     // Processing modal will be shown automatically after session approval
     // Don't hide scan modal - keep it visible until session is established
   };
 
   // Mobile-specific handlers
   const handleOpenInWallet = async (): Promise<void> => {
-    console.log(
-      '[Mobile] Open in wallet clicked, selected:',
-      currentSelectedWallet
-    );
-
     // Check if URI is available
     if (!currentQRCodeUri) {
       const storedUri = localStorage.getItem(
@@ -347,11 +195,6 @@ export const createScanModal: ModalFunction = () => {
 
     try {
       const detection = await detectInstalledApps();
-
-      console.log('[Mobile] App detection:', {
-        installedApps: detection.installedApps,
-        recommendedAction: detection.recommendedAction,
-      });
 
       // Handle based on detection result
       if (detection.recommendedAction === 'show-store') {
@@ -395,7 +238,6 @@ export const createScanModal: ModalFunction = () => {
   };
 
   const handleOpenOtherDevice = async (): Promise<void> => {
-    console.log('[Mobile] Verify on Another Device clicked');
     const btnWrapper = scanContainer.querySelector('#btn-wrapper');
     if (btnWrapper) {
       btnWrapper.classList.add(CSS_CLASSES.HIDDEN);
@@ -417,44 +259,6 @@ export const createScanModal: ModalFunction = () => {
       'click',
       handleOpenOtherDevice
     );
-  }
-
-  // Initialize dropdown - always show
-  const dropdownContainer = scanContainer.querySelector(
-    SELECTORS.DROPDOWN_LIST
-  ) as HTMLElement | null;
-  if (dropdownContainer) {
-    const dropdown = new Dropdown(dropdownContainer, {
-      onSelect: (selected: WalletOption) => {
-        console.log('Wallet selected:', selected);
-        currentSelectedWallet = selected.value as WalletTypeValues;
-
-        if (isMobile) {
-          // Update button text for mobile
-          const walletBtnText = scanContainer.querySelector('#wallet-btn-text');
-          if (walletBtnText) {
-            walletBtnText.textContent = `Verify with ${selected.text}`;
-          }
-        } else {
-          // Update content for desktop
-          requestAnimationFrame(() => updateContent(selected));
-
-          // Update footer text based on selection
-          const footerTitle = scanContainer.querySelector('#footer-title');
-          if (footerTitle) {
-            if (selected.value === WALLET_TYPES.CONCORDIUM_ID) {
-              footerTitle.textContent = 'Download Concordium ID';
-            } else if (selected.value === WALLET_TYPES.CONCORDIUM_WALLET) {
-              footerTitle.textContent = 'Download Concordium Wallet';
-            } else if (selected.value === WALLET_TYPES.BROWSER_WALLET) {
-              footerTitle.textContent = 'Download Concordium Browser Wallet';
-            }
-          }
-        }
-      },
-    });
-    // Store dropdown instance for cleanup
-    (scanContainer as any).dropdownInstance = dropdown;
   }
 
   return scanContainer;
@@ -609,17 +413,13 @@ async function initializeWalletConnection(): Promise<void> {
         const activeSessionData = await checkForActiveSession();
 
         if (activeSessionData) {
-          console.log(
-            'Active session detected, redirecting to returning user modal...'
-          );
-
           // // Extract session details
           // const { topic, namespaces } = activeSessionData;
           // const accounts = namespaces?.ccd?.accounts || [];
 
           // // Emit active_session event to merchant with session data
           // window.dispatchEvent(
-          //   new CustomEvent('concordium-merchant-sdk-event', {
+          //   new CustomEvent('verification-web-ui-event', {
           //     detail: {
           //       type: 'active_session',
           //       data: {
@@ -661,12 +461,6 @@ async function initializeWalletConnection(): Promise<void> {
     }
 
     // No active session, proceed with QR code display
-    console.log('No active session, displaying QR code...');
-
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('Initializing WalletConnect in Scan Modal');
-    console.log('   Mode:', connectionMode || 'merchant-provided (default)');
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
     if (connectionMode === 'sdk-managed') {
       // SDK manages WalletConnect - initialize and generate QR code
@@ -699,12 +493,6 @@ async function initializeSDKManagedConnection(): Promise<void> {
     );
   }
 
-  console.log(' SDK-Managed Connection');
-  console.log('   → Merchant provided projectId to SDK');
-  console.log('   → SDK is generating WalletConnect URI');
-  console.log('   → Project ID:', projectId.substring(0, 20) + '...');
-  console.log('   → Network:', network);
-
   // Get WalletConnect service and generate URI
   const wcService = ServiceFactory.createWalletConnectService();
   await wcService.initialize();
@@ -731,15 +519,12 @@ async function initializeSDKManagedConnection(): Promise<void> {
     throw new Error('Failed to generate WalletConnect URI from SDK');
   }
 
-  console.log('SDK generated WalletConnect URI successfully');
-
   // Store URI for mobile deep linking
   currentQRCodeUri = uri;
 
   // Handle session approval in the background
   approval()
     .then(async session => {
-      console.log('Wallet connected! Session approved');
       await handleSessionApproval(session);
     })
     .catch(error => {
@@ -778,11 +563,6 @@ async function initializeMerchantProvidedConnection(): Promise<void> {
     return;
   }
 
-  console.log(' Merchant-Provided Connection');
-  console.log('   → Merchant is managing their own WalletConnect');
-  console.log('   → Using merchant-generated URI');
-  console.log('   → URI:', storedUri.substring(0, 30) + '...');
-
   // Store URI for mobile deep linking
   currentQRCodeUri = storedUri;
 
@@ -813,8 +593,6 @@ async function initializeMerchantProvidedConnection(): Promise<void> {
  */
 export async function handleSessionApproval(sessionData: any): Promise<void> {
   try {
-    console.log('WalletConnect session approved');
-
     // Extract session details
     const { topic, namespaces } = sessionData;
     const accounts = namespaces?.ccd?.accounts || [];
@@ -827,7 +605,7 @@ export async function handleSessionApproval(sessionData: any): Promise<void> {
     };
 
     window.dispatchEvent(
-      new CustomEvent('concordium-merchant-sdk-event', {
+      new CustomEvent('verification-web-ui-event', {
         detail: {
           type: 'session_approved',
           data: sessionEvent,
@@ -837,22 +615,15 @@ export async function handleSessionApproval(sessionData: any): Promise<void> {
       })
     );
 
-    console.log('Session approved event emitted to merchant');
-    console.log('   → Topic:', topic);
-    console.log('   → Accounts:', accounts);
-
     // Show the processing modal (it will handle crossfade with scan modal)
     const { showProcessingModal } = await import('./processing');
     await showProcessingModal();
-
-    console.log('Waiting for merchant to send presentation request...');
-    console.log('   → Merchant should call sdk.sendPresentationRequest()');
   } catch (error) {
     console.error('Error handling session approval:', error);
 
     // Emit error event
     window.dispatchEvent(
-      new CustomEvent('concordium-merchant-sdk-event', {
+      new CustomEvent('verification-web-ui-event', {
         detail: {
           type: 'error',
           data: {
@@ -872,7 +643,6 @@ export async function handleSessionApproval(sessionData: any): Promise<void> {
 async function displayQRCode(uri: string): Promise<void> {
   try {
     // Dynamic import following your coding instructions pattern
-    console.log('Generating QR code for URI:', uri);
     const { default: QRCode } = await import('qrcode');
     const { getConfig } = await import('@/config.state');
     const config = getConfig();
@@ -893,115 +663,23 @@ async function displayQRCode(uri: string): Promise<void> {
 
       qrContainer.innerHTML = `
         <div class="text-center">
-          <img src="${qrCodeDataURL}" alt="QR Code for wallet connection" class="w-48 h-48 mx-auto mb-2" />
-          <p class="text-sm mt-2" style="color: #0D0F11;">Scan the QR code using a supported app</p>
+          <img src="${qrCodeDataURL}" alt="QR Code for wallet connection" class="w-48 h-48 mx-auto mb-2" style="border-radius: 12.414px; border: 1px solid rgba(0, 0, 0, 0.10); background: #FFF;" />
+          <p class="desktop--scan-text mt-2">Scan the QR code with your<br>Concordium ID compatible device</p>
           ${countdownHTML}
-          
-          <!-- Toggle Switch -->
-          <div class="mt-4 flex items-center justify-center gap-2 p-1 mx-auto" style="background: #E4E6E7; border-radius: 1000px; height: 45px; width: 400px;">
-            <button id="toggle-mobile" class="flex items-center gap-2 px-3 transition-all flex-1 justify-center" style="color: #2667FF; background: #D4D6D9; border-radius: 1000px; height: 36px;">
-              <img id="mobile-icon" src="${mobileBlue}" alt="Mobile" />
-              <span class="text-sm font-medium">Mobile App</span>
-            </button>
-            <div style="width: 1px; height: 24px; background: #00000033;"></div>
-            <button id="toggle-browser" class="flex items-center gap-2 px-3 transition-all flex-1 justify-center" style="color: #00000099; border-radius: 1000px; height: 36px;">
-              <img id="browser-icon" src="${laptopGrey}" alt="Browser" />
-              <span class="text-sm font-medium">Browser App</span>
-            </button>
+          <img src="${sectionSeparator}" alt="" class="mx-auto mt-4" />
+          <div class="flex items-center justify-center mt-4">
+            <p class="desktop--download-text">Download & Install the <a href="#">Concordium ID App</a> and come back here to verify.</p>
           </div>
         </div>
       `;
 
-      // Set up toggle functionality
-      setupToggleSwitch();
-
       // Set up QR code expiry
       setupQRCodeExpiry();
-
-      // Show the hidden elements now that QR code is ready
-      const dropdownWrapper = document.querySelector('#dropdown-wrapper');
-      const pointList = document.querySelector(
-        '#point-list'
-      ) as HTMLElement | null;
-      const footer = document.querySelector(
-        '.desktop--scan-footer'
-      ) as HTMLElement | null;
-
-      dropdownWrapper?.classList.remove(CSS_CLASSES.HIDDEN);
-      if (pointList) {
-        pointList.classList.remove(CSS_CLASSES.HIDDEN);
-        pointList.style.display = 'flex';
-      }
-      if (footer) {
-        footer.classList.remove(CSS_CLASSES.HIDDEN);
-        footer.style.display = 'flex';
-      }
     }
   } catch (error) {
     console.error('Failed to generate QR code:', error);
     showQRError('Failed to generate QR code. Please try again.');
   }
-}
-
-/**
- * Sets up toggle switch functionality for Mobile/Browser app selection
- */
-function setupToggleSwitch(): void {
-  const mobileBtn = document.querySelector(
-    '#toggle-mobile'
-  ) as HTMLButtonElement;
-  const browserBtn = document.querySelector(
-    '#toggle-browser'
-  ) as HTMLButtonElement;
-  const mobileIcon = document.querySelector('#mobile-icon') as HTMLImageElement;
-  const browserIcon = document.querySelector(
-    '#browser-icon'
-  ) as HTMLImageElement;
-
-  if (!mobileBtn || !browserBtn || !mobileIcon || !browserIcon) return;
-
-  const setActiveButton = (
-    active: HTMLButtonElement,
-    inactive: HTMLButtonElement,
-    activeIcon: HTMLImageElement,
-    inactiveIcon: HTMLImageElement,
-    activeSrc: string,
-    inactiveSrc: string
-  ) => {
-    // Active button styles
-    active.style.background = '#D4D6D9';
-    active.style.color = '#2667FF';
-    activeIcon.src = activeSrc;
-
-    // Inactive button styles
-    inactive.style.background = 'transparent';
-    inactive.style.color = '#00000099';
-    inactiveIcon.src = inactiveSrc;
-  };
-
-  mobileBtn.addEventListener('click', () => {
-    setActiveButton(
-      mobileBtn,
-      browserBtn,
-      mobileIcon,
-      browserIcon,
-      mobileBlue,
-      laptopGrey
-    );
-    console.log('Mobile app option selected');
-  });
-
-  browserBtn.addEventListener('click', () => {
-    setActiveButton(
-      browserBtn,
-      mobileBtn,
-      browserIcon,
-      mobileIcon,
-      laptopBlue,
-      mobileGrey
-    );
-    console.log('Browser app option selected');
-  });
 }
 
 /**
@@ -1063,11 +741,6 @@ async function handleQRCodeExpiry(autoRefresh: boolean): Promise<void> {
   );
   const isMerchantProvided = connectionMode !== 'sdk-managed';
 
-  console.log('QR Code expired', {
-    mode: connectionMode,
-    autoRefresh: isMerchantProvided ? 'N/A (merchant-provided)' : autoRefresh,
-  });
-
   // Dispatch expiry event
   dispatchConcordiumEvent({
     type: 'qr-code-expired',
@@ -1082,18 +755,13 @@ async function handleQRCodeExpiry(autoRefresh: boolean): Promise<void> {
 
   if (isMerchantProvided) {
     // Merchant-provided QR code expired - notify merchant, don't auto-refresh
-    console.log(
-      '🔔 Merchant-provided QR code expired. Waiting for new URI from merchant...'
-    );
     showQRExpiredMessage(false);
   } else if (autoRefresh) {
     // SDK-managed QR code with auto-refresh enabled
-    console.log('Auto-refreshing SDK-generated QR code...');
     showQRRefreshing();
     await refreshQRCode();
   } else {
     // SDK-managed but auto-refresh disabled
-    console.log('QR code expired. Auto-refresh disabled.');
     showQRExpiredMessage(true);
   }
 }
@@ -1115,8 +783,6 @@ async function refreshQRCode(): Promise<void> {
         timestamp: Date.now(),
       },
     });
-
-    console.log('QR code refreshed successfully');
   } catch (error) {
     console.error('Failed to refresh QR code:', error);
     showQRError('Failed to refresh QR code. Please try again.');
@@ -1181,8 +847,6 @@ function showQRRefreshing(): void {
  * @param newUri - The new WalletConnect URI from merchant
  */
 export async function updateQRCodeFromMerchant(newUri: string): Promise<void> {
-  console.log('Received new URI from merchant, updating QR code...');
-
   // Display the new QR code
   await displayQRCode(newUri);
 
@@ -1196,8 +860,6 @@ export async function updateQRCodeFromMerchant(newUri: string): Promise<void> {
       source: 'merchant',
     },
   });
-
-  console.log('Merchant-provided QR code updated successfully');
 }
 
 function showQRError(message: string): void {
@@ -1243,10 +905,7 @@ function setupEventListeners(): void {
   const listeners: Array<() => void> = [];
 
   // Listen for session-approved event to transition to processing modal
-  const handleSessionApproved = async (event: Event) => {
-    const customEvent = event as CustomEvent;
-    console.log('Session approved event received:', customEvent.detail);
-
+  const handleSessionApproved = async (_event: Event) => {
     // Hide scan modal first and wait for it to be removed
     hideScanModal();
 
@@ -1275,114 +934,6 @@ function setupEventListeners(): void {
   (window as any).scanEventListeners = listeners;
 }
 
-// Helper functions
-function toggleElementVisibility(
-  element: HTMLElement | null,
-  show: boolean
-): void {
-  if (!element) return;
-
-  if (show) {
-    element.classList.remove(CSS_CLASSES.HIDDEN);
-    element.style.display = CSS_CLASSES.FLEX;
-  } else {
-    element.style.display = 'none';
-  }
-}
-
-function getModalElements(): ModalElements | null {
-  const modal = document.querySelector(
-    SELECTORS.SCAN_MODAL
-  ) as HTMLElement | null;
-  if (!modal) return null;
-
-  return {
-    modal,
-    qrContainer: modal.querySelector(
-      SELECTORS.QR_CONTAINER
-    ) as HTMLElement | null,
-    footerIcon: modal.querySelector(
-      SELECTORS.FOOTER_ICON
-    ) as HTMLElement | null,
-    pointList: modal.querySelector(SELECTORS.POINT_LIST) as HTMLElement | null,
-    browserBtn: modal.querySelector(
-      SELECTORS.BROWSER_BTN
-    ) as HTMLElement | null,
-  };
-}
-
-function createStepHTML(steps: StepConfiguration[]): string {
-  if (!steps || !Array.isArray(steps)) return '';
-
-  return steps
-    .map(
-      ({ count, text }) => `
-      <div class="flex items-center gap-4">
-        <span class="desktop--point-count">${count}</span>
-        <span class="desktop--point-text">${text}</span>
-      </div>`
-    )
-    .join('');
-}
-
-function updateUIForBrowserWallet(elements: ModalElements): void {
-  const { qrContainer, footerIcon, pointList, browserBtn } = elements;
-
-  toggleElementVisibility(qrContainer, false);
-  toggleElementVisibility(browserBtn, true);
-
-  if (footerIcon) {
-    footerIcon.innerHTML = `<img src="${webStoreIcon}" alt="Web Store" />`;
-  }
-
-  if (pointList) {
-    pointList.innerHTML = createStepHTML(
-      STEP_CONFIGURATIONS[WALLET_TYPES.BROWSER_WALLET]
-    );
-  }
-}
-
-function updateUIForOtherWallets(elements: ModalElements): void {
-  const { qrContainer, footerIcon, pointList, browserBtn } = elements;
-
-  toggleElementVisibility(qrContainer, true);
-  toggleElementVisibility(browserBtn, false);
-
-  if (footerIcon) {
-    footerIcon.innerHTML = `
-      <img src="${appstoreIcon}" alt="App Store" />
-      <img src="${playstoreIcon}" alt="Play Store" />
-    `;
-  }
-
-  if (pointList) {
-    pointList.innerHTML = createStepHTML(STEP_CONFIGURATIONS.default);
-  }
-
-  // Re-initialize QR code for wallet types that need it
-  initializeWalletConnection().catch(console.error);
-}
-
-function updateContent(selected: WalletOption): void {
-  if (!selected?.value) {
-    console.error('Invalid selection provided');
-    return;
-  }
-
-  const elements = getModalElements();
-  if (!elements) {
-    console.error('Modal elements not found');
-    return;
-  }
-
-  // Update UI based on wallet type
-  if (selected.value === WALLET_TYPES.BROWSER_WALLET) {
-    updateUIForBrowserWallet(elements);
-  } else {
-    updateUIForOtherWallets(elements);
-  }
-}
-
 /**
  * Checks for active WalletConnect sessions
  * @returns Session data if there are active sessions, null otherwise
@@ -1396,12 +947,10 @@ async function checkForActiveSession(): Promise<any | null> {
     const activeSessions = walletConnectService.getActiveSessions();
 
     if (activeSessions.length > 0) {
-      console.log('Found active session(s):', activeSessions.length);
       // Return the first active session data
       return activeSessions[0];
     }
 
-    console.log('No active sessions found');
     return null;
   } catch (error) {
     console.error('Failed to check for active sessions:', error);
@@ -1425,30 +974,19 @@ function generateDeepLink(
   const ua = navigator.userAgent;
   let deepLink: string | null = null;
 
-  console.log('[Mobile] Generating deep link:');
-  console.log('  - Wallet type:', walletType);
-  console.log('  - Network:', network);
-  console.log('  - URI:', uri?.substring(0, 30) + '...');
-
   if (walletType === WALLET_TYPES.CONCORDIUM_WALLET) {
     // Check device type for Concordium Wallet
     if (/iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream) {
       // iOS
       deepLink = `cryptox${network}://wc?uri=${encodeURIComponent(uri)}&redirect=googlechrome://`;
-      console.log('  - Platform: iOS');
     } else if (/android/i.test(ua)) {
       // Android
       deepLink = `cryptox-wc-${network}://wc?uri=${encodeURIComponent(uri)}&go_back=true`;
-      console.log('  - Platform: Android');
     }
   } else if (walletType === WALLET_TYPES.CONCORDIUM_ID) {
-    // Concordium ID - same for all devices
-    deepLink = `concordiumidapp://wc?uri=${encodeURIComponent(uri)}`;
-    console.log('  - Platform: All (Concordium ID)');
-  }
-
-  if (deepLink) {
-    console.log('  - Generated deep link:', deepLink.substring(0, 50) + '...');
+    // Concordium ID - same for all devices, with redirect to origin
+    const redirectUrl = encodeURIComponent(window.location.origin);
+    deepLink = `concordiumidapp://wc?uri=${encodeURIComponent(uri)}&redirect=${redirectUrl}`;
   }
 
   return deepLink;
@@ -1464,7 +1002,6 @@ async function displayQRCodeMobile(
   container: HTMLElement
 ): Promise<void> {
   try {
-    console.log('[Mobile] Generating QR code for cross-device verification');
     const { default: QRCode } = await import('qrcode');
 
     const qrCodeDataURL = await QRCode.toDataURL(uri, {
@@ -1475,26 +1012,14 @@ async function displayQRCodeMobile(
 
     container.innerHTML = `
       <div class="text-center py-4">
-        <img src="${qrCodeDataURL}" alt="QR Code for wallet connection" class="w-48 h-48 mx-auto mb-2" />
-        <p class="text-sm" style="color: #0D0F11;">Scan the QR code using a supported app</p>
-        
-        <!-- Toggle Switch -->
-        <div class="mt-4 flex items-center justify-center gap-2 p-1 max-w-[280px] mx-auto" style="background: #E4E6E7; border-radius: 1000px; height: 45px;">
-          <button id="toggle-mobile-mobile" class="flex items-center gap-2 px-3 transition-all flex-1 justify-center" style="color: #2667FF; background: #D4D6D9; border-radius: 1000px; height: 36px;">
-            <img id="mobile-icon-mobile" src="${mobileBlue}" alt="Mobile" class="w-5 h-5" />
-            <span class="text-sm font-medium">Mobile App</span>
-          </button>
-          <div style="width: 1px; height: 24px; background: #00000033;"></div>
-          <button id="toggle-browser-mobile" class="flex items-center gap-2 px-3 transition-all flex-1 justify-center" style="color: #00000099; border-radius: 1000px; height: 36px;">
-            <img id="browser-icon-mobile" src="${laptopGrey}" alt="Browser" class="w-5 h-5" />
-            <span class="text-sm font-medium">Browser App</span>
-          </button>
+        <img src="${qrCodeDataURL}" alt="QR Code for wallet connection" class="w-48 h-48 mx-auto mb-2" style="border-radius: 12.414px; border: 1px solid rgba(0, 0, 0, 0.10); background: #FFF;" />
+        <p class="desktop--scan-text">Scan the QR code with your<br>Concordium ID compatible device</p>
+        <img src="${sectionSeparator}" alt="" class="mx-auto mt-4" />
+        <div class="flex items-center justify-center mt-4">
+          <p class="desktop--download-text">Download & Install the <a href="#">Concordium ID App</a> and come back here to verify.</p>
         </div>
       </div>
     `;
-
-    // Set up toggle functionality for mobile view
-    setupToggleSwitchMobile();
 
     // Show the container
     container.classList.remove(CSS_CLASSES.HIDDEN);
@@ -1502,67 +1027,4 @@ async function displayQRCodeMobile(
   } catch (error) {
     console.error('[Mobile] Failed to generate QR code:', error);
   }
-}
-
-/**
- * Sets up toggle switch functionality for Mobile/Browser app selection (mobile view)
- */
-function setupToggleSwitchMobile(): void {
-  const mobileBtn = document.querySelector(
-    '#toggle-mobile-mobile'
-  ) as HTMLButtonElement;
-  const browserBtn = document.querySelector(
-    '#toggle-browser-mobile'
-  ) as HTMLButtonElement;
-  const mobileIcon = document.querySelector(
-    '#mobile-icon-mobile'
-  ) as HTMLImageElement;
-  const browserIcon = document.querySelector(
-    '#browser-icon-mobile'
-  ) as HTMLImageElement;
-
-  if (!mobileBtn || !browserBtn || !mobileIcon || !browserIcon) return;
-
-  const setActiveButton = (
-    active: HTMLButtonElement,
-    inactive: HTMLButtonElement,
-    activeIcon: HTMLImageElement,
-    inactiveIcon: HTMLImageElement,
-    activeSrc: string,
-    inactiveSrc: string
-  ) => {
-    // Active button styles
-    active.style.background = '#D4D6D9';
-    active.style.color = '#2667FF';
-    activeIcon.src = activeSrc;
-
-    // Inactive button styles
-    inactive.style.background = 'transparent';
-    inactive.style.color = '#00000099';
-    inactiveIcon.src = inactiveSrc;
-  };
-
-  mobileBtn.addEventListener('click', () => {
-    setActiveButton(
-      mobileBtn,
-      browserBtn,
-      mobileIcon,
-      browserIcon,
-      mobileBlue,
-      laptopGrey
-    );
-    console.log('[Mobile] Mobile app option selected');
-  });
-
-  browserBtn.addEventListener('click', () => {
-    setActiveButton(
-      browserBtn,
-      mobileBtn,
-      browserIcon,
-      mobileIcon,
-      laptopBlue,
-      mobileGrey
-    );
-    console.log('[Mobile] Browser app option selected');
-  });
 }

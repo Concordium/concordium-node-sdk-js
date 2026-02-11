@@ -1,6 +1,6 @@
 import arrowRight from '@/assets/arrow-right.svg';
 import concordiumModalLogo from '@/assets/concordium-modal-logo.svg';
-import lockedGraphic from '@/assets/locked-graphic.svg';
+import modalGraphicSuccess from '@/assets/modal-graphic-success.svg';
 
 import type {
   ModalFunction,
@@ -24,17 +24,16 @@ export const createReturningUserModal: ModalFunction = () => {
         </div>
 
         <div class="flex items-center justify-center">
-          <img src="${lockedGraphic}" alt="locked-graphic" class="object-cover" />
+          <img src="${modalGraphicSuccess}" alt="success-graphic" class="object-cover" />
         </div>
 
         <div class="flex flex-col items-center gap-2">
           <p class="font-medium text-[20px] leading-[25px] tracking-[0.2px] font-jakarta" style="color: #0D0F11;">Your ID is still connected</p>
-          <p class="font-normal text-[12px] leading-[19px] tracking-[0px] font-inter" style="color: #0D0F11;">Continue and verify</p>
         </div>
 
         <div class="flex flex-col items-center gap-4">
           <button class="desktop--primary-button" id="continue-btn" style="margin-bottom: 10px;">
-            <span>Continue In App</span>
+            <span>Start private verification</span>
             <img src="${arrowRight}" alt="arrow-right-icon" class="object-cover" />
           </button>
 
@@ -56,7 +55,6 @@ export const createReturningUserModal: ModalFunction = () => {
   ) as HTMLButtonElement | null;
 
   continueBtn?.addEventListener('click', async () => {
-    console.log('Continue in app clicked - using existing session');
 
     // Get active session from WalletConnect service
     const { ServiceFactory } = await import('@/services');
@@ -82,7 +80,7 @@ export const createReturningUserModal: ModalFunction = () => {
 
     // Emit active_session event to merchant with session data
     window.dispatchEvent(
-      new CustomEvent('concordium-merchant-sdk-event', {
+      new CustomEvent('verification-web-ui-event', {
         detail: {
           type: 'active_session',
           data: {
@@ -120,7 +118,6 @@ export const createReturningUserModal: ModalFunction = () => {
   });
 
   disconnectBtn?.addEventListener('click', async () => {
-    console.log('Disconnect clicked - clearing sessions');
 
     // Disconnect all active sessions
     try {
@@ -143,7 +140,6 @@ export const createReturningUserModal: ModalFunction = () => {
         ModalConstants.LOCAL_STORAGE_FLAGS.CONCORDIUM_ID_NOT_INSTALLED
       );
 
-      console.log('All sessions disconnected successfully');
 
       // Navigate to landing modal
       const { showLandingModal } = await import('./landing');

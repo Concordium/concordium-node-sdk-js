@@ -48,7 +48,13 @@ export default defineConfig(({ mode }) => {
         },
         rollupOptions: {
           // Externalize deps that shouldn't be bundled
-          external: ['react', 'vue', '@vue/runtime-core'],
+          external: [
+            'react',
+            'vue',
+            '@vue/runtime-core',
+            '@walletconnect/sign-client',
+            /^@walletconnect\/.*/,
+          ],
           output: {
             globals: {
               react: 'React',

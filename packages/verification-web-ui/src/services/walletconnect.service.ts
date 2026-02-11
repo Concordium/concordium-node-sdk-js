@@ -31,7 +31,6 @@ export class WalletConnectService {
       });
 
       this.setupEventListeners();
-      console.log('WalletConnect initialized successfully');
       return this.signClient;
     } catch (error) {
       console.error('Failed to initialize WalletConnect:', error);
@@ -137,7 +136,6 @@ export class WalletConnectService {
 
       await Promise.all(disconnectPromises);
       this.currentSession = null;
-      console.log('Disconnected from all sessions');
     } catch (error) {
       console.error('Failed to disconnect:', error);
       throw error;
@@ -170,8 +168,7 @@ export class WalletConnectService {
       });
     });
 
-    signClient.on('session_ping', (event: any) => {
-      console.log('Session ping received:', event);
+    signClient.on('session_ping', (_event: any) => {
     });
 
     signClient.on('session_delete', (event: any) => {

@@ -300,3 +300,68 @@
 .desktop--carousel-point-text {
   @apply text-dark text-[14px] leading-[21px] font-inter font-medium;
 }
+
+.desktop--download-text {
+  color: rgba(0, 0, 0, 0.6);
+  text-align: center;
+  font-feature-settings: 'liga' off, 'clig' off;
+  font-family: Inter, sans-serif;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 18px;
+}
+
+.desktop--download-text a {
+  text-decoration: underline;
+  text-decoration-style: solid;
+  text-underline-offset: 0%;
+  text-decoration-thickness: from-font;
+  text-decoration-skip-ink: auto;
+  color: inherit;
+}
+
+.desktop--landing-title {
+  color: #0D0F11;
+  text-align: center;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 20px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 25px;
+  letter-spacing: 0.2px;
+  margin-bottom: 16px;
+}
+
+.desktop--landing-description {
+  color: #0D0F11;
+  text-align: center;
+  font-feature-settings: 'liga' off, 'clig' off;
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 20px;
+}
+
+.desktop--scan-text {
+  color: #0D0F11;
+  text-align: center;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 20px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 25px;
+  letter-spacing: 0.2px;
+}
+
+.desktop--processing-text {
+  color: #0D0F11;
+  text-align: center;
+  font-feature-settings: 'liga' off, 'clig' off;
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 20px;
+}

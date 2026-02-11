@@ -47,7 +47,7 @@
     "scripts": {
         "test-ci": "yarn workspace @concordium/web-sdk run test-ci && yarn workspaces foreach --no-private --exclude @concordium/web-sdk run test",
         "test:all": "FORCE_COLOR=true yarn workspaces foreach --no-private run test --passWithNoTests",
-        "eslint": "eslint . --cache --ext .ts,.tsx --max-warnings 0",
+        "eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint . --cache --ext .ts,.tsx --max-warnings 0",
         "lint:all": "yarn eslint",
         "lint-fix:all": "yarn eslint --fix",
         "prettier": "prettier ./.*.* ./*.* .github/**/* -u --cache",

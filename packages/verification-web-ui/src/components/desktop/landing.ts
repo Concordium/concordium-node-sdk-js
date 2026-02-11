@@ -2,16 +2,11 @@ import arrowRight from '@/assets/arrow-right.svg';
 import concordiumModalLogo from '@/assets/concordium-modal-logo.svg';
 import modalGraphic from '@/assets/modal-graphic.svg';
 import sectionSeparator from '@/assets/section-separator.svg';
-
-import type {
-  ModalFunction,
-  ShowModalFunction,
-  HideModalFunction,
-} from '@/types';
-import { getGlobalContainer, getConfig } from '@/index';
+import { getConfig, getGlobalContainer } from '@/index';
+import type { HideModalFunction, ModalFunction, ShowModalFunction } from '@/types';
 
 export const createLandingModal: ModalFunction = () => {
-  const landingHTML = `
+    const landingHTML = `
     <div class="desktop--modal-overlay">
       <div class="desktop--modal-container">
         <div class="desktop--modal-body">
@@ -48,129 +43,119 @@ export const createLandingModal: ModalFunction = () => {
     </div>
   `;
 
-  const landingContainer = document.createElement('div');
-  landingContainer.innerHTML = landingHTML;
+    const landingContainer = document.createElement('div');
+    landingContainer.innerHTML = landingHTML;
 
-  // Add event listener for the start verification button
-  const startBtn = landingContainer.querySelector(
-    '#start-verification-btn'
-  ) as HTMLButtonElement | null;
-  startBtn?.addEventListener('click', async () => {
-    const { showScanModal } = await import('./scan');
-    const { hideLandingModal } = await import('./landing');
-    hideLandingModal();
-    await showScanModal();
-  });
+    // Add event listener for the start verification button
+    const startBtn = landingContainer.querySelector('#start-verification-btn') as HTMLButtonElement | null;
+    startBtn?.addEventListener('click', async () => {
+        const { showScanModal } = await import('./scan');
+        const { hideLandingModal } = await import('./landing');
+        hideLandingModal();
+        await showScanModal();
+    });
 
-  return landingContainer;
+    return landingContainer;
 };
 
 export const showLandingModal: ShowModalFunction = async () => {
-  // Ensure DOM is ready before resolving container
-  if (document.readyState === 'loading') {
-    await new Promise(resolve => {
-      document.addEventListener('DOMContentLoaded', resolve, { once: true });
-    });
-  }
-
-  // Resolve container with retries (similar to initConcordiumModal)
-  let targetContainer = getGlobalContainer();
-
-  // If still not found, wait a bit and try again (for React apps that might still be mounting)
-  if (!targetContainer) {
-    await new Promise(resolve => setTimeout(resolve, 100));
-    targetContainer = getGlobalContainer();
-  }
-
-  if (!targetContainer) {
-    console.error('Container not found for modal');
-    console.error(
-      `Container not found for Concordium modal. Tried: ${getConfig().defaultContainer}`
-    );
-    console.error('Available elements:', {
-      root: document.querySelector('#root'),
-      app: document.querySelector('#app'),
-      body: document.body,
-    });
-    return;
-  }
-
-  // Prevent horizontal scrolling on body
-  document.body.style.overflowX = 'hidden';
-
-  // Find existing modal to crossfade
-  const existingModal = targetContainer.querySelector(
-    '.desktop--modal-overlay'
-  ) as HTMLElement | null;
-
-  const landing = createLandingModal();
-  landing.id = 'landing-modal';
-
-  // Get the modal container for transforms
-  const modalContainer = landing.querySelector(
-    '.desktop--modal-container'
-  ) as HTMLElement;
-
-  // For smooth transitions, prepare new modal completely before showing
-  landing.style.opacity = '0';
-  modalContainer.style.transform = 'translateY(-20px) scale(0.95)';
-  modalContainer.style.transition = 'transform 0.3s ease-out';
-  targetContainer.appendChild(landing);
-
-  // Force a reflow to ensure the styles are applied
-  landing.offsetHeight;
-
-  // Now start the transition
-  landing.style.transition = 'opacity 0.3s ease-out';
-
-  // Use a small delay to ensure DOM is fully ready
-  setTimeout(() => {
-    // Start simultaneous crossfade
-    if (existingModal) {
-      const existingContainer = existingModal.querySelector(
-        '.desktop--modal-container'
-      ) as HTMLElement;
-      existingModal.style.transition = 'opacity 0.3s ease-in';
-      if (existingContainer) {
-        existingContainer.style.transition = 'transform 0.3s ease-in';
-        existingContainer.style.transform = 'translateY(-20px) scale(0.95)';
-      }
-      existingModal.style.opacity = '0';
-      existingModal.style.pointerEvents = 'none';
-      existingModal.style.zIndex = '9998';
+    // Ensure DOM is ready before resolving container
+    if (document.readyState === 'loading') {
+        await new Promise((resolve) => {
+            document.addEventListener('DOMContentLoaded', resolve, { once: true });
+        });
     }
 
-    // Show new modal
-    landing.style.opacity = '1';
-    modalContainer.style.transform = 'translateY(0) scale(1)';
+    // Resolve container with retries (similar to initConcordiumModal)
+    let targetContainer = getGlobalContainer();
 
-    // Remove old modal after transition completes
-    if (existingModal) {
-      setTimeout(() => {
-        if (existingModal.parentNode) {
-          existingModal.parentNode.removeChild(existingModal);
+    // If still not found, wait a bit and try again (for React apps that might still be mounting)
+    if (!targetContainer) {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        targetContainer = getGlobalContainer();
+    }
+
+    if (!targetContainer) {
+        console.error('Container not found for modal');
+        console.error(`Container not found for Concordium modal. Tried: ${getConfig().defaultContainer}`);
+        console.error('Available elements:', {
+            root: document.querySelector('#root'),
+            app: document.querySelector('#app'),
+            body: document.body,
+        });
+        return;
+    }
+
+    // Prevent horizontal scrolling on body
+    document.body.style.overflowX = 'hidden';
+
+    // Find existing modal to crossfade
+    const existingModal = targetContainer.querySelector('.desktop--modal-overlay') as HTMLElement | null;
+
+    const landing = createLandingModal();
+    landing.id = 'landing-modal';
+
+    // Get the modal container for transforms
+    const modalContainer = landing.querySelector('.desktop--modal-container') as HTMLElement;
+
+    // For smooth transitions, prepare new modal completely before showing
+    landing.style.opacity = '0';
+    modalContainer.style.transform = 'translateY(-20px) scale(0.95)';
+    modalContainer.style.transition = 'transform 0.3s ease-out';
+    targetContainer.appendChild(landing);
+
+    // Force a reflow to ensure the styles are applied
+    landing.offsetHeight;
+
+    // Now start the transition
+    landing.style.transition = 'opacity 0.3s ease-out';
+
+    // Use a small delay to ensure DOM is fully ready
+    setTimeout(() => {
+        // Start simultaneous crossfade
+        if (existingModal) {
+            const existingContainer = existingModal.querySelector('.desktop--modal-container') as HTMLElement;
+            existingModal.style.transition = 'opacity 0.3s ease-in';
+            if (existingContainer) {
+                existingContainer.style.transition = 'transform 0.3s ease-in';
+                existingContainer.style.transform = 'translateY(-20px) scale(0.95)';
+            }
+            existingModal.style.opacity = '0';
+            existingModal.style.pointerEvents = 'none';
+            existingModal.style.zIndex = '9998';
         }
-      }, 350);
-    }
-  }, 10);
+
+        // Show new modal
+        landing.style.opacity = '1';
+        modalContainer.style.transform = 'translateY(0) scale(1)';
+
+        // Remove old modal after transition completes
+        if (existingModal) {
+            setTimeout(() => {
+                if (existingModal.parentNode) {
+                    existingModal.parentNode.removeChild(existingModal);
+                }
+            }, 350);
+        }
+    }, 10);
 };
 
 export const hideLandingModal: HideModalFunction = () => {
-  const modal = document.querySelector('#landing-modal') as HTMLElement | null;
-  if (modal) {
-    // Add fade-out animation
-    modal.classList.add('modal-exiting');
+    const modal = document.querySelector('#landing-modal') as HTMLElement | null;
+    if (modal) {
+        // Add fade-out animation
+        modal.classList.add('modal-exiting');
 
-    // Remove after animation completes
-    setTimeout(() => {
-      modal.remove();
-      // Restore body overflow if no other modals are present
-      if (
-        !document.querySelector('.desktop--modal-overlay') &&
-        !document.querySelector('.mobile--modal-overlay')
-      ) {
-        document.body.style.overflowX = '';
-      }
-    }, 300);
-  }
+        // Remove after animation completes
+        setTimeout(() => {
+            modal.remove();
+            // Restore body overflow if no other modals are present
+            if (
+                !document.querySelector('.desktop--modal-overlay') &&
+                !document.querySelector('.mobile--modal-overlay')
+            ) {
+                document.body.style.overflowX = '';
+            }
+        }, 300);
+    }
 };

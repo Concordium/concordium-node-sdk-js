@@ -1,17 +1,17 @@
 // Concordium ID App Popup Utility
-import { PopupConstants } from '@/constants/popup.constants';
-import concordiumLogo from '@/assets/concordium-modal-logo.svg';
 import appStoreLogo from '@/assets/appstore-icon.svg';
+import concordiumLogo from '@/assets/concordium-modal-logo.svg';
 import playStoreLogo from '@/assets/playstore-icon.svg';
+import { PopupConstants } from '@/constants/popup.constants';
 
 /**
  * Interface for popup configuration options
  */
 export interface PopupOptions {
-  walletConnectUri?: string;
-  walletConnectSessionTopic?: string;
-  onCreateAccount?: () => Promise<unknown>;
-  onClose?: () => void;
+    walletConnectUri?: string;
+    walletConnectSessionTopic?: string;
+    onCreateAccount?: () => Promise<unknown>;
+    onClose?: () => void;
 }
 
 /**
@@ -19,16 +19,16 @@ export interface PopupOptions {
  * Handles displaying popups for WalletConnect integration and account creation
  */
 export class ConcordiumIDAppPopup {
-  /**
-   * Injects the popup styles into the document head
-   * Only injects once per page load
-   */
-  private static injectPopupStyles(): void {
-    if (document.getElementById(PopupConstants.ELEMENT_IDS.popupStyles)) return;
+    /**
+     * Injects the popup styles into the document head
+     * Only injects once per page load
+     */
+    private static injectPopupStyles(): void {
+        if (document.getElementById(PopupConstants.ELEMENT_IDS.popupStyles)) return;
 
-    const style = document.createElement('style');
-    style.id = PopupConstants.ELEMENT_IDS.popupStyles;
-    style.innerHTML = `
+        const style = document.createElement('style');
+        style.id = PopupConstants.ELEMENT_IDS.popupStyles;
+        style.innerHTML = `
     .concordium-authCode {
       margin: 16px auto; 
       width: 86px;
@@ -277,145 +277,134 @@ export class ConcordiumIDAppPopup {
       margin: 1.0rem 0;
     }
   `;
-    document.head.appendChild(style);
-  }
-
-  /**
-   * Closes the popup and removes styles
-   */
-  static closePopup(): void {
-    const wrapper = document.getElementById(
-      PopupConstants.ELEMENT_IDS.popupWrapper
-    );
-    if (wrapper) wrapper.remove();
-
-    const style = document.getElementById(
-      PopupConstants.ELEMENT_IDS.popupStyles
-    );
-    if (style) style.remove();
-  }
-
-  /**
-   * Opens the ID App using a deep link
-   * Handles both mobile and desktop scenarios
-   * @param wallectConnectMobileUrl - The mobile deep link URL
-   * @param walletConnectDesktopUrl - Optional desktop URL
-   */
-  static openIdapp({
-    wallectConnectMobileUrl,
-    walletConnectDesktopUrl,
-  }: {
-    wallectConnectMobileUrl: string;
-    walletConnectDesktopUrl?: string;
-  }): void {
-    // On mobile, hand off to the native app
-    if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-      window.location.href = wallectConnectMobileUrl;
-    } else {
-      // Desktop fallback: show instructions or open a popup for testing
-      if (walletConnectDesktopUrl) {
-        const width = 400;
-        const height = 700;
-        const top = 0;
-        const left = window.screen.availWidth - width;
-        window.open(
-          walletConnectDesktopUrl,
-          'ConcordiumIdapp',
-          `width=${width},height=${height},top=${top},left=${left}`
-        );
-      }
-    }
-  }
-
-  /**
-   * Loads the QR Code library from CDN
-   * @returns Promise that resolves when library is loaded
-   */
-  private static loadQRCodeLibrary(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      // Check if already loaded
-      if ((window as any).QRCode) {
-        resolve();
-        return;
-      }
-
-      // Check if script tag already exists
-      if (document.getElementById(PopupConstants.ELEMENT_IDS.qrcodeLib)) {
-        // Wait for it to load
-        const checkInterval = setInterval(() => {
-          if ((window as any).QRCode) {
-            clearInterval(checkInterval);
-            resolve();
-          }
-        }, 100);
-        return;
-      }
-
-      // Create and load script
-      const script = document.createElement('script');
-      script.id = PopupConstants.ELEMENT_IDS.qrcodeLib;
-      script.src = PopupConstants.CLOUDFLARE_CDN_FOR_QRCODE;
-      script.onload = () => resolve();
-      script.onerror = () =>
-        reject(new Error('Failed to load QR Code library'));
-      document.head.appendChild(script);
-    });
-  }
-
-  /**
-   * Renders a QR code in the specified container
-   * @param url - The URL to encode in the QR code
-   */
-  private static async renderQRCode(url: string): Promise<void> {
-    await this.loadQRCodeLibrary();
-
-    const qrContainer = document.getElementById(
-      PopupConstants.ELEMENT_IDS.qrContainer
-    );
-    if (qrContainer && (window as any).QRCode) {
-      // Clear existing QR code
-      qrContainer.innerHTML = '';
-
-      // Create new QR code
-      new (window as any).QRCode(qrContainer, {
-        text: url,
-        width: PopupConstants.QR_CONFIG.width,
-        height: PopupConstants.QR_CONFIG.height,
-        colorDark: PopupConstants.QR_CONFIG.colorDark,
-        colorLight: PopupConstants.QR_CONFIG.colorLight,
-        correctLevel: (window as any).QRCode.CorrectLevel.H,
-      });
-    }
-  }
-
-  /**
-   * Shows a popup with WalletConnect QR code and deep link
-   * @param options - Popup configuration options
-   */
-  static async showWalletConnectPopup(options: PopupOptions): Promise<void> {
-    if (!navigator || !window) {
-      throw new Error(
-        'ConcordiumIDAppPopup.showWalletConnectPopup() requires a browser environment'
-      );
+        document.head.appendChild(style);
     }
 
-    if (!options.walletConnectUri) {
-      throw new Error(
-        'ConcordiumIDAppPopup.showWalletConnectPopup() requires a valid walletConnectUri'
-      );
+    /**
+     * Closes the popup and removes styles
+     */
+    static closePopup(): void {
+        const wrapper = document.getElementById(PopupConstants.ELEMENT_IDS.popupWrapper);
+        if (wrapper) wrapper.remove();
+
+        const style = document.getElementById(PopupConstants.ELEMENT_IDS.popupStyles);
+        if (style) style.remove();
     }
 
-    // Remove any existing popup
-    this.closePopup();
+    /**
+     * Opens the ID App using a deep link
+     * Handles both mobile and desktop scenarios
+     * @param wallectConnectMobileUrl - The mobile deep link URL
+     * @param walletConnectDesktopUrl - Optional desktop URL
+     */
+    static openIdapp({
+        wallectConnectMobileUrl,
+        walletConnectDesktopUrl,
+    }: {
+        wallectConnectMobileUrl: string;
+        walletConnectDesktopUrl?: string;
+    }): void {
+        // On mobile, hand off to the native app
+        if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+            window.location.href = wallectConnectMobileUrl;
+        } else {
+            // Desktop fallback: show instructions or open a popup for testing
+            if (walletConnectDesktopUrl) {
+                const width = 400;
+                const height = 700;
+                const top = 0;
+                const left = window.screen.availWidth - width;
+                window.open(
+                    walletConnectDesktopUrl,
+                    'ConcordiumIdapp',
+                    `width=${width},height=${height},top=${top},left=${left}`
+                );
+            }
+        }
+    }
 
-    this.injectPopupStyles();
+    /**
+     * Loads the QR Code library from CDN
+     * @returns Promise that resolves when library is loaded
+     */
+    private static loadQRCodeLibrary(): Promise<void> {
+        return new Promise((resolve, reject) => {
+            // Check if already loaded
+            if ((window as any).QRCode) {
+                resolve();
+                return;
+            }
 
-    const wallectConnectMobileUrl = `${PopupConstants.IDAPP_HOSTS.mobile}wallet-connect?encodedUri=${options.walletConnectUri}`;
-    // const walletConnectDesktopUrl = `${PopupConstants.IDAPP_HOSTS.web}wallet-connect?encodedUri=${options.walletConnectUri}`;
+            // Check if script tag already exists
+            if (document.getElementById(PopupConstants.ELEMENT_IDS.qrcodeLib)) {
+                // Wait for it to load
+                const checkInterval = setInterval(() => {
+                    if ((window as any).QRCode) {
+                        clearInterval(checkInterval);
+                        resolve();
+                    }
+                }, 100);
+                return;
+            }
 
-    const wrapper = document.createElement('div');
-    wrapper.id = PopupConstants.ELEMENT_IDS.popupWrapper;
-    wrapper.innerHTML = `
+            // Create and load script
+            const script = document.createElement('script');
+            script.id = PopupConstants.ELEMENT_IDS.qrcodeLib;
+            script.src = PopupConstants.CLOUDFLARE_CDN_FOR_QRCODE;
+            script.onload = () => resolve();
+            script.onerror = () => reject(new Error('Failed to load QR Code library'));
+            document.head.appendChild(script);
+        });
+    }
+
+    /**
+     * Renders a QR code in the specified container
+     * @param url - The URL to encode in the QR code
+     */
+    private static async renderQRCode(url: string): Promise<void> {
+        await this.loadQRCodeLibrary();
+
+        const qrContainer = document.getElementById(PopupConstants.ELEMENT_IDS.qrContainer);
+        if (qrContainer && (window as any).QRCode) {
+            // Clear existing QR code
+            qrContainer.innerHTML = '';
+
+            // Create new QR code
+            new (window as any).QRCode(qrContainer, {
+                text: url,
+                width: PopupConstants.QR_CONFIG.width,
+                height: PopupConstants.QR_CONFIG.height,
+                colorDark: PopupConstants.QR_CONFIG.colorDark,
+                colorLight: PopupConstants.QR_CONFIG.colorLight,
+                correctLevel: (window as any).QRCode.CorrectLevel.H,
+            });
+        }
+    }
+
+    /**
+     * Shows a popup with WalletConnect QR code and deep link
+     * @param options - Popup configuration options
+     */
+    static async showWalletConnectPopup(options: PopupOptions): Promise<void> {
+        if (!navigator || !window) {
+            throw new Error('ConcordiumIDAppPopup.showWalletConnectPopup() requires a browser environment');
+        }
+
+        if (!options.walletConnectUri) {
+            throw new Error('ConcordiumIDAppPopup.showWalletConnectPopup() requires a valid walletConnectUri');
+        }
+
+        // Remove any existing popup
+        this.closePopup();
+
+        this.injectPopupStyles();
+
+        const wallectConnectMobileUrl = `${PopupConstants.IDAPP_HOSTS.mobile}wallet-connect?encodedUri=${options.walletConnectUri}`;
+        // const walletConnectDesktopUrl = `${PopupConstants.IDAPP_HOSTS.web}wallet-connect?encodedUri=${options.walletConnectUri}`;
+
+        const wrapper = document.createElement('div');
+        wrapper.id = PopupConstants.ELEMENT_IDS.popupWrapper;
+        wrapper.innerHTML = `
     <div class="concordium-sdk-popup-overlay">
       <div class="concordium-sdk-popup-box">
         <div class="concordium-app-message">
@@ -486,54 +475,50 @@ export class ConcordiumIDAppPopup {
     </div>
   `;
 
-    document.body.appendChild(wrapper);
+        document.body.appendChild(wrapper);
 
-    // Render QR code
-    await this.renderQRCode(wallectConnectMobileUrl);
+        // Render QR code
+        await this.renderQRCode(wallectConnectMobileUrl);
 
-    // Setup event listeners
-    const openAppBtn = wrapper.querySelector<HTMLButtonElement>(
-      `#${PopupConstants.ELEMENT_IDS.openAppBtn}`
-    )!;
-    const closeBtn = wrapper.querySelector<HTMLButtonElement>(
-      '.concordium-sdk-close-btn'
-    )!;
+        // Setup event listeners
+        const openAppBtn = wrapper.querySelector<HTMLButtonElement>(`#${PopupConstants.ELEMENT_IDS.openAppBtn}`)!;
+        const closeBtn = wrapper.querySelector<HTMLButtonElement>('.concordium-sdk-close-btn')!;
 
-    closeBtn.addEventListener('click', () => {
-      this.closePopup();
-      options.onClose?.();
-    });
+        closeBtn.addEventListener('click', () => {
+            this.closePopup();
+            options.onClose?.();
+        });
 
-    openAppBtn?.addEventListener('click', () => {
-      try {
-        this.openIdapp({ wallectConnectMobileUrl });
-      } catch (e) {
-        console.error('Failed to open ID App:', e);
-      }
-    });
-  }
-
-  /**
-   * Shows a popup for account creation actions
-   * @param options - Popup configuration options
-   */
-  static async showAccountActionsPopup(options: PopupOptions): Promise<void> {
-    if (!options.onCreateAccount) {
-      throw new Error('onCreateAccount handler must be provided');
+        openAppBtn?.addEventListener('click', () => {
+            try {
+                this.openIdapp({ wallectConnectMobileUrl });
+            } catch (e) {
+                console.error('Failed to open ID App:', e);
+            }
+        });
     }
 
-    if (!options.walletConnectSessionTopic) {
-      throw new Error("Wallet Connect's session.topic is required");
-    }
+    /**
+     * Shows a popup for account creation actions
+     * @param options - Popup configuration options
+     */
+    static async showAccountActionsPopup(options: PopupOptions): Promise<void> {
+        if (!options.onCreateAccount) {
+            throw new Error('onCreateAccount handler must be provided');
+        }
 
-    // Remove any existing popup
-    this.closePopup();
+        if (!options.walletConnectSessionTopic) {
+            throw new Error("Wallet Connect's session.topic is required");
+        }
 
-    this.injectPopupStyles();
+        // Remove any existing popup
+        this.closePopup();
 
-    const wrapper = document.createElement('div');
-    wrapper.id = PopupConstants.ELEMENT_IDS.popupWrapper;
-    wrapper.innerHTML = `
+        this.injectPopupStyles();
+
+        const wrapper = document.createElement('div');
+        wrapper.id = PopupConstants.ELEMENT_IDS.popupWrapper;
+        wrapper.innerHTML = `
     <div class="concordium-sdk-popup-overlay">
       <div class="concordium-sdk-popup-box">
         <div class="concordium-app-message">
@@ -598,36 +583,34 @@ export class ConcordiumIDAppPopup {
     </div>
   `;
 
-    document.body.appendChild(wrapper);
+        document.body.appendChild(wrapper);
 
-    // Setup event listeners
-    const closeBtn = wrapper.querySelector<HTMLButtonElement>(
-      '.concordium-sdk-close-btn'
-    )!;
-    closeBtn.addEventListener('click', () => {
-      this.closePopup();
-      options.onClose?.();
-    });
-
-    // Setup create account button
-    requestAnimationFrame(() => {
-      const createBtn = wrapper.querySelector<HTMLButtonElement>(
-        `#${PopupConstants.ELEMENT_IDS.createAccountBtn}`
-      );
-      if (options.onCreateAccount && createBtn) {
-        createBtn.addEventListener('click', async e => {
-          e.preventDefault();
-          createBtn.disabled = true;
-          createBtn.textContent = '⏳ Please wait...';
-          try {
-            await options.onCreateAccount!();
-          } catch (err) {
-            console.error('Account creation failed:', err);
-            createBtn.textContent = 'Create New Account';
-            createBtn.disabled = false;
-          }
+        // Setup event listeners
+        const closeBtn = wrapper.querySelector<HTMLButtonElement>('.concordium-sdk-close-btn')!;
+        closeBtn.addEventListener('click', () => {
+            this.closePopup();
+            options.onClose?.();
         });
-      }
-    });
-  }
+
+        // Setup create account button
+        requestAnimationFrame(() => {
+            const createBtn = wrapper.querySelector<HTMLButtonElement>(
+                `#${PopupConstants.ELEMENT_IDS.createAccountBtn}`
+            );
+            if (options.onCreateAccount && createBtn) {
+                createBtn.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    createBtn.disabled = true;
+                    createBtn.textContent = '⏳ Please wait...';
+                    try {
+                        await options.onCreateAccount!();
+                    } catch (err) {
+                        console.error('Account creation failed:', err);
+                        createBtn.textContent = 'Create New Account';
+                        createBtn.disabled = false;
+                    }
+                });
+            }
+        });
+    }
 }

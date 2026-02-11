@@ -4,25 +4,25 @@
 @import './mobile.css';
 
 @theme {
-  --color-surface: #f7f7f8;
-  --color-primary: #1b2735;
-  --color-accent-light: #e2edff;
-  --color-light-blue: #accbfa;
-  --color-dark: #0d0f11;
-  --color-light: #5d6774;
-  --color-tertiary: #d4d6d9;
-  --color-muted: rgba(0, 0, 0, 0.1);
-  --color-nav-button: rgba(27, 39, 53, 0.7);
-  --color-secondary: rgba(0, 0, 0, 0.05);
-  --color-footer-text: #545f71;
-  --color-btn-light: #e2edff;
-  --color-dropdown-item: #e4e6e7;
-  --color-dropdown-border: #d4d6d9;
-  --color-inverse-tertiary: #4b535d;
-  --color-inverse-secondary: #9ca3aa;
+    --color-surface: #f7f7f8;
+    --color-primary: #1b2735;
+    --color-accent-light: #e2edff;
+    --color-light-blue: #accbfa;
+    --color-dark: #0d0f11;
+    --color-light: #5d6774;
+    --color-tertiary: #d4d6d9;
+    --color-muted: rgba(0, 0, 0, 0.1);
+    --color-nav-button: rgba(27, 39, 53, 0.7);
+    --color-secondary: rgba(0, 0, 0, 0.05);
+    --color-footer-text: #545f71;
+    --color-btn-light: #e2edff;
+    --color-dropdown-item: #e4e6e7;
+    --color-dropdown-border: #d4d6d9;
+    --color-inverse-tertiary: #4b535d;
+    --color-inverse-secondary: #9ca3aa;
 
-  --font-inter: 'Inter', ui-sans-serif, system-ui, sans-serif;
-  --font-jakarta: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+    --font-inter: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    --font-jakarta: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
 }
 
 /* #app {
@@ -30,5 +30,5 @@
 } */
 
 button {
-  cursor: pointer;
+    cursor: pointer;
 }

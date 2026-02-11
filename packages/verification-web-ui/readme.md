@@ -55,44 +55,41 @@ import { ConcordiumVerificationWebUI } from '@concordium/verification-web-ui';
 import '@concordium/verification-web-ui/styles';
 
 const sdk = new ConcordiumVerificationWebUI({
-  network: 'testnet', // or 'mainnet'
-  projectId: 'YOUR_WALLETCONNECT_PROJECT_ID',
-  metadata: {
-    name: 'Your App Name',
-    description: 'Your app description',
-    url: 'https://yourapp.com',
-    icons: ['https://yourapp.com/icon.png'],
-  },
+    network: 'testnet', // or 'mainnet'
+    projectId: 'YOUR_WALLETCONNECT_PROJECT_ID',
+    metadata: {
+        name: 'Your App Name',
+        description: 'Your app description',
+        url: 'https://yourapp.com',
+        icons: ['https://yourapp.com/icon.png'],
+    },
 });
 ```
 
 ### Step 2: Listen to SDK Events
 
 ```typescript
-window.addEventListener(
-  '@concordium/verification-web-ui-event',
-  async event => {
+window.addEventListener('@concordium/verification-web-ui-event', async (event) => {
     const { type, data } = event.detail;
 
     switch (type) {
-      case 'session_approved':
-        await handleSessionApproved(data);
-        break;
+        case 'session_approved':
+            await handleSessionApproved(data);
+            break;
 
-      case 'presentation_received':
-        await handlePresentationReceived(data);
-        break;
+        case 'presentation_received':
+            await handlePresentationReceived(data);
+            break;
 
-      case 'session_disconnected':
-        handleDisconnected(data);
-        break;
+        case 'session_disconnected':
+            handleDisconnected(data);
+            break;
 
-      case 'error':
-        handleError(data);
-        break;
+        case 'error':
+            handleError(data);
+            break;
     }
-  }
-);
+});
 ```
 
 ### Step 3: Show Connection Modal
@@ -111,24 +108,24 @@ When user scans QR code, SDK emits `session_approved`:
 
 ```typescript
 async function handleSessionApproved(sessionData) {
-  const { topic, accounts, namespaces } = sessionData;
+    const { topic, accounts, namespaces } = sessionData;
 
-  console.log('Session approved!');
-  console.log('Topic:', topic);
-  console.log('Accounts:', accounts);
+    console.log('Session approved!');
+    console.log('Topic:', topic);
+    console.log('Accounts:', accounts);
 
-  // Create your presentation request
-  const presentationRequest = {
-    challenge: generateChallenge(), // Your challenge generation
-    credentialSubject: {
-      attributes: ['age'],
-      threshold: 18,
-      operator: 'gte',
-    },
-  };
+    // Create your presentation request
+    const presentationRequest = {
+        challenge: generateChallenge(), // Your challenge generation
+        credentialSubject: {
+            attributes: ['age'],
+            threshold: 18,
+            operator: 'gte',
+        },
+    };
 
-  // Send request through SDK
-  await sdk.sendPresentationRequest(presentationRequest);
+    // Send request through SDK
+    await sdk.sendPresentationRequest(presentationRequest);
 }
 ```
 
@@ -138,19 +135,19 @@ When wallet responds, SDK emits `presentation_received`:
 
 ```typescript
 async function handlePresentationReceived(zkpResponse) {
-  // Verify the ZKP proof at your backend or locally
-  const isValid = await verifyProof(zkpResponse);
+    // Verify the ZKP proof at your backend or locally
+    const isValid = await verifyProof(zkpResponse);
 
-  if (isValid) {
-    // Show success state in SDK
-    await sdk.showSuccessState();
+    if (isValid) {
+        // Show success state in SDK
+        await sdk.showSuccessState();
 
-    // Your business logic
-    onVerificationSuccess(zkpResponse);
-  } else {
-    console.error('Verification failed');
-    sdk.closeModal();
-  }
+        // Your business logic
+        onVerificationSuccess(zkpResponse);
+    } else {
+        console.error('Verification failed');
+        sdk.closeModal();
+    }
 }
 ```
 
@@ -164,20 +161,20 @@ async function handlePresentationReceived(zkpResponse) {
 import { SignClient } from '@walletconnect/sign-client';
 
 const wcClient = await SignClient.init({
-  projectId: 'YOUR_PROJECT_ID',
-  metadata: {
-    /* ... */
-  },
+    projectId: 'YOUR_PROJECT_ID',
+    metadata: {
+        /* ... */
+    },
 });
 
 const { uri, approval } = await wcClient.connect({
-  requiredNamespaces: {
-    ccd: {
-      methods: ['request_verifiable_presentation_v1'],
-      chains: ['ccd:4221332d34e1694168c2a0c0b3fd0f27'],
-      events: [],
+    requiredNamespaces: {
+        ccd: {
+            methods: ['request_verifiable_presentation_v1'],
+            chains: ['ccd:4221332d34e1694168c2a0c0b3fd0f27'],
+            events: [],
+        },
     },
-  },
 });
 ```
 
@@ -198,27 +195,24 @@ await sdk.showWalletConnectPopup(uri);
 const session = await approval();
 
 // SDK emits session_approved event
-window.addEventListener(
-  '@concordium/verification-web-ui-event',
-  async event => {
+window.addEventListener('@concordium/verification-web-ui-event', async (event) => {
     if (event.detail.type === 'session_approved') {
-      // Send your presentation request through YOUR WalletConnect client
-      const response = await wcClient.request({
-        topic: session.topic,
-        chainId: 'ccd:4221332d34e1694168c2a0c0b3fd0f27',
-        request: {
-          method: 'request_verifiable_presentation_v1',
-          params: yourPresentationRequest,
-        },
-      });
+        // Send your presentation request through YOUR WalletConnect client
+        const response = await wcClient.request({
+            topic: session.topic,
+            chainId: 'ccd:4221332d34e1694168c2a0c0b3fd0f27',
+            request: {
+                method: 'request_verifiable_presentation_v1',
+                params: yourPresentationRequest,
+            },
+        });
 
-      // Verify and show success
-      if (await verifyProof(response)) {
-        await sdk.showSuccessState();
-      }
+        // Verify and show success
+        if (await verifyProof(response)) {
+            await sdk.showSuccessState();
+        }
     }
-  }
-);
+});
 ```
 
 ---
@@ -229,10 +223,7 @@ If you already have an active WalletConnect session:
 
 ```typescript
 // Send a new request to existing session
-await sdk.sendRequestToExistingSession(
-  presentationRequest,
-  existingSessionTopic
-);
+await sdk.sendRequestToExistingSession(presentationRequest, existingSessionTopic);
 
 // SDK will:
 // 1. Show processing modal
@@ -329,10 +320,10 @@ Send ZKP/presentation request through WalletConnect.
 
 ```typescript
 await sdk.sendPresentationRequest({
-  challenge: 'your-challenge',
-  credentialSubject: {
-    /* ... */
-  },
+    challenge: 'your-challenge',
+    credentialSubject: {
+        /* ... */
+    },
 });
 ```
 

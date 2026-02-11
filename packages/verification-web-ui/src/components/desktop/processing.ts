@@ -1,5 +1,5 @@
-import loadingVideo from '@/assets/loading.mp4';
 import concordiumModalLogo from '@/assets/concordium-modal-logo.svg';
+import loadingVideo from '@/assets/loading.mp4';
 import modalGraphicDelete from '@/assets/modal-graphic-delete.svg';
 import modalGraphicSuccess from '@/assets/modal-graphic-success.svg';
 import type { HideModalFunction, ShowModalFunction } from '@/types';

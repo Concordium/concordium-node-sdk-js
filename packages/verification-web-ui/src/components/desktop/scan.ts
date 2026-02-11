@@ -157,54 +157,38 @@ export const createScanModal: ModalFunction = () => {
 
     // Mobile-specific handlers
     const handleOpenInWallet = async (): Promise<void> => {
-        // Check if URI is available
-        if (!currentQRCodeUri) {
-            const storedUri = localStorage.getItem(ModalConstants.LOCAL_STORAGE_FLAGS.WALLET_CONNECT_URI);
-            if (storedUri) {
-                currentQRCodeUri = storedUri;
-            } else {
-                await initializeWalletConnection();
-                if (!currentQRCodeUri) {
-                    alert('Connection URI not available. Please refresh and try again.');
-                    return;
+        try {
+            // Check if URI is available
+            if (!currentQRCodeUri) {
+                const storedUri = localStorage.getItem(ModalConstants.LOCAL_STORAGE_FLAGS.WALLET_CONNECT_URI);
+                if (storedUri) {
+                    currentQRCodeUri = storedUri;
+                } else {
+                    await initializeWalletConnection();
+                    if (!currentQRCodeUri) {
+                        alert('Connection URI not available. Please refresh and try again.');
+                        return;
+                    }
                 }
             }
-        }
 
-        // Use smart mobile routing with app detection
-        const { detectInstalledApps, openDeepLink, openAppStore } = await import('@/utils/mobileAppDetection');
+            // Determine app type based on selection
+            const appType =
+                currentSelectedWallet === WALLET_TYPES.CONCORDIUM_ID ? 'concordium-id' : 'concordium-wallet';
 
-        try {
-            const detection = await detectInstalledApps();
-
-            // Handle based on detection result
-            if (detection.recommendedAction === 'show-store') {
-                // No apps installed - take to store
-                const appType =
-                    currentSelectedWallet === WALLET_TYPES.CONCORDIUM_ID ? 'concordium-id' : 'concordium-wallet';
-                openAppStore(appType);
-            } else if (detection.recommendedAction === 'show-selection') {
-                // Multiple apps - let user choose (they already selected via dropdown)
-                const appType =
-                    currentSelectedWallet === WALLET_TYPES.CONCORDIUM_ID ? 'concordium-id' : 'concordium-wallet';
-                openDeepLink(appType, currentQRCodeUri!);
-            } else {
-                // Single app or direct open
-                const appType = detection.recommendedAction === 'open-id' ? 'concordium-id' : 'concordium-wallet';
-                openDeepLink(appType, currentQRCodeUri!);
-            }
-
-            // Processing modal will be shown automatically after session approval
-            // Keep scan modal visible until session is established
-        } catch (error) {
-            console.error('[Mobile] Smart routing failed:', error);
-            // Fallback to old behavior
+            // Generate and open deep link directly (simpler approach)
             const deepLink = generateDeepLink(currentSelectedWallet, currentQRCodeUri!);
+
             if (deepLink) {
                 window.location.href = deepLink;
             } else {
-                alert('Failed to open app. Please try again.');
+                // Fallback: try to open app store
+                const { openAppStore } = await import('@/utils/mobileAppDetection');
+                openAppStore(appType);
             }
+        } catch (error) {
+            console.error('[Mobile] handleOpenInWallet failed:', error);
+            alert('Failed to open wallet app. Please try again.');
         }
     };
 
@@ -921,7 +905,7 @@ function generateDeepLink(walletType: WalletTypeValues, uri: string): string | n
         }
     } else if (walletType === WALLET_TYPES.CONCORDIUM_ID) {
         // Concordium ID - same for all devices, with redirect to origin
-        const redirectUrl = encodeURIComponent(window.location.origin);
+        const redirectUrl = encodeURIComponent(window.location.href);
         deepLink = `concordiumidapp://wc?uri=${encodeURIComponent(uri)}&redirect=${redirectUrl}`;
     }
 

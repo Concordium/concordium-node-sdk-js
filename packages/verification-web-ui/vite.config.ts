@@ -9,6 +9,9 @@ export default defineConfig(({ mode }) => {
     css: {
       postcss: './postcss.config.ts',
     },
+    optimizeDeps: {
+      exclude: ['@walletconnect/sign-client', '@walletconnect/core', '@walletconnect/types'],
+    },
     resolve: {
       extensions: ['.ts', '.js', '.json'],
       alias: {

@@ -10059,17 +10059,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@walletconnect/types@npm:2.13.0":
-  version: 2.13.0
-  resolution: "@walletconnect/types@npm:2.13.0"
+"@walletconnect/types@npm:2.23.5":
+  version: 2.23.5
+  resolution: "@walletconnect/types@npm:2.23.5"
   dependencies:
     "@walletconnect/events": 1.0.1
     "@walletconnect/heartbeat": 1.2.2
     "@walletconnect/jsonrpc-types": 1.0.4
     "@walletconnect/keyvaluestorage": 1.1.1
-    "@walletconnect/logger": 2.1.2
+    "@walletconnect/logger": 3.0.2
     events: 3.3.0
-  checksum: 868e12449026154c5a8945359ab03c2f2dd7dd329e631fea721e8399928823b93585013784253d787daf184adb76de6bccd76525679b4c87fd830300c70275d4
+  checksum: e3e932065b8b65871313c69e3b7ea7792e0505a06a6f8306697331173d64a41f9ec894e239ce983d2514a3ea0fa62655b2302fbf596d2468cdf358dfcc5356b0
   languageName: node
   linkType: hard
 

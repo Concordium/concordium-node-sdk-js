@@ -34,7 +34,7 @@
         "prettier": "^3.2.5"
     },
     "resolutions": {
-        "@walletconnect/types": "2.13.0",
+        "@walletconnect/types": "2.23.5",
         "@protobuf-ts/runtime-rpc": "2.9.1",
         "css-select@npm:2.1.0/nth-check": "2.1.1",
         "resolve-url-loader@npm:4.0.0/postcss": "8.4.31",

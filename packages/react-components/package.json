@@ -21,7 +21,7 @@
         "url": "https://github.com/Concordium/concordium-node-sdk-js/tree/main/packages/react-components"
     },
     "scripts": {
-        "lint": "eslint . --cache --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+        "lint": "eslint . --cache --ext ts,tsx --max-warnings 0",
         "lint-fix": "yarn lint --fix",
         "prettier": "prettier . --ignore-path ../../.gitignore --ignore-path ../../.prettierignore --ignore-path .gitignore",
         "fmt": "yarn prettier --write",

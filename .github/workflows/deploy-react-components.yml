@@ -21,7 +21,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  NODE_VERSION: 18.16.0
+  NODE_VERSION: 24.13.1
   RUST_VERSION: 1.85
   WASM_PACK_VERSION: 0.13.1
 

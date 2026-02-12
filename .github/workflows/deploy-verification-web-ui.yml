@@ -23,7 +23,45 @@ env:
   NODE_VERSION: 24.13.1
 
 jobs:
+  validate:
+    runs-on: ubuntu-latest
+    outputs:
+      full_tag: ${{ steps.extract_version.outputs.full_tag }}
+      base_version: ${{ steps.extract_version.outputs.base_version }}
+      npm_tag: ${{ steps.extract_version.outputs.npm_tag }}
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: Extract and validate version
+        id: extract_version
+        run: |
+          full_tag="${GITHUB_REF#refs/tags/verification-web-ui/}"
+          # Strip trailing -<number> suffix for re-tagging (e.g., 0.1.0-1 -> 0.1.0)
+          base_version=$(echo "$full_tag" | sed -E 's/-[0-9]+$//')
+          package_version=$(jq -r ".version" packages/verification-web-ui/package.json)
+
+          echo "full_tag=$full_tag" >> $GITHUB_OUTPUT
+          echo "base_version=$base_version" >> $GITHUB_OUTPUT
+
+          # Validate that base version matches package.json
+          if [ "$base_version" != "$package_version" ]; then
+            echo "Error: Tag version ($base_version) does not match package.json version ($package_version)"
+            exit 1
+          fi
+
+          # Determine npm tag
+          if [[ "$package_version" == *-* ]]; then
+            npm_tag=$(echo "$package_version" | cut -d'-' -f2 | cut -d'.' -f1)
+          else
+            npm_tag="latest"
+          fi
+          echo "npm_tag=$npm_tag" >> $GITHUB_OUTPUT
+
   build:
+    needs: validate
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v6
@@ -64,7 +102,7 @@ jobs:
             packages/verification-web-ui/README.md
 
   upload-release:
-    needs: build
+    needs: [validate, build]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -75,29 +113,6 @@ jobs:
         uses: actions/checkout@v6
         with:
           submodules: recursive
-
-      - name: Extract tag name
-        id: get_tag
-        run: |
-          full_tag="${GITHUB_REF#refs/tags/verification-web-ui/}"
-          # Strip trailing -<number> suffix for re-tagging (e.g., 0.1.0-1 -> 0.1.0)
-          base_version=$(echo "$full_tag" | sed -E 's/-[0-9]+$//')
-          echo "::set-output name=tag::$full_tag"
-          echo "::set-output name=base_version::$base_version"
-
-      - name: Test that tag version matches package.json version
-        run: test "${{ steps.get_tag.outputs.base_version }}" = "$(jq -r ".version" packages/verification-web-ui/package.json)" || exit 1
-
-      - name: Determine npm tag
-        id: determine_npm_tag
-        run: |
-          version=$(jq -r ".version" packages/verification-web-ui/package.json)
-          if [[ "$version" == *-* ]]; then
-            npm_tag=$(echo "$version" | cut -d'-' -f2 | cut -d'.' -f1)
-          else
-            npm_tag="latest"
-          fi
-          echo "npm_tag=$npm_tag" >> $GITHUB_OUTPUT
 
       - name: Get build-output
         uses: actions/download-artifact@v7
@@ -114,11 +129,11 @@ jobs:
       - name: Publish to NPM
         run: |
           yarn workspace @concordium/verification-web-ui pack --out ../../verification-web-ui.tgz
-          NPM_AUTH_TOKEN="" npm publish ./verification-web-ui.tgz --tag ${{ steps.determine_npm_tag.outputs.npm_tag }} --access public --provenance
+          NPM_AUTH_TOKEN="" npm publish ./verification-web-ui.tgz --tag ${{ needs.validate.outputs.npm_tag }} --access public --provenance
 
       - name: Create a GitHub release
         uses: ncipollo/release-action@v1
         with:
-          tag: verification-web-ui/${{ steps.get_tag.outputs.tag }}
-          name: verification-web-ui Release v${{ steps.get_tag.outputs.tag }}
+          tag: verification-web-ui/${{ needs.validate.outputs.full_tag }}
+          name: verification-web-ui Release v${{ needs.validate.outputs.base_version }}
           draft: true

@@ -87,9 +87,6 @@ export interface AppState {
     concordiumIDNotInstalled?: boolean;
 }
 
-// Wallet types enum
-export enum WalletType
-
 // Content map interface for modal states
 export interface ContentMapItem {
     title: string;

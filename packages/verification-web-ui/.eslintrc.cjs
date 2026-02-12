@@ -11,6 +11,8 @@ module.exports = {
                 ignore: [
                     '^@/.*$', // Ignore the @/ path alias (handled by Vite)
                     '^\\./(react|vue|index)$', // Ignore relative module declarations in global.d.ts
+                    '^@tailwindcss/postcss$', // Vite/build tooling
+                    '^vite-plugin-dts$', // Vite/build tooling
                 ],
             },
         ],

@@ -45,7 +45,8 @@
         "link": "./setup-link.sh",
         "preview": "vite preview",
         "typecheck": "tsc --noEmit",
-        "lint": "eslint . --cache --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+        "lint": "eslint . --cache --ext ts,tsx --max-warnings 0",
+        "lint-fix": "yarn lint --fix",
         "fmt": "prettier --write .",
         "fmt-check": "prettier --check .",
         "prepublishOnly": "npm run build:lib"

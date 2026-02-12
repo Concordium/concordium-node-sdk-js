@@ -78,10 +78,26 @@ jobs:
 
       - name: Extract tag name
         id: get_tag
-        run: echo "::set-output name=tag::${GITHUB_REF#refs/tags/verification-web-ui/}"
+        run: |
+          full_tag="${GITHUB_REF#refs/tags/verification-web-ui/}"
+          # Strip trailing -<number> suffix for re-tagging (e.g., 0.1.0-1 -> 0.1.0)
+          base_version=$(echo "$full_tag" | sed -E 's/-[0-9]+$//')
+          echo "::set-output name=tag::$full_tag"
+          echo "::set-output name=base_version::$base_version"
 
       - name: Test that tag version matches package.json version
-        run: test "${{ steps.get_tag.outputs.tag }}" = "$(jq -r ".version" packages/verification-web-ui/package.json)" || exit 1
+        run: test "${{ steps.get_tag.outputs.base_version }}" = "$(jq -r ".version" packages/verification-web-ui/package.json)" || exit 1
+
+      - name: Determine npm tag
+        id: determine_npm_tag
+        run: |
+          version=$(jq -r ".version" packages/verification-web-ui/package.json)
+          if [[ "$version" == *-* ]]; then
+            npm_tag=$(echo "$version" | cut -d'-' -f2 | cut -d'.' -f1)
+          else
+            npm_tag="latest"
+          fi
+          echo "npm_tag=$npm_tag" >> $GITHUB_OUTPUT
 
       - name: Get build-output
         uses: actions/download-artifact@v7

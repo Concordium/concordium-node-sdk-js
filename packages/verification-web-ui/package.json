@@ -5,6 +5,11 @@
     "engines": {
         "node": ">=24"
     },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Concordium/concordium-node-sdk-js",
+        "directory": "packages/verification-web-ui"
+    },
     "main": "./dist/index.js",
     "module": "./dist/index.js",
     "types": "./dist/index.d.ts",

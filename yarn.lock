@@ -3618,15 +3618,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@concordium/browser-wallet-api-helpers@npm:3.1.0-alpha.0":
-  version: 3.1.0-alpha.0
-  resolution: "@concordium/browser-wallet-api-helpers@npm:3.1.0-alpha.0"
+"@concordium/browser-wallet-api-helpers@npm:3.3.0-alpha.0":
+  version: 3.3.0-alpha.0
+  resolution: "@concordium/browser-wallet-api-helpers@npm:3.3.0-alpha.0"
   dependencies:
     "@protobuf-ts/runtime-rpc": ^2.9.1
   peerDependencies:
-    "@concordium/web-sdk": ^12.0.0
+    "@concordium/web-sdk": ^12.0.1
     "@protobuf-ts/runtime-rpc": ^2.9.1
-  checksum: 22b8f3ace8bc8af6c0c31732d7ddffd395763134d02e8aff0a1563fc48eb0c1b2b6720f14ee75eadfe9db21af216e1c50ac5ecfca57ed29791cb6c4230e23948
+  checksum: a7fd3a3cee48eadc8ea2d6785180e089065d5b64627141d76c162e1ce352edba2e7778dfc1294c4552f53e13542c13ff78943ee8bdeec86a16abe1b23d7ec9b1
   languageName: node
   linkType: hard
 
@@ -3742,7 +3742,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@concordium/wallet-connectors@workspace:packages/wallet-connectors"
   dependencies:
-    "@concordium/browser-wallet-api-helpers": 3.1.0-alpha.0
+    "@concordium/browser-wallet-api-helpers": 3.3.0-alpha.0
     "@jest/types": ^29.6.3
     "@protobuf-ts/grpcweb-transport": ^2.9.4
     "@tsconfig/recommended": ^1.0.1

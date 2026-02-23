@@ -215,7 +215,11 @@ export interface WalletConnection {
      * @param transaction A signable sponsored transaction.
      * @return A promise for the hash of the submitted transaction.
      */
-    signAndSendSponsoredTransaction(sender: AccountAddress.Type, transaction: Transaction.Signable): Promise<string>;
+    signAndSendSponsoredTransaction(
+        sender: AccountAddress.Type, 
+        transaction: Transaction.Signable,
+        schema?: Schema
+    ): Promise<string>;
 
     /**
      * Request the wallet to sign a message using the keys of the given account.

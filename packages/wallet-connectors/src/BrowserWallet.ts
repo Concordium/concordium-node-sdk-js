@@ -9,13 +9,13 @@ import {
 } from '@concordium/web-sdk';
 
 import {
+    Schema,
     SendTransactionPayload,
     SignableMessage,
     TypedSmartContractParameters,
     WalletConnection,
     WalletConnectionDelegate,
     WalletConnector,
-    Schema,
 } from './WalletConnection';
 import { UnreachableCaseError } from './error';
 
@@ -168,17 +168,18 @@ export class BrowserWalletConnector implements WalletConnector, WalletConnection
     async signAndSendSponsoredTransaction(
         sender: AccountAddress.Type,
         transaction: Transaction.Signable,
-        schema?: Schema,
+        schema?: Schema
     ): Promise<string> {
-
-        const contractSchema = schema? {
-            type: schema.type,
-            value: schema.value,
-            ...(schema.type === 'ModuleSchema' ? { version: schema.version } : undefined),
-        } : undefined;
+        const contractSchema = schema
+            ? {
+                  type: schema.type,
+                  value: schema.value,
+                  ...(schema.type === 'ModuleSchema' ? { version: schema.version } : undefined),
+              }
+            : undefined;
 
         if (contractSchema) {
-           return this.client.sendSponsoredTransaction(sender.address, transaction, contractSchema as any);
+            return this.client.sendSponsoredTransaction(sender.address, transaction, contractSchema as any);
         } else {
             return this.client.sendSponsoredTransaction(sender.address, transaction);
         }

@@ -398,7 +398,11 @@ export class WalletConnectConnection implements WalletConnection {
         }
     }
 
-    async signAndSendSponsoredTransaction(sender: AccountAddress.Type, transaction: Transaction.Signable, schema?: Schema) {
+    async signAndSendSponsoredTransaction(
+        sender: AccountAddress.Type,
+        transaction: Transaction.Signable,
+        schema?: Schema
+    ) {
         const connectedAccount = this.getConnectedAccount();
         if (sender.address !== connectedAccount) {
             throw new Error(

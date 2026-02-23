@@ -15,6 +15,7 @@ import {
     WalletConnection,
     WalletConnectionDelegate,
     WalletConnector,
+    Schema,
 } from './WalletConnection';
 import { UnreachableCaseError } from './error';
 
@@ -166,9 +167,10 @@ export class BrowserWalletConnector implements WalletConnector, WalletConnection
 
     async signAndSendSponsoredTransaction(
         sender: AccountAddress.Type,
-        transaction: Transaction.Signable
+        transaction: Transaction.Signable,
+        schema?: Schema,
     ): Promise<string> {
-        return this.client.sendSponsoredTransaction(sender.address, transaction);
+        return this.client.sendSponsoredTransaction(sender.address, transaction, schema);
     }
 
     async signMessage(accountAddress: string, msg: SignableMessage): Promise<AccountTransactionSignature> {

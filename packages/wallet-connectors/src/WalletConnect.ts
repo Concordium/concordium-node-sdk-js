@@ -398,7 +398,11 @@ export class WalletConnectConnection implements WalletConnection {
         }
     }
 
-    async signAndSendSponsoredTransaction(sender: AccountAddress.Type, transaction: Transaction.Signable) {
+    async signAndSendSponsoredTransaction(
+        sender: AccountAddress.Type,
+        transaction: Transaction.Signable,
+        schema?: Schema
+    ) {
         const connectedAccount = this.getConnectedAccount();
         if (sender.address !== connectedAccount) {
             throw new Error(
@@ -425,6 +429,7 @@ export class WalletConnectConnection implements WalletConnection {
                             header: bytesToHex(sHeader),
                             payload: bytesToHex(sPayload),
                             sponsorSignature: bytesToHex(sSponsorSignature),
+                            schema: convertSchemaFormat(schema),
                         },
                     },
                     chainId: this.chainId,

@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Amended signAndSendSponsoredTransaction to have an optional parameter for smartContract schema
+
 ## [0.8.0]
 
 -   Add `signAndSendSponsoredTransaction` function to support sponsored transactions.

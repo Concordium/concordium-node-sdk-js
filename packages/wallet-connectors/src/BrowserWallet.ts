@@ -9,6 +9,7 @@ import {
 } from '@concordium/web-sdk';
 
 import {
+    Schema,
     SendTransactionPayload,
     SignableMessage,
     TypedSmartContractParameters,
@@ -166,9 +167,22 @@ export class BrowserWalletConnector implements WalletConnector, WalletConnection
 
     async signAndSendSponsoredTransaction(
         sender: AccountAddress.Type,
-        transaction: Transaction.Signable
+        transaction: Transaction.Signable,
+        schema?: Schema
     ): Promise<string> {
-        return this.client.sendSponsoredTransaction(sender.address, transaction);
+        const contractSchema = schema
+            ? {
+                  type: schema.type,
+                  value: schema.value,
+                  ...(schema.type === 'ModuleSchema' ? { version: schema.version } : undefined),
+              }
+            : undefined;
+
+        if (contractSchema) {
+            return this.client.sendSponsoredTransaction(sender.address, transaction, contractSchema as any);
+        } else {
+            return this.client.sendSponsoredTransaction(sender.address, transaction);
+        }
     }
 
     async signMessage(accountAddress: string, msg: SignableMessage): Promise<AccountTransactionSignature> {

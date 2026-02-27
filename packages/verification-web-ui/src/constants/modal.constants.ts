@@ -35,5 +35,7 @@ export const ModalConstants = {
         CONNECTION_MODE: 'connectionMode',
         SDK_PROJECT_ID: 'sdkProjectId',
         SDK_NETWORK: 'sdkNetwork',
+        SDK_PRESENTATION_REQUEST: 'sdkPresentationRequest',
+        CONNECTED_WALLET_NAME: 'connectedWalletName',
     },
 } as const;

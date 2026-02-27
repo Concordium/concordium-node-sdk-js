@@ -151,6 +151,11 @@ export interface SDKWalletConnectConfig {
         url?: string;
         icons?: string[];
     };
+    /**
+     * Optional presentation request to automatically send after session approval.
+     * If provided, the SDK will automatically send this request when a wallet connects.
+     */
+    presentationRequest?: PresentationRequest;
 }
 
 export interface QRCodeConfig {

@@ -2,6 +2,7 @@ import concordiumModalLogo from '@/assets/concordium-modal-logo.svg';
 import loadingVideo from '@/assets/loading.mp4';
 import modalGraphicDelete from '@/assets/modal-graphic-delete.svg';
 import modalGraphicSuccess from '@/assets/modal-graphic-success.svg';
+import { ModalConstants } from '@/constants/modal.constants';
 import type { HideModalFunction, ShowModalFunction } from '@/types';
 
 type ProcessingState = 'loading' | 'success' | 'error';
@@ -10,7 +11,16 @@ type ProcessingState = 'loading' | 'success' | 'error';
 let processingModalElement: HTMLElement | null = null;
 let eventListenerCleanup: (() => void) | null = null;
 
+/**
+ * Get the connected wallet name from localStorage, with fallback
+ */
+function getConnectedWalletName(): string {
+    return localStorage.getItem(ModalConstants.LOCAL_STORAGE_FLAGS.CONNECTED_WALLET_NAME) || 'Wallet';
+}
+
 export const createProcessingModal = (state: ProcessingState = 'loading'): HTMLElement => {
+    const walletName = getConnectedWalletName();
+
     const processingHTML = `
     <div class="desktop--modal-overlay">
         <div class="desktop--modal-container">
@@ -48,7 +58,7 @@ export const createProcessingModal = (state: ProcessingState = 'loading'): HTMLE
                     <p class="desktop--processing-text">
                         ${
                             state === 'loading'
-                                ? 'Approve in your ConcordiumID App'
+                                ? `Approve in your ${walletName}`
                                 : state === 'success'
                                   ? 'Verification completed'
                                   : 'Something went wrong with your verification. Please repeat the process'

@@ -150,6 +150,47 @@ export class WalletConnectService {
         return this.signClient?.session.getAll() || [];
     }
 
+    /**
+     * Get the most recent active session (sorted by expiry timestamp)
+     * Returns the session with the highest expiry (most recently created)
+     */
+    getMostRecentSession(): SessionTypes.Struct | null {
+        const sessions = this.getActiveSessions();
+        if (sessions.length === 0) return null;
+
+        // Sort by expiry in descending order (most recent first)
+        // Sessions with higher expiry were created more recently
+        return sessions.sort((a, b) => (b.expiry || 0) - (a.expiry || 0))[0];
+    }
+
+    /**
+     * Clear all existing sessions before starting a new pairing
+     * This prevents conflicts between multiple wallet connections
+     */
+    async clearAllSessionsForNewPairing(): Promise<void> {
+        if (!this.signClient) return;
+
+        try {
+            const sessions = this.signClient.session.getAll();
+            if (sessions.length > 0) {
+                console.log(`Clearing ${sessions.length} existing session(s) before new pairing`);
+                const disconnectPromises = sessions.map((session) =>
+                    this.signClient!.disconnect({
+                        topic: session.topic,
+                        reason: WalletConnectConstants.DISCONNECT_REASON,
+                    }).catch((err) => {
+                        // Ignore errors for individual disconnects
+                        console.warn(`Failed to disconnect session ${session.topic}:`, err);
+                    })
+                );
+                await Promise.all(disconnectPromises);
+            }
+            this.currentSession = null;
+        } catch (error) {
+            console.warn('Error clearing sessions, continuing anyway:', error);
+        }
+    }
+
     private setupEventListeners(): void {
         if (!this.signClient) return;
 

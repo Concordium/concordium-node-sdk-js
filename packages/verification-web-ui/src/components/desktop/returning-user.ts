@@ -51,8 +51,8 @@ export const createReturningUserModal: ModalFunction = () => {
         const { ServiceFactory } = await import('@/services');
         const walletConnectService = ServiceFactory.createWalletConnectService();
         await walletConnectService.initialize();
-        const activeSessions = walletConnectService.getActiveSessions();
-        const activeSessionData = activeSessions[0]; // Get first active session
+        // Get the most recent session (sorted by expiry - most recent first)
+        const activeSessionData = walletConnectService.getMostRecentSession();
 
         // Check if session exists
         if (!activeSessionData) {
@@ -100,6 +100,10 @@ export const createReturningUserModal: ModalFunction = () => {
                 source: 'desktop',
                 modalType: 'returning-user',
             });
+
+            // Auto-send presentation request if configured
+            const { autoSendPresentationRequestIfConfigured } = await import('./scan');
+            await autoSendPresentationRequestIfConfigured(topic);
         } catch (error) {
             console.error('Failed to continue with existing session:', error);
         }

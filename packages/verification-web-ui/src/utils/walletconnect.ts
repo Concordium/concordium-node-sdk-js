@@ -186,7 +186,15 @@ export function getChainId(): string[] {
 
 export const NAMESPACE = {
     ccd: {
-        methods: ['sign_and_send_transaction', 'sign_message', 'request_verifiable_presentation_v1'],
+        // Include both v0 and v1 methods for broad wallet compatibility
+        // - ID App uses request_verifiable_presentation_v1
+        // - Concordium Wallet uses request_verifiable_presentation (v0)
+        methods: [
+            'sign_and_send_transaction',
+            'sign_message',
+            'request_verifiable_presentation_v1',
+            'request_verifiable_presentation',
+        ],
         chains: getChainId(),
         events: ['session_ping', 'chain_changed', 'accounts_changed', 'account_disconnected', 'session_event'],
     },

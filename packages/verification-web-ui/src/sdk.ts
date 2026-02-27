@@ -313,6 +313,17 @@ export class ConcordiumVerificationWebUI {
                 localStorage.setItem('sdkWalletConnectMetadata', JSON.stringify(config.metadata));
             }
 
+            // Store presentation request if provided (for auto-send after session approval)
+            if (config.presentationRequest) {
+                localStorage.setItem(
+                    ModalConstants.LOCAL_STORAGE_FLAGS.SDK_PRESENTATION_REQUEST,
+                    JSON.stringify(config.presentationRequest)
+                );
+            } else {
+                // Clear any old presentation request
+                localStorage.removeItem(ModalConstants.LOCAL_STORAGE_FLAGS.SDK_PRESENTATION_REQUEST);
+            }
+
             // Show the landing modal
             await ConcordiumVerificationWebUI.showLandingModal();
 
@@ -542,6 +553,23 @@ export class ConcordiumVerificationWebUI {
      * });
      * ```
      */
+    /**
+     * Send a verifiable presentation request to the connected wallet
+     * Tries v1 method first (ID App), then falls back to v0 (Concordium Wallet)
+     * @param presentationRequest - The presentation request object to send to the wallet
+     * @param sessionTopic - Optional session topic to use (uses current session if not provided)
+     * @example
+     * ```typescript
+     * // After session is approved, send a presentation request:
+     * sdk.on('session_approved', async (event) => {
+     *     const presentationRequest = {
+     *         challenge: 'your-challenge-string',
+     *         credentialSubject: { ... }
+     *     };
+     *     await sdk.sendPresentationRequest(presentationRequest);
+     * });
+     * ```
+     */
     async sendPresentationRequest(presentationRequest: PresentationRequest, sessionTopic?: string): Promise<void> {
         const topic = sessionTopic || this.currentSession?.topic;
 
@@ -572,18 +600,38 @@ export class ConcordiumVerificationWebUI {
                 icons: constructorMetadata?.icons || [concordiumModalLogo],
             };
 
-            // Send the request through WalletConnect
-            const response = await wcService.request({
-                topic,
-                chainId,
-                request: {
-                    method: 'request_verifiable_presentation_v1',
-                    params: {
-                        ...(presentationRequest || {}),
-                        metadata,
+            // Try v1 method first (ID App), then fallback to v0 (Concordium Wallet)
+            let response: any;
+
+            try {
+                // Try v1 first (Concordium ID App)
+                console.log('Trying v1 method (request_verifiable_presentation_v1)...');
+                response = await wcService.request({
+                    topic,
+                    chainId,
+                    request: {
+                        method: 'request_verifiable_presentation_v1',
+                        params: {
+                            ...(presentationRequest || {}),
+                            metadata,
+                        },
                     },
-                },
-            });
+                });
+            } catch (v1Error) {
+                console.log('v1 method failed, trying v0 method...', v1Error);
+                // Fallback to v0 (Concordium Wallet)
+                response = await wcService.request({
+                    topic,
+                    chainId,
+                    request: {
+                        method: 'request_verifiable_presentation',
+                        params: {
+                            ...(presentationRequest || {}),
+                            metadata,
+                        },
+                    },
+                });
+            }
 
             // Emit the response back to merchant
             this.emitEvent('presentation_received', response as PresentationResponse);

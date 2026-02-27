@@ -4,6 +4,7 @@ import { ServiceFactory } from '@/services';
 
 import { type ConcordiumConfig, getConfig, resolveContainer, setConfig } from './config.state';
 import { ModalConstants } from './constants/modal.constants';
+import { getQrRedirectUri } from './constants/wallet.registry';
 import './styles/index.css';
 import { isAppInstalled, isConcordiumIDInstalled } from './utils/sessionDetection';
 
@@ -40,6 +41,15 @@ export async function initConcordiumModal(config?: Partial<ConcordiumConfig>): P
     setDefaultFlags();
     if (config) {
         setConfig(config);
+    }
+
+    // Check if this is a QR redirect (user scanned QR code on mobile)
+    const redirectUri = getQrRedirectUri();
+    if (redirectUri) {
+        // Handle QR redirect - this will open the wallet app(s)
+        const { handleQrRedirectOnLoad } = await import('./components/desktop/wallet-selection');
+        await handleQrRedirectOnLoad();
+        return; // Don't show modal, wallet app will handle it
     }
 
     // Ensure DOM is ready before resolving container

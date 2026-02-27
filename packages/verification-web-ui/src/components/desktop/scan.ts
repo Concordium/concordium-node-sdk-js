@@ -61,8 +61,8 @@ function createDesktopScanHTML(): string {
             </div>
           </div>
 
-          <div id="qr-container" class="${CSS_CLASSES.FLEX} items-center justify-center min-h-[200px]">
-            <div class="animate-pulse text-center">
+          <div id="qr-container" class="${CSS_CLASSES.FLEX} items-center justify-center" style="min-height: 380px;">
+            <div class="animate-pulse text-center" style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
               <div class="w-48 h-48 bg-gray-200 rounded mb-2"></div>
               <p class="text-sm" style="color: #0D0F11;">Generating QR code...</p>
             </div>
@@ -429,6 +429,10 @@ async function initializeSDKManagedConnection(): Promise<void> {
     const wcService = ServiceFactory.createWalletConnectService();
     await wcService.initialize();
 
+    // Clear all existing sessions before creating new pairing
+    // This prevents conflicts when user tries different wallets
+    await wcService.clearAllSessionsForNewPairing();
+
     // Import WalletConnect constants for namespace configuration
     const { WalletConnectConstants } = await import('@/constants/walletconnect.constants');
 
@@ -438,7 +442,9 @@ async function initializeSDKManagedConnection(): Promise<void> {
     // Generate WalletConnect URI by calling connect()
     const { uri, approval } = await wcService.connect({
         ccd: {
-            methods: [WalletConnectConstants.METHODS.REQUEST_VERIFIABLE_PRESENTATION_V1],
+            // Request all methods for broad wallet compatibility
+            // This allows both ID App (v1) and Concordium Wallet (v0) to connect
+            methods: [...WalletConnectConstants.ALL_METHODS],
             chains: chainIds,
             events: [...WalletConnectConstants.EVENTS],
         },
@@ -510,13 +516,128 @@ async function initializeMerchantProvidedConnection(): Promise<void> {
 }
 
 /**
- * Handles session approval and transitions to processing modal
- * Called when QR code is scanned and wallet approves the connection
- * @param sessionData - The session data from WalletConnect approval
+ * Auto-send the presentation request if one is configured in localStorage.
+ * This is called after session approval to automatically trigger verification.
+ * Tries v1 method first (ID App), then falls back to v0 (Concordium Wallet).
+ * @param topic - The session topic to use for the request
  */
+export async function autoSendPresentationRequestIfConfigured(topic: string): Promise<void> {
+    try {
+        const presentationRequestStr = localStorage.getItem(
+            ModalConstants.LOCAL_STORAGE_FLAGS.SDK_PRESENTATION_REQUEST
+        );
+        if (!presentationRequestStr) {
+            console.log('No presentation request configured, waiting for merchant to send request');
+            return;
+        }
+
+        const presentationRequest = JSON.parse(presentationRequestStr);
+        console.log('Auto-sending presentation request:', presentationRequest);
+
+        // Get the WalletConnect service
+        const wcService = ServiceFactory.getWalletConnectService();
+        if (!wcService) {
+            console.error('WalletConnect service not available for auto-send');
+            return;
+        }
+
+        // Get network configuration
+        const network = localStorage.getItem(ModalConstants.LOCAL_STORAGE_FLAGS.SDK_NETWORK) as 'mainnet' | 'testnet';
+        const chainId =
+            network === 'mainnet' ? import.meta.env.VITE_CHAIN_ID_MAINNET : import.meta.env.VITE_CHAIN_ID_TESTNET;
+
+        // Get metadata from localStorage
+        const metadataStr = localStorage.getItem('sdkWalletConnectMetadata');
+        const storedMetadata = metadataStr ? JSON.parse(metadataStr) : {};
+
+        const metadata = {
+            description: storedMetadata?.description || 'Requesting verification',
+            appName: storedMetadata?.name || 'Concordium Verification WebUI',
+            url: storedMetadata?.url || window.location.origin,
+            icons: storedMetadata?.icons || [],
+        };
+
+        // Try v1 method first (ID App), then fallback to v0 (Concordium Wallet)
+        let response: any;
+        let methodUsed: string;
+
+        try {
+            // Try v1 first (Concordium ID App)
+            console.log('Trying v1 method (request_verifiable_presentation_v1)...');
+            response = await wcService.request({
+                topic,
+                chainId,
+                request: {
+                    method: 'request_verifiable_presentation_v1',
+                    params: {
+                        ...presentationRequest,
+                        metadata,
+                    },
+                },
+            });
+            methodUsed = 'v1';
+        } catch (v1Error) {
+            console.log('v1 method failed, trying v0 method...', v1Error);
+            // Fallback to v0 (Concordium Wallet)
+            response = await wcService.request({
+                topic,
+                chainId,
+                request: {
+                    method: 'request_verifiable_presentation',
+                    params: {
+                        ...presentationRequest,
+                        metadata,
+                    },
+                },
+            });
+            methodUsed = 'v0';
+        }
+
+        console.log(`Presentation response received (method ${methodUsed}):`, response);
+
+        // Emit the response to merchant
+        window.dispatchEvent(
+            new CustomEvent('verification-web-ui-event', {
+                detail: {
+                    type: 'presentation_received',
+                    data: response,
+                },
+                bubbles: true,
+                composed: true,
+            })
+        );
+
+        // Show success state
+        const { showSuccessState } = await import('./processing');
+        await showSuccessState();
+    } catch (error) {
+        console.error('Failed to auto-send presentation request:', error);
+
+        // Emit error event
+        window.dispatchEvent(
+            new CustomEvent('verification-web-ui-event', {
+                detail: {
+                    type: 'error',
+                    data: {
+                        message: 'Failed to send verification request',
+                        error,
+                    },
+                },
+                bubbles: true,
+                composed: true,
+            })
+        );
+
+        // Show error state
+        const { showErrorState } = await import('./processing');
+        await showErrorState();
+    }
+}
+
 /**
  * Handle WalletConnect session approval
  * Emits session_approved event to merchant and transitions to processing modal
+ * If a presentationRequest is configured, automatically sends the verification request
  */
 export async function handleSessionApproval(sessionData: any): Promise<void> {
     try {
@@ -524,11 +645,16 @@ export async function handleSessionApproval(sessionData: any): Promise<void> {
         const { topic, namespaces } = sessionData;
         const accounts = namespaces?.ccd?.accounts || [];
 
+        // Extract and store connected wallet name from peer metadata
+        const walletName = sessionData.peer?.metadata?.name || 'Wallet';
+        localStorage.setItem(ModalConstants.LOCAL_STORAGE_FLAGS.CONNECTED_WALLET_NAME, walletName);
+
         // Emit session approved event to merchant
         const sessionEvent = {
             topic,
             accounts,
             namespaces,
+            walletName,
         };
 
         window.dispatchEvent(
@@ -545,6 +671,9 @@ export async function handleSessionApproval(sessionData: any): Promise<void> {
         // Show the processing modal (it will handle crossfade with scan modal)
         const { showProcessingModal } = await import('./processing');
         await showProcessingModal();
+
+        // Check if there's a presentation request to auto-send
+        await autoSendPresentationRequestIfConfigured(topic);
     } catch (error) {
         console.error('Error handling session approval:', error);
 
@@ -572,12 +701,18 @@ async function displayQRCode(uri: string): Promise<void> {
         // Dynamic import following your coding instructions pattern
         const { default: QRCode } = await import('qrcode');
         const { getConfig } = await import('@/config.state');
+        const { getConcordiumIdDeepLink } = await import('@/constants/wallet.registry');
         const config = getConfig();
 
         const qrContainer = document.querySelector(SELECTORS.QR_CONTAINER);
 
         if (qrContainer) {
-            const qrCodeDataURL = await QRCode.toDataURL(uri, {
+            // Use Concordium ID app deep link format: concordiumidapp://wc?uri=<encoded-wc-uri>
+            // This allows ID app to scan and recognize its own deep link format
+            const qrValue = getConcordiumIdDeepLink(uri);
+            console.log('Generated QR code value:', qrValue);
+
+            const qrCodeDataURL = await QRCode.toDataURL(qrValue, {
                 width: 200,
                 margin: 2,
                 color: { dark: '#000000', light: '#ffffff' },
@@ -588,14 +723,18 @@ async function displayQRCode(uri: string): Promise<void> {
                 ? '<p id="qr-countdown" class="text-sm text-inverse-tertiary mt-2">Expires in: <span class="font-semibold">5:00</span></p>'
                 : '';
 
+            // Determine app store link based on user's device
+            const { getIdAppStoreUrl } = await import('@/constants/wallet.registry');
+            const appStoreUrl = getIdAppStoreUrl();
+
             qrContainer.innerHTML = `
-        <div class="text-center">
+        <div class="text-center" style="min-height: 350px; display: flex; flex-direction: column; justify-content: center;">
           <img src="${qrCodeDataURL}" alt="QR Code for wallet connection" class="w-48 h-48 mx-auto mb-2" style="border-radius: 12.414px; border: 1px solid rgba(0, 0, 0, 0.10); background: #FFF;" />
           <p class="desktop--scan-text mt-2">Scan the QR code with your<br>Concordium ID compatible device</p>
           ${countdownHTML}
           <img src="${sectionSeparator}" alt="" class="mx-auto mt-4" />
           <div class="flex items-center justify-center mt-4">
-            <p class="desktop--download-text">Download & Install the <a href="#">Concordium ID App</a> and come back here to verify.</p>
+            <p class="desktop--download-text">Download & Install the <a href="${appStoreUrl}" target="_blank" rel="noopener noreferrer">Concordium ID App</a> and come back here to verify.</p>
           </div>
         </div>
       `;
@@ -727,7 +866,7 @@ function showQRExpiredMessage(canRefresh: boolean): void {
             : `<p class="text-sm text-inverse-tertiary mt-2">Waiting for new QR code from merchant...</p>`;
 
         qrContainer.innerHTML = `
-      <div class="text-center">
+      <div class="text-center" style="min-height: 350px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
         <div class="w-48 h-48 bg-yellow-50 border-2 border-yellow-200 rounded flex items-center justify-center mx-auto mb-2">
           <svg class="w-16 h-16 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -758,7 +897,7 @@ function showQRRefreshing(): void {
     const qrContainer = document.querySelector(SELECTORS.QR_CONTAINER);
     if (qrContainer) {
         qrContainer.innerHTML = `
-      <div class="animate-pulse text-center">
+      <div class="animate-pulse text-center" style="min-height: 350px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
         <div class="w-48 h-48 bg-gray-200 rounded mb-2 mx-auto"></div>
         <p class="text-sm text-inverse-tertiary">Refreshing QR code...</p>
       </div>
@@ -791,7 +930,7 @@ function showQRError(message: string): void {
     const qrContainer = document.querySelector(SELECTORS.QR_CONTAINER);
     if (qrContainer) {
         qrContainer.innerHTML = `
-      <div class="text-center">
+      <div class="text-center" style="min-height: 350px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
         <div class="w-48 h-48 bg-red-50 border-2 border-red-200 rounded flex items-center justify-center mx-auto mb-2">
           <svg class="w-16 h-16 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
@@ -810,7 +949,7 @@ function showQRError(message: string): void {
             retryBtn.addEventListener('click', async () => {
                 // Reset to loading state
                 qrContainer.innerHTML = `
-          <div class="animate-pulse text-center">
+          <div class="animate-pulse text-center" style="min-height: 350px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
             <div class="w-48 h-48 bg-gray-200 rounded mb-2 mx-auto"></div>
             <p class="text-sm text-inverse-tertiary">Generating QR code...</p>
           </div>
@@ -920,8 +1059,12 @@ function generateDeepLink(walletType: WalletTypeValues, uri: string): string | n
 async function displayQRCodeMobile(uri: string, container: HTMLElement): Promise<void> {
     try {
         const { default: QRCode } = await import('qrcode');
+        const { buildQrRedirectUrl } = await import('@/constants/wallet.registry');
 
-        const qrCodeDataURL = await QRCode.toDataURL(uri, {
+        // Use redirect URL for better wallet compatibility
+        const qrValue = buildQrRedirectUrl(uri);
+
+        const qrCodeDataURL = await QRCode.toDataURL(qrValue, {
             width: 200,
             margin: 2,
             color: { dark: '#000000', light: '#ffffff' },

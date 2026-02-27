@@ -156,11 +156,11 @@ export function openAppStore(appType: 'concordium-wallet' | 'concordium-id' = 'c
             return;
         }
     } else {
-        // Concordium ID
+        // Concordium ID - Updated app store URLs
         if (isIOS) {
-            storeUrl = 'https://apps.apple.com/app/concordium-id/id1504083341';
+            storeUrl = 'https://apps.apple.com/ca/app/concordium-id/id6746754485';
         } else if (isAndroid) {
-            storeUrl = 'https://play.google.com/store/apps/details?id=com.concordium.mobile_wallet_testnet';
+            storeUrl = 'https://play.google.com/store/apps/details?id=com.idwallet.app&hl=en_CA';
         } else {
             console.warn('Unsupported platform for app store');
             return;
@@ -168,6 +168,126 @@ export function openAppStore(appType: 'concordium-wallet' | 'concordium-id' = 'c
     }
 
     window.location.href = storeUrl;
+}
+
+/**
+ * Opens the app store specifically for Concordium ID app
+ * Convenience function that ensures correct store URLs are used
+ */
+export function openAppStoreForConcordiumID(): void {
+    openAppStore('concordium-id');
+}
+
+/**
+ * Attempts to open the Concordium ID app with a WalletConnect URI
+ * Returns true if the app appears to have opened, false otherwise
+ *
+ * Note: On iOS Safari, we can't reliably detect if an app opened.
+ * We use a timing-based approach and always attempt to open the app first.
+ */
+export async function tryOpenConcordiumIDApp(walletConnectUri: string): Promise<boolean> {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+
+    // Create deep link for Concordium ID
+    const redirectUrl = encodeURIComponent(window.location.href);
+    const deepLink = `concordiumidapp://wc?uri=${encodeURIComponent(walletConnectUri)}&redirect=${redirectUrl}`;
+
+    console.log('[tryOpenConcordiumIDApp] Deep link:', deepLink.substring(0, 80) + '...');
+    console.log('[tryOpenConcordiumIDApp] Platform:', isIOS ? 'iOS' : 'Android/other');
+
+    return new Promise((resolve) => {
+        let appOpened = false;
+        let timeoutId: ReturnType<typeof setTimeout>;
+        const startTime = Date.now();
+
+        // Track if the app opens by detecting blur or visibility change
+        const handleBlur = () => {
+            console.log('[tryOpenConcordiumIDApp] Blur detected - app likely opened');
+            appOpened = true;
+            clearTimeout(timeoutId);
+            cleanup();
+            resolve(true);
+        };
+
+        const handleVisibilityChange = () => {
+            if (document.hidden) {
+                console.log('[tryOpenConcordiumIDApp] Visibility change - app likely opened');
+                appOpened = true;
+                clearTimeout(timeoutId);
+                cleanup();
+                resolve(true);
+            }
+        };
+
+        const handlePageHide = () => {
+            console.log('[tryOpenConcordiumIDApp] Page hide - app likely opened');
+            appOpened = true;
+            clearTimeout(timeoutId);
+            cleanup();
+            resolve(true);
+        };
+
+        const handleFocus = () => {
+            // If we get focus back quickly (< 1.5s), app probably didn't open
+            const elapsed = Date.now() - startTime;
+            console.log(`[tryOpenConcordiumIDApp] Focus regained after ${elapsed}ms`);
+            if (elapsed < 1500 && !appOpened) {
+                // Quick return to browser means app didn't open
+                console.log('[tryOpenConcordiumIDApp] Quick focus return - app not installed');
+            }
+        };
+
+        const cleanup = () => {
+            window.removeEventListener('blur', handleBlur);
+            window.removeEventListener('focus', handleFocus);
+            window.removeEventListener('pagehide', handlePageHide);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
+
+        // Set up detection listeners
+        window.addEventListener('blur', handleBlur);
+        window.addEventListener('focus', handleFocus);
+        window.addEventListener('pagehide', handlePageHide, { once: true });
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        // For iOS, use a hidden link click approach which is more reliable
+        if (isIOS) {
+            const link = document.createElement('a');
+            link.href = deepLink;
+            link.style.display = 'none';
+            document.body.appendChild(link);
+
+            console.log('[tryOpenConcordiumIDApp] iOS - clicking hidden link...');
+            link.click();
+
+            // Clean up the link
+            setTimeout(() => {
+                if (link.parentNode) {
+                    link.parentNode.removeChild(link);
+                }
+            }, 100);
+        } else {
+            // For Android and other platforms, use location.href
+            console.log('[tryOpenConcordiumIDApp] Opening deep link via location.href...');
+            window.location.href = deepLink;
+        }
+
+        // Timeout - if we haven't detected app opening by now, assume not installed
+        // Use shorter timeout for iOS since the hidden link approach is faster
+        const timeout = isIOS ? 1500 : 2500;
+        timeoutId = setTimeout(() => {
+            console.log(`[tryOpenConcordiumIDApp] Timeout reached (${timeout}ms), appOpened: ${appOpened}`);
+            cleanup();
+
+            // On iOS, if we're still here and document is visible, app didn't open
+            if (isIOS && !document.hidden && !appOpened) {
+                console.log('[tryOpenConcordiumIDApp] iOS: Still on page, app not installed');
+                resolve(false);
+            } else {
+                resolve(appOpened);
+            }
+        }, timeout);
+    });
 }
 
 /**

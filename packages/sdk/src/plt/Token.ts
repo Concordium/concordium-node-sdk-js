@@ -1,12 +1,15 @@
+import { Metadata } from '@grpc/grpc-js';
 import { ConcordiumGRPCClient } from '../grpc/GRPCClient.js';
 import { AccountAddress, AccountInfo, TokenUpdatePayload, TransactionExpiry, TransactionHash } from '../pub/types.js';
 import { AccountSigner } from '../signHelpers.js';
 import { Transaction } from '../transactions/index.js';
+import { TokenUpdate } from '../transactions/Payload.ts';
 import { SequenceNumber } from '../types/index.js';
 import { bail } from '../util.js';
 import {
     Cbor,
     CborAccountAddress,
+    MetadataUrl,
     TokenAddAllowListOperation,
     TokenAddDenyListOperation,
     TokenAmount,
@@ -24,6 +27,7 @@ import {
     TokenTransfer,
     TokenTransferOperation,
     TokenUnpauseOperation,
+    TokenUpdateMetadataOperation,
     createTokenUpdatePayload,
 } from './index.js';
 
@@ -901,6 +905,20 @@ export async function unpause(
     const operation: TokenUnpauseOperation = { [TokenOperationType.Unpause]: {} };
     return sendOperations(token, sender, [operation], signer, metadata);
 }
+
+
+export async function updateMetadata(
+    token: Token,
+    metadataUrl: MetadataUrl,
+    sender: AccountAddress.Type,
+    signer: AccountSigner,
+    metadata?: TokenUpdateMetadata
+): Promise<TransactionHash.Type> {
+
+    const operation: TokenUpdateMetadataOperation = { [TokenOperationType.UpdateMetadata]: metadataUrl };
+    return sendOperations(token, sender, [operation], signer, metadata);
+}
+
 
 /**
  * Executes a batch of operations on a token.

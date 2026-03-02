@@ -14,6 +14,7 @@ export enum TokenOperationType {
     RemoveDenyList = 'removeDenyList',
     Pause = 'pause',
     Unpause = 'unpause',
+    UpdateMetadata = 'updateMetadata',
 }
 
 export type Memo = CborMemo.Type | Uint8Array;
@@ -29,6 +30,16 @@ export type TokenTransfer = {
     /** An optional memo for the transfer. A string will be CBOR encoded, while raw bytes are included in the
      * transaction as is. */
     memo?: Memo;
+};
+
+/**
+ * URL identifies a metadata together with an optional sha256 checksum of the contents of the metadata
+ */
+export type MetadataUrl = {
+    /** The URL of the metadata. */
+    url: string;
+    /** An optional SHA256 checksum of the metadata contents. */
+    checksum?: string;
 };
 
 /**
@@ -103,6 +114,8 @@ export type TokenPauseOperation = TokenOperationGen<TokenOperationType.Pause, {}
  */
 export type TokenUnpauseOperation = TokenOperationGen<TokenOperationType.Unpause, {}>;
 
+export type TokenUpdateMetadataOperation = TokenOperationGen<TokenOperationType.UpdateMetadata, MetadataUrl>;
+
 /**
  * Union type representing all possible operations for a token.
  */
@@ -115,7 +128,8 @@ export type TokenOperation =
     | TokenAddDenyListOperation
     | TokenRemoveDenyListOperation
     | TokenPauseOperation
-    | TokenUnpauseOperation;
+    | TokenUnpauseOperation
+    | TokenUpdateMetadataOperation;
 
 /**
  * Creates a payload for token operations.

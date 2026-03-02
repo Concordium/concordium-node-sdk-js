@@ -29,7 +29,7 @@
         "build": "tsc && vite build",
         "dev": "vite",
         "start": "vite preview",
-        "lint": "eslint . --cache --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+        "lint": "eslint . --cache --ext ts,tsx --max-warnings 0",
         "lint-fix": "yarn lint --fix",
         "prettier": "prettier . --ignore-path ../../.gitignore --ignore-path ../../.prettierignore --ignore-path .gitignore",
         "fmt": "yarn prettier --write",

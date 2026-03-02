@@ -213,9 +213,15 @@ export interface WalletConnection {
      *
      * @param sender The account address whose keys are used to sign the transaction in the wallet.
      * @param transaction A signable sponsored transaction.
+     * @param schema An optional parameter which is the smart contract schema.
+     *               When passed with contract update txn, it enables wallet to present the smart contract call in a human-friendly way
      * @return A promise for the hash of the submitted transaction.
      */
-    signAndSendSponsoredTransaction(sender: AccountAddress.Type, transaction: Transaction.Signable): Promise<string>;
+    signAndSendSponsoredTransaction(
+        sender: AccountAddress.Type,
+        transaction: Transaction.Signable,
+        schema?: Schema
+    ): Promise<string>;
 
     /**
      * Request the wallet to sign a message using the keys of the given account.

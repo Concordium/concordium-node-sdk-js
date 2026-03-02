@@ -3,7 +3,6 @@ import { ConcordiumGRPCClient } from '../grpc/GRPCClient.js';
 import { AccountAddress, AccountInfo, TokenUpdatePayload, TransactionExpiry, TransactionHash } from '../pub/types.js';
 import { AccountSigner } from '../signHelpers.js';
 import { Transaction } from '../transactions/index.js';
-import { TokenUpdate } from '../transactions/Payload.ts';
 import { SequenceNumber } from '../types/index.js';
 import { bail } from '../util.js';
 import {

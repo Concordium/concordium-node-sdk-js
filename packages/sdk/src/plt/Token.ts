@@ -906,7 +906,16 @@ export async function unpause(
     return sendOperations(token, sender, [operation], signer, metadata);
 }
 
-
+/**
+ * Updates the metadata URL of a token.
+ *
+ * @param {Token} token - The token to update.
+ * @param {MetadataUrl} metadataUrl - The new metadata URL.
+ * @param {AccountAddress.Type} sender - The account address of the sender.
+ * @param {AccountSigner} signer - The signer responsible for signing the transaction.
+ * @param {TokenUpdateMetadata} [metadata={ expiry: TransactionExpiry.futureMinutes(5) }] - The metadata for the token update.
+ * @returns A promise that resolves to the transaction hash.
+ */
 export async function updateMetadata(
     token: Token,
     metadataUrl: MetadataUrl,

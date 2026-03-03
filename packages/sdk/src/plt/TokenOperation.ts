@@ -143,17 +143,16 @@ export type TokenUpdateMetadataOperation = TokenOperationGen<TokenOperationType.
 /**
  * Represents an operation to assign an admin role to an account.
  */
-export type TokenAssignAdminRolesOperation = {
-    assignAdminRoles: TokenUpdateAdminRolesDetails;
-}
+export type TokenAssignAdminRolesOperation = TokenOperationGen<TokenOperationType.AssignAdminRoles, TokenUpdateAdminRolesDetails>;
 
 /**
  * Represents an operation to revoke an admin role from an account.
  */
-export type TokenRevokeAdminRolesOperation = {
-    revokeAdminRoles: TokenUpdateAdminRolesDetails;
-}
+export type TokenRevokeAdminRolesOperation = TokenOperationGen<TokenOperationType.RevokeAdminRoles, TokenUpdateAdminRolesDetails>;
 
+/**
+ * Represents an operation to update admin roles for an account, which can be either assigning or revoking roles.
+ */
 export type TokenUpdateAdminRoleOperation = TokenAssignAdminRolesOperation | TokenRevokeAdminRolesOperation;
 
 /**

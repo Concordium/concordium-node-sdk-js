@@ -15,11 +15,12 @@ export enum TokenOperationType {
     Pause = 'pause',
     Unpause = 'unpause',
     UpdateMetadata = 'updateMetadata',
-    AssignAdminRole = 'assignAdminRole',
+    AssignAdminRoles = 'assignAdminRoles',
+    RevokeAdminRoles = 'revokeAdminRoles',
 }
 
 export enum TokenAdminRole {
-    UpdateAdminRole = 'updateAdminRole',
+    UpdateAdminRoles = 'updateAdminRoles',
     Mint = 'mint',
     Burn = 'burn',
     UpdateAllowList = 'allowList',
@@ -54,9 +55,11 @@ export type MetadataUrl = {
     checksum?: string;
 };
 
-//TODO:
-export type TokenUpdateAdminRoleDetails = {
-    role: TokenAdminRole;
+/**
+ * The details required to update an admin role for a token.
+ */
+export type TokenUpdateAdminRolesDetails = {
+    roles: TokenAdminRole[];
     account: CborAccountAddress.Type;
 };
 
@@ -140,18 +143,18 @@ export type TokenUpdateMetadataOperation = TokenOperationGen<TokenOperationType.
 /**
  * Represents an operation to assign an admin role to an account.
  */
-export type TokenAssignAdminRoleOperation = {
-    assignAdminRole: TokenUpdateAdminRoleDetails;
+export type TokenAssignAdminRolesOperation = {
+    assignAdminRoles: TokenUpdateAdminRolesDetails;
 }
 
 /**
  * Represents an operation to revoke an admin role from an account.
  */
-export type TokenRevokeAdminRoleOperation = {
-    revokeAdminRole: TokenUpdateAdminRoleDetails;
+export type TokenRevokeAdminRolesOperation = {
+    revokeAdminRoles: TokenUpdateAdminRolesDetails;
 }
 
-export type TokenUpdateAdminRoleOperation = TokenAssignAdminRoleOperation | TokenRevokeAdminRoleOperation;
+export type TokenUpdateAdminRoleOperation = TokenAssignAdminRolesOperation | TokenRevokeAdminRolesOperation;
 
 /**
  * Union type representing all possible operations for a token.

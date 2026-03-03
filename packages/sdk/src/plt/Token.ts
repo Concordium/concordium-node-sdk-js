@@ -11,6 +11,7 @@ import {
     TokenAddAllowListOperation,
     TokenAddDenyListOperation,
     TokenAmount,
+    TokenAssignAdminRolesOperation,
     TokenBurnOperation,
     TokenId,
     TokenInfo,
@@ -22,12 +23,11 @@ import {
     TokenPauseOperation,
     TokenRemoveAllowListOperation,
     TokenRemoveDenyListOperation,
+    TokenRevokeAdminRolesOperation,
     TokenTransfer,
     TokenTransferOperation,
     TokenUnpauseOperation,
     TokenUpdateAdminRolesDetails,
-    TokenAssignAdminRolesOperation,
-    TokenRevokeAdminRolesOperation,
     TokenUpdateMetadataOperation,
     createTokenUpdatePayload,
 } from './index.js';
@@ -924,11 +924,9 @@ export async function updateMetadata(
     signer: AccountSigner,
     metadata?: TokenUpdateMetadata
 ): Promise<TransactionHash.Type> {
-
     const operation: TokenUpdateMetadataOperation = { [TokenOperationType.UpdateMetadata]: metadataUrl };
     return sendOperations(token, sender, [operation], signer, metadata);
 }
-
 
 async function assignAdminRoles(
     token: Token,
@@ -937,8 +935,7 @@ async function assignAdminRoles(
     signer: AccountSigner,
     metadata?: TokenUpdateMetadata
 ): Promise<TransactionHash.Type> {
-
-    const operation: TokenAssignAdminRolesOperation = { [TokenOperationType.AssignAdminRoles]: updateAdminRoleDetails};
+    const operation: TokenAssignAdminRolesOperation = { [TokenOperationType.AssignAdminRoles]: updateAdminRoleDetails };
     return sendOperations(token, sender, [operation], signer, metadata);
 }
 
@@ -949,8 +946,7 @@ async function revokeAdminRoles(
     signer: AccountSigner,
     metadata?: TokenUpdateMetadata
 ): Promise<TransactionHash.Type> {
-
-    const operation: TokenRevokeAdminRolesOperation = { [TokenOperationType.RevokeAdminRoles]: updateAdminRoleDetails};
+    const operation: TokenRevokeAdminRolesOperation = { [TokenOperationType.RevokeAdminRoles]: updateAdminRoleDetails };
     return sendOperations(token, sender, [operation], signer, metadata);
 }
 
@@ -973,8 +969,8 @@ export async function updateAdminRoles(
     signer: AccountSigner,
     metadata?: TokenUpdateMetadata
 ): Promise<TransactionHash.Type> {
-    switch(type) {
-         case TokenOperationType.AssignAdminRoles:
+    switch (type) {
+        case TokenOperationType.AssignAdminRoles:
             return assignAdminRoles(token, updateAdminRoleDetails, sender, signer, metadata);
         case TokenOperationType.RevokeAdminRoles:
             return revokeAdminRoles(token, updateAdminRoleDetails, sender, signer, metadata);
@@ -982,7 +978,6 @@ export async function updateAdminRoles(
             throw new Error(`Unsupported operation type: ${type}`);
     }
 }
-
 
 /**
  * Executes a batch of operations on a token.

@@ -1,0 +1,7 @@
+# Ignore formatting for these files
+dist/
+node_modules/
+*.min.js
+*.min.css
+package-lock.json
+.DS_Store

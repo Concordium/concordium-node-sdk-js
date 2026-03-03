@@ -87,7 +87,7 @@
     "scripts": {
         "generate-ts-v2": "node scripts/run-protoc.js",
         "generate": "node scripts/generate.js",
-        "lint": "eslint . --cache --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+        "lint": "eslint . --cache --ext ts,tsx --max-warnings 0",
         "lint-fix": "yarn lint --fix",
         "prettier": "prettier . --ignore-path ../../.gitignore --ignore-path ../../.prettierignore --ignore-path .gitignore",
         "fmt": "yarn prettier --write",

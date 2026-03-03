@@ -1,0 +1,152 @@
+.mobile--modal-overlay {
+    @apply fixed inset-0 bg-black/50 flex items-center justify-center;
+    z-index: 9999;
+    transition:
+        opacity 0.3s ease-out,
+        transform 0.3s ease-out;
+    will-change: opacity, transform;
+    overflow-x: hidden;
+    left: 0;
+    right: 0;
+}
+
+.mobile--modal-container {
+    @apply bg-surface rounded-2xl h-auto;
+    width: 100%;
+    max-width: min(360px, calc(100% - 2rem));
+    padding: 1rem;
+    box-sizing: border-box;
+    margin: 0 auto;
+}
+
+/* Mobile-specific breakpoint for smaller screens */
+@media (max-width: 767px) {
+    .mobile--modal-container {
+        max-width: calc(100% - 1rem);
+        padding: 0.75rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .mobile--modal-container {
+        padding: 1rem;
+    }
+}
+
+.mobile--modal-body {
+    @apply flex flex-col border border-light-blue rounded-md gap-6;
+    padding: 1rem;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+}
+
+/* Responsive padding for modal body */
+@media (max-width: 767px) {
+    .mobile--modal-body {
+        padding: 0.75rem;
+        gap: 1rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .mobile--modal-body {
+        padding: 1rem;
+    }
+}
+
+.mobile--navigation-button {
+    @apply flex items-center gap-2 font-inter text-nav-button font-medium text-[12px] leading-[15px] tracking-[0px];
+}
+
+.mobile--primary-button {
+    @apply font-inter rounded-full capitalize flex items-center justify-center gap-2 px-6 py-4 bg-primary text-white text-sm leading-4 tracking-normal font-medium;
+}
+
+.mobile--primary-outline-button {
+    @apply font-inter rounded-full px-6 py-4 border border-inverse-tertiary text-inverse-secondary text-sm font-medium leading-4 tracking-normal;
+}
+
+.mobile--outline-button {
+    @apply font-inter rounded-full px-6 py-4 border border-tertiary text-light text-sm font-medium leading-4 tracking-normal;
+}
+
+.mobile--disabled-button {
+    @apply font-inter rounded-full cursor-not-allowed px-6 py-4 bg-light-blue text-white text-sm font-medium leading-4 tracking-normal;
+}
+
+.mobile--scan-footer {
+    @apply flex-col text-center bg-secondary rounded-2xl p-4 gap-3;
+}
+
+.mobile--point-list {
+    @apply min-w-[200px] mx-auto flex flex-col gap-4;
+}
+
+.mobile--point-count {
+    @apply bg-primary h-6 w-6 flex items-center justify-center rounded-full text-white text-[14px] font-inter font-bold leading-6;
+}
+.mobile--point-text {
+    @apply text-dark text-[14px] font-inter font-medium leading-[18px] capitalize;
+}
+
+/* Carousel */
+
+.mobile--carousel-container {
+    @apply flex flex-col  relative gap-3;
+}
+
+.mobile--carousel-wrapper {
+    @apply overflow-hidden w-full cursor-grab select-none relative;
+}
+
+.mobile--carousel-wrapper:active {
+    @apply cursor-grabbing;
+}
+
+.mobile--carousel-track {
+    @apply flex transition-transform duration-300 ease-out w-full;
+    will-change: transform;
+}
+
+.mobile--carousel-image {
+    @apply min-w-full max-w-full shrink-0 flex items-center justify-center;
+}
+
+.mobile--carousel-image img {
+    @apply max-w-full h-auto block;
+    -webkit-user-drag: none;
+    -user-drag: none;
+}
+
+.mobile--carousel-actions {
+    @apply flex items-center justify-center gap-2 mt-2;
+}
+
+.mobile--carousel-action-item {
+    @apply w-1.5 h-1.5 rounded-full bg-tertiary cursor-pointer transition-all duration-300;
+}
+
+.mobile--carousel-action-item.active {
+    @apply w-14 h-1.5 rounded-full bg-[linear-gradient(to_right,var(--color-primary)_0_30%,var(--color-tertiary)_30%_100%)];
+}
+
+.mobile--carousel-action-item.next {
+    @apply w-14 h-1.5 rounded-full bg-primary;
+}
+
+.mobile--carousel-action-item:hover {
+    @apply opacity-70;
+}
+
+.mobile--carousel-points-wrapper {
+    @apply min-h-20 max-h-[120px] w-[216px] mx-auto gap-2 flex flex-col;
+}
+
+.mobile--carousel-point-item {
+    @apply flex items-center gap-3;
+}
+
+.mobile--carousel-point-text {
+    @apply text-dark text-[14px] leading-[21px] font-inter font-medium;
+}

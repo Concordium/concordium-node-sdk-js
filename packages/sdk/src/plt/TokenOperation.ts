@@ -14,6 +14,19 @@ export enum TokenOperationType {
     RemoveDenyList = 'removeDenyList',
     Pause = 'pause',
     Unpause = 'unpause',
+    UpdateMetadata = 'updateMetadata',
+    AssignAdminRoles = 'assignAdminRoles',
+    RevokeAdminRoles = 'revokeAdminRoles',
+}
+
+export enum TokenAdminRole {
+    UpdateAdminRoles = 'updateAdminRoles',
+    Mint = 'mint',
+    Burn = 'burn',
+    UpdateAllowList = 'allowList',
+    UpdateDenyList = 'denyList',
+    Pause = 'pause',
+    UpdateMetadata = 'updateMetadata',
 }
 
 export type Memo = CborMemo.Type | Uint8Array;
@@ -29,6 +42,24 @@ export type TokenTransfer = {
     /** An optional memo for the transfer. A string will be CBOR encoded, while raw bytes are included in the
      * transaction as is. */
     memo?: Memo;
+};
+
+/**
+ * URL identifies a metadata together with an optional sha256 checksum of the contents of the metadata
+ */
+export type MetadataUrl = {
+    /** The URL of the metadata. */
+    url: string;
+    /** An optional SHA256 checksum of the metadata contents. */
+    checksum?: string;
+};
+
+/**
+ * The details required to update an admin role for a token.
+ */
+export type TokenUpdateAdminRolesDetails = {
+    roles: TokenAdminRole[];
+    account: CborAccountAddress.Type;
 };
 
 /**
@@ -104,6 +135,32 @@ export type TokenPauseOperation = TokenOperationGen<TokenOperationType.Pause, {}
 export type TokenUnpauseOperation = TokenOperationGen<TokenOperationType.Unpause, {}>;
 
 /**
+ * Represents an operation to update the metadata url of a token.
+ */
+export type TokenUpdateMetadataOperation = TokenOperationGen<TokenOperationType.UpdateMetadata, MetadataUrl>;
+
+/**
+ * Represents an operation to assign an admin role to an account.
+ */
+export type TokenAssignAdminRolesOperation = TokenOperationGen<
+    TokenOperationType.AssignAdminRoles,
+    TokenUpdateAdminRolesDetails
+>;
+
+/**
+ * Represents an operation to revoke an admin role from an account.
+ */
+export type TokenRevokeAdminRolesOperation = TokenOperationGen<
+    TokenOperationType.RevokeAdminRoles,
+    TokenUpdateAdminRolesDetails
+>;
+
+/**
+ * Represents an operation to update admin roles for an account, which can be either assigning or revoking roles.
+ */
+export type TokenUpdateAdminRoleOperation = TokenAssignAdminRolesOperation | TokenRevokeAdminRolesOperation;
+
+/**
  * Union type representing all possible operations for a token.
  */
 export type TokenOperation =
@@ -115,7 +172,9 @@ export type TokenOperation =
     | TokenAddDenyListOperation
     | TokenRemoveDenyListOperation
     | TokenPauseOperation
-    | TokenUnpauseOperation;
+    | TokenUnpauseOperation
+    | TokenUpdateMetadataOperation
+    | TokenUpdateAdminRoleOperation;
 
 /**
  * Creates a payload for token operations.

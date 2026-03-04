@@ -7,9 +7,11 @@ import { bail } from '../util.js';
 import {
     Cbor,
     CborAccountAddress,
+    MetadataUrl,
     TokenAddAllowListOperation,
     TokenAddDenyListOperation,
     TokenAmount,
+    TokenAssignAdminRolesOperation,
     TokenBurnOperation,
     TokenId,
     TokenInfo,
@@ -21,9 +23,12 @@ import {
     TokenPauseOperation,
     TokenRemoveAllowListOperation,
     TokenRemoveDenyListOperation,
+    TokenRevokeAdminRolesOperation,
     TokenTransfer,
     TokenTransferOperation,
     TokenUnpauseOperation,
+    TokenUpdateAdminRolesDetails,
+    TokenUpdateMetadataOperation,
     createTokenUpdatePayload,
 } from './index.js';
 
@@ -899,6 +904,69 @@ export async function unpause(
     metadata?: TokenUpdateMetadata
 ): Promise<TransactionHash.Type> {
     const operation: TokenUnpauseOperation = { [TokenOperationType.Unpause]: {} };
+    return sendOperations(token, sender, [operation], signer, metadata);
+}
+
+/**
+ * Updates the metadata URL of a token.
+ *
+ * @param {Token} token - The token to update.
+ * @param {MetadataUrl} metadataUrl - The new metadata URL.
+ * @param {AccountAddress.Type} sender - The account address of the sender.
+ * @param {AccountSigner} signer - The signer responsible for signing the transaction.
+ * @param {TokenUpdateMetadata} [metadata={ expiry: TransactionExpiry.futureMinutes(5) }] - The metadata for the token update.
+ * @returns A promise that resolves to the transaction hash.
+ */
+export async function updateMetadata(
+    token: Token,
+    metadataUrl: MetadataUrl,
+    sender: AccountAddress.Type,
+    signer: AccountSigner,
+    metadata?: TokenUpdateMetadata
+): Promise<TransactionHash.Type> {
+    const operation: TokenUpdateMetadataOperation = { [TokenOperationType.UpdateMetadata]: metadataUrl };
+    return sendOperations(token, sender, [operation], signer, metadata);
+}
+
+/**
+ * Assigns admin roles to a token.
+ *
+ * @param {Token} token - The token to update.
+ * @param {TokenUpdateAdminRolesDetails} updateAdminRoleDetails - The details of the admin role updates.
+ * @param {AccountAddress.Type} sender - The account address of the sender.
+ * @param {AccountSigner} signer - The signer responsible for signing the transaction.
+ * @param {TokenUpdateMetadata} [metadata={ expiry: TransactionExpiry.futureMinutes(5) }] - The metadata for the token update.
+ * @returns A promise that resolves to the transaction hash.
+ */
+export async function assignAdminRoles(
+    token: Token,
+    updateAdminRoleDetails: TokenUpdateAdminRolesDetails,
+    sender: AccountAddress.Type,
+    signer: AccountSigner,
+    metadata?: TokenUpdateMetadata
+): Promise<TransactionHash.Type> {
+    const operation: TokenAssignAdminRolesOperation = { [TokenOperationType.AssignAdminRoles]: updateAdminRoleDetails };
+    return sendOperations(token, sender, [operation], signer, metadata);
+}
+
+/**
+ * Revokes admin roles from a token.
+ *
+ * @param {Token} token - The token to update.
+ * @param {TokenUpdateAdminRolesDetails} updateAdminRoleDetails - The details of the admin role updates.
+ * @param {AccountAddress.Type} sender - The account address of the sender.
+ * @param {AccountSigner} signer - The signer responsible for signing the transaction.
+ * @param {TokenUpdateMetadata} [metadata={ expiry: TransactionExpiry.futureMinutes(5) }] - The metadata for the token update.
+ * @returns A promise that resolves to the transaction hash.
+ */
+export async function revokeAdminRoles(
+    token: Token,
+    updateAdminRoleDetails: TokenUpdateAdminRolesDetails,
+    sender: AccountAddress.Type,
+    signer: AccountSigner,
+    metadata?: TokenUpdateMetadata
+): Promise<TransactionHash.Type> {
+    const operation: TokenRevokeAdminRolesOperation = { [TokenOperationType.RevokeAdminRoles]: updateAdminRoleDetails };
     return sendOperations(token, sender, [operation], signer, metadata);
 }
 

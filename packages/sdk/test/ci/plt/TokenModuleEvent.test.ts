@@ -6,6 +6,7 @@ import {
     TokenListUpdateEventDetails,
     TokenPauseEventDetails,
     parseTokenModuleEvent,
+    TokenUpdateMetadataEventDetails,
 } from '../../../src/plt/index.ts';
 
 describe('PLT TokenModuleEvent', () => {
@@ -67,6 +68,27 @@ describe('PLT TokenModuleEvent', () => {
         expect(parsedEvent.type).toEqual('unpause');
         expect(parsedEvent.details).toEqual({});
     });
+
+ //******* */
+    it('parses updateMetadata event', () => {
+        const details: TokenUpdateMetadataEventDetails = {
+            url: 'https://example.com/token-metadata.json',
+            checksum: 'abc123',
+        };
+ 
+        const validEvent: EncodedTokenModuleEvent = {
+            tag: TransactionEventTag.TokenModuleEvent,
+            tokenId: TokenId.fromString('PLT'),
+            type: 'updateMetadata',
+            details: Cbor.encode(details),
+        };
+
+        const parsedEvent = parseTokenModuleEvent(validEvent)!;
+        expect(parsedEvent.type).toEqual('updateMetadata');
+        expect(parsedEvent.details).toEqual(details);
+    });
+
+//******* */
 
     it('handles unknown events', () => {
         const unknownEvent: EncodedTokenModuleEvent = {

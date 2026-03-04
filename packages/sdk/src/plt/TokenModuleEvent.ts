@@ -79,6 +79,18 @@ export type TokenPauseEvent = GenTokenModuleEvent<TokenOperationType.Pause, Toke
 export type TokenUnpauseEvent = GenTokenModuleEvent<TokenOperationType.Unpause, TokenPauseEventDetails>;
 
 /**
+ * An event occuring as the result of an "updateMetadata" operation, describing the URL of the metadata and an optional checksum.
+ */
+export type TokenUpdateMetadataEventDetails = {
+    /** The URL of the metadata. */
+    url: string;
+    /** An optional SHA256 checksum of the metadata contents. */
+    checksum?: string;
+};
+
+export type TokenUpdateMetadataEvent = GenTokenModuleEvent<TokenOperationType.UpdateMetadata, TokenUpdateMetadataEventDetails>;
+
+/**
  * A union of all token module events.
  */
 export type TokenModuleEvent =
@@ -87,7 +99,8 @@ export type TokenModuleEvent =
     | TokenRemoveAllowListEvent
     | TokenRemoveDenyListEvent
     | TokenPauseEvent
-    | TokenUnpauseEvent;
+    | TokenUnpauseEvent
+    | TokenUpdateMetadataEvent;
 
 function parseTokenListUpdateEventDetails(decoded: unknown): TokenListUpdateEventDetails {
     if (typeof decoded !== 'object' || decoded === null) {
@@ -106,6 +119,14 @@ function parseTokenPauseEventDetails(decoded: unknown): TokenPauseEventDetails {
     }
 
     return decoded as TokenPauseEventDetails;
+}
+
+function parseTokenUpdateMetadataEventDetails(decoded: unknown): TokenUpdateMetadataEventDetails {
+    if (typeof decoded !== 'object' || decoded === null) {
+        throw new Error(`Invalid event details: ${JSON.stringify(decoded)}. Expected an object.`);
+    }
+
+    return decoded as TokenUpdateMetadataEventDetails;
 }
 
 /**
@@ -134,6 +155,8 @@ export function parseTokenModuleEvent(event: EncodedTokenModuleEvent): TokenModu
         case TokenOperationType.Pause:
         case TokenOperationType.Unpause:
             return { ...event, type: event.type, details: parseTokenPauseEventDetails(decoded) };
+        case TokenOperationType.UpdateMetadata:
+            return { ...event, type: event.type, details: parseTokenUpdateMetadataEventDetails(decoded) };
         default:
             return { ...event, details: decoded };
     }

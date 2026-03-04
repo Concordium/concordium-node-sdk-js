@@ -14,6 +14,7 @@ import {
     TokenRemoveDenyListOperation,
     TokenTransferOperation,
     TokenUnpauseOperation,
+    TokenUpdateMetadataOperation,
     UnknownTokenOperation,
     createTokenUpdatePayload,
     parseTokenUpdatePayload,
@@ -384,6 +385,60 @@ describe('PLT TokenOperation', () => {
         const parsed = parseTokenUpdatePayload(des);
         expect(parsed.operations).toEqual([pause]);
     });
+
+    it('(de)serializes update metadata operations correctly', () => {
+        const updateMetadata: TokenUpdateMetadataOperation = {
+            [TokenOperationType.UpdateMetadata]: {
+                url: 'https://example.com/token-metadata.json',
+                checksum: 'abc123',
+            },
+        };
+
+        const payload = createTokenUpdatePayload(token, updateMetadata);
+
+        // This is a CBOR encoded byte sequence representing the update metadata operation:
+        // - 81: An array of 1 item
+        // - a1: A map with 1 key-value pair
+        // - 6e: length of text is 14 bytes
+        // - 7570646174654d65746164617461: the actual "updateMetadata" text (75 70 64 61 74 65 4D 65 74 61 64 61 74 61)
+        // - A2: map with 2 key-value pairs
+        // - 63: key "url", length is 3 bytes
+        // - 75726C: the actual "url" text (75 72 6C)
+        // - 78 27: the value of the url, length is 39 bytes
+        // - 68747470733A2F2F6578616D706C652E636F6D2F746F6B656E2D6D657461646174612E6A736F6E # "https://example.com/token-metadata.json"
+        // - 68: key "checksum", length is 8 bytes
+        // - 636865636B73756D: the actual "checksum" text
+        // - 66: the value for the "checksum" key, length is 6 bytes
+        // - 616263313233                      # "abc123"
+
+        const expectedOperations = Buffer.from(
+            `
+            81
+              a1
+                6e 7570646174654D65746164617461
+            A2
+              63
+                75726C
+              78 27
+                68747470733A2F2F6578616D706C652E636F6D2F746F6B656E2D6D657461646174612E6A736F6E
+              68
+                636865636B73756D
+              66
+                616263313233
+            `.replace(/\s/g, ''),
+            'hex'
+        );
+        expect(payload.operations.toString()).toEqual(expectedOperations.toString('hex'));
+
+        const ser = serializeAccountTransactionPayload({ payload, type: AccountTransactionType.TokenUpdate });
+        const serPayload = ser.slice(1);
+        const des = new TokenUpdateHandler().deserialize(Cursor.fromBuffer(serPayload));
+        expect(des).toEqual(payload);
+
+        const parsed = parseTokenUpdatePayload(des);
+        expect(parsed.operations).toEqual([updateMetadata]);
+    });
+
 
     it('(de)serializes unknown operations correctly', () => {
         const unknown: UnknownTokenOperation = {

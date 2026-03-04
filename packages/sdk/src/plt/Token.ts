@@ -928,7 +928,17 @@ export async function updateMetadata(
     return sendOperations(token, sender, [operation], signer, metadata);
 }
 
-async function assignAdminRoles(
+/**
+ * Assigns admin roles to a token.
+ *
+ * @param {Token} token - The token to update.
+ * @param {TokenUpdateAdminRolesDetails} updateAdminRoleDetails - The details of the admin role updates.
+ * @param {AccountAddress.Type} sender - The account address of the sender.
+ * @param {AccountSigner} signer - The signer responsible for signing the transaction.
+ * @param {TokenUpdateMetadata} [metadata={ expiry: TransactionExpiry.futureMinutes(5) }] - The metadata for the token update.
+ * @returns A promise that resolves to the transaction hash.
+ */
+export async function assignAdminRoles(
     token: Token,
     updateAdminRoleDetails: TokenUpdateAdminRolesDetails,
     sender: AccountAddress.Type,
@@ -939,7 +949,17 @@ async function assignAdminRoles(
     return sendOperations(token, sender, [operation], signer, metadata);
 }
 
-async function revokeAdminRoles(
+/**
+ * Revokes admin roles from a token.
+ *
+ * @param {Token} token - The token to update.
+ * @param {TokenUpdateAdminRolesDetails} updateAdminRoleDetails - The details of the admin role updates.
+ * @param {AccountAddress.Type} sender - The account address of the sender.
+ * @param {AccountSigner} signer - The signer responsible for signing the transaction.
+ * @param {TokenUpdateMetadata} [metadata={ expiry: TransactionExpiry.futureMinutes(5) }] - The metadata for the token update.
+ * @returns A promise that resolves to the transaction hash.
+ */
+export async function revokeAdminRoles(
     token: Token,
     updateAdminRoleDetails: TokenUpdateAdminRolesDetails,
     sender: AccountAddress.Type,
@@ -948,35 +968,6 @@ async function revokeAdminRoles(
 ): Promise<TransactionHash.Type> {
     const operation: TokenRevokeAdminRolesOperation = { [TokenOperationType.RevokeAdminRoles]: updateAdminRoleDetails };
     return sendOperations(token, sender, [operation], signer, metadata);
-}
-
-/**
- * assign roles to admin or revoke roles from admin
- * @param {TokenOperationType} type - The type of operation, either `AssignAdminRoles` or `RevokeAdminRoles`.
- * @param {Token} token - The token to update.
- * @param {TokenUpdateAdminRolesDetails} updateAdminRoleDetails - role details to be processed
- * @param {AccountAddress.Type} sender - The account address of the sender.
- * @param {AccountSigner} signer - The signer responsible for signing the transaction.
- * @param {TokenUpdateMetadata} [metadata={ expiry: TransactionExpiry.futureMinutes(5) }] - The metadata for the token update.
- * @returns A promise that resolves to the transaction hash.
-
- */
-export async function updateAdminRoles(
-    type: TokenOperationType.AssignAdminRoles | TokenOperationType.RevokeAdminRoles,
-    token: Token,
-    updateAdminRoleDetails: TokenUpdateAdminRolesDetails,
-    sender: AccountAddress.Type,
-    signer: AccountSigner,
-    metadata?: TokenUpdateMetadata
-): Promise<TransactionHash.Type> {
-    switch (type) {
-        case TokenOperationType.AssignAdminRoles:
-            return assignAdminRoles(token, updateAdminRoleDetails, sender, signer, metadata);
-        case TokenOperationType.RevokeAdminRoles:
-            return revokeAdminRoles(token, updateAdminRoleDetails, sender, signer, metadata);
-        default:
-            throw new Error(`Unsupported operation type: ${type}`);
-    }
 }
 
 /**

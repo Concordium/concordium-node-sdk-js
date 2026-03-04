@@ -26,7 +26,6 @@ export enum TokenAdminRole {
     UpdateAllowList = 'allowList',
     UpdateDenyList = 'denyList',
     Pause = 'pause',
-    Unpause = 'unpause',
     UpdateMetadata = 'updateMetadata',
 }
 

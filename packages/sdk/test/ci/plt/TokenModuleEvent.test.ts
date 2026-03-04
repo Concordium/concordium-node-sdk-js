@@ -69,7 +69,6 @@ describe('PLT TokenModuleEvent', () => {
         expect(parsedEvent.details).toEqual({});
     });
 
- //******* */
     it('parses updateMetadata event', () => {
         const details: TokenUpdateMetadataEventDetails = {
             url: 'https://example.com/token-metadata.json',
@@ -87,8 +86,6 @@ describe('PLT TokenModuleEvent', () => {
         expect(parsedEvent.type).toEqual('updateMetadata');
         expect(parsedEvent.details).toEqual(details);
     });
-
-//******* */
 
     it('handles unknown events', () => {
         const unknownEvent: EncodedTokenModuleEvent = {

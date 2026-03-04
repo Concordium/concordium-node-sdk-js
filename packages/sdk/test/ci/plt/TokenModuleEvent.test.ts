@@ -1,11 +1,11 @@
-import { AccountAddress, EncodedTokenModuleEvent, TransactionEventTag } from '../../../src/index.ts';
+import { check } from 'prettier';
+import { AccountAddress, EncodedTokenModuleEvent, TokenMetadataUrl, TransactionEventTag } from '../../../src/index.ts';
 import {
     Cbor,
     CborAccountAddress,
     TokenId,
     TokenListUpdateEventDetails,
     TokenPauseEventDetails,
-    TokenUpdateMetadataEventDetails,
     parseTokenModuleEvent,
 } from '../../../src/plt/index.ts';
 
@@ -70,10 +70,9 @@ describe('PLT TokenModuleEvent', () => {
     });
 
     it('parses updateMetadata event', () => {
-        const details: TokenUpdateMetadataEventDetails = {
-            url: 'https://example.com/token-metadata.json',
-            checksum: 'abc123',
-        };
+        const checksum = new Uint8Array(32);
+        checksum.fill(1);
+        const details = TokenMetadataUrl.create('https://example.com/token-metadata.json', checksum);
 
         const validEvent: EncodedTokenModuleEvent = {
             tag: TransactionEventTag.TokenModuleEvent,

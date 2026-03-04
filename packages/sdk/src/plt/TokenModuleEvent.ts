@@ -1,7 +1,7 @@
 import { EncodedTokenModuleEvent, TransactionEventTag } from '../types.js';
 import { cborDecode } from '../types/cbor.js';
 import { TokenOperationType } from './TokenOperation.js';
-import { CborAccountAddress, TokenId } from './index.js';
+import { CborAccountAddress, TokenId, TokenMetadataUrl } from './index.js';
 
 type GenTokenModuleEvent<E extends TokenOperationType, T extends Object> = {
     /** The tag of the event. */
@@ -79,18 +79,11 @@ export type TokenPauseEvent = GenTokenModuleEvent<TokenOperationType.Pause, Toke
 export type TokenUnpauseEvent = GenTokenModuleEvent<TokenOperationType.Unpause, TokenPauseEventDetails>;
 
 /**
- * An event occuring as the result of an "updateMetadata" operation, describing the URL of the metadata and an optional checksum.
+ * An event occuring as the result of "updateMetadata" operation, describing the new metadata URL of the token.
  */
-export type TokenUpdateMetadataEventDetails = {
-    /** The URL of the metadata. */
-    url: string;
-    /** An optional SHA256 checksum of the metadata contents. */
-    checksum?: string;
-};
-
 export type TokenUpdateMetadataEvent = GenTokenModuleEvent<
     TokenOperationType.UpdateMetadata,
-    TokenUpdateMetadataEventDetails
+    TokenMetadataUrl.Type
 >;
 
 /**
@@ -124,12 +117,12 @@ function parseTokenPauseEventDetails(decoded: unknown): TokenPauseEventDetails {
     return decoded as TokenPauseEventDetails;
 }
 
-function parseTokenUpdateMetadataEventDetails(decoded: unknown): TokenUpdateMetadataEventDetails {
+function parseTokenUpdateMetadataEventDetails(decoded: unknown): TokenMetadataUrl.Type {
     if (typeof decoded !== 'object' || decoded === null) {
         throw new Error(`Invalid event details: ${JSON.stringify(decoded)}. Expected an object.`);
     }
 
-    return decoded as TokenUpdateMetadataEventDetails;
+    return decoded as TokenMetadataUrl.Type;
 }
 
 /**
@@ -159,7 +152,7 @@ export function parseTokenModuleEvent(event: EncodedTokenModuleEvent): TokenModu
         case TokenOperationType.Unpause:
             return { ...event, type: event.type, details: parseTokenPauseEventDetails(decoded) };
         case TokenOperationType.UpdateMetadata:
-            return { ...event, type: event.type, details: parseTokenUpdateMetadataEventDetails(decoded) };
+            return { ...event, type: event.type, details: TokenMetadataUrl.fromCBORValue(decoded) };
         default:
             return { ...event, details: decoded };
     }

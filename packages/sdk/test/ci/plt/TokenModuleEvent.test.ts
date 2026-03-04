@@ -5,8 +5,8 @@ import {
     TokenId,
     TokenListUpdateEventDetails,
     TokenPauseEventDetails,
-    parseTokenModuleEvent,
     TokenUpdateMetadataEventDetails,
+    parseTokenModuleEvent,
 } from '../../../src/plt/index.ts';
 
 describe('PLT TokenModuleEvent', () => {
@@ -74,7 +74,7 @@ describe('PLT TokenModuleEvent', () => {
             url: 'https://example.com/token-metadata.json',
             checksum: 'abc123',
         };
- 
+
         const validEvent: EncodedTokenModuleEvent = {
             tag: TransactionEventTag.TokenModuleEvent,
             tokenId: TokenId.fromString('PLT'),

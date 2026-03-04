@@ -88,7 +88,10 @@ export type TokenUpdateMetadataEventDetails = {
     checksum?: string;
 };
 
-export type TokenUpdateMetadataEvent = GenTokenModuleEvent<TokenOperationType.UpdateMetadata, TokenUpdateMetadataEventDetails>;
+export type TokenUpdateMetadataEvent = GenTokenModuleEvent<
+    TokenOperationType.UpdateMetadata,
+    TokenUpdateMetadataEventDetails
+>;
 
 /**
  * A union of all token module events.

@@ -86,12 +86,18 @@ export type TokenUpdateMetadataEvent = GenTokenModuleEvent<TokenOperationType.Up
 /**
  * An event occuring as the result of an "assignAdminRoles" operation, describing the target of the role assignment.
  */
-export type TokenAssignAdminRolesEvent = GenTokenModuleEvent<TokenOperationType.AssignAdminRoles, TokenUpdateAdminRolesDetails>;
+export type TokenAssignAdminRolesEvent = GenTokenModuleEvent<
+    TokenOperationType.AssignAdminRoles,
+    TokenUpdateAdminRolesDetails
+>;
 
 /**
  * An event occuring as the result of a "revokeAdminRoles" operation, describing the target of the role revocation.
  */
-export type TokenRevokeAdminRolesEvent = GenTokenModuleEvent<TokenOperationType.RevokeAdminRoles, TokenUpdateAdminRolesDetails>;
+export type TokenRevokeAdminRolesEvent = GenTokenModuleEvent<
+    TokenOperationType.RevokeAdminRoles,
+    TokenUpdateAdminRolesDetails
+>;
 
 /**
  * A union of all token module events.
@@ -131,7 +137,7 @@ function parseTokenUpdateAdminRolesEventDetails(decoded: unknown): TokenUpdateAd
         throw new Error(`Invalid event details: ${JSON.stringify(decoded)}. Expected an object.`);
     }
 
-    if(!('account' in decoded && CborAccountAddress.instanceOf(decoded.account))) {
+    if (!('account' in decoded && CborAccountAddress.instanceOf(decoded.account))) {
         throw new Error(`Invalid event details: ${JSON.stringify(decoded)}. Expected 'account'`);
     }
 
@@ -143,7 +149,7 @@ function parseTokenAssignAdminRolesEventDetails(decoded: unknown): TokenUpdateAd
         throw new Error(`Invalid event details: ${JSON.stringify(decoded)}. Expected an object.`);
     }
 
-    if(!('account' in decoded && CborAccountAddress.instanceOf(decoded.account))) {
+    if (!('account' in decoded && CborAccountAddress.instanceOf(decoded.account))) {
         throw new Error(`Invalid event details: ${JSON.stringify(decoded)}. Expected 'account'`);
     }
 

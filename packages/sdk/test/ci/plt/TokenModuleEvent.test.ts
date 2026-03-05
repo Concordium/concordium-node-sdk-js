@@ -1,4 +1,4 @@
-import { AccountAddress, EncodedTokenModuleEvent, TokenMetadataUrl, TransactionEventTag } from '../../../src/index.ts';
+import { AccountAddress, EncodedTokenModuleEvent, TokenAdminRole, TokenMetadataUrl, TokenUpdateAdminRolesDetails, TransactionEventTag } from '../../../src/index.ts';
 import {
     Cbor,
     CborAccountAddress,
@@ -85,6 +85,48 @@ describe('PLT TokenModuleEvent', () => {
         expect(parsedEvent.details).toEqual(details);
     });
 
+    it('parses assignAdminRoles event', () => {
+        const accountBytes = new Uint8Array(32).fill(0x20);
+        const details: TokenUpdateAdminRolesDetails = {
+            roles: [TokenAdminRole.UpdateAdminRoles],
+            account: CborAccountAddress.fromAccountAddress(AccountAddress.fromBuffer(accountBytes)),
+        };
+        const validEvent: EncodedTokenModuleEvent = {
+            tag: TransactionEventTag.TokenModuleEvent,
+            tokenId: TokenId.fromString('PLT'),
+            type: 'assignAdminRoles',
+            details: Cbor.encode(details),
+        };
+
+        const parsedEvent = parseTokenModuleEvent(validEvent)!;
+        expect(parsedEvent.type).toEqual('assignAdminRoles');
+        expect((parsedEvent.details as TokenUpdateAdminRolesDetails).roles).toEqual([TokenAdminRole.UpdateAdminRoles]);
+        expect((parsedEvent.details as TokenUpdateAdminRolesDetails).account.address.decodedAddress).toEqual(
+            new Uint8Array(32).fill(0x20)
+        );
+    });
+
+    it('parses revokeAdminRoles event', () => {
+        const accountBytes = new Uint8Array(32).fill(0x20);
+        const details: TokenUpdateAdminRolesDetails = {
+            roles: [TokenAdminRole.UpdateAdminRoles],
+            account: CborAccountAddress.fromAccountAddress(AccountAddress.fromBuffer(accountBytes)),
+        };
+        const validEvent: EncodedTokenModuleEvent = {
+            tag: TransactionEventTag.TokenModuleEvent,
+            tokenId: TokenId.fromString('PLT'),
+            type: 'revokeAdminRoles',
+            details: Cbor.encode(details),
+        };
+
+        const parsedEvent = parseTokenModuleEvent(validEvent)!;
+        expect(parsedEvent.type).toEqual('revokeAdminRoles');
+        expect((parsedEvent.details as TokenUpdateAdminRolesDetails).roles).toEqual([TokenAdminRole.UpdateAdminRoles]);
+        expect((parsedEvent.details as TokenUpdateAdminRolesDetails).account.address.decodedAddress).toEqual(
+            new Uint8Array(32).fill(0x20)
+        );
+    });
+
     it('handles unknown events', () => {
         const unknownEvent: EncodedTokenModuleEvent = {
             tag: TransactionEventTag.TokenModuleEvent,
@@ -136,4 +178,78 @@ describe('PLT TokenModuleEvent', () => {
         };
         expect(() => parseTokenModuleEvent(invalidEvent)).toThrowError(/null/);
     });
+
+    it('throws an error for null event details for updateMetadata events', () => {
+        const invalidEvent: EncodedTokenModuleEvent = {
+            tag: TransactionEventTag.TokenModuleEvent,
+            tokenId: TokenId.fromString('PLT'),
+            type: 'updateMetadata',
+            details: Cbor.encode(null),
+        };
+        expect(() => parseTokenModuleEvent(invalidEvent)).toThrowError("Invalid CBOR value for TokenMetadataUrl");
+    });
+
+    it('throws an error for missing url details for updateMetadata events', () => {
+        const invalidDetails = {
+            checksumSha256: new Uint8Array(32),
+            url: 123,
+        };
+
+        const invalidEvent: EncodedTokenModuleEvent = {
+            tag: TransactionEventTag.TokenModuleEvent,
+            tokenId: TokenId.fromString('PLT'),
+            type: 'updateMetadata',
+            details: Cbor.encode(invalidDetails),
+        };
+        expect(() => parseTokenModuleEvent(invalidEvent)).toThrowError("Missing or invalid \"url\" field in TokenMetadataUrl");
+    });
+
+    it('throws an error for null event details for revokeAdminRoles events', () => {
+        const invalidEvent: EncodedTokenModuleEvent = {
+            tag: TransactionEventTag.TokenModuleEvent,
+            tokenId: TokenId.fromString('PLT'),
+            type: 'revokeAdminRoles',
+            details: Cbor.encode(null),
+        };
+        expect(() => parseTokenModuleEvent(invalidEvent)).toThrowError("Invalid event details: null. Expected an object.");
+    });
+
+    it('throws an error for missing account for revokeAdminRoles events', () => {
+        const invalidDetails = {
+            roles: [TokenAdminRole.UpdateAdminRoles],
+        };
+
+        const invalidEvent: EncodedTokenModuleEvent = {
+            tag: TransactionEventTag.TokenModuleEvent,
+            tokenId: TokenId.fromString('PLT'),
+            type: 'revokeAdminRoles',
+            details: Cbor.encode(invalidDetails),
+        };
+        expect(() => parseTokenModuleEvent(invalidEvent)).toThrowError("Invalid event details: {\"roles\":[\"updateAdminRoles\"]}. Expected 'account'");
+    });
+
+    it('throws an error for null event details for assignAdminRoles events', () => {
+        const invalidEvent: EncodedTokenModuleEvent = {
+            tag: TransactionEventTag.TokenModuleEvent,
+            tokenId: TokenId.fromString('PLT'),
+            type: 'assignAdminRoles',
+            details: Cbor.encode(null),
+        };
+        expect(() => parseTokenModuleEvent(invalidEvent)).toThrowError("Invalid event details: null. Expected an object.");
+    });
+
+    it('throws an error for missing account for assignAdminRoles events', () => {
+        const invalidDetails = {
+            roles: [TokenAdminRole.UpdateAdminRoles],
+        };
+
+        const invalidEvent: EncodedTokenModuleEvent = {
+            tag: TransactionEventTag.TokenModuleEvent,
+            tokenId: TokenId.fromString('PLT'),
+            type: 'assignAdminRoles',
+            details: Cbor.encode(invalidDetails),
+        };
+        expect(() => parseTokenModuleEvent(invalidEvent)).toThrowError("Invalid event details: {\"roles\":[\"updateAdminRoles\"]}. Expected 'account'");
+    });
+
 });

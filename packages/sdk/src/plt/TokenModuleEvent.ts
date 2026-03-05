@@ -1,6 +1,6 @@
 import { EncodedTokenModuleEvent, TransactionEventTag } from '../types.js';
 import { cborDecode } from '../types/cbor.js';
-import { TokenOperationType } from './TokenOperation.js';
+import { TokenOperationType, TokenUpdateAdminRolesDetails } from './TokenOperation.js';
 import { CborAccountAddress, TokenId, TokenMetadataUrl } from './index.js';
 
 type GenTokenModuleEvent<E extends TokenOperationType, T extends Object> = {
@@ -84,6 +84,16 @@ export type TokenUnpauseEvent = GenTokenModuleEvent<TokenOperationType.Unpause, 
 export type TokenUpdateMetadataEvent = GenTokenModuleEvent<TokenOperationType.UpdateMetadata, TokenMetadataUrl.Type>;
 
 /**
+ * An event occuring as the result of an "assignAdminRoles" operation, describing the target of the role assignment.
+ */
+export type TokenAssignAdminRolesEvent = GenTokenModuleEvent<TokenOperationType.AssignAdminRoles, TokenUpdateAdminRolesDetails>;
+
+/**
+ * An event occuring as the result of a "revokeAdminRoles" operation, describing the target of the role revocation.
+ */
+export type TokenRevokeAdminRolesEvent = GenTokenModuleEvent<TokenOperationType.RevokeAdminRoles, TokenUpdateAdminRolesDetails>;
+
+/**
  * A union of all token module events.
  */
 export type TokenModuleEvent =
@@ -93,7 +103,9 @@ export type TokenModuleEvent =
     | TokenRemoveDenyListEvent
     | TokenPauseEvent
     | TokenUnpauseEvent
-    | TokenUpdateMetadataEvent;
+    | TokenUpdateMetadataEvent
+    | TokenAssignAdminRolesEvent
+    | TokenRevokeAdminRolesEvent;
 
 function parseTokenListUpdateEventDetails(decoded: unknown): TokenListUpdateEventDetails {
     if (typeof decoded !== 'object' || decoded === null) {
@@ -114,12 +126,28 @@ function parseTokenPauseEventDetails(decoded: unknown): TokenPauseEventDetails {
     return decoded as TokenPauseEventDetails;
 }
 
-function parseTokenUpdateMetadataEventDetails(decoded: unknown): TokenMetadataUrl.Type {
+function parseTokenUpdateAdminRolesEventDetails(decoded: unknown): TokenUpdateAdminRolesDetails {
     if (typeof decoded !== 'object' || decoded === null) {
         throw new Error(`Invalid event details: ${JSON.stringify(decoded)}. Expected an object.`);
     }
 
-    return decoded as TokenMetadataUrl.Type;
+    if(!('account' in decoded && CborAccountAddress.instanceOf(decoded.account))) {
+        throw new Error(`Invalid event details: ${JSON.stringify(decoded)}. Expected 'account'`);
+    }
+
+    return decoded as TokenUpdateAdminRolesDetails;
+}
+
+function parseTokenAssignAdminRolesEventDetails(decoded: unknown): TokenUpdateAdminRolesDetails {
+    if (typeof decoded !== 'object' || decoded === null) {
+        throw new Error(`Invalid event details: ${JSON.stringify(decoded)}. Expected an object.`);
+    }
+
+    if(!('account' in decoded && CborAccountAddress.instanceOf(decoded.account))) {
+        throw new Error(`Invalid event details: ${JSON.stringify(decoded)}. Expected 'account'`);
+    }
+
+    return decoded as TokenUpdateAdminRolesDetails;
 }
 
 /**
@@ -150,6 +178,10 @@ export function parseTokenModuleEvent(event: EncodedTokenModuleEvent): TokenModu
             return { ...event, type: event.type, details: parseTokenPauseEventDetails(decoded) };
         case TokenOperationType.UpdateMetadata:
             return { ...event, type: event.type, details: TokenMetadataUrl.fromCBORValue(decoded) };
+        case TokenOperationType.AssignAdminRoles:
+            return { ...event, type: event.type, details: parseTokenAssignAdminRolesEventDetails(decoded) };
+        case TokenOperationType.RevokeAdminRoles:
+            return { ...event, type: event.type, details: parseTokenUpdateAdminRolesEventDetails(decoded) };
         default:
             return { ...event, details: decoded };
     }

@@ -81,10 +81,7 @@ export type TokenUnpauseEvent = GenTokenModuleEvent<TokenOperationType.Unpause, 
 /**
  * An event occuring as the result of "updateMetadata" operation, describing the new metadata URL of the token.
  */
-export type TokenUpdateMetadataEvent = GenTokenModuleEvent<
-    TokenOperationType.UpdateMetadata,
-    TokenMetadataUrl.Type
->;
+export type TokenUpdateMetadataEvent = GenTokenModuleEvent<TokenOperationType.UpdateMetadata, TokenMetadataUrl.Type>;
 
 /**
  * A union of all token module events.

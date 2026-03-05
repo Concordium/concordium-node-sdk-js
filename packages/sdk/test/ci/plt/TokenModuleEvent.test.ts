@@ -1,4 +1,5 @@
 import { check } from 'prettier';
+
 import { AccountAddress, EncodedTokenModuleEvent, TokenMetadataUrl, TransactionEventTag } from '../../../src/index.ts';
 import {
     Cbor,

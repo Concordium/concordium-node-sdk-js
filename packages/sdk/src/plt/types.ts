@@ -1,3 +1,4 @@
+import * as BlockHash from '../types/BlockHash.js';
 import type { Cbor, TokenAmount, TokenId, TokenModuleReference } from './index.js';
 
 /**
@@ -73,4 +74,14 @@ export type CreatePLTPayload = {
     decimals: number;
     /** The module specific initialization parameters. */
     initializationParameters: Cbor.Type;
+};
+
+export type TokenAuthorizationsRequest = {
+    blockHash: BlockHash.Type;
+    tokenId: TokenId.Type;
+};
+
+export type TokenAuthorizations = {
+    tokenId: TokenId.Type;
+    details: Cbor.Type;
 };

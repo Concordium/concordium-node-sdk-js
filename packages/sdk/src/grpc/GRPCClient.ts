@@ -15,6 +15,7 @@ import { HealthClient } from '../grpc-api/v2/concordium/health.client.js';
 import * as GRPCKernel from '../grpc-api/v2/concordium/kernel.js';
 import { QueriesClient } from '../grpc-api/v2/concordium/service.client.js';
 import * as GRPC from '../grpc-api/v2/concordium/types.js';
+import { TokenAuthorizationsRequest } from '../grpc-api/v2/concordium/types.js';
 import * as PLT from '../plt/index.js';
 import { RawModuleSchema } from '../schemaTypes.js';
 import { serializeAccountTransactionPayload } from '../serialization.js';
@@ -1600,6 +1601,24 @@ export class ConcordiumGRPCClient {
         const blockHashInput = getBlockHashInput(blockHash);
         const tokenIds = this.client.getTokenList(blockHashInput, { abort: abortSignal }).responses;
         return mapStream(tokenIds, PLT.TokenId.fromProto);
+    }
+
+    /**
+     * Get the authorizations of a given token in the given block
+     * @param request tokenAuthorizationsRequest structure containing the token ID and block hash
+     * @returns
+     */
+    async getTokenAuthorizations(request: PLT.TokenAuthorizationsRequest): Promise<PLT.TokenAuthorizations> {
+        const blockHashInput = getBlockHashInput(request.blockHash);
+
+        const req: TokenAuthorizationsRequest = {
+            tokenId: PLT.TokenId.toProto(request.tokenId),
+            blockHash: blockHashInput,
+        };
+
+        const result = await this.client.getTokenAuthorizations(req);
+
+        return translate.trTokenAuthorizations(result.response);
     }
 }
 

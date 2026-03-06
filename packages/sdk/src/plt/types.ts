@@ -1,5 +1,5 @@
-import type { Cbor, TokenAmount, TokenId, TokenModuleReference } from './index.js';
 import * as BlockHash from '../types/BlockHash.js';
+import type { Cbor, TokenAmount, TokenId, TokenModuleReference } from './index.js';
 
 /**
  * Represents a protocol level token state for an account.
@@ -79,9 +79,9 @@ export type CreatePLTPayload = {
 export type TokenAuthorizationsRequest = {
     blockHash: BlockHash.Type;
     tokenId: TokenId.Type;
-}
+};
 
 export type TokenAuthorizations = {
     tokenId: TokenId.Type;
     details: Cbor.Type;
-}
+};

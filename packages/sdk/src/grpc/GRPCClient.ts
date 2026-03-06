@@ -38,6 +38,7 @@ import type { BlockItemStatus, BlockItemSummary } from '../types/blockItemSummar
 import { countSignatures, isHex, isValidIp, mapRecord, mapStream, unwrap } from '../util.js';
 import * as translate from './translation.js';
 import type { Upward } from './upward.js';
+import { TokenAuthorizationsRequest } from '../grpc-api/v2/concordium/types.js';
 
 /**
  * @hidden
@@ -1600,6 +1601,24 @@ export class ConcordiumGRPCClient {
         const blockHashInput = getBlockHashInput(blockHash);
         const tokenIds = this.client.getTokenList(blockHashInput, { abort: abortSignal }).responses;
         return mapStream(tokenIds, PLT.TokenId.fromProto);
+    }
+
+    /**
+     * Get the authorizations of a given token in the given block
+     * @param request tokenAuthorizationsRequest structure containing the token ID and block hash
+     * @returns 
+     */
+    async getTokenAuthorizations(request: PLT.TokenAuthorizationsRequest): Promise<PLT.TokenAuthorizations> {
+        const blockHashInput = getBlockHashInput(request.blockHash);
+
+        const req: TokenAuthorizationsRequest = {
+             tokenId: PLT.TokenId.toProto(request.tokenId),
+             blockHash: blockHashInput,
+        };
+
+        const result = await this.client.getTokenAuthorizations(req);
+
+        return translate.trTokenAuthorizations(result.response);
     }
 }
 

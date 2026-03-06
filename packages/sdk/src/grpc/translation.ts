@@ -2784,3 +2784,10 @@ export function BlocksAtHeightRequestToV2(request: SDK.BlocksAtHeightRequest): G
         };
     }
 }
+
+export function trTokenAuthorizations(tokenAuthorizations: GRPC_PLT.TokenAuthorizations ): PLT.TokenAuthorizations {
+    return {
+        tokenId: PLT.TokenId.fromProto(unwrap(tokenAuthorizations.tokenId)),
+        details: PLT.Cbor.fromProto(unwrap(tokenAuthorizations.details)),
+    };
+}

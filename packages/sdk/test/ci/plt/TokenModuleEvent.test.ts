@@ -94,8 +94,9 @@ describe('PLT TokenModuleEvent', () => {
 
     it('parses updateMetadata event against a FIXED hex string', () => {
         // got this hex by running the Cbor.encode(details) once with details created from TokenMetadata.create and checksum, then copying the output.
-        const fixedHex = 'a26375726c782768747470733a2f2f6578616d706c652e636f6d2f746f6b656e2d6d657461646174612e6a736f6e6e636865636b73756d53686132353658200101010101010101010101010101010101010101010101010101010101010101';
-        
+        const fixedHex =
+            'a26375726c782768747470733a2f2f6578616d706c652e636f6d2f746f6b656e2d6d657461646174612e6a736f6e6e636865636b73756d53686132353658200101010101010101010101010101010101010101010101010101010101010101';
+
         const validEvent: EncodedTokenModuleEvent = {
             tag: TransactionEventTag.TokenModuleEvent,
             tokenId: TokenId.fromString('PLT'),
@@ -104,7 +105,7 @@ describe('PLT TokenModuleEvent', () => {
         };
 
         const parsedEvent = parseTokenModuleEvent(validEvent)!;
-        
+
         expect(parsedEvent.type).toEqual('updateMetadata');
         const details = parsedEvent.details as TokenMetadataUrl.Type;
         expect(details.url).toEqual('https://example.com/token-metadata.json');
@@ -133,7 +134,8 @@ describe('PLT TokenModuleEvent', () => {
     });
 
     it('parses assignAdminRoles event against a FIXED hex string', () => {
-        const fixedHex = 'a265726f6c6573817075706461746541646d696e526f6c6573676163636f756e74d99d73a201d99d71a1011903970358202020202020202020202020202020202020202020202020202020202020202020';
+        const fixedHex =
+            'a265726f6c6573817075706461746541646d696e526f6c6573676163636f756e74d99d73a201d99d71a1011903970358202020202020202020202020202020202020202020202020202020202020202020';
 
         const validEvent: EncodedTokenModuleEvent = {
             tag: TransactionEventTag.TokenModuleEvent,
@@ -172,7 +174,8 @@ describe('PLT TokenModuleEvent', () => {
     });
 
     it('parses revokeAdminRoles event against a FIXED hex string', () => {
-        const fixedHex = 'a265726f6c6573817075706461746541646d696e526f6c6573676163636f756e74d99d73a201d99d71a1011903970358202020202020202020202020202020202020202020202020202020202020202020';
+        const fixedHex =
+            'a265726f6c6573817075706461746541646d696e526f6c6573676163636f756e74d99d73a201d99d71a1011903970358202020202020202020202020202020202020202020202020202020202020202020';
         const validEvent: EncodedTokenModuleEvent = {
             tag: TransactionEventTag.TokenModuleEvent,
             tokenId: TokenId.fromString('PLT'),

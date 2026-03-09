@@ -92,6 +92,25 @@ describe('PLT TokenModuleEvent', () => {
         expect(parsedEvent.details).toEqual(details);
     });
 
+    it('parses updateMetadata event against a FIXED hex string', () => {
+        // got this hex by running the Cbor.encode(details) once with details created from TokenMetadata.create and checksum, then copying the output.
+        const fixedHex = 'a26375726c782768747470733a2f2f6578616d706c652e636f6d2f746f6b656e2d6d657461646174612e6a736f6e6e636865636b73756d53686132353658200101010101010101010101010101010101010101010101010101010101010101';
+        
+        const validEvent: EncodedTokenModuleEvent = {
+            tag: TransactionEventTag.TokenModuleEvent,
+            tokenId: TokenId.fromString('PLT'),
+            type: 'updateMetadata',
+            details: Cbor.fromHexString(fixedHex),
+        };
+
+        const parsedEvent = parseTokenModuleEvent(validEvent)!;
+        
+        expect(parsedEvent.type).toEqual('updateMetadata');
+        const details = parsedEvent.details as TokenMetadataUrl.Type;
+        expect(details.url).toEqual('https://example.com/token-metadata.json');
+        expect(Buffer.from(details.checksumSha256!).toString('hex')).toEqual('01'.repeat(32));
+    });
+
     it('parses assignAdminRoles event', () => {
         const accountBytes = new Uint8Array(32).fill(0x20);
         const details: TokenUpdateAdminRolesDetails = {
@@ -113,6 +132,24 @@ describe('PLT TokenModuleEvent', () => {
         );
     });
 
+    it('parses assignAdminRoles event against a FIXED hex string', () => {
+        const fixedHex = 'a265726f6c6573817075706461746541646d696e526f6c6573676163636f756e74d99d73a201d99d71a1011903970358202020202020202020202020202020202020202020202020202020202020202020';
+
+        const validEvent: EncodedTokenModuleEvent = {
+            tag: TransactionEventTag.TokenModuleEvent,
+            tokenId: TokenId.fromString('PLT'),
+            type: 'assignAdminRoles',
+            details: Cbor.fromHexString(fixedHex),
+        };
+
+        const parsedEvent = parseTokenModuleEvent(validEvent)!;
+        expect(parsedEvent.type).toEqual('assignAdminRoles');
+        expect((parsedEvent.details as TokenUpdateAdminRolesDetails).roles).toEqual([TokenAdminRole.UpdateAdminRoles]);
+        expect((parsedEvent.details as TokenUpdateAdminRolesDetails).account.address.decodedAddress).toEqual(
+            new Uint8Array(32).fill(0x20)
+        );
+    });
+
     it('parses revokeAdminRoles event', () => {
         const accountBytes = new Uint8Array(32).fill(0x20);
         const details: TokenUpdateAdminRolesDetails = {
@@ -124,6 +161,23 @@ describe('PLT TokenModuleEvent', () => {
             tokenId: TokenId.fromString('PLT'),
             type: 'revokeAdminRoles',
             details: Cbor.encode(details),
+        };
+
+        const parsedEvent = parseTokenModuleEvent(validEvent)!;
+        expect(parsedEvent.type).toEqual('revokeAdminRoles');
+        expect((parsedEvent.details as TokenUpdateAdminRolesDetails).roles).toEqual([TokenAdminRole.UpdateAdminRoles]);
+        expect((parsedEvent.details as TokenUpdateAdminRolesDetails).account.address.decodedAddress).toEqual(
+            new Uint8Array(32).fill(0x20)
+        );
+    });
+
+    it('parses revokeAdminRoles event against a FIXED hex string', () => {
+        const fixedHex = 'a265726f6c6573817075706461746541646d696e526f6c6573676163636f756e74d99d73a201d99d71a1011903970358202020202020202020202020202020202020202020202020202020202020202020';
+        const validEvent: EncodedTokenModuleEvent = {
+            tag: TransactionEventTag.TokenModuleEvent,
+            tokenId: TokenId.fromString('PLT'),
+            type: 'revokeAdminRoles',
+            details: Cbor.fromHexString(fixedHex),
         };
 
         const parsedEvent = parseTokenModuleEvent(validEvent)!;

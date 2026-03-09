@@ -9,6 +9,7 @@ import {
     TokenAssignAdminRolesOperation,
     TokenBurnOperation,
     TokenId,
+    TokenMetadataUrl,
     TokenMintOperation,
     TokenOperationType,
     TokenPauseOperation,
@@ -390,11 +391,13 @@ describe('PLT TokenOperation', () => {
     });
 
     it('(de)serializes update metadata operations correctly', () => {
+        const checksum = new Uint8Array(32);
+        checksum.fill(1);
         const updateMetadata: TokenUpdateMetadataOperation = {
-            [TokenOperationType.UpdateMetadata]: {
-                url: 'https://example.com/token-metadata.json',
-                checksum: 'abc123',
-            },
+            [TokenOperationType.UpdateMetadata]: 
+                TokenMetadataUrl.create(
+                    'https://example.com/token-metadata.json',
+                    checksum),
         };
 
         const payload = createTokenUpdatePayload(token, updateMetadata);
@@ -410,9 +413,9 @@ describe('PLT TokenOperation', () => {
         // - 78 27: the value of the url, length is 39 bytes
         // - 68747470733A2F2F6578616D706C652E636F6D2F746F6B656E2D6D657461646174612E6A736F6E # "https://example.com/token-metadata.json"
         // - 68: key "checksum", length is 8 bytes
-        // - 636865636B73756D: the actual "checksum" text
-        // - 66: the value for the "checksum" key, length is 6 bytes
-        // - 616263313233                      # "abc123"
+        // - 53686132353658: the actual "checksum" text
+        // - 20: the value for the "checksum" key, length is 32 bytes
+        // - 0101010101010101010101010101010101010101010101010101010101010101
 
         const expectedOperations = Buffer.from(
             `
@@ -424,10 +427,10 @@ describe('PLT TokenOperation', () => {
                 75726C
               78 27
                 68747470733A2F2F6578616D706C652E636F6D2F746F6B656E2D6D657461646174612E6A736F6E
-              68
+              6E
                 636865636B73756D
-              66
-                616263313233
+              53
+                686132353658200101010101010101010101010101010101010101010101010101010101010101
             `.replace(/\s/g, ''),
             'hex'
         );

@@ -1,5 +1,5 @@
 import { TokenUpdatePayload } from '../types.js';
-import { Cbor, CborAccountAddress, CborMemo, TokenAmount, TokenId } from './index.js';
+import { Cbor, CborAccountAddress, CborMemo, TokenAmount, TokenId, TokenMetadataUrl } from './index.js';
 
 /**
  * Enum representing the types of token operations.
@@ -42,16 +42,6 @@ export type TokenTransfer = {
     /** An optional memo for the transfer. A string will be CBOR encoded, while raw bytes are included in the
      * transaction as is. */
     memo?: Memo;
-};
-
-/**
- * URL identifies a metadata together with an optional sha256 checksum of the contents of the metadata
- */
-export type MetadataUrl = {
-    /** The URL of the metadata. */
-    url: string;
-    /** An optional SHA256 checksum of the metadata contents. */
-    checksum?: string;
 };
 
 /**
@@ -137,7 +127,7 @@ export type TokenUnpauseOperation = TokenOperationGen<TokenOperationType.Unpause
 /**
  * Represents an operation to update the metadata url of a token.
  */
-export type TokenUpdateMetadataOperation = TokenOperationGen<TokenOperationType.UpdateMetadata, MetadataUrl>;
+export type TokenUpdateMetadataOperation = TokenOperationGen<TokenOperationType.UpdateMetadata, TokenMetadataUrl.Type>;
 
 /**
  * Represents an operation to assign an admin role to an account.

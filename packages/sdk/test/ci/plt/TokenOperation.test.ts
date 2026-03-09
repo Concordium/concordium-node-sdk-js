@@ -394,10 +394,10 @@ describe('PLT TokenOperation', () => {
         const checksum = new Uint8Array(32);
         checksum.fill(1);
         const updateMetadata: TokenUpdateMetadataOperation = {
-            [TokenOperationType.UpdateMetadata]: 
-                TokenMetadataUrl.create(
-                    'https://example.com/token-metadata.json',
-                    checksum),
+            [TokenOperationType.UpdateMetadata]: TokenMetadataUrl.create(
+                'https://example.com/token-metadata.json',
+                checksum
+            ),
         };
 
         const payload = createTokenUpdatePayload(token, updateMetadata);

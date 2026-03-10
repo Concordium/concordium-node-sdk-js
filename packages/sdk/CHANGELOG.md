@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Removed additional field from TokenModuleAccountState type
+
 ## 12.0.2
 
 ### Changed

@@ -7,7 +7,6 @@ import { bail } from '../util.js';
 import {
     Cbor,
     CborAccountAddress,
-    MetadataUrl,
     TokenAddAllowListOperation,
     TokenAddDenyListOperation,
     TokenAmount,
@@ -15,6 +14,7 @@ import {
     TokenBurnOperation,
     TokenId,
     TokenInfo,
+    TokenMetadataUrl,
     TokenMintOperation,
     TokenModuleReference,
     TokenModuleState,
@@ -911,15 +911,15 @@ export async function unpause(
  * Updates the metadata URL of a token.
  *
  * @param {Token} token - The token to update.
- * @param {MetadataUrl} metadataUrl - The new metadata URL.
+ * @param {TokenMetadataUrl.Type} metadataUrl - The new metadata URL.
  * @param {AccountAddress.Type} sender - The account address of the sender.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @param {TokenUpdateMetadata} [metadata={ expiry: TransactionExpiry.futureMinutes(5) }] - The metadata for the token update.
  * @returns A promise that resolves to the transaction hash.
  */
-export async function updateMetadata(
+export function updateMetadata(
     token: Token,
-    metadataUrl: MetadataUrl,
+    metadataUrl: TokenMetadataUrl.Type,
     sender: AccountAddress.Type,
     signer: AccountSigner,
     metadata?: TokenUpdateMetadata
@@ -938,7 +938,7 @@ export async function updateMetadata(
  * @param {TokenUpdateMetadata} [metadata={ expiry: TransactionExpiry.futureMinutes(5) }] - The metadata for the token update.
  * @returns A promise that resolves to the transaction hash.
  */
-export async function assignAdminRoles(
+export function assignAdminRoles(
     token: Token,
     updateAdminRoleDetails: TokenUpdateAdminRolesDetails,
     sender: AccountAddress.Type,
@@ -959,7 +959,7 @@ export async function assignAdminRoles(
  * @param {TokenUpdateMetadata} [metadata={ expiry: TransactionExpiry.futureMinutes(5) }] - The metadata for the token update.
  * @returns A promise that resolves to the transaction hash.
  */
-export async function revokeAdminRoles(
+export function revokeAdminRoles(
     token: Token,
     updateAdminRoleDetails: TokenUpdateAdminRolesDetails,
     sender: AccountAddress.Type,

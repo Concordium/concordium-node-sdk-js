@@ -1,5 +1,5 @@
 import { TokenUpdatePayload } from '../types.js';
-import { Cbor, CborAccountAddress, CborMemo, TokenAmount, TokenId } from './index.js';
+import { Cbor, CborAccountAddress, CborMemo, TokenAmount, TokenId, TokenMetadataUrl } from './index.js';
 
 /**
  * Enum representing the types of token operations.
@@ -14,6 +14,23 @@ export enum TokenOperationType {
     RemoveDenyList = 'removeDenyList',
     Pause = 'pause',
     Unpause = 'unpause',
+    UpdateMetadata = 'updateMetadata',
+    AssignAdminRoles = 'assignAdminRoles',
+    RevokeAdminRoles = 'revokeAdminRoles',
+}
+
+/**
+ * The different The different admin roles defined for the current token module implementation.
+ * Each role gives access to specific administrative operations.
+ */
+export enum TokenAdminRole {
+    UpdateAdminRoles = 'updateAdminRoles', //Gives authority to perform `token-assign-admin-roles` and `token-revoke-admin-roles` operations.
+    Mint = 'mint', //Gives authority to perform `token-mint` operations.
+    Burn = 'burn', //Gives authority to perform `token-burn` operations.
+    UpdateAllowList = 'allowList', //Gives authority to perform `token-add-allow-list` and `token-remove-allow-list` operations.
+    UpdateDenyList = 'denyList', //Gives authority to perform `token-add-deny-list` and `token-remove-deny-list` operations.
+    Pause = 'pause', //Gives authority to perform `token-pause` and `token-unpause` operations.
+    UpdateMetadata = 'updateMetadata', //Gives authority to perform `token-update-metadata` operations.
 }
 
 export type Memo = CborMemo.Type | Uint8Array;
@@ -29,6 +46,14 @@ export type TokenTransfer = {
     /** An optional memo for the transfer. A string will be CBOR encoded, while raw bytes are included in the
      * transaction as is. */
     memo?: Memo;
+};
+
+/**
+ * The details of the `token-assign-admin-roles` and `token-revoke-admin-roles` operations
+ */
+export type TokenUpdateAdminRolesDetails = {
+    roles: TokenAdminRole[]; //The admin roles to update.
+    account: CborAccountAddress.Type; //The account to update admin for
 };
 
 /**
@@ -104,6 +129,32 @@ export type TokenPauseOperation = TokenOperationGen<TokenOperationType.Pause, {}
 export type TokenUnpauseOperation = TokenOperationGen<TokenOperationType.Unpause, {}>;
 
 /**
+ * Represents an operation to update the metadata url of a token.
+ */
+export type TokenUpdateMetadataOperation = TokenOperationGen<TokenOperationType.UpdateMetadata, TokenMetadataUrl.Type>;
+
+/**
+ * Represents an operation to assign an admin role to an account.
+ */
+export type TokenAssignAdminRolesOperation = TokenOperationGen<
+    TokenOperationType.AssignAdminRoles,
+    TokenUpdateAdminRolesDetails
+>;
+
+/**
+ * Represents an operation to revoke an admin role from an account.
+ */
+export type TokenRevokeAdminRolesOperation = TokenOperationGen<
+    TokenOperationType.RevokeAdminRoles,
+    TokenUpdateAdminRolesDetails
+>;
+
+/**
+ * Represents an operation to update admin roles for an account, which can be either assigning or revoking roles.
+ */
+export type TokenUpdateAdminRoleOperation = TokenAssignAdminRolesOperation | TokenRevokeAdminRolesOperation;
+
+/**
  * Union type representing all possible operations for a token.
  */
 export type TokenOperation =
@@ -115,7 +166,9 @@ export type TokenOperation =
     | TokenAddDenyListOperation
     | TokenRemoveDenyListOperation
     | TokenPauseOperation
-    | TokenUnpauseOperation;
+    | TokenUnpauseOperation
+    | TokenUpdateMetadataOperation
+    | TokenUpdateAdminRoleOperation;
 
 /**
  * Creates a payload for token operations.

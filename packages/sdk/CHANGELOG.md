@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Token operations for updating metadata, assigning and revoking admin roles have been added.
+
 ## 12.0.2
 
 ### Changed

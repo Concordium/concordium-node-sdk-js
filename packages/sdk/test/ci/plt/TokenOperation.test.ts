@@ -4,16 +4,21 @@ import {
     CborAccountAddress,
     TokenAddAllowListOperation,
     TokenAddDenyListOperation,
+    TokenAdminRole,
     TokenAmount,
+    TokenAssignAdminRolesOperation,
     TokenBurnOperation,
     TokenId,
+    TokenMetadataUrl,
     TokenMintOperation,
     TokenOperationType,
     TokenPauseOperation,
     TokenRemoveAllowListOperation,
     TokenRemoveDenyListOperation,
+    TokenRevokeAdminRolesOperation,
     TokenTransferOperation,
     TokenUnpauseOperation,
+    TokenUpdateMetadataOperation,
     UnknownTokenOperation,
     createTokenUpdatePayload,
     parseTokenUpdatePayload,
@@ -34,13 +39,13 @@ describe('PLT TokenOperation', () => {
     // - d99d73: A tagged (40307) item with a map (a2) containing:
     // - a2: A map with 2 key-value pairs
     //   - 01: Key 1.
-    //   - d99d71: A tagged (40305) item containing:
-    //   - a1: A map with 1 key-value pair
-    //     - 01: Key 1.
-    //     - 190397: Uint16(919).
-    //   - 03: Key 3.
-    //   - 5820: A byte string of length 32, representing a 32-byte identifier.
-    //   - 151515151515151515151515151515151515151515151515151515151515151: The account address
+    //      - d99d71: A tagged (40305) item containing:
+    //          - a1: A map with 1 key-value pair
+    //          - 01: Key 1.
+    //          - 190397: Uint16(919).
+    //   - 03: Key 3, payload
+    //      - 5820: A byte string of length 32, representing a 32-byte identifier.
+    //      - 151515151515151515151515151515151515151515151515151515151515151: The account address
     const testAccountAddressCbor = `
       d99d73 a2
         01 d99d71 a1
@@ -383,6 +388,187 @@ describe('PLT TokenOperation', () => {
 
         const parsed = parseTokenUpdatePayload(des);
         expect(parsed.operations).toEqual([pause]);
+    });
+
+    it('(de)serializes update metadata operations correctly', () => {
+        const checksum = new Uint8Array(32);
+        checksum.fill(1);
+        const updateMetadata: TokenUpdateMetadataOperation = {
+            [TokenOperationType.UpdateMetadata]: TokenMetadataUrl.create(
+                'https://example.com/token-metadata.json',
+                checksum
+            ),
+        };
+
+        const payload = createTokenUpdatePayload(token, updateMetadata);
+
+        // This is a CBOR encoded byte sequence representing the update metadata operation:
+        // - 81: An array of 1 item
+        // - a1: A map with 1 key-value pair
+        // - 6e: length of text is 14 bytes
+        // - 7570646174654d65746164617461: the actual "updateMetadata" text (75 70 64 61 74 65 4D 65 74 61 64 61 74 61)
+        // - A2: map with 2 key-value pairs
+        // - 63: key "url", length is 3 bytes
+        // - 75726C: the actual "url" text (75 72 6C)
+        // - 78 27: the value of the url, length is 39 bytes
+        // - 68747470733A2F2F6578616D706C652E636F6D2F746F6B656E2D6D657461646174612E6A736F6E # "https://example.com/token-metadata.json"
+        // - 68: key "checksum", length is 8 bytes
+        // - 53686132353658: the actual "checksum" text
+        // - 20: the value for the "checksum" key, length is 32 bytes
+        // - 0101010101010101010101010101010101010101010101010101010101010101
+
+        const expectedOperations = Buffer.from(
+            `
+            81
+              a1
+                6e 7570646174654D65746164617461
+            A2
+              63
+                75726C
+              78 27
+                68747470733A2F2F6578616D706C652E636F6D2F746F6B656E2D6D657461646174612E6A736F6E
+              6E
+                636865636B73756D
+              53
+                686132353658200101010101010101010101010101010101010101010101010101010101010101
+            `.replace(/\s/g, ''),
+            'hex'
+        );
+        expect(payload.operations.toString()).toEqual(expectedOperations.toString('hex'));
+
+        const ser = serializeAccountTransactionPayload({ payload, type: AccountTransactionType.TokenUpdate });
+        const serPayload = ser.slice(1);
+        const des = new TokenUpdateHandler().deserialize(Cursor.fromBuffer(serPayload));
+        expect(des).toEqual(payload);
+
+        const parsed = parseTokenUpdatePayload(des);
+        expect(parsed.operations).toEqual([updateMetadata]);
+    });
+
+    it('(de)serializes assign admin roles operation correctly', () => {
+        const assignAdminRoles: TokenAssignAdminRolesOperation = {
+            [TokenOperationType.AssignAdminRoles]: {
+                roles: [TokenAdminRole.UpdateAdminRoles],
+                account: testAccountAddress,
+            },
+        };
+
+        const payload = createTokenUpdatePayload(token, assignAdminRoles);
+
+        // This is a CBOR encoded byte sequence representing the assign admin roles operation:
+        // - 81: An array of 1 item
+        // - a1: A map with 1 key-value pairs
+        // - 70: key "assignAdminRoles", length is 16 bytes
+        // - 61737369676e41646d696e526f6c6573: A string key "assignAdminRoles" (in UTF-8)
+        // - a2: map with 2 key-value pairs
+        // - 65: key "roles", length is 5 bytes
+        // - 726f6c6573: the actual "roles" text (72 6F 6C 65 73)
+        // - 81: An array of 1 item
+        // - 70: "updateAdminRoles", length is 16 bytes
+        // - 75706461746541646d696e526f6c6573: value is "updateAdminRoles"
+        // - 67: key "account", length is 7 bytes
+        // - 6163636f756e74: the actual "account" text (61 63 63 6F 75 6E 74)
+        // - d99d73 a2 01 d99d71 a1 01 190397 03 5820: A tagged (40307) item with a map (a2) containing:
+        // - 01: Key 1.
+        //  - d99d71: A tagged (40305) item containing:
+        //      - a1: A map with 1 key-value pair
+        //          - 01: Key 1.
+        //          - 190397: Uint16(919).
+        // - 03: Key 3, payload
+        //      - 58 20: the account address, length is 32 bytes
+        //      - 151515151515151515151515151515151515151515151515151515151515151
+        const expectedOperations = Buffer.from(
+            `
+            81
+              a1
+                    70
+                        61737369676e41646d696e526f6c6573
+                    a2
+                        65
+                            726f6c6573
+                        81
+                            70 
+                            75706461746541646d696e526f6c6573                            
+                    67
+                        6163636f756e74
+                    d99d73a201d99d71a10119039703
+                    5820
+                        1515151515151515151515151515151515151515151515151515151515151515
+            `.replace(/\s/g, ''),
+            'hex'
+        );
+        expect(payload.operations.toString()).toEqual(expectedOperations.toString('hex'));
+
+        const ser = serializeAccountTransactionPayload({ payload, type: AccountTransactionType.TokenUpdate });
+        const serPayload = ser.slice(1);
+        const des = new TokenUpdateHandler().deserialize(Cursor.fromBuffer(serPayload));
+        expect(des).toEqual(payload);
+
+        const parsed = parseTokenUpdatePayload(des);
+        expect(parsed.operations).toEqual([assignAdminRoles]);
+    });
+
+    it('(de)serializes revoke admin roles operation correctly', () => {
+        const revokeAdminRoles: TokenRevokeAdminRolesOperation = {
+            [TokenOperationType.RevokeAdminRoles]: {
+                roles: [TokenAdminRole.UpdateAdminRoles],
+                account: testAccountAddress,
+            },
+        };
+
+        const payload = createTokenUpdatePayload(token, revokeAdminRoles);
+
+        // This is a CBOR encoded byte sequence representing the revoke admin roles operation:
+        // - 81: An array of 1 item
+        // - a1: A map with 1 key-value pairs
+        // - 70: key "revokeAdminRoles", length is 16 bytes
+        // - 7265766f6b6541646d696e526f6c6573: A string key "revokeAdminRoles" (in UTF-8)
+        // - a2: map with 2 key-value pairs
+        // - 65: key "roles", length is 5 bytes
+        // - 726f6c6573: the actual "roles" text (72 6F 6C 65 73)
+        // - 81: An array of 1 item
+        // - 70: "updateAdminRoles", length is 16 bytes
+        // - 75706461746541646d696e526f6c6573: value is "updateAdminRoles"
+        // - 67: key "account", length is 7 bytes
+        // - 6163636f756e74: the actual "account" text (61 63 63 6F 75 6E 74)
+        // - d99d73 a2 01 d99d71 a1 01 190397 03 5820: A tagged (40307) item with a map (a2) containing:
+        // - 01: Key 1.
+        //  - d99d71: A tagged (40305) item containing:
+        //      - a1: A map with 1 key-value pair
+        //          - 01: Key 1.
+        //          - 190397: Uint16(919).
+        // - 03: Key 3, payload
+        //      - 58 20: the account address, length is 32 bytes
+        //      - 151515151515151515151515151515151515151515151515151515151515151
+        const expectedOperations = Buffer.from(
+            `
+            81
+              a1
+                    70
+                        7265766f6b6541646d696e526f6c6573
+                    a2
+                        65
+                            726f6c6573
+                        81
+                            70 
+                            75706461746541646d696e526f6c6573                            
+                    67
+                        6163636f756e74
+                    d99d73a201d99d71a10119039703
+                    5820
+                        1515151515151515151515151515151515151515151515151515151515151515
+            `.replace(/\s/g, ''),
+            'hex'
+        );
+        expect(payload.operations.toString()).toEqual(expectedOperations.toString('hex'));
+
+        const ser = serializeAccountTransactionPayload({ payload, type: AccountTransactionType.TokenUpdate });
+        const serPayload = ser.slice(1);
+        const des = new TokenUpdateHandler().deserialize(Cursor.fromBuffer(serPayload));
+        expect(des).toEqual(payload);
+
+        const parsed = parseTokenUpdatePayload(des);
+        expect(parsed.operations).toEqual([revokeAdminRoles]);
     });
 
     it('(de)serializes unknown operations correctly', () => {

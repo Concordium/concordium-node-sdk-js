@@ -24,13 +24,13 @@ export enum TokenOperationType {
  * Each role gives access to specific administrative operations.
  */
 export enum TokenAdminRole {
-    UpdateAdminRoles = 'updateAdminRoles',  //Gives authority to perform `token-assign-admin-roles` and `token-revoke-admin-roles` operations.
-    Mint = 'mint',  //Gives authority to perform `token-mint` operations.
-    Burn = 'burn',  //Gives authority to perform `token-burn` operations.
-    UpdateAllowList = 'allowList',  //Gives authority to perform `token-add-allow-list` and `token-remove-allow-list` operations.
-    UpdateDenyList = 'denyList',  //Gives authority to perform `token-add-deny-list` and `token-remove-deny-list` operations.
-    Pause = 'pause',  //Gives authority to perform `token-pause` and `token-unpause` operations.
-    UpdateMetadata = 'updateMetadata',  //Gives authority to perform `token-update-metadata` operations.
+    UpdateAdminRoles = 'updateAdminRoles', //Gives authority to perform `token-assign-admin-roles` and `token-revoke-admin-roles` operations.
+    Mint = 'mint', //Gives authority to perform `token-mint` operations.
+    Burn = 'burn', //Gives authority to perform `token-burn` operations.
+    UpdateAllowList = 'allowList', //Gives authority to perform `token-add-allow-list` and `token-remove-allow-list` operations.
+    UpdateDenyList = 'denyList', //Gives authority to perform `token-add-deny-list` and `token-remove-deny-list` operations.
+    Pause = 'pause', //Gives authority to perform `token-pause` and `token-unpause` operations.
+    UpdateMetadata = 'updateMetadata', //Gives authority to perform `token-update-metadata` operations.
 }
 
 export type Memo = CborMemo.Type | Uint8Array;
@@ -52,8 +52,8 @@ export type TokenTransfer = {
  * The details of the `token-assign-admin-roles` and `token-revoke-admin-roles` operations
  */
 export type TokenUpdateAdminRolesDetails = {
-    roles: TokenAdminRole[];  //The admin roles to update.
-    account: CborAccountAddress.Type;  //The account to update admin for
+    roles: TokenAdminRole[]; //The admin roles to update.
+    account: CborAccountAddress.Type; //The account to update admin for
 };
 
 /**

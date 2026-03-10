@@ -1,4 +1,3 @@
-import * as BlockHash from '../types/BlockHash.js';
 import type { Cbor, TokenAmount, TokenId, TokenModuleReference } from './index.js';
 
 /**

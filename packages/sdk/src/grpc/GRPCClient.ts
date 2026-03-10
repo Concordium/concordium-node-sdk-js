@@ -1605,14 +1605,15 @@ export class ConcordiumGRPCClient {
 
     /**
      * Get the authorizations of a given token in the given block
-     * @param request tokenAuthorizationsRequest structure containing the token ID and block hash
+     * @param tokenId the ID of the token to query information about
+     * @param blockHash an optional block hash to get the info from, otherwise retrieves from last finalized block.
      * @returns
      */
-    async getTokenAuthorizations(request: PLT.TokenAuthorizationsRequest): Promise<PLT.TokenAuthorizations> {
-        const blockHashInput = getBlockHashInput(request.blockHash);
+    async getTokenAuthorizations(tokenId: PLT.TokenId.Type, blockHash?: BlockHash.Type): Promise<PLT.TokenAuthorizations> {
+        const blockHashInput = getBlockHashInput(blockHash);
 
         const req: TokenAuthorizationsRequest = {
-            tokenId: PLT.TokenId.toProto(request.tokenId),
+            tokenId: PLT.TokenId.toProto(tokenId),
             blockHash: blockHashInput,
         };
 

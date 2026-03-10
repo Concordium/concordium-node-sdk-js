@@ -64,12 +64,7 @@ const client = new ConcordiumGRPCNodeClient(
     const tokenId = TokenId.fromString(cli.flags.token);
     const blockHash = BlockHash.fromHexString(cli.flags.block);
 
-    const tokenAuthorizationsRequest = {
-        tokenId: tokenId,
-        blockHash: blockHash,
-    };
-
-    const tokenAuthorizations = await client.getTokenAuthorizations(tokenAuthorizationsRequest);
+    const tokenAuthorizations = await client.getTokenAuthorizations(tokenId, blockHash);
 
     console.log('Token authorizations:', tokenAuthorizations);
     // #endregion documentation-snippet

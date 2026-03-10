@@ -81,7 +81,6 @@ describe('PLT Cbor', () => {
                 initialSupply,
                 mintable: true,
                 burnable: true,
-                customField: 'custom value',
             };
 
             const encoded = Cbor.encode(params);

@@ -144,18 +144,6 @@ function parseTokenUpdateAdminRolesEventDetails(decoded: unknown): TokenUpdateAd
     return decoded as TokenUpdateAdminRolesDetails;
 }
 
-function parseTokenAssignAdminRolesEventDetails(decoded: unknown): TokenUpdateAdminRolesDetails {
-    if (typeof decoded !== 'object' || decoded === null) {
-        throw new Error(`Invalid event details: ${JSON.stringify(decoded)}. Expected an object.`);
-    }
-
-    if (!('account' in decoded && CborAccountAddress.instanceOf(decoded.account))) {
-        throw new Error(`Invalid event details: ${JSON.stringify(decoded)}. Expected 'account'`);
-    }
-
-    return decoded as TokenUpdateAdminRolesDetails;
-}
-
 /**
  * Parses a token module event, decoding the details from CBOR format.
  *
@@ -185,7 +173,6 @@ export function parseTokenModuleEvent(event: EncodedTokenModuleEvent): TokenModu
         case TokenOperationType.UpdateMetadata:
             return { ...event, type: event.type, details: TokenMetadataUrl.fromCBORValue(decoded) };
         case TokenOperationType.AssignAdminRoles:
-            return { ...event, type: event.type, details: parseTokenAssignAdminRolesEventDetails(decoded) };
         case TokenOperationType.RevokeAdminRoles:
             return { ...event, type: event.type, details: parseTokenUpdateAdminRolesEventDetails(decoded) };
         default:

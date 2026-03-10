@@ -1,5 +1,5 @@
 import { TokenUpdatePayload } from '../types.js';
-import { Cbor, CborAccountAddress, CborMemo, TokenAmount, TokenId } from './index.js';
+import { Cbor, CborAccountAddress, CborMemo, TokenAmount, TokenId, TokenMetadataUrl } from './index.js';
 
 /**
  * Enum representing the types of token operations.
@@ -19,14 +19,18 @@ export enum TokenOperationType {
     RevokeAdminRoles = 'revokeAdminRoles',
 }
 
+/**
+ * The different The different admin roles defined for the current token module implementation.
+ * Each role gives access to specific administrative operations.
+ */
 export enum TokenAdminRole {
-    UpdateAdminRoles = 'updateAdminRoles',
-    Mint = 'mint',
-    Burn = 'burn',
-    UpdateAllowList = 'allowList',
-    UpdateDenyList = 'denyList',
-    Pause = 'pause',
-    UpdateMetadata = 'updateMetadata',
+    UpdateAdminRoles = 'updateAdminRoles', //Gives authority to perform `token-assign-admin-roles` and `token-revoke-admin-roles` operations.
+    Mint = 'mint', //Gives authority to perform `token-mint` operations.
+    Burn = 'burn', //Gives authority to perform `token-burn` operations.
+    UpdateAllowList = 'allowList', //Gives authority to perform `token-add-allow-list` and `token-remove-allow-list` operations.
+    UpdateDenyList = 'denyList', //Gives authority to perform `token-add-deny-list` and `token-remove-deny-list` operations.
+    Pause = 'pause', //Gives authority to perform `token-pause` and `token-unpause` operations.
+    UpdateMetadata = 'updateMetadata', //Gives authority to perform `token-update-metadata` operations.
 }
 
 export type Memo = CborMemo.Type | Uint8Array;
@@ -45,21 +49,11 @@ export type TokenTransfer = {
 };
 
 /**
- * URL identifies a metadata together with an optional sha256 checksum of the contents of the metadata
- */
-export type MetadataUrl = {
-    /** The URL of the metadata. */
-    url: string;
-    /** An optional SHA256 checksum of the metadata contents. */
-    checksum?: string;
-};
-
-/**
- * The details required to update an admin role for a token.
+ * The details of the `token-assign-admin-roles` and `token-revoke-admin-roles` operations
  */
 export type TokenUpdateAdminRolesDetails = {
-    roles: TokenAdminRole[];
-    account: CborAccountAddress.Type;
+    roles: TokenAdminRole[]; //The admin roles to update.
+    account: CborAccountAddress.Type; //The account to update admin for
 };
 
 /**
@@ -137,7 +131,7 @@ export type TokenUnpauseOperation = TokenOperationGen<TokenOperationType.Unpause
 /**
  * Represents an operation to update the metadata url of a token.
  */
-export type TokenUpdateMetadataOperation = TokenOperationGen<TokenOperationType.UpdateMetadata, MetadataUrl>;
+export type TokenUpdateMetadataOperation = TokenOperationGen<TokenOperationType.UpdateMetadata, TokenMetadataUrl.Type>;
 
 /**
  * Represents an operation to assign an admin role to an account.

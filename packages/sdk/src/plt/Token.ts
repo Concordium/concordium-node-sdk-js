@@ -917,7 +917,7 @@ export async function unpause(
  * @param {TokenUpdateMetadata} [metadata={ expiry: TransactionExpiry.futureMinutes(5) }] - The metadata for the token update.
  * @returns A promise that resolves to the transaction hash.
  */
-export async function updateMetadata(
+export function updateMetadata(
     token: Token,
     metadataUrl: TokenMetadataUrl.Type,
     sender: AccountAddress.Type,
@@ -938,7 +938,7 @@ export async function updateMetadata(
  * @param {TokenUpdateMetadata} [metadata={ expiry: TransactionExpiry.futureMinutes(5) }] - The metadata for the token update.
  * @returns A promise that resolves to the transaction hash.
  */
-export async function assignAdminRoles(
+export function assignAdminRoles(
     token: Token,
     updateAdminRoleDetails: TokenUpdateAdminRolesDetails,
     sender: AccountAddress.Type,
@@ -959,7 +959,7 @@ export async function assignAdminRoles(
  * @param {TokenUpdateMetadata} [metadata={ expiry: TransactionExpiry.futureMinutes(5) }] - The metadata for the token update.
  * @returns A promise that resolves to the transaction hash.
  */
-export async function revokeAdminRoles(
+export function revokeAdminRoles(
     token: Token,
     updateAdminRoleDetails: TokenUpdateAdminRolesDetails,
     sender: AccountAddress.Type,

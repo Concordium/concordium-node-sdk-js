@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Removed additional field from TokenModuleAccountState type
+- Removed `additional` field from TokenModuleAccountState and TokenModuleState types as they never contained any data
 
 ## 12.0.2
 

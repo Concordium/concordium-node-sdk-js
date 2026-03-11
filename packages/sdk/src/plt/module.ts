@@ -9,10 +9,7 @@ import { Cbor, CborAccountAddress, CreatePLTPayload, TokenAmount, TokenMetadataU
  * `GetAccountInfo` instead.
  *
  * The "name" and "metadata" fields are required. Other fields are optional, and can be omitted if
- * the module implementation does not support them. The structure supports additional fields for
- * future extensibility. Non-standard fields (i.e. any fields that are not defined by a standard,
- * and are specific to the module implementation) may be included, and their tags should be
- * prefixed with an underscore ("_") to distinguish them as such.
+ * the module implementation does not support them.
  */
 export type TokenModuleState = {
     /** The name of the token. */
@@ -31,8 +28,6 @@ export type TokenModuleState = {
     burnable?: boolean;
     /** Whether the token operations are paused or not. */
     paused?: boolean;
-    /** Any additional state information depending on the module implementation */
-    [key: string]: unknown;
 };
 
 /**

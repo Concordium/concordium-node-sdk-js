@@ -25,7 +25,6 @@ describe('PLT Cbor', () => {
                 denyList: false,
                 mintable: true,
                 burnable: true,
-                customField: 'custom value',
             };
 
             const encoded = Cbor.encode(state);
@@ -38,7 +37,6 @@ describe('PLT Cbor', () => {
             expect(decoded.denyList).toBe(state.denyList);
             expect(decoded.mintable).toBe(state.mintable);
             expect(decoded.burnable).toBe(state.burnable);
-            expect(decoded.customField).toBe(state.customField);
         });
 
         test('should encode and decode minimal TokenModuleState correctly', () => {
@@ -81,7 +79,6 @@ describe('PLT Cbor', () => {
                 initialSupply,
                 mintable: true,
                 burnable: true,
-                customField: 'custom value',
             };
 
             const encoded = Cbor.encode(params);
@@ -127,7 +124,6 @@ describe('PLT Cbor', () => {
             const state = {
                 allowList: true,
                 denyList: false,
-                customField: 'custom value',
             };
 
             const encoded = Cbor.encode(state);
@@ -135,7 +131,6 @@ describe('PLT Cbor', () => {
 
             expect(decoded.allowList).toBe(state.allowList);
             expect(decoded.denyList).toBe(state.denyList);
-            expect(decoded.customField).toBe(state.customField);
         });
 
         test('should throw error if TokenModuleAccountState has invalid field types', () => {

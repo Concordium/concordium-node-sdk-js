@@ -20,6 +20,41 @@ export * from './config.state';
 
 // Configuration functions
 
+let qrRedirectHandled = false;
+let qrRedirectHandlingPromise: Promise<boolean> | null = null;
+
+async function tryHandleQrRedirectOnBootstrap(): Promise<boolean> {
+    if (qrRedirectHandled) {
+        return true;
+    }
+
+    if (typeof window === 'undefined' || typeof document === 'undefined') {
+        return false;
+    }
+
+    if (qrRedirectHandlingPromise) {
+        return qrRedirectHandlingPromise;
+    }
+
+    qrRedirectHandlingPromise = (async () => {
+        const redirectUri = getQrRedirectUri();
+        if (!redirectUri) {
+            return false;
+        }
+
+        const { handleQrRedirectOnLoad } = await import('./components/desktop/wallet-selection');
+        await handleQrRedirectOnLoad();
+        qrRedirectHandled = true;
+        return true;
+    })();
+
+    try {
+        return await qrRedirectHandlingPromise;
+    } finally {
+        qrRedirectHandlingPromise = null;
+    }
+}
+
 function setDefaultFlags(): void {
     try {
         const setIfAbsent = (key: string): void => {
@@ -43,12 +78,7 @@ export async function initConcordiumModal(config?: Partial<ConcordiumConfig>): P
         setConfig(config);
     }
 
-    // Check if this is a QR redirect (user scanned QR code on mobile)
-    const redirectUri = getQrRedirectUri();
-    if (redirectUri) {
-        // Handle QR redirect - this will open the wallet app(s)
-        const { handleQrRedirectOnLoad } = await import('./components/desktop/wallet-selection');
-        await handleQrRedirectOnLoad();
+    if (await tryHandleQrRedirectOnBootstrap()) {
         return; // Don't show modal, wallet app will handle it
     }
 
@@ -103,6 +133,12 @@ export function resetSDK(): void {
     // Clear any localStorage flags
     Object.values(ModalConstants.LOCAL_STORAGE_FLAGS).forEach((flag) => {
         return localStorage.removeItem(flag as string);
+    });
+}
+
+if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+    void tryHandleQrRedirectOnBootstrap().catch((error) => {
+        console.error('Failed to handle QR redirect during bootstrap:', error);
     });
 }
 

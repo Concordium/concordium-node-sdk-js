@@ -266,8 +266,16 @@ export async function tryOpenConcordiumIDApp(walletConnectUri: string): Promise<
                     link.parentNode.removeChild(link);
                 }
             }, 100);
+        } else if (/android/i.test(navigator.userAgent)) {
+            // Android: Use intent-based URL for better reliability on Chrome Android
+            const intentUrl = `intent://wc?uri=${encodeURIComponent(
+                walletConnectUri
+            )}#Intent;scheme=concordiumidapp;package=com.idwallet.app;end`;
+
+            console.log('[tryOpenConcordiumIDApp] Android - using intent URL:', intentUrl.substring(0, 80) + '...');
+            window.location.href = intentUrl;
         } else {
-            // For Android and other platforms, use location.href
+            // For other platforms, use location.href with regular scheme
             console.log('[tryOpenConcordiumIDApp] Opening deep link via location.href...');
             window.location.href = deepLink;
         }

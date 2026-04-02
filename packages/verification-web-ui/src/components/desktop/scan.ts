@@ -41,8 +41,6 @@ const SELECTORS = {
     SCAN_MODAL: '#scan-modal',
     BACK_BTN: '#back-btn',
     QR_CONTAINER: '#qr-container',
-    BROWSER_BTN: '#browser-btn',
-    BROWSER_WALLET_BTN: '#browser-wallet-btn',
 } as const;
 
 // Helper function to create desktop HTML
@@ -68,12 +66,6 @@ function createDesktopScanHTML(): string {
             </div>
           </div>
 
-          <div id="browser-btn" class="${CSS_CLASSES.HIDDEN} ${CSS_CLASSES.FLEX_COL} items-center gap-4">
-            <button class="desktop--primary-button" id="browser-wallet-btn">
-              <span>Verify with Browser Wallet</span>
-              <img src="${arrowRight}" alt="arrow-right-icon" />
-            </button>
-          </div>
         </div>
       </div>
     </div>
@@ -137,7 +129,6 @@ export const createScanModal: ModalFunction = () => {
     // Cache DOM elements for better performance
     const elements = {
         backBtn: scanContainer.querySelector(SELECTORS.BACK_BTN) as HTMLButtonElement | null,
-        browserWalletBtn: scanContainer.querySelector(SELECTORS.BROWSER_WALLET_BTN) as HTMLButtonElement | null,
         openInWalletBtn: scanContainer.querySelector('#open-in-wallet-btn') as HTMLButtonElement | null,
         openOtherDeviceBtn: scanContainer.querySelector('#open-other-device-btn') as HTMLButtonElement | null,
         qrContainer: scanContainer.querySelector(SELECTORS.QR_CONTAINER) as HTMLElement | null,
@@ -148,11 +139,6 @@ export const createScanModal: ModalFunction = () => {
         const { showLandingModal } = await import('./landing');
         hideScanModal();
         await showLandingModal();
-    };
-
-    const handleBrowserWallet = async (): Promise<void> => {
-        // Processing modal will be shown automatically after session approval
-        // Don't hide scan modal - keep it visible until session is established
     };
 
     // Mobile-specific handlers
@@ -205,7 +191,6 @@ export const createScanModal: ModalFunction = () => {
 
     // Attach event listeners with null safety
     elements.backBtn?.addEventListener('click', handleBack);
-    elements.browserWalletBtn?.addEventListener('click', handleBrowserWallet);
 
     // Mobile-specific event listeners
     if (isMobile) {
@@ -701,15 +686,14 @@ async function displayQRCode(uri: string): Promise<void> {
         // Dynamic import following your coding instructions pattern
         const { default: QRCode } = await import('qrcode');
         const { getConfig } = await import('@/config.state');
-        const { getConcordiumIdDeepLink } = await import('@/constants/wallet.registry');
+        const { buildQrRedirectUrl } = await import('@/constants/wallet.registry');
         const config = getConfig();
 
         const qrContainer = document.querySelector(SELECTORS.QR_CONTAINER);
 
         if (qrContainer) {
-            // Use Concordium ID app deep link format: concordiumidapp://wc?uri=<encoded-wc-uri>
-            // This allows ID app to scan and recognize its own deep link format
-            const qrValue = getConcordiumIdDeepLink(uri);
+            // Use redirect URL so camera scans open this page and run wallet deeplink detection.
+            const qrValue = buildQrRedirectUrl(uri);
             console.log('Generated QR code value:', qrValue);
 
             const qrCodeDataURL = await QRCode.toDataURL(qrValue, {
@@ -717,6 +701,12 @@ async function displayQRCode(uri: string): Promise<void> {
                 margin: 2,
                 color: { dark: '#000000', light: '#ffffff' },
             });
+
+            const hostname = window.location.hostname;
+            const isLoopbackHost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1';
+            const loopbackWarning = isLoopbackHost
+                ? '<p class="text-xs text-center mt-2" style="color: #B45309; max-width: 280px; margin-left: auto; margin-right: auto;">This page is running on localhost. Phone camera scans cannot open localhost on another device. Use a LAN/public URL.</p>'
+                : '';
 
             const showCountdown = config.qrCode?.showCountdown !== false;
             const countdownHTML = showCountdown
@@ -731,6 +721,7 @@ async function displayQRCode(uri: string): Promise<void> {
         <div class="text-center" style="min-height: 350px; display: flex; flex-direction: column; justify-content: center;">
           <img src="${qrCodeDataURL}" alt="QR Code for wallet connection" class="w-48 h-48 mx-auto mb-2" style="border-radius: 12.414px; border: 1px solid rgba(0, 0, 0, 0.10); background: #FFF;" />
           <p class="desktop--scan-text mt-2">Scan the QR code with your<br>Concordium ID compatible device</p>
+          ${loopbackWarning}
           ${countdownHTML}
           <img src="${sectionSeparator}" alt="" class="mx-auto mt-4" />
           <div class="flex items-center justify-center mt-4">
@@ -1043,9 +1034,8 @@ function generateDeepLink(walletType: WalletTypeValues, uri: string): string | n
             deepLink = `cryptox-wc-${network}://wc?uri=${encodeURIComponent(uri)}&go_back=true`;
         }
     } else if (walletType === WALLET_TYPES.CONCORDIUM_ID) {
-        // Concordium ID - same for all devices, with redirect to origin
-        const redirectUrl = encodeURIComponent(window.location.href);
-        deepLink = `concordiumidapp://wc?uri=${encodeURIComponent(uri)}&redirect=${redirectUrl}`;
+        // Concordium ID deep link format expected by the app
+        deepLink = `concordiumidapp://wc?uri=${encodeURIComponent(uri)}`;
     }
 
     return deepLink;

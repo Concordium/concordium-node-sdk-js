@@ -80,6 +80,22 @@ export const createLandingModal: ModalFunction = () => {
                 const { WalletConnectConstants } = await import('@/constants/walletconnect.constants');
                 const { getConcordiumIdDeepLink } = await import('@/constants/wallet.registry');
 
+                // Ensure __CONCORDIUM_WC_CONFIG__ is populated if we're in sdk-managed mode
+                if (!(window as any).__CONCORDIUM_WC_CONFIG__) {
+                    const projectId = localStorage.getItem(ModalConstants.LOCAL_STORAGE_FLAGS.SDK_PROJECT_ID);
+                    const network = localStorage.getItem(ModalConstants.LOCAL_STORAGE_FLAGS.SDK_NETWORK) || 'testnet';
+                    const storedMetadata = localStorage.getItem('sdkWalletConnectMetadata');
+                    const metadata = storedMetadata ? JSON.parse(storedMetadata) : null;
+
+                    if (projectId) {
+                        (window as any).__CONCORDIUM_WC_CONFIG__ = {
+                            projectId,
+                            network,
+                            metadata: metadata || WalletConnectConstants.getDefaultMetadata(),
+                        };
+                    }
+                }
+
                 // Get WalletConnect service and generate URI
                 const wcService = ServiceFactory.createWalletConnectService();
                 await wcService.initialize();
@@ -115,22 +131,44 @@ export const createLandingModal: ModalFunction = () => {
                 // Store connected wallet name
                 localStorage.setItem(ModalConstants.LOCAL_STORAGE_FLAGS.CONNECTED_WALLET_NAME, 'Concordium ID');
 
+                let sessionProcessed = false;
+
+                const processApprovedSession = async (session: any) => {
+                    if (sessionProcessed) return;
+                    sessionProcessed = true;
+
+                    console.log('[Mobile] Session approved:', session.peer?.metadata?.name);
+                    const { handleSessionApproval } = await import('./scan');
+                    await handleSessionApproval(session);
+                };
+
                 // Handle session approval in the background
                 approval()
-                    .then(async (session) => {
-                        console.log('[Mobile] Session approved:', session.peer?.metadata?.name);
-                        const { handleSessionApproval } = await import('./scan');
-                        await handleSessionApproval(session);
-                    })
+                    .then(processApprovedSession)
                     .catch((error) => {
                         console.error('Session approval failed:', error);
                     });
 
+                const tryRecoverApprovedSession = async () => {
+                    if (document.hidden || sessionProcessed) return;
+
+                    const activeSessions = wcService.getActiveSessions();
+                    if (activeSessions.length > 0) {
+                        await processApprovedSession(activeSessions[0]);
+                    }
+                };
+
+                document.addEventListener('visibilitychange', () => {
+                    void tryRecoverApprovedSession();
+                });
+
+                window.addEventListener('focus', () => {
+                    void tryRecoverApprovedSession();
+                });
+
                 // Generate deep link
                 const deepLink = getConcordiumIdDeepLink(uri);
                 console.log('[Mobile] Opening deep link:', deepLink.substring(0, 80) + '...');
-
-                const isAndroid = /android/i.test(navigator.userAgent);
 
                 // Track if app opened (page loses visibility)
                 let appOpened = false;
@@ -139,51 +177,37 @@ export const createLandingModal: ModalFunction = () => {
                     appOpened = true;
                 };
 
-                document.addEventListener('visibilitychange', () => {
+                const visibilityHandler = () => {
                     if (document.hidden) markAppOpened();
-                });
+                };
+
+                document.addEventListener('visibilitychange', visibilityHandler);
                 window.addEventListener('pagehide', markAppOpened);
                 window.addEventListener('blur', markAppOpened);
 
-                if (isAndroid) {
-                    // Android: Try deep link, fall back to Play Store after timeout
-                    // Use iframe trick for more reliable detection
-                    const iframe = document.createElement('iframe');
-                    iframe.style.display = 'none';
-                    iframe.src = deepLink;
-                    document.body.appendChild(iframe);
+                // Use one direct deep link format on both Android and iOS.
+                // This avoids Android intent chooser edge-cases where the browser prompt can remain stuck.
+                const link = document.createElement('a');
+                link.href = deepLink;
+                link.style.display = 'none';
+                document.body.appendChild(link);
+                link.click();
 
-                    // Also try window.location as backup
-                    setTimeout(() => {
-                        window.location.href = deepLink;
-                    }, 100);
+                setTimeout(() => {
+                    if (!appOpened && !document.hidden && document.visibilityState === 'visible') {
+                        console.log('[Mobile] Redirecting to app store - app not detected/installed');
+                        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+                        window.location.href = isIOS ? ID_APP_STORE.ios : ID_APP_STORE.android;
+                    }
 
-                    // After 2.5 seconds, if still on page, redirect to Play Store
-                    setTimeout(() => {
-                        if (!appOpened && !document.hidden) {
-                            console.log('[Mobile] App not detected after timeout, redirecting to Play Store...');
-                            window.location.href = ID_APP_STORE.android;
-                        }
-                        // Clean up iframe
-                        if (iframe.parentNode) {
-                            iframe.parentNode.removeChild(iframe);
-                        }
-                    }, 2500);
-                } else {
-                    // iOS: Use a hidden link click for better Safari compatibility
-                    const link = document.createElement('a');
-                    link.href = deepLink;
-                    link.style.display = 'none';
-                    document.body.appendChild(link);
-                    link.click();
+                    document.removeEventListener('visibilitychange', visibilityHandler);
+                    window.removeEventListener('pagehide', markAppOpened);
+                    window.removeEventListener('blur', markAppOpened);
 
-                    // Clean up
-                    setTimeout(() => {
-                        if (link.parentNode) {
-                            link.parentNode.removeChild(link);
-                        }
-                    }, 100);
-                }
+                    if (link.parentNode) {
+                        link.parentNode.removeChild(link);
+                    }
+                }, 3500);
             } catch (error) {
                 console.error('Failed to open Concordium ID app:', error);
                 // Fallback to app store if something goes wrong

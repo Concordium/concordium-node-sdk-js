@@ -152,7 +152,6 @@ export function openAppStore(appType: 'concordium-wallet' | 'concordium-id' = 'c
             storeUrl =
                 'https://play.google.com/store/apps/details?id=software.concordium.mobilewallet.seedphrase.mainnet';
         } else {
-            console.warn('Unsupported platform for app store');
             return;
         }
     } else {
@@ -162,7 +161,6 @@ export function openAppStore(appType: 'concordium-wallet' | 'concordium-id' = 'c
         } else if (isAndroid) {
             storeUrl = 'https://play.google.com/store/apps/details?id=com.idwallet.app&hl=en_CA';
         } else {
-            console.warn('Unsupported platform for app store');
             return;
         }
     }
@@ -192,9 +190,6 @@ export async function tryOpenConcordiumIDApp(walletConnectUri: string): Promise<
     const redirectUrl = encodeURIComponent(window.location.href);
     const deepLink = `concordiumidapp://wc?uri=${encodeURIComponent(walletConnectUri)}&redirect=${redirectUrl}`;
 
-    console.log('[tryOpenConcordiumIDApp] Deep link:', deepLink.substring(0, 80) + '...');
-    console.log('[tryOpenConcordiumIDApp] Platform:', isIOS ? 'iOS' : 'Android/other');
-
     return new Promise((resolve) => {
         let appOpened = false;
         let timeoutId: ReturnType<typeof setTimeout>;
@@ -202,7 +197,6 @@ export async function tryOpenConcordiumIDApp(walletConnectUri: string): Promise<
 
         // Track if the app opens by detecting blur or visibility change
         const handleBlur = () => {
-            console.log('[tryOpenConcordiumIDApp] Blur detected - app likely opened');
             appOpened = true;
             clearTimeout(timeoutId);
             cleanup();
@@ -211,7 +205,6 @@ export async function tryOpenConcordiumIDApp(walletConnectUri: string): Promise<
 
         const handleVisibilityChange = () => {
             if (document.hidden) {
-                console.log('[tryOpenConcordiumIDApp] Visibility change - app likely opened');
                 appOpened = true;
                 clearTimeout(timeoutId);
                 cleanup();
@@ -220,7 +213,6 @@ export async function tryOpenConcordiumIDApp(walletConnectUri: string): Promise<
         };
 
         const handlePageHide = () => {
-            console.log('[tryOpenConcordiumIDApp] Page hide - app likely opened');
             appOpened = true;
             clearTimeout(timeoutId);
             cleanup();
@@ -230,10 +222,8 @@ export async function tryOpenConcordiumIDApp(walletConnectUri: string): Promise<
         const handleFocus = () => {
             // If we get focus back quickly (< 1.5s), app probably didn't open
             const elapsed = Date.now() - startTime;
-            console.log(`[tryOpenConcordiumIDApp] Focus regained after ${elapsed}ms`);
             if (elapsed < 1500 && !appOpened) {
                 // Quick return to browser means app didn't open
-                console.log('[tryOpenConcordiumIDApp] Quick focus return - app not installed');
             }
         };
 
@@ -257,7 +247,6 @@ export async function tryOpenConcordiumIDApp(walletConnectUri: string): Promise<
             link.style.display = 'none';
             document.body.appendChild(link);
 
-            console.log('[tryOpenConcordiumIDApp] iOS - clicking hidden link...');
             link.click();
 
             // Clean up the link
@@ -267,16 +256,11 @@ export async function tryOpenConcordiumIDApp(walletConnectUri: string): Promise<
                 }
             }, 100);
         } else if (/android/i.test(navigator.userAgent)) {
-            // Android: Use intent-based URL for better reliability on Chrome Android
             const intentUrl = `intent://wc?uri=${encodeURIComponent(
                 walletConnectUri
             )}#Intent;scheme=concordiumidapp;package=com.idwallet.app;end`;
-
-            console.log('[tryOpenConcordiumIDApp] Android - using intent URL:', intentUrl.substring(0, 80) + '...');
             window.location.href = intentUrl;
         } else {
-            // For other platforms, use location.href with regular scheme
-            console.log('[tryOpenConcordiumIDApp] Opening deep link via location.href...');
             window.location.href = deepLink;
         }
 
@@ -284,12 +268,10 @@ export async function tryOpenConcordiumIDApp(walletConnectUri: string): Promise<
         // Use shorter timeout for iOS since the hidden link approach is faster
         const timeout = isIOS ? 1500 : 2500;
         timeoutId = setTimeout(() => {
-            console.log(`[tryOpenConcordiumIDApp] Timeout reached (${timeout}ms), appOpened: ${appOpened}`);
             cleanup();
 
             // On iOS, if we're still here and document is visible, app didn't open
             if (isIOS && !document.hidden && !appOpened) {
-                console.log('[tryOpenConcordiumIDApp] iOS: Still on page, app not installed');
                 resolve(false);
             } else {
                 resolve(appOpened);
@@ -314,7 +296,6 @@ export function openDeepLink(appType: 'concordium-wallet' | 'concordium-id', wal
         } else if (isAndroid) {
             deepLink = `cryptox-wc-${network}://wc?uri=${encodeURIComponent(walletConnectUri)}&go_back=true`;
         } else {
-            console.warn('Unsupported platform for deep link');
             return;
         }
     } else {

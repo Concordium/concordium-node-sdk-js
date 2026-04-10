@@ -43,6 +43,95 @@ const SELECTORS = {
     QR_CONTAINER: '#qr-container',
 } as const;
 
+const AUTO_SEND_READINESS_RETRY_DELAYS_MS = [400, 900, 1600] as const;
+
+function sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function waitForActiveSessionTopic(
+    wcService: ReturnType<typeof ServiceFactory.getWalletConnectService>,
+    topic: string,
+    timeoutMs = 6000,
+    pollIntervalMs = 200
+): Promise<void> {
+    const deadline = Date.now() + timeoutMs;
+
+    while (Date.now() < deadline) {
+        const active = wcService?.getActiveSessions() || [];
+        if (active.some((session) => session.topic === topic)) {
+            return;
+        }
+
+        await sleep(pollIntervalMs);
+    }
+
+    throw new Error(`Session topic ${topic} was not active before timeout`);
+}
+
+async function sendPresentationWithReadinessRetry({
+    wcService,
+    topic,
+    chainId,
+    presentationRequest,
+    metadata,
+}: {
+    wcService: NonNullable<ReturnType<typeof ServiceFactory.getWalletConnectService>>;
+    topic: string;
+    chainId: string;
+    presentationRequest: any;
+    metadata: any;
+}): Promise<{ response: any; methodUsed: 'v1' | 'v0' }> {
+    const maxAttempts = AUTO_SEND_READINESS_RETRY_DELAYS_MS.length + 1;
+    let lastError: unknown;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+            await waitForActiveSessionTopic(wcService, topic);
+
+            try {
+                const response = await wcService.request({
+                    topic,
+                    chainId,
+                    request: {
+                        method: 'request_verifiable_presentation_v1',
+                        params: {
+                            ...presentationRequest,
+                            metadata,
+                        },
+                    },
+                });
+
+                return { response, methodUsed: 'v1' };
+            } catch (v1Error) {
+                const response = await wcService.request({
+                    topic,
+                    chainId,
+                    request: {
+                        method: 'request_verifiable_presentation',
+                        params: {
+                            ...presentationRequest,
+                            metadata,
+                        },
+                    },
+                });
+
+                return { response, methodUsed: 'v0' };
+            }
+        } catch (error) {
+            lastError = error;
+            if (attempt === maxAttempts) {
+                break;
+            }
+
+            const retryDelay = AUTO_SEND_READINESS_RETRY_DELAYS_MS[attempt - 1];
+            await sleep(retryDelay);
+        }
+    }
+
+    throw lastError instanceof Error ? lastError : new Error('Failed to auto-send presentation request');
+}
+
 // Helper function to create desktop HTML
 function createDesktopScanHTML(): string {
     return `
@@ -172,8 +261,7 @@ export const createScanModal: ModalFunction = () => {
                 const { openAppStore } = await import('@/utils/mobileAppDetection');
                 openAppStore(appType);
             }
-        } catch (error) {
-            console.error('[Mobile] handleOpenInWallet failed:', error);
+        } catch {
             alert('Failed to open wallet app. Please try again.');
         }
     };
@@ -206,34 +294,19 @@ export const showScanModal: ShowModalFunction = async () => {
     const targetContainer = getGlobalContainer();
 
     if (!targetContainer) {
-        console.error('Container not found for modal');
         return;
     }
-
-    // Detect mobile/desktop mode
-    const isMobile = isMobileScreen();
-    const containerClass = isMobile ? '.mobile--modal-container' : '.desktop--modal-container';
 
     // Create and store modal element reference
     scanModalElement = createScanModal();
     scanModalElement.id = 'scan-modal';
 
-    // Get the modal container for transforms
-    const modalContainer = scanModalElement.querySelector(containerClass) as HTMLElement | null;
-
-    // For smooth transitions, prepare new modal completely before showing
-    scanModalElement.style.opacity = '0';
-    if (modalContainer) {
-        modalContainer.style.transform = 'translateY(-20px) scale(0.95)';
-        modalContainer.style.transition = 'transform 0.3s ease-out';
-    }
+    // For smooth transitions, start hidden then trigger enter
+    scanModalElement.classList.add('modal-wrapper');
     targetContainer.appendChild(scanModalElement);
 
-    // Force a reflow to ensure the styles are applied
+    // Force a reflow to ensure the initial hidden state is applied
     scanModalElement.offsetHeight;
-
-    // Now start the transition
-    scanModalElement.style.transition = 'opacity 0.3s ease-out';
 
     // Use a small delay to ensure DOM is fully ready
     setTimeout(() => {
@@ -242,11 +315,8 @@ export const showScanModal: ShowModalFunction = async () => {
             return;
         }
 
-        // Show new modal
-        scanModalElement.style.opacity = '1';
-        if (modalContainer) {
-            modalContainer.style.transform = 'translateY(0) scale(1)';
-        }
+        // Show modal
+        scanModalElement.classList.add('is-visible');
     }, 10);
 
     // Set up event listeners for session approval and verification completion
@@ -393,7 +463,6 @@ async function initializeWalletConnection(): Promise<void> {
             await initializeMerchantProvidedConnection();
         }
     } catch (error) {
-        console.error('Wallet connection failed:', error);
         showQRError('Failed to generate QR code. Please try again.');
     }
 }
@@ -447,9 +516,7 @@ async function initializeSDKManagedConnection(): Promise<void> {
         .then(async (session) => {
             await handleSessionApproval(session);
         })
-        .catch((error) => {
-            console.error('Session approval failed:', error);
-        });
+        .catch(() => {});
 
     // Check if mobile screen
     if (isMobileScreen()) {
@@ -512,17 +579,14 @@ export async function autoSendPresentationRequestIfConfigured(topic: string): Pr
             ModalConstants.LOCAL_STORAGE_FLAGS.SDK_PRESENTATION_REQUEST
         );
         if (!presentationRequestStr) {
-            console.log('No presentation request configured, waiting for merchant to send request');
             return;
         }
 
         const presentationRequest = JSON.parse(presentationRequestStr);
-        console.log('Auto-sending presentation request:', presentationRequest);
 
         // Get the WalletConnect service
         const wcService = ServiceFactory.getWalletConnectService();
         if (!wcService) {
-            console.error('WalletConnect service not available for auto-send');
             return;
         }
 
@@ -542,43 +606,13 @@ export async function autoSendPresentationRequestIfConfigured(topic: string): Pr
             icons: storedMetadata?.icons || [],
         };
 
-        // Try v1 method first (ID App), then fallback to v0 (Concordium Wallet)
-        let response: any;
-        let methodUsed: string;
-
-        try {
-            // Try v1 first (Concordium ID App)
-            console.log('Trying v1 method (request_verifiable_presentation_v1)...');
-            response = await wcService.request({
-                topic,
-                chainId,
-                request: {
-                    method: 'request_verifiable_presentation_v1',
-                    params: {
-                        ...presentationRequest,
-                        metadata,
-                    },
-                },
-            });
-            methodUsed = 'v1';
-        } catch (v1Error) {
-            console.log('v1 method failed, trying v0 method...', v1Error);
-            // Fallback to v0 (Concordium Wallet)
-            response = await wcService.request({
-                topic,
-                chainId,
-                request: {
-                    method: 'request_verifiable_presentation',
-                    params: {
-                        ...presentationRequest,
-                        metadata,
-                    },
-                },
-            });
-            methodUsed = 'v0';
-        }
-
-        console.log(`Presentation response received (method ${methodUsed}):`, response);
+        const { response } = await sendPresentationWithReadinessRetry({
+            wcService,
+            topic,
+            chainId,
+            presentationRequest,
+            metadata,
+        });
 
         // Emit the response to merchant
         window.dispatchEvent(
@@ -596,8 +630,6 @@ export async function autoSendPresentationRequestIfConfigured(topic: string): Pr
         const { showSuccessState } = await import('./processing');
         await showSuccessState();
     } catch (error) {
-        console.error('Failed to auto-send presentation request:', error);
-
         // Emit error event
         window.dispatchEvent(
             new CustomEvent('verification-web-ui-event', {
@@ -660,8 +692,6 @@ export async function handleSessionApproval(sessionData: any): Promise<void> {
         // Check if there's a presentation request to auto-send
         await autoSendPresentationRequestIfConfigured(topic);
     } catch (error) {
-        console.error('Error handling session approval:', error);
-
         // Emit error event
         window.dispatchEvent(
             new CustomEvent('verification-web-ui-event', {
@@ -694,7 +724,6 @@ async function displayQRCode(uri: string): Promise<void> {
         if (qrContainer) {
             // Use redirect URL so camera scans open this page and run wallet deeplink detection.
             const qrValue = buildQrRedirectUrl(uri);
-            console.log('Generated QR code value:', qrValue);
 
             const qrCodeDataURL = await QRCode.toDataURL(qrValue, {
                 width: 200,
@@ -709,8 +738,12 @@ async function displayQRCode(uri: string): Promise<void> {
                 : '';
 
             const showCountdown = config.qrCode?.showCountdown !== false;
+            const expiryDuration = config.qrCode?.expiryDuration || 5 * 60 * 1000;
+            const initialMinutes = Math.floor(expiryDuration / 60000);
+            const initialSeconds = Math.floor((expiryDuration % 60000) / 1000);
+            const initialCountdown = `${initialMinutes}:${initialSeconds.toString().padStart(2, '0')}`;
             const countdownHTML = showCountdown
-                ? '<p id="qr-countdown" class="text-sm text-inverse-tertiary mt-2">Expires in: <span class="font-semibold">5:00</span></p>'
+                ? `<p id="qr-countdown" class="desktop--qr-countdown">Expires in: <span class="font-semibold">${initialCountdown}</span></p>`
                 : '';
 
             // Determine app store link based on user's device
@@ -734,7 +767,6 @@ async function displayQRCode(uri: string): Promise<void> {
             setupQRCodeExpiry();
         }
     } catch (error) {
-        console.error('Failed to generate QR code:', error);
         showQRError('Failed to generate QR code. Please try again.');
     }
 }
@@ -839,7 +871,6 @@ async function refreshQRCode(): Promise<void> {
             },
         });
     } catch (error) {
-        console.error('Failed to refresh QR code:', error);
         showQRError('Failed to refresh QR code. Please try again.');
     }
 }
@@ -1007,8 +1038,7 @@ async function checkForActiveSession(): Promise<any | null> {
         }
 
         return null;
-    } catch (error) {
-        console.error('Failed to check for active sessions:', error);
+    } catch {
         return null;
     }
 }
@@ -1049,7 +1079,10 @@ function generateDeepLink(walletType: WalletTypeValues, uri: string): string | n
 async function displayQRCodeMobile(uri: string, container: HTMLElement): Promise<void> {
     try {
         const { default: QRCode } = await import('qrcode');
-        const { buildQrRedirectUrl } = await import('@/constants/wallet.registry');
+        const { getConfig } = await import('@/config.state');
+        const { buildQrRedirectUrl, getIdAppStoreUrl } = await import('@/constants/wallet.registry');
+
+        const config = getConfig();
 
         // Use redirect URL for better wallet compatibility
         const qrValue = buildQrRedirectUrl(uri);
@@ -1060,13 +1093,25 @@ async function displayQRCodeMobile(uri: string, container: HTMLElement): Promise
             color: { dark: '#000000', light: '#ffffff' },
         });
 
+        const showCountdown = config.qrCode?.showCountdown !== false;
+        const expiryDuration = config.qrCode?.expiryDuration || 5 * 60 * 1000;
+        const initialMinutes = Math.floor(expiryDuration / 60000);
+        const initialSeconds = Math.floor((expiryDuration % 60000) / 1000);
+        const initialCountdown = `${initialMinutes}:${initialSeconds.toString().padStart(2, '0')}`;
+        const countdownHTML = showCountdown
+            ? `<p id="qr-countdown" class="desktop--qr-countdown">Expires in: <span class="font-semibold">${initialCountdown}</span></p>`
+            : '';
+
+        const appStoreUrl = getIdAppStoreUrl();
+
         container.innerHTML = `
       <div class="text-center py-4">
         <img src="${qrCodeDataURL}" alt="QR Code for wallet connection" class="w-48 h-48 mx-auto mb-2" style="border-radius: 12.414px; border: 1px solid rgba(0, 0, 0, 0.10); background: #FFF;" />
         <p class="desktop--scan-text">Scan the QR code with your<br>Concordium ID compatible device</p>
+                ${countdownHTML}
         <img src="${sectionSeparator}" alt="" class="mx-auto mt-4" />
         <div class="flex items-center justify-center mt-4">
-          <p class="desktop--download-text">Download & Install the <a href="#">Concordium ID App</a> and come back here to verify.</p>
+                    <p class="desktop--download-text">Download & Install the <a href="${appStoreUrl}" target="_blank" rel="noopener noreferrer">Concordium ID App</a> and come back here to verify.</p>
         </div>
       </div>
     `;
@@ -1074,7 +1119,10 @@ async function displayQRCodeMobile(uri: string, container: HTMLElement): Promise
         // Show the container
         container.classList.remove(CSS_CLASSES.HIDDEN);
         container.style.display = 'flex';
-    } catch (error) {
-        console.error('[Mobile] Failed to generate QR code:', error);
+
+        // Keep countdown and expiry behavior consistent with desktop.
+        await setupQRCodeExpiry();
+    } catch {
+        // Mobile QR generation failed
     }
 }

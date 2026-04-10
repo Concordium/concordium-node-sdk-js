@@ -6,7 +6,6 @@ import { type ConcordiumConfig, getConfig, resolveContainer, setConfig } from '.
 import { ModalConstants } from './constants/modal.constants';
 import { getQrRedirectUri } from './constants/wallet.registry';
 import './styles/index.css';
-import { isAppInstalled, isConcordiumIDInstalled } from './utils/sessionDetection';
 
 // Export SDK class
 export { ConcordiumVerificationWebUI, sdk } from './sdk';
@@ -66,8 +65,18 @@ function setDefaultFlags(): void {
         setIfAbsent(ModalConstants.LOCAL_STORAGE_FLAGS.ONLY_ONE_OPTION);
         setIfAbsent(ModalConstants.LOCAL_STORAGE_FLAGS.APP_NOT_INSTALLED);
         setIfAbsent(ModalConstants.LOCAL_STORAGE_FLAGS.CONCORDIUM_ID_NOT_INSTALLED);
-    } catch (e) {
-        console.error('Failed to update landing flags in localStorage:', e);
+    } catch {
+        // Ignore localStorage errors
+    }
+}
+
+async function hasReusableWalletConnectSession(): Promise<boolean> {
+    try {
+        const walletConnectService = ServiceFactory.createWalletConnectService();
+        await walletConnectService.initialize();
+        return walletConnectService.getActiveSessions().length > 0;
+    } catch {
+        return false;
     }
 }
 
@@ -99,23 +108,12 @@ export async function initConcordiumModal(config?: Partial<ConcordiumConfig>): P
     }
 
     if (!targetContainer) {
-        console.error(`Container not found for Concordium modal. Tried: ${getConfig().defaultContainer}`);
-        console.error('Available elements:', {
-            root: document.querySelector('#root'),
-            app: document.querySelector('#app'),
-            body: document.body,
-        });
         return;
     }
 
-    const hasActiveSession = isConcordiumIDInstalled() || isAppInstalled();
-    const currentConfig = getConfig();
+    const hasActiveSession = await hasReusableWalletConnectSession();
 
-    if (currentConfig.autoDetectMobile && typeof window !== 'undefined') {
-        // Use desktop returning-user modal for both mobile and desktop
-        const { showReturningUserModal } = await import('./components/desktop/returning-user');
-        showReturningUserModal();
-    } else if (hasActiveSession) {
+    if (hasActiveSession) {
         // If there's an active session, show the returning user modal directly
         const { showReturningUserModal } = await import('./components/desktop/returning-user');
         showReturningUserModal();
@@ -137,9 +135,7 @@ export function resetSDK(): void {
 }
 
 if (typeof window !== 'undefined' && typeof document !== 'undefined') {
-    void tryHandleQrRedirectOnBootstrap().catch((error) => {
-        console.error('Failed to handle QR redirect during bootstrap:', error);
-    });
+    void tryHandleQrRedirectOnBootstrap().catch(() => {});
 }
 
 // Default export for convenience

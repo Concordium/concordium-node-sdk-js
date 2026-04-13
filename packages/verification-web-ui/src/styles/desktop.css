@@ -75,12 +75,30 @@
     }
 }
 
-.desktop--modal-container {
-    animation: slideIn 0.3s ease-out;
+/* === Modal wrapper enter animation ===
+ * Used by modals whose returned element is a wrapper div
+ * (landing, scan, wallet-selection). Processing and returning-user
+ * modals return the overlay element directly and use the existing
+ * .modal-entering / .modal-visible classes instead.
+ */
+.modal-wrapper {
+    opacity: 0;
+    transition: opacity 0.3s ease-out;
 }
 
-.desktop--modal-overlay.modal-exiting .desktop--modal-container {
-    animation: slideOut 0.3s ease-in forwards;
+.modal-wrapper.is-visible {
+    opacity: 1;
+}
+
+.modal-wrapper .desktop--modal-container,
+.modal-wrapper .mobile--modal-container {
+    transform: translateY(-20px) scale(0.95);
+    transition: transform 0.3s ease-out;
+}
+
+.modal-wrapper.is-visible .desktop--modal-container,
+.modal-wrapper.is-visible .mobile--modal-container {
+    transform: translateY(0) scale(1);
 }
 
 .desktop--modal-container {
@@ -357,6 +375,18 @@
     font-weight: 500;
     line-height: 25px;
     letter-spacing: 0.2px;
+}
+
+.desktop--qr-countdown {
+    display: block;
+    margin-top: 0.5rem;
+    color: #4b535d;
+    text-align: center;
+    font-family: Inter, sans-serif;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 20px;
 }
 
 .desktop--processing-text {

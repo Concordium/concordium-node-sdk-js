@@ -492,8 +492,8 @@ export class ConcordiumIDAppPopup {
         openAppBtn?.addEventListener('click', () => {
             try {
                 this.openIdapp({ wallectConnectMobileUrl });
-            } catch (e) {
-                console.error('Failed to open ID App:', e);
+            } catch {
+                // Failed to open ID App
             }
         });
     }
@@ -604,8 +604,7 @@ export class ConcordiumIDAppPopup {
                     createBtn.textContent = '⏳ Please wait...';
                     try {
                         await options.onCreateAccount!();
-                    } catch (err) {
-                        console.error('Account creation failed:', err);
+                    } catch {
                         createBtn.textContent = 'Create New Account';
                         createBtn.disabled = false;
                     }

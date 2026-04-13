@@ -20,6 +20,9 @@ export class ConcordiumVerificationWebUI {
     private _wcUri?: string;
     private _wcConfig?: SDKWalletConnectConfig;
 
+    private static readonly SESSION_READY_TIMEOUT_MS = 8000;
+    private static readonly SESSION_READY_POLL_INTERVAL_MS = 200;
+
     /**
      * Shows the landing modal
      */
@@ -235,13 +238,11 @@ export class ConcordiumVerificationWebUI {
      */
     async showWalletConnectPopup(walletConnectUri: string, onClose?: () => void): Promise<void> {
         if (!walletConnectUri) {
-            console.warn('No WalletConnect URI provided to showWalletConnectPopup');
             throw new Error('WalletConnect URI is required');
         }
 
         // Validate WalletConnect URI format
         if (!walletConnectUri.startsWith('wc:')) {
-            console.warn('Invalid WalletConnect URI format:', walletConnectUri);
             throw new Error('Invalid WalletConnect URI format. Must start with "wc:"');
         }
 
@@ -260,7 +261,6 @@ export class ConcordiumVerificationWebUI {
                 this.setupCloseCallback(onClose);
             }
         } catch (error) {
-            console.error('Failed to show WalletConnect popup:', error);
             throw error;
         }
     }
@@ -332,7 +332,6 @@ export class ConcordiumVerificationWebUI {
                 this.setupCloseCallback(onClose);
             }
         } catch (error) {
-            console.error('Failed to initialize WalletConnect:', error);
             throw error;
         }
     }
@@ -344,8 +343,8 @@ export class ConcordiumVerificationWebUI {
     private storeWalletConnectUri(uri: string): void {
         try {
             localStorage.setItem(ModalConstants.LOCAL_STORAGE_FLAGS.WALLET_CONNECT_URI, uri);
-        } catch (error) {
-            console.error('Failed to store WalletConnect URI:', error);
+        } catch {
+            // Ignore storage errors
         }
     }
 
@@ -382,7 +381,7 @@ export class ConcordiumVerificationWebUI {
                 await ConcordiumVerificationWebUI.showReturningUserModal();
                 break;
             default:
-                console.warn('Unknown modal type:', modalType);
+                break;
         }
     }
 
@@ -506,14 +505,12 @@ export class ConcordiumVerificationWebUI {
             const { updateQRCodeFromMerchant } = await import('./components/desktop/scan');
             await updateQRCodeFromMerchant(newUri);
         } catch (error) {
-            console.error('Failed to update WalletConnect URI:', error);
             throw error;
         }
     }
 
     /**
      * Close the processing modal
-     * Call this to programmatically close the processing modal from Vue
      * @example
      * ```typescript
      * const sdk = new ConcordiumVerificationWebUI();
@@ -583,6 +580,10 @@ export class ConcordiumVerificationWebUI {
                 throw new Error('WalletConnect service not initialized');
             }
 
+            // WalletConnect can approve a session before all session stores are settled.
+            // Wait for the topic to become visible as an active session to reduce cold-start races.
+            await this.waitForActiveSessionTopic(topic);
+
             // Get the network configuration
             const globalConfig = getConfig();
             const network = globalConfig.network || 'testnet';
@@ -605,7 +606,6 @@ export class ConcordiumVerificationWebUI {
 
             try {
                 // Try v1 first (Concordium ID App)
-                console.log('Trying v1 method (request_verifiable_presentation_v1)...');
                 response = await wcService.request({
                     topic,
                     chainId,
@@ -618,7 +618,6 @@ export class ConcordiumVerificationWebUI {
                     },
                 });
             } catch (v1Error) {
-                console.log('v1 method failed, trying v0 method...', v1Error);
                 // Fallback to v0 (Concordium Wallet)
                 response = await wcService.request({
                     topic,
@@ -636,13 +635,31 @@ export class ConcordiumVerificationWebUI {
             // Emit the response back to merchant
             this.emitEvent('presentation_received', response as PresentationResponse);
         } catch (error) {
-            console.error('Failed to send presentation request:', error);
             this.emitEvent('error', {
                 message: 'Failed to send presentation request',
                 error,
             });
             throw error;
         }
+    }
+
+    private async waitForActiveSessionTopic(topic: string): Promise<void> {
+        const deadline = Date.now() + ConcordiumVerificationWebUI.SESSION_READY_TIMEOUT_MS;
+
+        while (Date.now() < deadline) {
+            const wcService = ServiceFactory.getWalletConnectService();
+            const hasSession = wcService?.getActiveSessions().some((session) => session.topic === topic);
+
+            if (hasSession) {
+                return;
+            }
+
+            await new Promise((resolve) =>
+                setTimeout(resolve, ConcordiumVerificationWebUI.SESSION_READY_POLL_INTERVAL_MS)
+            );
+        }
+
+        throw new Error(`Session topic ${topic} was not active before timeout`);
     }
 
     /**
@@ -664,7 +681,6 @@ export class ConcordiumVerificationWebUI {
             // Send the request
             await this.sendPresentationRequest(presentationRequest, sessionTopic);
         } catch (error) {
-            console.error('Failed to send request to existing session:', error);
             throw error;
         }
     }

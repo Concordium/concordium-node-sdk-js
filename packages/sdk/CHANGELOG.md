@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Token operations for updating metadata, assigning and revoking admin roles have been added.
+- Token events for updating metadata, assigning and revoking admin roles have been added.
+- New Proto types, a translation function for those proto types and a new function getTokenAuthorizations
+
 ## 12.0.2
 
 ### Changed

@@ -74,3 +74,12 @@ export type CreatePLTPayload = {
     /** The module specific initialization parameters. */
     initializationParameters: Cbor.Type;
 };
+
+/**
+ * Represents the authorizations of a token, such as allow/deny lists, at a specific block.
+ * see {@link GRPCClient.getTokenAuthorizations} for more details.
+ */
+export type TokenAuthorizations = {
+    tokenId: TokenId.Type;
+    details: Cbor.Type;
+};

@@ -147,9 +147,6 @@ function verifyAtomicStatement(statement: AtomicStatement, existingStatements: I
     if (!(statement.attributeTag in AttributeKeyString)) {
         throw new Error('Unknown attributeTag: ' + statement.attributeTag);
     }
-    if (existingStatements.some((v) => v.attributeTag === statement.attributeTag)) {
-        throw new Error('Only 1 statement is allowed for each attribute');
-    }
     switch (statement.type) {
         case StatementTypes.AttributeInRange:
             return verifyRangeStatement(statement);

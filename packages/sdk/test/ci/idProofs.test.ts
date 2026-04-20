@@ -13,7 +13,6 @@ test('Creating a statement with multiple atomic statements on the same attribute
             .addRange(AttributesKeys.dob, '20001010', '20201010')
             .addRange(AttributesKeys.dob, '20001010', '20201010')
     ).not.toThrow();
-    expect(() => builder.addMembership(AttributesKeys.countryOfResidence, []).addEUResidency()).not.toThrow();
     expect(() =>
         builder
             .addNonMembership(AttributesKeys.countryOfResidence, ['DE'])
@@ -23,6 +22,11 @@ test('Creating a statement with multiple atomic statements on the same attribute
         builder.revealAttribute(AttributesKeys.countryOfResidence).revealAttribute(AttributesKeys.countryOfResidence)
     ).not.toThrow();
     expect(() => builder.addMinimumAge(18).addMinimumAge(20)).not.toThrow();
+});
+
+test('Statements may not use empty sets', () => {
+    const builder = new IdStatementBuilder(true);
+    expect(() => builder.addMembership(AttributesKeys.countryOfResidence, []).addEUResidency()).toThrow();
 });
 
 test('Minimum age helper adds a range statement on date of birth', () => {

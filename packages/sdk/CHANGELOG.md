@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Removed
+
+- In zero knowledge proofs removed limitation of a single statement per attribute
+
 ## 12.0.2
 
 ### Changed

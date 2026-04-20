@@ -6,23 +6,23 @@ import { IdStatementBuilder } from '../../src/id/idProofs.js';
 import { AttributeKeyString, AttributesKeys, IdDocType } from '../../src/types.js';
 import { getIdProof } from '../../src/wasm/index.js';
 
-test('Creating a statement with multiple atomic statements on the same attribute fails', () => {
+test('Creating a statement with multiple atomic statements on the same attribute should not fail', () => {
     const builder = new IdStatementBuilder(true);
     expect(() =>
         builder
             .addRange(AttributesKeys.dob, '20001010', '20201010')
             .addRange(AttributesKeys.dob, '20001010', '20201010')
-    ).toThrow();
-    expect(() => builder.addMembership(AttributesKeys.countryOfResidence, []).addEUResidency()).toThrow();
+    ).not.toThrow();
+    expect(() => builder.addMembership(AttributesKeys.countryOfResidence, []).addEUResidency()).not.toThrow();
     expect(() =>
         builder
             .addNonMembership(AttributesKeys.countryOfResidence, ['DE'])
             .addNonMembership(AttributesKeys.countryOfResidence, ['DK', 'FR'])
-    ).toThrow();
+    ).not.toThrow();
     expect(() =>
         builder.revealAttribute(AttributesKeys.countryOfResidence).revealAttribute(AttributesKeys.countryOfResidence)
-    ).toThrow();
-    expect(() => builder.addMinimumAge(18).addMinimumAge(20)).toThrow();
+    ).not.toThrow();
+    expect(() => builder.addMinimumAge(18).addMinimumAge(20)).not.toThrow();
 });
 
 test('Minimum age helper adds a range statement on date of birth', () => {

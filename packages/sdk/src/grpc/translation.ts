@@ -6,7 +6,7 @@ import * as GRPC_PLT from '../grpc-api/v2/concordium/protocol-level-tokens.js';
 import * as GRPC from '../grpc-api/v2/concordium/types.js';
 import * as PLT from '../plt/index.js';
 import * as SDK from '../types.js';
-import { TokenEvent, TokenTransferEvent, TransactionEventTag } from '../types.js';
+import { MetaUpdateEvent, TokenEvent, TokenTransferEvent, TransactionEventTag } from '../types.js';
 import * as AccountAddress from '../types/AccountAddress.js';
 import * as BlockHash from '../types/BlockHash.js';
 import * as CcdAmount from '../types/CcdAmount.js';
@@ -2052,46 +2052,115 @@ function trAccountTransactionSummary(
                 transactionType: SDK.TransactionKindString.TokenUpdate,
                 events: effect.tokenUpdateEffect.events.map(tokenEvent),
             };
+        case 'metaUpdateEffect':
+            return {
+                ...base,
+                transactionType: SDK.TransactionKindString.MetaUpdate,
+                events: effect.metaUpdateEffect.events.map(metaUpdateEvent),
+            };
         case undefined:
             throw Error('Failed translating AccountTransactionEffects, encountered undefined value');
     }
 }
 
+function requiredTokenId(tokenId: GRPC_PLT.TokenId | undefined, eventType: string): GRPC_PLT.TokenId {
+    if (tokenId === undefined) {
+        throw new Error(`${eventType} did not include a token id`);
+    }
+    return tokenId;
+}
+
+function tokenTransferEvent(
+    event: GRPC_PLT.TokenTransferEvent,
+    tokenId: GRPC_PLT.TokenId | undefined
+): TokenTransferEvent {
+    const transferEvent: TokenTransferEvent = {
+        tag: TransactionEventTag.TokenTransfer,
+        tokenId: PLT.TokenId.fromProto(requiredTokenId(tokenId, 'Token transfer event')),
+        from: PLT.TokenHolder.fromProto(unwrap(event.from)),
+        to: PLT.TokenHolder.fromProto(unwrap(event.to)),
+        amount: PLT.TokenAmount.fromProto(unwrap(event.amount)),
+    };
+    if (event.memo) {
+        transferEvent.memo = PLT.CborMemo.fromProto(unwrap(event.memo));
+    }
+    if (event.fromLock) {
+        transferEvent.fromLock = PLT.LockId.fromProto(event.fromLock);
+    }
+    if (event.toLock) {
+        transferEvent.toLock = PLT.LockId.fromProto(event.toLock);
+    }
+    return transferEvent;
+}
+
+function tokenModuleEvent(
+    event: GRPC_PLT.TokenModuleEvent,
+    tokenId: GRPC_PLT.TokenId | undefined
+): SDK.EncodedTokenModuleEvent {
+    return {
+        tag: TransactionEventTag.TokenModuleEvent,
+        tokenId: PLT.TokenId.fromProto(requiredTokenId(tokenId, 'Token module event')),
+        type: event.type,
+        details: PLT.Cbor.fromProto(unwrap(event.details)),
+    };
+}
+
+function tokenSupplyUpdateEvent(
+    tag: TransactionEventTag.TokenMint | TransactionEventTag.TokenBurn,
+    event: GRPC_PLT.TokenSupplyUpdateEvent,
+    tokenId: GRPC_PLT.TokenId | undefined
+): SDK.TokenMintEvent | SDK.TokenBurnEvent {
+    return {
+        tag,
+        tokenId: PLT.TokenId.fromProto(requiredTokenId(tokenId, 'Token supply update event')),
+        amount: PLT.TokenAmount.fromProto(unwrap(event.amount)),
+        target: PLT.TokenHolder.fromProto(unwrap(event.target)),
+    };
+}
+
 function tokenEvent(event: GRPC_PLT.TokenEvent): Upward<TokenEvent> {
     switch (event.event.oneofKind) {
         case 'transferEvent':
-            const transferEvent: TokenTransferEvent = {
-                tag: TransactionEventTag.TokenTransfer,
-                tokenId: PLT.TokenId.fromProto(unwrap(event.tokenId)),
-                from: PLT.TokenHolder.fromProto(unwrap(event.event.transferEvent.from)),
-                to: PLT.TokenHolder.fromProto(unwrap(event.event.transferEvent.to)),
-                amount: PLT.TokenAmount.fromProto(unwrap(event.event.transferEvent.amount)),
-            };
-            if (event.event.transferEvent.memo) {
-                transferEvent.memo = PLT.CborMemo.fromProto(unwrap(event.event.transferEvent.memo));
-            }
-
-            return transferEvent;
+            return tokenTransferEvent(event.event.transferEvent, event.tokenId);
         case 'moduleEvent':
-            return {
-                tag: TransactionEventTag.TokenModuleEvent,
-                tokenId: PLT.TokenId.fromProto(unwrap(event.tokenId)),
-                type: event.event.moduleEvent.type,
-                details: PLT.Cbor.fromProto(unwrap(event.event.moduleEvent.details)),
-            };
+            return tokenModuleEvent(event.event.moduleEvent, event.tokenId);
         case 'mintEvent':
-            return {
-                tag: TransactionEventTag.TokenMint,
-                tokenId: PLT.TokenId.fromProto(unwrap(event.tokenId)),
-                amount: PLT.TokenAmount.fromProto(unwrap(event.event.mintEvent.amount)),
-                target: PLT.TokenHolder.fromProto(unwrap(event.event.mintEvent.target)),
-            };
+            return tokenSupplyUpdateEvent(TransactionEventTag.TokenMint, event.event.mintEvent, event.tokenId);
         case 'burnEvent':
+            return tokenSupplyUpdateEvent(TransactionEventTag.TokenBurn, event.event.burnEvent, event.tokenId);
+        case undefined:
+            return null;
+    }
+}
+
+function metaUpdateEvent(event: GRPC_PLT.MetaEvent): Upward<MetaUpdateEvent> {
+    switch (event.event.oneofKind) {
+        case 'transferEvent':
+            return tokenTransferEvent(event.event.transferEvent, event.event.transferEvent.tokenId);
+        case 'moduleEvent':
+            return tokenModuleEvent(event.event.moduleEvent, event.event.moduleEvent.tokenId);
+        case 'mintEvent':
+            return tokenSupplyUpdateEvent(
+                TransactionEventTag.TokenMint,
+                event.event.mintEvent,
+                event.event.mintEvent.tokenId
+            );
+        case 'burnEvent':
+            return tokenSupplyUpdateEvent(
+                TransactionEventTag.TokenBurn,
+                event.event.burnEvent,
+                event.event.burnEvent.tokenId
+            );
+        case 'lockCreateEvent':
             return {
-                tag: TransactionEventTag.TokenBurn,
-                tokenId: PLT.TokenId.fromProto(unwrap(event.tokenId)),
-                amount: PLT.TokenAmount.fromProto(unwrap(event.event.burnEvent.amount)),
-                target: PLT.TokenHolder.fromProto(unwrap(event.event.burnEvent.target)),
+                tag: TransactionEventTag.LockCreate,
+                lockId: PLT.LockId.fromProto(unwrap(event.event.lockCreateEvent.lockId)),
+                lockConfig: PLT.Cbor.fromProto(unwrap(event.event.lockCreateEvent.lockConfig)),
+            };
+        case 'lockDestroyEvent':
+            return {
+                tag: TransactionEventTag.LockDestroy,
+                lockId: PLT.LockId.fromProto(unwrap(event.event.lockDestroyEvent.lockId)),
             };
         case undefined:
             return null;

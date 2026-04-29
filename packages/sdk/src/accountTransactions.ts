@@ -51,6 +51,7 @@ import {
     DeployModulePayload,
     HexString,
     InitContractPayload,
+    MetaUpdatePayload,
     OpenStatus,
     RegisterDataPayload,
     SimpleTransferPayload,
@@ -889,6 +890,54 @@ export type TokenUpdatePayloadJSON = {
     operations: Cbor.JSON;
 };
 
+function getPLTOperationEnergyCost(operation: unknown): bigint {
+    if (typeof operation !== 'object' || operation === null) {
+        return 0n;
+    }
+
+    const op = operation as Record<string, unknown>;
+
+    const PLT_TRANSFER_COST = 100n;
+    const PLT_MINT_COST = 50n;
+    const PLT_BURN_COST = 50n;
+    const PLT_LIST_UPDATE_COST = 50n;
+    const PLT_PAUSE_COST = 50n;
+    const PLT_ASSIGN_REVOKE_ROLES_COST = 50n;
+    const PLT_UPDATE_METADATA_COST = 50n;
+    // TODO: add costs for lock operations
+
+    switch (true) {
+        case TokenOperationType.Transfer in op:
+        case 'lockFund' in op:
+        case 'lockSend' in op:
+        case 'lockReturn' in op:
+            return PLT_TRANSFER_COST;
+        case TokenOperationType.Mint in op:
+            return PLT_MINT_COST;
+        case TokenOperationType.Burn in op:
+            return PLT_BURN_COST;
+        case TokenOperationType.AddAllowList in op:
+        case TokenOperationType.RemoveAllowList in op:
+        case TokenOperationType.AddDenyList in op:
+        case TokenOperationType.RemoveDenyList in op:
+            return PLT_LIST_UPDATE_COST;
+        case TokenOperationType.Pause in op:
+        case TokenOperationType.Unpause in op:
+            return PLT_PAUSE_COST;
+        case TokenOperationType.AssignAdminRoles in op:
+        case TokenOperationType.RevokeAdminRoles in op:
+            return PLT_ASSIGN_REVOKE_ROLES_COST;
+        case TokenOperationType.UpdateMetadata in op:
+            return PLT_UPDATE_METADATA_COST;
+        default:
+            return 0n;
+    }
+}
+
+export type MetaUpdatePayloadJSON = {
+    operations: Cbor.JSON;
+};
+
 /**
  * @deprecated use `Transaction.tokenUpdate` and `Payload.tokenUpdate` APIs instead.
  */
@@ -910,40 +959,7 @@ export class TokenUpdateHandler
     }
     getBaseEnergyCost(payload: TokenUpdatePayload): bigint {
         const operations = Cbor.decode(payload.operations, 'TokenOperation[]');
-        // The base cost for a token transaction.
-        let energyCost = 300n;
-        // Additional cost of specific PLT operations
-        const PLT_TRANSFER_COST = 100n;
-        const PLT_MINT_COST = 50n;
-        const PLT_BURN_COST = 50n;
-        const PLT_LIST_UPDATE_COST = 50n;
-        const PLT_PAUSE_COST = 50n;
-
-        for (const operation of operations) {
-            switch (true) {
-                case TokenOperationType.Transfer in operation:
-                    energyCost += PLT_TRANSFER_COST;
-                    break;
-                case TokenOperationType.Mint in operation:
-                    energyCost += PLT_MINT_COST;
-                    break;
-                case TokenOperationType.Burn in operation:
-                    energyCost += PLT_BURN_COST;
-                    break;
-                case TokenOperationType.AddAllowList in operation:
-                case TokenOperationType.RemoveAllowList in operation:
-                case TokenOperationType.AddDenyList in operation:
-                case TokenOperationType.RemoveDenyList in operation:
-                    energyCost += PLT_LIST_UPDATE_COST;
-                    break;
-                case TokenOperationType.Pause in operation:
-                case TokenOperationType.Unpause in operation:
-                    energyCost += PLT_PAUSE_COST;
-                    break;
-            }
-        }
-
-        return energyCost;
+        return operations.reduce((energyCost, operation) => energyCost + getPLTOperationEnergyCost(operation), 300n);
     }
     toJSON(payload: TokenUpdatePayload): TokenUpdatePayloadJSON {
         return {
@@ -954,6 +970,40 @@ export class TokenUpdateHandler
     fromJSON(json: TokenUpdatePayloadJSON): TokenUpdatePayload {
         return {
             tokenId: TokenId.fromJSON(json.tokenId),
+            operations: Cbor.fromJSON(json.operations),
+        };
+    }
+}
+
+export class MetaUpdateHandler
+    implements AccountTransactionHandler<MetaUpdatePayload, MetaUpdatePayloadJSON, MetaUpdatePayload>
+{
+    serialize(payload: MetaUpdatePayload): Buffer {
+        return packBufferWithWord32Length(payload.operations.bytes);
+    }
+
+    deserialize(serializedPayload: Cursor): MetaUpdatePayload {
+        const len = serializedPayload.read(4).readUInt32BE(0);
+        const operations = Cbor.fromBuffer(serializedPayload.read(len));
+        return { operations };
+    }
+
+    getBaseEnergyCost(payload: MetaUpdatePayload): bigint {
+        const operations = Cbor.decode(payload.operations);
+        if (!Array.isArray(operations)) {
+            throw new Error('Invalid MetaUpdate operations: expected a CBOR array');
+        }
+        return operations.reduce((energyCost, operation) => energyCost + getPLTOperationEnergyCost(operation), 300n);
+    }
+
+    toJSON(payload: MetaUpdatePayload): MetaUpdatePayloadJSON {
+        return {
+            operations: payload.operations.toJSON(),
+        };
+    }
+
+    fromJSON(json: MetaUpdatePayloadJSON): MetaUpdatePayload {
+        return {
             operations: Cbor.fromJSON(json.operations),
         };
     }
@@ -1096,6 +1146,7 @@ export type AccountTransactionPayloadJSON =
     | ConfigureDelegationPayloadJSON
     | ConfigureBakerPayloadJSON
     | TokenUpdatePayloadJSON
+    | MetaUpdatePayloadJSON
     | UpdateCredentialKeysPayloadJSON;
 
 /**
@@ -1115,6 +1166,7 @@ export function getAccountTransactionHandler(
 ): ConfigureDelegationHandler;
 export function getAccountTransactionHandler(type: AccountTransactionType.ConfigureBaker): ConfigureBakerHandler;
 export function getAccountTransactionHandler(type: AccountTransactionType.TokenUpdate): TokenUpdateHandler;
+export function getAccountTransactionHandler(type: AccountTransactionType.MetaUpdate): MetaUpdateHandler;
 export function getAccountTransactionHandler(
     type: AccountTransactionType.UpdateCredentialKeys
 ): UpdateCredentialKeysHandler;
@@ -1146,6 +1198,8 @@ export function getAccountTransactionHandler(
             return new ConfigureBakerHandler();
         case AccountTransactionType.TokenUpdate:
             return new TokenUpdateHandler();
+        case AccountTransactionType.MetaUpdate:
+            return new MetaUpdateHandler();
         case AccountTransactionType.UpdateCredentialKeys:
             return new UpdateCredentialKeysHandler();
         default:

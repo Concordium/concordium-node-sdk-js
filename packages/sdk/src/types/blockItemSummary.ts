@@ -29,6 +29,7 @@ import {
     EncryptedAmountsRemovedEvent,
     EncryptedSelfAmountAddedEvent,
     MemoEvent,
+    MetaUpdateEvent,
     ModuleDeployedEvent,
     NewEncryptedAmountEvent,
     TokenEvent,
@@ -104,6 +105,7 @@ export enum TransactionKindString {
     StakingReward = 'paydayAccountReward',
     Failed = 'failed',
     TokenUpdate = 'tokenUpdate',
+    MetaUpdate = 'metaUpdate',
 }
 
 /**
@@ -268,6 +270,20 @@ export type TokenUpdateSummary = {
 };
 
 /**
+ * The summary of a meta update transaction.
+ */
+export type MetaUpdateSummary = {
+    transactionType: TransactionKindString.MetaUpdate;
+    /**
+     * The meta update details
+     *
+     * **Please note**, these can possibly be unknown if the SDK is not fully compatible with the Concordium
+     * node queried, in which case `null` is returned.
+     */
+    events: Upward<MetaUpdateEvent>[];
+};
+
+/**
  * Tagged union type of all possible account transaction summaries, distinguishable by the `transactionType` tag.
  */
 export type AccountTransactionSummary = BaseAccountTransactionSummary &
@@ -295,6 +311,7 @@ export type AccountTransactionSummary = BaseAccountTransactionSummary &
         | UpdateCredentialKeysSummary
         | UpdateCredentialsSummary
         | TokenUpdateSummary
+        | MetaUpdateSummary
     );
 
 export interface AccountCreationSummary extends BaseBlockItemSummary {

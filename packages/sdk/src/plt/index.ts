@@ -3,7 +3,10 @@ export * from './module.js';
 export * from './TokenModuleRejectReason.js';
 export * from './TokenModuleEvent.js';
 export * from './TokenOperation.js';
+export * from './MetaUpdateOperation.js';
 
+export * as LockConfig from './LockConfig.js';
+export * as LockController from './LockController.js';
 export * as TokenId from './TokenId.js';
 export * as TokenModuleReference from './TokenModuleReference.js';
 export * as TokenMetadataUrl from './TokenMetadataUrl.js';
@@ -14,3 +17,4 @@ export * as CborMemo from './CborMemo.js';
 export * as CborAccountAddress from './CborAccountAddress.js';
 export * as TokenHolder from './TokenHolder.js';
 export * as CborContractAddress from './CborContractAddress.js';
+export * as LockId from './LockId.js';

@@ -2,6 +2,7 @@ import { cborDecode } from '../types/cbor.js';
 import {
     Cbor,
     CborAccountAddress,
+    LockConfig,
     TokenAmount,
     TokenInitializationParameters,
     TokenMetadataUrl,
@@ -100,6 +101,7 @@ type DecodeTypeMap = {
     TokenModuleAccountState: TokenModuleAccountState;
     TokenInitializationParameters: TokenInitializationParameters;
     'TokenOperation[]': (TokenOperation | UnknownTokenOperation)[];
+    LockConfig: LockConfig.Type;
 };
 
 /**
@@ -132,6 +134,8 @@ export function decode<T extends keyof DecodeTypeMap | undefined>(cbor: Cbor.Typ
             return decodeTokenInitializationParameters(cbor);
         case 'TokenOperation[]':
             return decodeTokenOperations(cbor);
+        case 'LockConfig':
+            return LockConfig.fromCBORValue(cborDecode(cbor.bytes));
         default:
             return cborDecode(cbor.bytes);
     }

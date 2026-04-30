@@ -18,10 +18,15 @@ import { parseEmpty, parseListUpdate, parseSupplyUpdate, parseTransfer } from '.
 
 /** Enum representing the types of meta update operations. */
 export enum MetaUpdateOperationType {
+    /** Creates a new protocol-level lock. */
     LockCreate = 'lockCreate',
+    /** Cancels an existing lock before expiry. Requires the `cancel` capability on the lock controller. */
     LockCancel = 'lockCancel',
+    /** Funds a lock with tokens from the sender account. */
     LockFund = 'lockFund',
+    /** Sends locked tokens to a recipient from a lock the sender controls. */
     LockSend = 'lockSend',
+    /** Returns locked tokens to the account that owns the lock. */
     LockReturn = 'lockReturn',
 }
 
@@ -34,48 +39,72 @@ export type LockCreateOperation = MetaUpdateOperationGen<MetaUpdateOperationType
 
 /** Details for cancelling a lock. */
 export type LockCancel = {
+    /** Identifier of the lock to cancel. */
     lock: LockId.Type;
+    /** Optional memo to include with the cancellation. */
     memo?: Memo;
 };
 
+/** Meta operation that cancels an existing lock. */
 export type LockCancelOperation = MetaUpdateOperationGen<MetaUpdateOperationType.LockCancel, LockCancel>;
 
 /** Details for funding a lock with tokens from the sender account. */
 export type LockFund = {
+    /** Token id of the token to fund the lock with. */
     token: TokenId.Type;
+    /** Identifier of the lock to fund. */
     lock: LockId.Type;
+    /** Amount of tokens to transfer into the lock from the sender account. */
     amount: TokenAmount.Type;
+    /** Optional memo to include with the operation. */
     memo?: Memo;
 };
 
+/** Meta operation that funds a lock with tokens from the sender account. */
 export type LockFundOperation = MetaUpdateOperationGen<MetaUpdateOperationType.LockFund, LockFund>;
 
 /** Details for sending locked funds to a recipient. */
 export type LockSend = {
+    /** Token id of the locked token to send. */
     token: TokenId.Type;
+    /** Identifier of the lock holding the tokens. */
     lock: LockId.Type;
+    /** Account that currently holds the locked funds. */
     source: CborAccountAddress.Type;
+    /** Amount of locked tokens to send. */
     amount: TokenAmount.Type;
+    /** Account to receive the tokens. */
     recipient: CborAccountAddress.Type;
+    /** Optional memo to include with the operation. */
     memo?: Memo;
 };
 
+/** Meta operation that sends locked tokens to a recipient. */
 export type LockSendOperation = MetaUpdateOperationGen<MetaUpdateOperationType.LockSend, LockSend>;
 
 /** Details for returning locked funds to their owner account. */
 export type LockReturn = {
+    /** Token id of the locked token to return. */
     token: TokenId.Type;
+    /** Identifier of the lock holding the tokens. */
     lock: LockId.Type;
+    /** Account that currently holds the locked funds. */
     source: CborAccountAddress.Type;
+    /** Amount of locked tokens to return to the owning account. */
     amount: TokenAmount.Type;
+    /** Optional memo to include with the operation. */
     memo?: Memo;
 };
 
+/** Meta operation that returns locked tokens to the account that owns the lock. */
 export type LockReturnOperation = MetaUpdateOperationGen<MetaUpdateOperationType.LockReturn, LockReturn>;
 
 type FromTokenOperation<Type extends TokenOperationType, T extends object> = MetaUpdateOperationGen<
     Type,
-    T & { token: TokenId.Type }
+    T & {
+        /** Token id the operation applies to. */
+        token: TokenId.Type;
+    }
 >;
 
 /** Token operation extended with an explicit token id for MetaUpdate context. */

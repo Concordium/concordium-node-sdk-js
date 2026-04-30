@@ -42,22 +42,49 @@ class LockId {
     }
 }
 
+/** Lock identifier. */
 export type Type = LockId;
 
+/** CBOR tag used to encode a lock identifier (tag 40920). */
 const CBOR_TAG = 40920;
 
+/**
+ * Construct a lock identifier.
+ *
+ * @param accountIndex account index of the account that created the lock.
+ * @param sequenceNumber sequence number of the transaction that created the lock.
+ * @param creationOrder 0-based creation order of the lock within the transaction.
+ * @returns a lock identifier.
+ */
 export function create(accountIndex: bigint, sequenceNumber: bigint, creationOrder: bigint): LockId {
     return new LockId(accountIndex, sequenceNumber, creationOrder);
 }
 
+/**
+ * Construct a lock identifier from its JSON representation.
+ *
+ * @param json JSON representation of a lock identifier.
+ * @returns a lock identifier.
+ */
 export function fromJSON(json: JSON): LockId {
     return create(BigInt(json.accountIndex), BigInt(json.sequenceNumber), BigInt(json.creationOrder));
 }
 
+/**
+ * Construct a lock identifier from its protobuf representation.
+ *
+ * @param lockId protobuf lock id.
+ * @returns a lock identifier.
+ */
 export function fromProto(lockId: Proto.LockId): LockId {
     return create(lockId.accountIndex, lockId.sequenceNumber, lockId.creationOrder);
 }
 
+/**
+ * Type predicate — returns `true` if `value` is a {@linkcode Type}.
+ *
+ * @param value value to check.
+ */
 export function instanceOf(value: unknown): value is LockId {
     return value instanceof LockId;
 }

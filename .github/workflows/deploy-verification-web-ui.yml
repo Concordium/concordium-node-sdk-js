@@ -115,7 +115,7 @@ jobs:
           submodules: recursive
 
       - name: Get build-output
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           path: packages/verification-web-ui
           name: build-release

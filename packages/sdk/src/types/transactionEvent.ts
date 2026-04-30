@@ -64,8 +64,8 @@ export enum TransactionEventTag {
     TokenTransfer = 'TokenTransfer',
     TokenMint = 'TokenMint',
     TokenBurn = 'TokenBurn',
-    LockCreate = 'LockCreate',
-    LockDestroy = 'LockDestroy',
+    LockCreated = 'LockCreated',
+    LockDestroyed = 'LockDestroyed',
 }
 
 export type TransactionEvent =
@@ -450,7 +450,7 @@ export type TokenBurnEvent = {
 
 export type LockCreateEvent = {
     /** The type of the event */
-    tag: TransactionEventTag.LockCreate;
+    tag: TransactionEventTag.LockCreated;
     /** The ID of the newly created lock. */
     lockId: PLT.LockId.Type;
     /** The CBOR-encoded lock configuration. */
@@ -459,7 +459,7 @@ export type LockCreateEvent = {
 
 export type LockDestroyEvent = {
     /** The type of the event */
-    tag: TransactionEventTag.LockDestroy;
+    tag: TransactionEventTag.LockDestroyed;
     /** The ID of the destroyed lock. */
     lockId: PLT.LockId.Type;
 };

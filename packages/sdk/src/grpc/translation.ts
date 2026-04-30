@@ -2153,13 +2153,13 @@ function metaUpdateEvent(event: GRPC_PLT.MetaEvent): Upward<MetaUpdateEvent> {
             );
         case 'lockCreateEvent':
             return {
-                tag: TransactionEventTag.LockCreate,
+                tag: TransactionEventTag.LockCreated,
                 lockId: PLT.LockId.fromProto(unwrap(event.event.lockCreateEvent.lockId)),
                 lockConfig: PLT.Cbor.fromProto(unwrap(event.event.lockCreateEvent.lockConfig)),
             };
         case 'lockDestroyEvent':
             return {
-                tag: TransactionEventTag.LockDestroy,
+                tag: TransactionEventTag.LockDestroyed,
                 lockId: PLT.LockId.fromProto(unwrap(event.event.lockDestroyEvent.lockId)),
             };
         case undefined:

@@ -6,7 +6,7 @@ import playstoreIcon from '@/assets/playstore-icon.svg';
 import sectionSeparator from '@/assets/section-separator.svg';
 import { isMobileScreen } from '@/config.state';
 import { ID_APP_STORE } from '@/constants/wallet.registry';
-import { getConfig, getGlobalContainer } from '@/index';
+import { getGlobalContainer } from '@/index';
 import type { HideModalFunction, ModalFunction, ShowModalFunction } from '@/types';
 import { openAppStoreForConcordiumID } from '@/utils/mobileAppDetection';
 
@@ -74,11 +74,26 @@ export const createLandingModal: ModalFunction = () => {
             // On mobile, try to open the Concordium ID app directly
             // First, we need to initialize WalletConnect to get a URI
             try {
-                console.log('[Mobile] Opening ID App - initializing WalletConnect...');
                 const { ServiceFactory } = await import('@/services');
                 const { ModalConstants } = await import('@/constants/modal.constants');
                 const { WalletConnectConstants } = await import('@/constants/walletconnect.constants');
                 const { getConcordiumIdDeepLink } = await import('@/constants/wallet.registry');
+
+                // Ensure __CONCORDIUM_WC_CONFIG__ is populated if we're in sdk-managed mode
+                if (!(window as any).__CONCORDIUM_WC_CONFIG__) {
+                    const projectId = localStorage.getItem(ModalConstants.LOCAL_STORAGE_FLAGS.SDK_PROJECT_ID);
+                    const network = localStorage.getItem(ModalConstants.LOCAL_STORAGE_FLAGS.SDK_NETWORK) || 'testnet';
+                    const storedMetadata = localStorage.getItem('sdkWalletConnectMetadata');
+                    const metadata = storedMetadata ? JSON.parse(storedMetadata) : null;
+
+                    if (projectId) {
+                        (window as any).__CONCORDIUM_WC_CONFIG__ = {
+                            projectId,
+                            network,
+                            metadata: metadata || WalletConnectConstants.getDefaultMetadata(),
+                        };
+                    }
+                }
 
                 // Get WalletConnect service and generate URI
                 const wcService = ServiceFactory.createWalletConnectService();
@@ -92,7 +107,6 @@ export const createLandingModal: ModalFunction = () => {
                     'testnet';
                 const chainIds = WalletConnectConstants.CHAIN_IDS[network];
 
-                console.log('[Mobile] Generating WalletConnect URI...');
                 // Generate WalletConnect URI by calling connect()
                 const { uri, approval } = await wcService.connect({
                     ccd: {
@@ -107,85 +121,84 @@ export const createLandingModal: ModalFunction = () => {
                     throw new Error('Failed to generate WalletConnect URI');
                 }
 
-                console.log('[Mobile] WalletConnect URI generated:', uri.substring(0, 50) + '...');
-
                 // Store URI for later use
                 localStorage.setItem(ModalConstants.LOCAL_STORAGE_FLAGS.WALLET_CONNECT_URI, uri);
 
                 // Store connected wallet name
                 localStorage.setItem(ModalConstants.LOCAL_STORAGE_FLAGS.CONNECTED_WALLET_NAME, 'Concordium ID');
 
+                let sessionProcessed = false;
+
+                const processApprovedSession = async (session: any) => {
+                    if (sessionProcessed) return;
+                    sessionProcessed = true;
+
+                    const { handleSessionApproval } = await import('./scan');
+                    await handleSessionApproval(session);
+                };
+
                 // Handle session approval in the background
                 approval()
-                    .then(async (session) => {
-                        console.log('[Mobile] Session approved:', session.peer?.metadata?.name);
-                        const { handleSessionApproval } = await import('./scan');
-                        await handleSessionApproval(session);
-                    })
-                    .catch((error) => {
-                        console.error('Session approval failed:', error);
-                    });
+                    .then(processApprovedSession)
+                    .catch(() => {});
+
+                const tryRecoverApprovedSession = async () => {
+                    if (document.hidden || sessionProcessed) return;
+
+                    const activeSessions = wcService.getActiveSessions();
+                    if (activeSessions.length > 0) {
+                        await processApprovedSession(activeSessions[0]);
+                    }
+                };
+
+                document.addEventListener('visibilitychange', () => {
+                    void tryRecoverApprovedSession();
+                });
+
+                window.addEventListener('focus', () => {
+                    void tryRecoverApprovedSession();
+                });
 
                 // Generate deep link
                 const deepLink = getConcordiumIdDeepLink(uri);
-                console.log('[Mobile] Opening deep link:', deepLink.substring(0, 80) + '...');
-
-                const isAndroid = /android/i.test(navigator.userAgent);
 
                 // Track if app opened (page loses visibility)
                 let appOpened = false;
                 const markAppOpened = () => {
-                    console.log('[Mobile] App opened detected');
                     appOpened = true;
                 };
 
-                document.addEventListener('visibilitychange', () => {
+                const visibilityHandler = () => {
                     if (document.hidden) markAppOpened();
-                });
+                };
+
+                document.addEventListener('visibilitychange', visibilityHandler);
                 window.addEventListener('pagehide', markAppOpened);
                 window.addEventListener('blur', markAppOpened);
 
-                if (isAndroid) {
-                    // Android: Try deep link, fall back to Play Store after timeout
-                    // Use iframe trick for more reliable detection
-                    const iframe = document.createElement('iframe');
-                    iframe.style.display = 'none';
-                    iframe.src = deepLink;
-                    document.body.appendChild(iframe);
+                // Use one direct deep link format on both Android and iOS.
+                // This avoids Android intent chooser edge-cases where the browser prompt can remain stuck.
+                const link = document.createElement('a');
+                link.href = deepLink;
+                link.style.display = 'none';
+                document.body.appendChild(link);
+                link.click();
 
-                    // Also try window.location as backup
-                    setTimeout(() => {
-                        window.location.href = deepLink;
-                    }, 100);
+                setTimeout(() => {
+                    if (!appOpened && !document.hidden && document.visibilityState === 'visible') {
+                        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+                        window.location.href = isIOS ? ID_APP_STORE.ios : ID_APP_STORE.android;
+                    }
 
-                    // After 2.5 seconds, if still on page, redirect to Play Store
-                    setTimeout(() => {
-                        if (!appOpened && !document.hidden) {
-                            console.log('[Mobile] App not detected after timeout, redirecting to Play Store...');
-                            window.location.href = ID_APP_STORE.android;
-                        }
-                        // Clean up iframe
-                        if (iframe.parentNode) {
-                            iframe.parentNode.removeChild(iframe);
-                        }
-                    }, 2500);
-                } else {
-                    // iOS: Use a hidden link click for better Safari compatibility
-                    const link = document.createElement('a');
-                    link.href = deepLink;
-                    link.style.display = 'none';
-                    document.body.appendChild(link);
-                    link.click();
+                    document.removeEventListener('visibilitychange', visibilityHandler);
+                    window.removeEventListener('pagehide', markAppOpened);
+                    window.removeEventListener('blur', markAppOpened);
 
-                    // Clean up
-                    setTimeout(() => {
-                        if (link.parentNode) {
-                            link.parentNode.removeChild(link);
-                        }
-                    }, 100);
-                }
-            } catch (error) {
-                console.error('Failed to open Concordium ID app:', error);
+                    if (link.parentNode) {
+                        link.parentNode.removeChild(link);
+                    }
+                }, 3500);
+            } catch {
                 // Fallback to app store if something goes wrong
                 openAppStoreForConcordiumID();
             }
@@ -239,13 +252,6 @@ export const showLandingModal: ShowModalFunction = async () => {
     }
 
     if (!targetContainer) {
-        console.error('Container not found for modal');
-        console.error(`Container not found for Concordium modal. Tried: ${getConfig().defaultContainer}`);
-        console.error('Available elements:', {
-            root: document.querySelector('#root'),
-            app: document.querySelector('#app'),
-            body: document.body,
-        });
         return;
     }
 
@@ -258,48 +264,25 @@ export const showLandingModal: ShowModalFunction = async () => {
     const landing = createLandingModal();
     landing.id = 'landing-modal';
 
-    // Get the modal container for transforms
-    const modalContainer = landing.querySelector('.desktop--modal-container') as HTMLElement;
-
-    // For smooth transitions, prepare new modal completely before showing
-    landing.style.opacity = '0';
-    modalContainer.style.transform = 'translateY(-20px) scale(0.95)';
-    modalContainer.style.transition = 'transform 0.3s ease-out';
+    // For smooth transitions, start hidden then trigger enter
+    landing.classList.add('modal-wrapper');
     targetContainer.appendChild(landing);
 
-    // Force a reflow to ensure the styles are applied
+    // Force a reflow to ensure the initial hidden state is applied
     landing.offsetHeight;
-
-    // Now start the transition
-    landing.style.transition = 'opacity 0.3s ease-out';
 
     // Use a small delay to ensure DOM is fully ready
     setTimeout(() => {
         // Start simultaneous crossfade
         if (existingModal) {
-            const existingContainer = existingModal.querySelector('.desktop--modal-container') as HTMLElement;
-            existingModal.style.transition = 'opacity 0.3s ease-in';
-            if (existingContainer) {
-                existingContainer.style.transition = 'transform 0.3s ease-in';
-                existingContainer.style.transform = 'translateY(-20px) scale(0.95)';
-            }
-            existingModal.style.opacity = '0';
-            existingModal.style.pointerEvents = 'none';
-            existingModal.style.zIndex = '9998';
-        }
-
-        // Show new modal
-        landing.style.opacity = '1';
-        modalContainer.style.transform = 'translateY(0) scale(1)';
-
-        // Remove old modal after transition completes
-        if (existingModal) {
+            existingModal.classList.add('modal-exiting');
             setTimeout(() => {
-                if (existingModal.parentNode) {
-                    existingModal.parentNode.removeChild(existingModal);
-                }
+                existingModal.parentNode?.removeChild(existingModal);
             }, 350);
         }
+
+        // Reveal new modal
+        landing.classList.add('is-visible');
     }, 10);
 };
 

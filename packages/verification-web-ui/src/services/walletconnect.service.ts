@@ -32,8 +32,6 @@ export class WalletConnectService {
             this.setupEventListeners();
             return this.signClient;
         } catch (error) {
-            console.error('Failed to initialize WalletConnect:', error);
-
             dispatchConcordiumEvent({
                 type: 'error',
                 source: 'desktop',
@@ -88,7 +86,6 @@ export class WalletConnectService {
 
             return { uri: uri || '', approval: enhancedApproval };
         } catch (error) {
-            console.error('Failed to connect wallet:', error);
             throw error;
         }
     }
@@ -133,7 +130,6 @@ export class WalletConnectService {
             await Promise.all(disconnectPromises);
             this.currentSession = null;
         } catch (error) {
-            console.error('Failed to disconnect:', error);
             throw error;
         }
     }
@@ -173,21 +169,19 @@ export class WalletConnectService {
         try {
             const sessions = this.signClient.session.getAll();
             if (sessions.length > 0) {
-                console.log(`Clearing ${sessions.length} existing session(s) before new pairing`);
                 const disconnectPromises = sessions.map((session) =>
                     this.signClient!.disconnect({
                         topic: session.topic,
                         reason: WalletConnectConstants.DISCONNECT_REASON,
-                    }).catch((err) => {
+                    }).catch(() => {
                         // Ignore errors for individual disconnects
-                        console.warn(`Failed to disconnect session ${session.topic}:`, err);
                     })
                 );
                 await Promise.all(disconnectPromises);
             }
             this.currentSession = null;
-        } catch (error) {
-            console.warn('Error clearing sessions, continuing anyway:', error);
+        } catch {
+            // Ignore errors when clearing sessions
         }
     }
 
@@ -224,7 +218,7 @@ export class WalletConnectService {
         }
 
         if (this.config.projectId.includes('test') || this.config.projectId.includes('development')) {
-            console.warn('🚨 Using test/development project ID. Get a real one from https://cloud.walletconnect.com');
+            // Silently allow test/development project IDs
         }
     }
 

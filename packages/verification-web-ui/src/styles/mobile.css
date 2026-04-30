@@ -150,3 +150,34 @@
 .mobile--carousel-point-text {
     @apply text-dark text-[14px] leading-[21px] font-inter font-medium;
 }
+
+.mobile--redirect-fallback-panel {
+    @apply fixed left-4 right-4 bottom-4 bg-gray-900 text-white rounded-[14px] p-[14px];
+    z-index: 2147483647;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.24);
+}
+
+.mobile--redirect-fallback-panel__text {
+    @apply text-sm;
+    margin: 0 0 10px 0;
+    line-height: 1.4;
+}
+
+.mobile--redirect-fallback-panel__button {
+    @apply w-full font-semibold text-sm bg-white text-gray-900;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 12px;
+}
+
+.mobile--redirect-fallback-panel__footer {
+    @apply text-xs;
+    margin: 10px 0 0 0;
+    line-height: 1.4;
+    opacity: 0.9;
+}
+
+.mobile--redirect-fallback-panel__link {
+    color: #93c5fd;
+    text-decoration: underline;
+}

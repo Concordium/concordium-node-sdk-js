@@ -7,7 +7,7 @@ import {
 } from './deserialization.js';
 import { Cursor } from './deserializationHelpers.js';
 import { DelegationTargetTypeNumeric, Upward, isKnown } from './index.js';
-import { Cbor, TokenId, TokenOperationType } from './plt/index.js';
+import { Cbor, MetaUpdateOperationType, TokenId, TokenOperationType } from './plt/index.js';
 import {
     AccountTransactionInput,
     ContractAddress,
@@ -890,7 +890,7 @@ export type TokenUpdatePayloadJSON = {
     operations: Cbor.JSON;
 };
 
-function getPLTOperationEnergyCost(operation: unknown): bigint {
+function getTokenOperationEnergyCost(operation: unknown): bigint {
     if (typeof operation !== 'object' || operation === null) {
         return 0n;
     }
@@ -904,13 +904,9 @@ function getPLTOperationEnergyCost(operation: unknown): bigint {
     const PLT_PAUSE_COST = 50n;
     const PLT_ASSIGN_REVOKE_ROLES_COST = 50n;
     const PLT_UPDATE_METADATA_COST = 50n;
-    // TODO: add costs for lock operations
 
     switch (true) {
         case TokenOperationType.Transfer in op:
-        case 'lockFund' in op:
-        case 'lockSend' in op:
-        case 'lockReturn' in op:
             return PLT_TRANSFER_COST;
         case TokenOperationType.Mint in op:
             return PLT_MINT_COST;
@@ -931,6 +927,31 @@ function getPLTOperationEnergyCost(operation: unknown): bigint {
             return PLT_UPDATE_METADATA_COST;
         default:
             return 0n;
+    }
+}
+
+function getMetaUpdateOperationEnergyCost(operation: unknown): bigint {
+    if (typeof operation !== 'object' || operation === null) {
+        return 0n;
+    }
+
+    const op = operation as Record<string, unknown>;
+
+    const LOCK_TRANSFER_COST = 100n;
+    const PLT_LOCK_CREATE_COST = 100n;
+    const PLT_LOCK_CANCEL_COST = 50n;
+
+    switch (true) {
+        case MetaUpdateOperationType.LockFund in op:
+        case MetaUpdateOperationType.LockSend in op:
+        case MetaUpdateOperationType.LockReturn in op:
+            return LOCK_TRANSFER_COST;
+        case MetaUpdateOperationType.LockCreate in op:
+            return PLT_LOCK_CREATE_COST;
+        case MetaUpdateOperationType.LockCancel in op:
+            return PLT_LOCK_CANCEL_COST;
+        default:
+            return getTokenOperationEnergyCost(operation);
     }
 }
 
@@ -958,8 +979,12 @@ export class TokenUpdateHandler
         return { tokenId, operations };
     }
     getBaseEnergyCost(payload: TokenUpdatePayload): bigint {
+        const BASE_COST = 300n;
         const operations = Cbor.decode(payload.operations, 'TokenOperation[]');
-        return operations.reduce((energyCost, operation) => energyCost + getPLTOperationEnergyCost(operation), 300n);
+        return operations.reduce(
+            (energyCost, operation) => energyCost + getTokenOperationEnergyCost(operation),
+            BASE_COST
+        );
     }
     toJSON(payload: TokenUpdatePayload): TokenUpdatePayloadJSON {
         return {
@@ -989,11 +1014,15 @@ export class MetaUpdateHandler
     }
 
     getBaseEnergyCost(payload: MetaUpdatePayload): bigint {
+        const BASE_COST = 300n;
         const operations = Cbor.decode(payload.operations);
         if (!Array.isArray(operations)) {
             throw new Error('Invalid MetaUpdate operations: expected a CBOR array');
         }
-        return operations.reduce((energyCost, operation) => energyCost + getPLTOperationEnergyCost(operation), 300n);
+        return operations.reduce(
+            (energyCost, operation) => energyCost + getMetaUpdateOperationEnergyCost(operation),
+            BASE_COST
+        );
     }
 
     toJSON(payload: MetaUpdatePayload): MetaUpdatePayloadJSON {

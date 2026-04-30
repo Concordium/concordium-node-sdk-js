@@ -6,6 +6,7 @@ import {
     LockConfig,
     LockController,
     LockId,
+    MetaUpdateOperationType,
     TokenAmount,
     TokenId,
     TokenOperationType,
@@ -46,8 +47,8 @@ describe('PLT MetaUpdateOperation', () => {
 
     it('encodes lockCreate and lockCancel meta operations', () => {
         const operations = encodeMetaUpdateOperations([
-            { lockCreate: lockConfig },
-            { lockCancel: { lock, memo: new Uint8Array([9]) } },
+            { [MetaUpdateOperationType.LockCreate]: lockConfig },
+            { [MetaUpdateOperationType.LockCancel]: { lock, memo: new Uint8Array([9]) } },
         ]);
 
         expect(operations.toString()).toContain('6a6c6f636b437265617465');
@@ -57,9 +58,9 @@ describe('PLT MetaUpdateOperation', () => {
 
     it('encodes token-scoped lock operations', () => {
         const operations = encodeMetaUpdateOperations([
-            { lockFund: { token, lock, amount, memo: new Uint8Array([9]) } },
-            { lockSend: { token, lock, source: account, amount, recipient: account } },
-            { lockReturn: { token, lock, source: account, amount } },
+            { [MetaUpdateOperationType.LockFund]: { token, lock, amount, memo: new Uint8Array([9]) } },
+            { [MetaUpdateOperationType.LockSend]: { token, lock, source: account, amount, recipient: account } },
+            { [MetaUpdateOperationType.LockReturn]: { token, lock, source: account, amount } },
         ]);
 
         expect(operations.toString()).toBe(
@@ -81,7 +82,7 @@ describe('PLT MetaUpdateOperation', () => {
     });
 
     it('serializes and deserializes MetaUpdate payloads', () => {
-        const payload = createMetaUpdatePayload({ lockCancel: { lock } });
+        const payload = createMetaUpdatePayload({ [MetaUpdateOperationType.LockCancel]: { lock } });
         const serialized = serializeAccountTransactionPayload({ type: AccountTransactionType.MetaUpdate, payload });
 
         expect(serialized.toString('hex')).toBe('1c0000001a81a16a6c6f636b43616e63656ca1646c6f636bd99fd883010203');
@@ -91,7 +92,7 @@ describe('PLT MetaUpdateOperation', () => {
     });
 
     it('supports Payload helpers and JSON roundtrips for MetaUpdate', () => {
-        const payload = Payload.metaUpdate(createMetaUpdatePayload({ lockCancel: { lock } }));
+        const payload = Payload.metaUpdate(createMetaUpdatePayload({ [MetaUpdateOperationType.LockCancel]: { lock } }));
         const serialized = Payload.serialize(payload);
         expect(Payload.deserialize(serialized)).toEqual(payload);
 
@@ -113,12 +114,14 @@ describe('PLT MetaUpdateOperation', () => {
                     recipient: account,
                 },
             }),
-            { lockFund: { token, lock, amount } },
-            { lockSend: { token, lock, source: account, amount, recipient: account } },
-            { lockReturn: { token, lock, source: account, amount } },
+            { [MetaUpdateOperationType.LockCreate]: lockConfig },
+            { [MetaUpdateOperationType.LockCancel]: { lock } },
+            { [MetaUpdateOperationType.LockFund]: { token, lock, amount } },
+            { [MetaUpdateOperationType.LockSend]: { token, lock, source: account, amount, recipient: account } },
+            { [MetaUpdateOperationType.LockReturn]: { token, lock, source: account, amount } },
         ]);
 
-        expect(new MetaUpdateHandler().getBaseEnergyCost(payload)).toBe(700n);
+        expect(new MetaUpdateHandler().getBaseEnergyCost(payload)).toBe(850n);
     });
 
     it('does not change TokenUpdate transaction type value', () => {

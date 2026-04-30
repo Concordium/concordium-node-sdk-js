@@ -56,8 +56,6 @@ export const createReturningUserModal: ModalFunction = () => {
 
         // Check if session exists
         if (!activeSessionData) {
-            console.error('No active session found');
-
             // Redirect to landing modal since session is missing
             hideReturningUserModal();
             const { showLandingModal } = await import('./landing');
@@ -104,8 +102,8 @@ export const createReturningUserModal: ModalFunction = () => {
             // Auto-send presentation request if configured
             const { autoSendPresentationRequestIfConfigured } = await import('./scan');
             await autoSendPresentationRequestIfConfigured(topic);
-        } catch (error) {
-            console.error('Failed to continue with existing session:', error);
+        } catch {
+            // Session continuation failed
         }
     });
 
@@ -129,16 +127,14 @@ export const createReturningUserModal: ModalFunction = () => {
             const { showLandingModal } = await import('./landing');
             await showLandingModal();
             hideReturningUserModal();
-        } catch (error) {
-            console.error('Failed to disconnect sessions:', error);
-
+        } catch {
             // Even if disconnect fails, clear flags and redirect
             try {
                 localStorage.removeItem(ModalConstants.LOCAL_STORAGE_FLAGS.ONLY_ONE_OPTION);
                 localStorage.removeItem(ModalConstants.LOCAL_STORAGE_FLAGS.APP_NOT_INSTALLED);
                 localStorage.removeItem(ModalConstants.LOCAL_STORAGE_FLAGS.CONCORDIUM_ID_NOT_INSTALLED);
-            } catch (storageError) {
-                console.error('Failed to clear localStorage flags:', storageError);
+            } catch {
+                // Ignore localStorage errors
             }
 
             // Still navigate to landing modal
@@ -156,7 +152,6 @@ export const showReturningUserModal: ShowModalFunction = async () => {
     const targetContainer = getGlobalContainer();
 
     if (!targetContainer) {
-        console.error('Container not found for modal');
         return;
     }
 
@@ -166,48 +161,26 @@ export const showReturningUserModal: ShowModalFunction = async () => {
     const modal = createReturningUserModal();
     modal.id = 'returning-user-modal';
 
-    // Get the modal container for transforms
-    const modalContainer = modal.querySelector('.desktop--modal-container') as HTMLElement;
-
-    // For smooth transitions, prepare new modal completely before showing
-    modal.style.opacity = '0';
-    modalContainer.style.transform = 'translateY(-20px) scale(0.95)';
-    modalContainer.style.transition = 'transform 0.3s ease-out';
+    // For smooth transitions, start with modal-entering then transition to modal-visible
+    modal.classList.add('modal-entering');
     targetContainer.appendChild(modal);
 
-    // Force a reflow to ensure the styles are applied
+    // Force a reflow to ensure the initial hidden state is applied
     modal.offsetHeight;
-
-    // Now start the transition
-    modal.style.transition = 'opacity 0.3s ease-out';
 
     // Use a small delay to ensure DOM is fully ready
     setTimeout(() => {
         // Start simultaneous crossfade
         if (existingModal) {
-            const existingContainer = existingModal.querySelector('.desktop--modal-container') as HTMLElement;
-            existingModal.style.transition = 'opacity 0.3s ease-in';
-            if (existingContainer) {
-                existingContainer.style.transition = 'transform 0.3s ease-in';
-                existingContainer.style.transform = 'translateY(-20px) scale(0.95)';
-            }
-            existingModal.style.opacity = '0';
-            existingModal.style.pointerEvents = 'none';
-            existingModal.style.zIndex = '9998';
-        }
-
-        // Show new modal
-        modal.style.opacity = '1';
-        modalContainer.style.transform = 'translateY(0) scale(1)';
-
-        // Remove old modal after transition completes
-        if (existingModal) {
+            existingModal.classList.add('modal-exiting');
             setTimeout(() => {
-                if (existingModal.parentNode) {
-                    existingModal.parentNode.removeChild(existingModal);
-                }
+                existingModal.parentNode?.removeChild(existingModal);
             }, 350);
         }
+
+        // Reveal new modal
+        modal.classList.remove('modal-entering');
+        modal.classList.add('modal-visible');
     }, 10);
 };
 

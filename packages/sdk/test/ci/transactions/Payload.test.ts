@@ -14,7 +14,6 @@ import {
     TransactionKindString,
 } from '../../../src/index.js';
 import {
-    CborAccountAddress,
     LockId,
     MetaUpdateOperationType,
     TokenAmount,

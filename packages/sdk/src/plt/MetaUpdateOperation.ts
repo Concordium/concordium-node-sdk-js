@@ -150,8 +150,15 @@ export function createMetaTokenOperation(token: TokenId.Type, operation: TokenOp
  * @param operations operation or operations to encode.
  * @returns CBOR encoded operation sequence.
  */
+function operationToCBORValue(operation: MetaUpdateOperation): object {
+    if (MetaUpdateOperationType.LockCreate in operation) {
+        return { [MetaUpdateOperationType.LockCreate]: LockConfig.toCBORValue(operation.lockCreate) };
+    }
+    return operation;
+}
+
 export function encodeMetaUpdateOperations(operations: MetaUpdateOperation | MetaUpdateOperation[]): Cbor.Type {
-    return Cbor.encode([operations].flat());
+    return Cbor.encode([operations].flat().map(operationToCBORValue));
 }
 
 /**

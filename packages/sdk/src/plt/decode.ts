@@ -2,7 +2,9 @@ import { cborDecode } from '../types/cbor.js';
 import {
     Cbor,
     CborAccountAddress,
+    CborEpoch,
     LockConfig,
+    LockController,
     MetaUpdateOperation,
     TokenAmount,
     TokenInitializationParameters,
@@ -99,13 +101,34 @@ function decodeTokenInitializationParameters(value: Cbor.Type): TokenInitializat
     return { ...decoded, metadata } as TokenInitializationParameters;
 }
 
+function decodeLockConfig(value: Cbor.Type): LockConfig {
+    const decoded = cborDecode(value.bytes);
+    if (typeof decoded !== 'object' || decoded === null) {
+        throw new Error('Invalid lock config: expected object');
+    }
+
+    const lockConfig = decoded as Record<string, unknown>;
+    if (!Array.isArray(lockConfig.recipients) || !lockConfig.recipients.every(CborAccountAddress.instanceOf)) {
+        throw new Error('Invalid lock config: expected recipients array');
+    }
+    if (!CborEpoch.instanceOf(lockConfig.expiry)) {
+        throw new Error('Invalid lock config: expected expiry as CBOR epoch time');
+    }
+
+    return {
+        recipients: lockConfig.recipients,
+        expiry: lockConfig.expiry,
+        controller: LockController.fromCBORValue(lockConfig.controller),
+    };
+}
+
 type DecodeTypeMap = {
     TokenModuleState: TokenModuleState;
     TokenModuleAccountState: TokenModuleAccountState;
     TokenInitializationParameters: TokenInitializationParameters;
     'TokenOperation[]': (TokenOperation | UnknownTokenOperation)[];
     'MetaUpdateOperation[]': (MetaUpdateOperation | UnknownMetaUpdateOperation)[];
-    LockConfig: LockConfig.Type;
+    LockConfig: LockConfig;
 };
 
 /**
@@ -141,7 +164,7 @@ export function decode<T extends keyof DecodeTypeMap | undefined>(cbor: Cbor.Typ
         case 'MetaUpdateOperation[]':
             return decodeMetaUpdateOperations(cbor);
         case 'LockConfig':
-            return LockConfig.fromCBORValue(cborDecode(cbor.bytes));
+            return decodeLockConfig(cbor);
         default:
             return cborDecode(cbor.bytes);
     }

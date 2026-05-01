@@ -3,7 +3,7 @@ import JSONBig from 'json-bigint';
 import { Cursor } from '../../../src/deserializationHelpers.ts';
 import {
     CborAccountAddress,
-    LockConfig,
+    CborEpoch,
     LockController,
     LockId,
     MetaUpdateOperationType,
@@ -16,11 +16,11 @@ import {
     createMetaUpdatePayload,
     encodeMetaUpdateOperations,
 } from '../../../src/pub/plt.ts';
+import type { LockConfig } from '../../../src/pub/plt.ts';
 import {
     AccountAddress,
     AccountTransactionType,
     MetaUpdateHandler,
-    TransactionExpiry,
     TransactionKindString,
     serializeAccountTransactionPayload,
 } from '../../../src/pub/types.ts';
@@ -33,10 +33,10 @@ describe('PLT MetaUpdateOperation', () => {
     const amount = TokenAmount.create(500n, 2);
     const lock = LockId.create(1n, 2n, 3n);
     const account = CborAccountAddress.fromAccountAddress(AccountAddress.fromBuffer(new Uint8Array(32).fill(0x15)));
-    const lockConfig = LockConfig.create(
-        [account],
-        TransactionExpiry.fromEpochSeconds(10n),
-        LockController.simpleV0(
+    const lockConfig: LockConfig = {
+        recipients: [account],
+        expiry: CborEpoch.fromEpochSeconds(10n),
+        controller: LockController.simpleV0(
             [
                 {
                     account,
@@ -44,8 +44,8 @@ describe('PLT MetaUpdateOperation', () => {
                 },
             ],
             [token]
-        )
-    );
+        ),
+    };
     const metadataChecksum = new Uint8Array(32).fill(1);
 
     it.each([

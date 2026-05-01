@@ -3,7 +3,9 @@ import type { AccountLockAmount, LockAccountFund, LockInfo } from './cbor-types.
 import {
     Cbor,
     CborAccountAddress,
+    CborEpoch,
     LockConfig,
+    LockController,
     LockId,
     MetaUpdateOperation,
     TokenAmount,
@@ -143,10 +145,11 @@ function decodeLockInfo(value: Cbor.Type): LockInfo {
     if (!Array.isArray(map.funds)) {
         throw new Error("Invalid LockInfo: 'funds' must be an array");
     }
+    const config = convertLockConfig(map);
 
     return {
-        ...LockConfig.fromCBORValue(map),
         lock: map.lock,
+        ...config,
         funds: map.funds.map(decodeLockAccountFund),
     };
 }
@@ -186,13 +189,38 @@ function decodeTokenInitializationParameters(value: Cbor.Type): TokenInitializat
     return { ...decoded, metadata } as TokenInitializationParameters;
 }
 
+function convertLockConfig(value: unknown): LockConfig {
+    if (typeof value !== 'object' || value === null) {
+        throw new Error('Invalid lock config: expected object');
+    }
+
+    const lockConfig = value as Record<string, unknown>;
+    if (!Array.isArray(lockConfig.recipients) || !lockConfig.recipients.every(CborAccountAddress.instanceOf)) {
+        throw new Error('Invalid lock config: expected recipients array');
+    }
+    if (!CborEpoch.instanceOf(lockConfig.expiry)) {
+        throw new Error('Invalid lock config: expected expiry as CBOR epoch time');
+    }
+
+    return {
+        recipients: lockConfig.recipients,
+        expiry: lockConfig.expiry,
+        controller: LockController.fromCBORValue(lockConfig.controller),
+    };
+}
+
+function decodeLockConfig(value: Cbor.Type): LockConfig {
+    const decoded = cborDecode(value.bytes);
+    return convertLockConfig(decoded);
+}
+
 type DecodeTypeMap = {
     TokenModuleState: TokenModuleState;
     TokenModuleAccountState: TokenModuleAccountState;
     TokenInitializationParameters: TokenInitializationParameters;
     'TokenOperation[]': (TokenOperation | UnknownTokenOperation)[];
     'MetaUpdateOperation[]': (MetaUpdateOperation | UnknownMetaUpdateOperation)[];
-    LockConfig: LockConfig.Type;
+    LockConfig: LockConfig;
     LockInfo: LockInfo;
 };
 
@@ -229,7 +257,7 @@ export function decode<T extends keyof DecodeTypeMap | undefined>(cbor: Cbor.Typ
         case 'MetaUpdateOperation[]':
             return decodeMetaUpdateOperations(cbor);
         case 'LockConfig':
-            return LockConfig.fromCBORValue(cborDecode(cbor.bytes));
+            return decodeLockConfig(cbor);
         case 'LockInfo':
             return decodeLockInfo(cbor);
         default:

@@ -1,10 +1,10 @@
+import * as CborEpoch from '../plt/CborEpoch.js';
 import * as Token from '../plt/Token.js';
 // To limit the exports meant only for internal use, we re-create the module exports.
 import * as Cbor from './plt/Cbor.js';
 import * as CborAccountAddress from './plt/CborAccountAddress.js';
 import * as CborContractAddress from './plt/CborContractAddress.js';
 import * as CborMemo from './plt/CborMemo.js';
-import * as LockConfig from './plt/LockConfig.js';
 import * as LockController from './plt/LockController.js';
 import * as LockId from './plt/LockId.js';
 import * as TokenAmount from './plt/TokenAmount.js';
@@ -25,13 +25,13 @@ export {
     Cbor,
     TokenAmount,
     CborMemo,
+    CborEpoch,
     TokenId,
     TokenModuleReference,
     TokenMetadataUrl,
     TokenHolder,
     CborAccountAddress,
     CborContractAddress,
-    LockConfig,
     LockController,
     LockId,
 };

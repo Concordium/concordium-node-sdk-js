@@ -64,6 +64,8 @@ export enum TransactionEventTag {
     TokenTransfer = 'TokenTransfer',
     TokenMint = 'TokenMint',
     TokenBurn = 'TokenBurn',
+    LockCreated = 'LockCreated',
+    LockDestroyed = 'LockDestroyed',
 }
 
 export type TransactionEvent =
@@ -402,6 +404,10 @@ export type TokenTransferEvent = {
     amount: PLT.TokenAmount.Type;
     /** An optional memo associated with the transfer. */
     memo?: PLT.CborMemo.Type;
+    /** The lock controlling the source funds, if the funds originate from a locked balance. */
+    fromLock?: PLT.LockId.Type;
+    /** The lock assuming control of the destination funds, if the funds are transferred into a lock. */
+    toLock?: PLT.LockId.Type;
 };
 
 /**
@@ -442,7 +448,24 @@ export type TokenBurnEvent = {
     amount: PLT.TokenAmount.Type;
 };
 
+export type LockCreateEvent = {
+    /** The type of the event */
+    tag: TransactionEventTag.LockCreated;
+    /** The ID of the newly created lock. */
+    lockId: PLT.LockId.Type;
+    /** The CBOR-encoded lock configuration. */
+    lockConfig: PLT.Cbor.Type;
+};
+
+export type LockDestroyEvent = {
+    /** The type of the event */
+    tag: TransactionEventTag.LockDestroyed;
+    /** The ID of the destroyed lock. */
+    lockId: PLT.LockId.Type;
+};
+
 export type TokenEvent = EncodedTokenModuleEvent | TokenTransferEvent | TokenMintEvent | TokenBurnEvent;
+export type MetaUpdateEvent = TokenEvent | LockCreateEvent | LockDestroyEvent;
 export type ContractTraceEvent = ResumedEvent | InterruptedEvent | UpdatedEvent | UpgradedEvent | TransferredEvent;
 export type BakerEvent =
     | BakerSetTransactionFeeCommissionEvent

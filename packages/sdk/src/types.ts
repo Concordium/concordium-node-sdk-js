@@ -1375,6 +1375,7 @@ export enum AccountTransactionType {
     ConfigureBaker = 25,
     ConfigureDelegation = 26,
     TokenUpdate = 27,
+    MetaUpdate = 28,
 }
 
 export function isAccountTransactionType(candidate: number): candidate is AccountTransactionType {
@@ -1569,6 +1570,15 @@ export type TokenUpdatePayload = {
 };
 
 /**
+ * The payload for a meta update transaction.
+ * The contents of the `operations` byte array is a CBOR encoding of the meta operation sequence.
+ */
+export type MetaUpdatePayload = {
+    /** The CBOR encoded meta operations. */
+    operations: Cbor.Type;
+};
+
+/**
  * The payload for UpdateCredentialKeys transaction
  * new set of credential keys to be replaced with the existing ones including updating the threshold
  *
@@ -1600,6 +1610,7 @@ export type AccountTransactionPayload =
     | ConfigureBakerPayload
     | ConfigureDelegationPayload
     | TokenUpdatePayload
+    | MetaUpdatePayload
     | UpdateCredentialKeysPayload;
 
 export type AccountTransactionInput =

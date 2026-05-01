@@ -1,5 +1,11 @@
 import { MAX_U8 } from '../constants.js';
-import { Cbor, CborAccountAddress, CreatePLTPayload, TokenAmount, TokenMetadataUrl } from './index.js';
+import * as Cbor from './Cbor.js';
+import type * as CborAccountAddress from './CborAccountAddress.js';
+import type * as CborEpoch from './CborEpoch.js';
+import type * as LockController from './LockController.js';
+import type * as TokenAmount from './TokenAmount.js';
+import type * as TokenMetadataUrl from './TokenMetadataUrl.js';
+import type { CreatePLTPayload } from './types.js';
 
 /**
  * The Token Module state represents global state information that is maintained by the Token Module,
@@ -77,6 +83,16 @@ export type TokenInitializationParameters = {
     mintable?: boolean;
     /** Whether the token is burnable */
     burnable?: boolean;
+};
+
+/** Lock configuration used by `lockCreate` meta update operations. */
+export type LockConfig = {
+    /** Accounts that are permitted to receive funds controlled by the lock. */
+    recipients: CborAccountAddress.Type[];
+    /** Lock expiry time. */
+    expiry: CborEpoch.Type;
+    /** Lock controller configuration. */
+    controller: LockController.Type;
 };
 
 /**

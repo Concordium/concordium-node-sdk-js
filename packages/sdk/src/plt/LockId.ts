@@ -81,6 +81,20 @@ export function fromProto(lockId: Proto.LockId): LockId {
 }
 
 /**
+ * Convert a lock identifier into its protobuf representation.
+ *
+ * @param lockId lock identifier.
+ * @returns protobuf lock id.
+ */
+export function toProto(lockId: LockId): Proto.LockId {
+    return {
+        accountIndex: lockId.accountIndex,
+        sequenceNumber: lockId.sequenceNumber,
+        creationOrder: lockId.creationOrder,
+    };
+}
+
+/**
  * Type predicate — returns `true` if `value` is a {@linkcode Type}.
  *
  * @param value value to check.

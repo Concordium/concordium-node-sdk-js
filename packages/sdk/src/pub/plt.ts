@@ -14,7 +14,7 @@ import * as TokenMetadataUrl from './plt/TokenMetadataUrl.js';
 import * as TokenModuleReference from './plt/TokenModuleReference.js';
 
 export * from '../plt/types.js';
-export * from '../plt/module.js';
+export * from '../plt/cbor-types.js';
 export * from '../plt/TokenModuleRejectReason.js';
 export * from '../plt/TokenModuleEvent.js';
 export * from '../plt/TokenOperation.js';

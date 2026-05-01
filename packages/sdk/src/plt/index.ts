@@ -1,5 +1,5 @@
 export * from './types.js';
-export * from './module.js';
+export * from './cbor-types.js';
 export * from './TokenModuleRejectReason.js';
 export * from './TokenModuleEvent.js';
 export * from './TokenOperation.js';

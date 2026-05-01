@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added gRPC client queries for PLT locks: `getLockInfo` and `getLockList`.
+- Added PLT `LockInfo` and `LockInfoResponse` types, and extended `TokenModuleAccountState` with P11 lock fields (`locks`, `available`).
 - Token operations for updating metadata, assigning and revoking admin roles have been added.
 - Token events for updating metadata, assigning and revoking admin roles have been added.
 - New Proto types, a translation function for those proto types and a new function getTokenAuthorizations

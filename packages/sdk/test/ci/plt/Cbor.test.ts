@@ -1,6 +1,9 @@
+import * as InternalLockConfig from '../../../src/plt/LockConfig.ts';
 import { CborAccountAddress, CborMemo } from '../../../src/plt/index.ts';
 import {
     Cbor,
+    LockController,
+    LockId,
     TokenAddDenyListOperation,
     TokenAmount,
     TokenId,
@@ -9,7 +12,7 @@ import {
     TokenOperationType,
     createTokenUpdatePayload,
 } from '../../../src/pub/plt.ts';
-import { AccountAddress } from '../../../src/types/index.ts';
+import { AccountAddress, TransactionExpiry } from '../../../src/types/index.ts';
 
 describe('PLT Cbor', () => {
     describe('TokenModuleState', () => {
@@ -136,6 +139,24 @@ describe('PLT Cbor', () => {
             expect(decoded.allowList).toBe(state.allowList);
             expect(decoded.denyList).toBe(state.denyList);
             expect(decoded.customField).toBe(state.customField);
+            expect(decoded.locks).toBeUndefined();
+            expect(decoded.available).toBeUndefined();
+        });
+
+        test('should encode and decode TokenModuleAccountState with locks correctly', () => {
+            const lock = LockId.create(1n, 2n, 0n);
+            const amount = TokenAmount.fromDecimal('1.23', 2);
+            const available = TokenAmount.fromDecimal('10', 0);
+            const state = {
+                locks: [{ lock, amount }],
+                available,
+            };
+
+            const encoded = Cbor.encode(state);
+            const decoded = Cbor.decode(encoded, 'TokenModuleAccountState');
+
+            expect(decoded.locks).toEqual(state.locks);
+            expect(decoded.available).toEqual(available);
         });
 
         test('should throw error if TokenModuleAccountState has invalid field types', () => {
@@ -154,6 +175,66 @@ describe('PLT Cbor', () => {
             };
             const encoded2 = Cbor.encode(invalidState2);
             expect(() => Cbor.decode(encoded2, 'TokenModuleAccountState')).toThrow(/denyList must be a boolean/);
+
+            const invalidLocks = Cbor.encode({
+                locks: { lock: LockId.create(1n, 2n, 0n), amount: TokenAmount.create(1n, 0) },
+            });
+            expect(() => Cbor.decode(invalidLocks, 'TokenModuleAccountState')).toThrow(/locks must be an array/);
+        });
+    });
+
+    describe('LockInfo', () => {
+        const account = CborAccountAddress.fromAccountAddress(AccountAddress.fromBuffer(new Uint8Array(32).fill(0x15)));
+        const lock = LockId.create(1n, 2n, 0n);
+        const token = TokenId.fromString('USDT');
+        const amount = TokenAmount.fromDecimal('42.123456', 6);
+        const expiry = TransactionExpiry.fromEpochSeconds(1_700_000_000n);
+        const controller = LockController.simpleV0(
+            [
+                {
+                    account,
+                    roles: [LockController.SimpleV0Capability.Fund, LockController.SimpleV0Capability.Send],
+                },
+            ],
+            [token]
+        );
+        const config = InternalLockConfig.create([account], expiry, controller);
+
+        test('should decode LockInfo correctly', () => {
+            const encoded = Cbor.encode({
+                lock,
+                ...InternalLockConfig.toCBORValue(config),
+                funds: [
+                    {
+                        account,
+                        amounts: [{ token: 'USDT', amount }],
+                    },
+                ],
+            });
+
+            expect(Cbor.toHexString(encoded)).toBe(
+                'a5646c6f636bd99fd8830102006566756e647381a2676163636f756e74d99d73a201d99d71a101190397035820151515151515151515151515151515151515151515151515151515151515151567616d6f756e747381a265746f6b656e645553445466616d6f756e74c482251a0282c0c066657870697279c11a6553f1006a636f6e74726f6c6c6572a16873696d706c655630a2666772616e747381a265726f6c6573826466756e646473656e64676163636f756e74d99d73a201d99d71a101190397035820151515151515151515151515151515151515151515151515151515151515151566746f6b656e738164555344546a726563697069656e747381d99d73a201d99d71a1011903970358201515151515151515151515151515151515151515151515151515151515151515'
+            );
+
+            const decoded = Cbor.decode(encoded, 'LockInfo');
+            expect(decoded).toEqual({
+                ...config,
+                lock,
+                funds: [
+                    {
+                        account,
+                        amounts: [{ token, amount }],
+                    },
+                ],
+            });
+        });
+
+        test('should throw error if LockInfo has invalid field types', () => {
+            expect(() => Cbor.decode(Cbor.encode([]), 'LockInfo')).toThrow(/Invalid CBOR data for LockInfo/);
+            expect(() => Cbor.decode(Cbor.encode({ funds: [] }), 'LockInfo')).toThrow(/missing or invalid 'lock'/);
+            expect(() => Cbor.decode(Cbor.encode({ lock, funds: 'invalid' }), 'LockInfo')).toThrow(
+                /'funds' must be an array/
+            );
         });
     });
 

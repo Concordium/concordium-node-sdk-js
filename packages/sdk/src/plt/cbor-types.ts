@@ -1,4 +1,7 @@
 import { MAX_U8 } from '../constants.js';
+import type * as LockConfig from './LockConfig.js';
+import type * as LockId from './LockId.js';
+import type * as TokenId from './TokenId.js';
 import { Cbor, CborAccountAddress, CreatePLTPayload, TokenAmount, TokenMetadataUrl } from './index.js';
 
 /**
@@ -36,6 +39,17 @@ export type TokenModuleState = {
 };
 
 /**
+ * The amount of a specific token controlled by a particular lock on an account.
+ * Introduced in P11.
+ */
+export type AccountLockAmount = {
+    /** The lock controlling an amount on the account. Introduced in P11. */
+    lock: LockId.Type;
+    /** The amount controlled by the lock. Introduced in P11. */
+    amount: TokenAmount.Type;
+};
+
+/**
  * The account state represents account-specific information that is maintained by the Token
  * Module, and is returned as part of a `GetAccountInfo` query. It does not include state that is
  * managed by the Token Kernel, such as the token identifier and account balance.
@@ -51,6 +65,10 @@ export type TokenModuleAccountState = {
     allowList?: boolean;
     /** Whether the account is on the deny list. */
     denyList?: boolean;
+    /** Locks that control funds associated with the account. Introduced in protocol version 11. */
+    locks?: AccountLockAmount[];
+    /** The total unencumbered balance on the account. Introduced in protocol version 11. */
+    available?: TokenAmount.Type;
     /** Any additional state information depending on the module implementation. */
     [key: string]: unknown;
 };
@@ -60,6 +78,27 @@ export type TokenModuleAccountState = {
  * The token initialization update will also include the ticker symbol,
  * number of decimals, and a reference to the token module implementation.
  */
+export type LockedTokenAndAmount = {
+    /** The token whose amount is controlled by a lock. */
+    token: TokenId.Type;
+    /** The token amount controlled by a lock. */
+    amount: TokenAmount.Type;
+};
+
+export type LockAccountFund = {
+    /** The account whose funds are controlled by the lock. */
+    account: CborAccountAddress.Type;
+    /** The token amounts controlled by the lock on the account. */
+    amounts: LockedTokenAndAmount[];
+};
+
+export type LockInfo = LockConfig.Type & {
+    /** The lock identifier. */
+    lock: LockId.Type;
+    /** Per-account funds controlled by the lock. */
+    funds: LockAccountFund[];
+};
+
 export type TokenInitializationParameters = {
     /** The name of the token. */
     name?: string;

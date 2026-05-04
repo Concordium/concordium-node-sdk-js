@@ -14,6 +14,8 @@ import {
     InitContractPayload,
     MakeOptional,
     MakeRequired,
+    MetaUpdateHandler,
+    MetaUpdatePayload,
     RegisterDataHandler,
     RegisterDataPayload,
     SimpleTransferHandler,
@@ -542,6 +544,18 @@ export function tokenUpdate(payload: TokenUpdatePayload | Payload.TokenUpdate): 
     if (!isPayloadWithType(payload)) return tokenUpdate(Payload.tokenUpdate(payload));
 
     const handler = new TokenUpdateHandler();
+    return new Builder({ executionEnergyAmount: Energy.create(handler.getBaseEnergyCost(payload)) }, payload);
+}
+
+/**
+ * Creates a meta update transaction for executing token/lock operations.
+ * @param payload the meta update payload
+ * @returns a meta update transaction
+ */
+export function metaUpdate(payload: MetaUpdatePayload | Payload.MetaUpdate): Initial<Payload.MetaUpdate> {
+    if (!isPayloadWithType<Payload.MetaUpdate>(payload)) return metaUpdate(Payload.metaUpdate(payload));
+
+    const handler = new MetaUpdateHandler();
     return new Builder({ executionEnergyAmount: Energy.create(handler.getBaseEnergyCost(payload)) }, payload);
 }
 

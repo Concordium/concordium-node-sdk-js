@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added high-level `Lock` client for creating, funding, sending, returning, and cancelling protocol-level locks.
 - Added gRPC client queries for PLT locks: `getLockInfo` and `getLockList`.
 - Added PLT `LockInfo` and `LockInfoResponse` types, and extended `TokenModuleAccountState` with P11 lock fields (`locks`, `available`).
 - Token operations for updating metadata, assigning and revoking admin roles have been added.

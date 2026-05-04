@@ -13,7 +13,7 @@
   - `MetaUpdateOperationType` enum for the five lock operation variants (`LockCreate`, `LockCancel`, `LockFund`, `LockSend`, `LockReturn`).
   - `createMetaUpdatePayload`, `encodeMetaUpdateOperations`, `createMetaTokenOperation` helpers for constructing MetaUpdate payloads.
   - `decodeMetaUpdateOperation`, `decodeMetaUpdateOperations` for decoding CBOR-encoded MetaUpdate operation arrays into typed SDK values.
-  - gRPC translation for `metaUpdateEffect`, including `LockCreateEvent` and `LockDestroyEvent` alongside token-scoped events.
+  - `MetaUpdateSummary` added to `AccountTransactionSummary`, adding `LockCreatedEvent` and `LockDestroyedEvent` alongside token-scoped events.
   - `TransactionEventTag.LockCreated` and `TransactionEventTag.LockDestroyed` event tags.
 
 ## 12.0.2

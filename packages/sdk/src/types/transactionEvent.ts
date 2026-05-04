@@ -448,7 +448,8 @@ export type TokenBurnEvent = {
     amount: PLT.TokenAmount.Type;
 };
 
-export type LockCreateEvent = {
+/** Event emitted when a transaction creates a new lock. */
+export type LockCreatedEvent = {
     /** The type of the event */
     tag: TransactionEventTag.LockCreated;
     /** The ID of the newly created lock. */
@@ -457,16 +458,21 @@ export type LockCreateEvent = {
     lockConfig: PLT.Cbor.Type;
 };
 
-export type LockDestroyEvent = {
+/** Event emitted when a transaction destroys an existing lock. */
+export type LockDestroyedEvent = {
     /** The type of the event */
     tag: TransactionEventTag.LockDestroyed;
     /** The ID of the destroyed lock. */
     lockId: PLT.LockId.Type;
 };
 
+/** Token-related event emitted by token update or meta update execution. */
 export type TokenEvent = EncodedTokenModuleEvent | TokenTransferEvent | TokenMintEvent | TokenBurnEvent;
-export type MetaUpdateEvent = TokenEvent | LockCreateEvent | LockDestroyEvent;
+/** Event emitted by a meta update transaction. */
+export type MetaUpdateEvent = TokenEvent | LockCreatedEvent | LockDestroyedEvent;
+/** Event emitted as part of a smart contract execution trace. */
 export type ContractTraceEvent = ResumedEvent | InterruptedEvent | UpdatedEvent | UpgradedEvent | TransferredEvent;
+/** Event emitted by baker/validator configuration changes. */
 export type BakerEvent =
     | BakerSetTransactionFeeCommissionEvent
     | BakerSetBakingRewardCommissionEvent
@@ -481,6 +487,7 @@ export type BakerEvent =
     | BakerDelegationRemovedEvent
     | BakerSuspendedEvent
     | BakerResumedEvent;
+/** Event emitted by delegator configuration changes. */
 export type DelegationEvent =
     | DelegatorEvent
     | DelegationSetDelegationTargetEvent

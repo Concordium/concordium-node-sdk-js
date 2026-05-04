@@ -77,7 +77,7 @@ const client = new ConcordiumGRPCNodeClient(
         'Recipients:',
         lockInfo.recipients.map((recipient) => recipient.toString())
     );
-    console.log('Expiry:', lockInfo.expiry.expiryEpochSeconds.toString());
+    console.log('Expiry:', lockInfo.expiry.expiry.toString());
     console.log('Funds:', JSON.stringify(lockInfo.funds, null, 2));
     // #endregion documentation-snippet
 })();

@@ -1,8 +1,7 @@
-import * as InternalLockConfig from '../../../src/plt/LockConfig.ts';
 import { CborAccountAddress, CborMemo } from '../../../src/plt/index.ts';
 import {
     Cbor,
-    LockController,
+    CborEpoch,
     LockId,
     TokenAddDenyListOperation,
     TokenAmount,
@@ -126,37 +125,41 @@ describe('PLT Cbor', () => {
     });
 
     describe('TokenModuleAccountState', () => {
-        test('should encode and decode TokenModuleAccountState correctly', () => {
-            const state = {
-                allowList: true,
-                denyList: false,
-                customField: 'custom value',
-            };
+        test('should decode TokenModuleAccountState correctly', () => {
+            // Fixture: { denyList: false, allowList: true, customField: 'custom value' }
+            const cbor = Cbor.fromHexString(
+                'a36864656e794c697374f469616c6c6f774c697374f56b637573746f6d4669656c646c637573746f6d2076616c7565'
+            );
+            const decoded = Cbor.decode(cbor, 'TokenModuleAccountState');
 
-            const encoded = Cbor.encode(state);
-            const decoded = Cbor.decode(encoded, 'TokenModuleAccountState');
-
-            expect(decoded.allowList).toBe(state.allowList);
-            expect(decoded.denyList).toBe(state.denyList);
-            expect(decoded.customField).toBe(state.customField);
+            expect(decoded.allowList).toBe(true);
+            expect(decoded.denyList).toBe(false);
+            expect(decoded.customField).toBe('custom value');
             expect(decoded.locks).toBeUndefined();
             expect(decoded.available).toBeUndefined();
+
+            // Roundtrip
+            expect(Cbor.toHexString(Cbor.encode(decoded))).toBe(Cbor.toHexString(cbor));
         });
 
-        test('should encode and decode TokenModuleAccountState with locks correctly', () => {
+        test('should decode TokenModuleAccountState with locks correctly', () => {
             const lock = LockId.create(1n, 2n, 0n);
             const amount = TokenAmount.fromDecimal('1.23', 2);
-            const available = TokenAmount.fromDecimal('10', 0);
-            const state = {
-                locks: [{ lock, amount }],
-                available,
-            };
+            const available = TokenAmount.fromDecimal('10', 2);
 
-            const encoded = Cbor.encode(state);
-            const decoded = Cbor.decode(encoded, 'TokenModuleAccountState');
+            // Fixture: { locks: [{ lock: LockId(1,2,0), amount: 1.23 }], available: 10 }
+            const cbor = Cbor.fromHexString(
+                'a2656c6f636b7381a2646c6f636bd99fd88301020066616d6f756e74c48221187b69617661696c61626c65c482211903e8'
+            );
+            const decoded = Cbor.decode(cbor, 'TokenModuleAccountState');
 
-            expect(decoded.locks).toEqual(state.locks);
+            expect(decoded.locks).toHaveLength(1);
+            expect(decoded.locks![0].lock).toEqual(lock);
+            expect(decoded.locks![0].amount).toEqual(amount);
             expect(decoded.available).toEqual(available);
+
+            // Roundtrip: re-encoding the decoded value must reproduce the fixture
+            expect(Cbor.toHexString(Cbor.encode(decoded))).toBe(Cbor.toHexString(cbor));
         });
 
         test('should throw error if TokenModuleAccountState has invalid field types', () => {
@@ -189,44 +192,24 @@ describe('PLT Cbor', () => {
         const token = TokenId.fromString('USDT');
         const amount = TokenAmount.fromDecimal('42.123456', 6);
         const expiry = TransactionExpiry.fromEpochSeconds(1_700_000_000n);
-        const controller = LockController.simpleV0(
-            [
-                {
-                    account,
-                    roles: [LockController.SimpleV0Capability.Fund, LockController.SimpleV0Capability.Send],
-                },
-            ],
-            [token]
-        );
-        const config = InternalLockConfig.create([account], expiry, controller);
 
         test('should decode LockInfo correctly', () => {
-            const encoded = Cbor.encode({
-                lock,
-                ...InternalLockConfig.toCBORValue(config),
-                funds: [
-                    {
-                        account,
-                        amounts: [{ token: 'USDT', amount }],
-                    },
-                ],
-            });
-
-            expect(Cbor.toHexString(encoded)).toBe(
+            // Fixture: LockInfo with lock(1,2,0), USDT amount 42.123456, one recipient,
+            // simpleV0 controller, and one fund entry.
+            const cbor = Cbor.fromHexString(
                 'a5646c6f636bd99fd8830102006566756e647381a2676163636f756e74d99d73a201d99d71a101190397035820151515151515151515151515151515151515151515151515151515151515151567616d6f756e747381a265746f6b656e645553445466616d6f756e74c482251a0282c0c066657870697279c11a6553f1006a636f6e74726f6c6c6572a16873696d706c655630a2666772616e747381a265726f6c6573826466756e646473656e64676163636f756e74d99d73a201d99d71a101190397035820151515151515151515151515151515151515151515151515151515151515151566746f6b656e738164555344546a726563697069656e747381d99d73a201d99d71a1011903970358201515151515151515151515151515151515151515151515151515151515151515'
             );
+            const decoded = Cbor.decode(cbor, 'LockInfo');
 
-            const decoded = Cbor.decode(encoded, 'LockInfo');
-            expect(decoded).toEqual({
-                ...config,
-                lock,
-                funds: [
-                    {
-                        account,
-                        amounts: [{ token, amount }],
-                    },
-                ],
-            });
+            expect(decoded.lock).toEqual(lock);
+            expect(decoded.recipients).toEqual([account]);
+            expect(decoded.expiry).toEqual(CborEpoch.fromTransactionExpiry(expiry));
+            expect(decoded.funds).toHaveLength(1);
+            expect(decoded.funds[0].account).toEqual(account);
+            expect(decoded.funds[0].amounts).toEqual([{ token, amount }]);
+
+            // Roundtrip: re-encoding the decoded value must reproduce the fixture
+            expect(Cbor.toHexString(Cbor.encode(decoded))).toBe(Cbor.toHexString(cbor));
         });
 
         test('should throw error if LockInfo has invalid field types', () => {

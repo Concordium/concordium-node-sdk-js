@@ -52,8 +52,9 @@
         "typecheck": "tsc --noEmit",
         "lint": "eslint . --cache --ext ts,tsx --max-warnings 0",
         "lint-fix": "yarn lint --fix",
-        "fmt": "prettier --write .",
-        "fmt-check": "prettier --check .",
+        "prettier": "prettier . --ignore-path ../../.gitignore --ignore-path ../../.prettierignore --ignore-path .gitignore --ignore-path .prettierignore",
+        "fmt": "yarn prettier --write",
+        "fmt-check": "yarn prettier --check",
         "prepublishOnly": "npm run build:lib"
     },
     "devDependencies": {

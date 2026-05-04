@@ -2,6 +2,7 @@ export {
     Type,
     JSON,
     create,
+    fromAccount,
     fromJSON,
     instanceOf,
     toCBOR,

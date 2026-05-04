@@ -4,6 +4,8 @@ import { Tag } from 'cbor2/tag';
 
 import { MAX_U64 } from '../constants.js';
 import type * as Proto from '../grpc-api/v2/concordium/protocol-level-tokens.js';
+import { ConcordiumGRPCClient } from '../grpc/GRPCClient.js';
+import type * as AccountAddress from '../types/AccountAddress.js';
 
 /** JSON representation of a lock identifier. */
 export type JSON = {
@@ -58,6 +60,27 @@ const CBOR_TAG = 40920;
  */
 export function create(accountIndex: bigint, sequenceNumber: bigint, creationOrder: bigint): LockId {
     return new LockId(accountIndex, sequenceNumber, creationOrder);
+}
+
+/**
+ * Construct the lock identifier that would be assigned to the next lock created by an account.
+ *
+ * This resolves the account's current nonce and account index from chain and combines them with
+ * the provided creation order. The returned identifier is only accurate as long as no other
+ * transaction consumes the account's next nonce before the lock creation transaction is submitted.
+ *
+ * @param grpc gRPC client used to resolve account info.
+ * @param account account address or account index of the account that will create the lock.
+ * @param creationOrder 0-based creation order of the lock within the transaction. Defaults to `0`.
+ * @returns a lock identifier for the next lock created by the account.
+ */
+export async function fromAccount(
+    grpc: ConcordiumGRPCClient,
+    account: AccountAddress.Type | bigint,
+    creationOrder: bigint | number = 0n
+): Promise<LockId> {
+    const accountInfo = await grpc.getAccountInfo(account);
+    return create(accountInfo.accountIndex, accountInfo.accountNonce.value, BigInt(creationOrder));
 }
 
 /**

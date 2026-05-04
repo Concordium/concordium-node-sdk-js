@@ -61,7 +61,9 @@ const client = new ConcordiumGRPCNodeClient(
     // #region documentation-snippet
 
     // Parse the lock configuration arguments
-    const recipients = cli.flags.recipient.map((r) => CborAccountAddress.fromAccountAddress(AccountAddress.fromBase58(r)));
+    const recipients = cli.flags.recipient.map((r) =>
+        CborAccountAddress.fromAccountAddress(AccountAddress.fromBase58(r))
+    );
     const tokenIds = cli.flags.token.map(TokenId.fromString);
     const expiry = CborEpoch.fromEpochSeconds(cli.flags.expiry);
 

@@ -6,13 +6,7 @@ import {
     serializeAccountTransactionPayload,
 } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
-import {
-    Lock,
-    MetaUpdateOperationType,
-    TokenAmount,
-    TokenId,
-    createMetaUpdatePayload,
-} from '@concordium/web-sdk/plt';
+import { Lock, MetaUpdateOperationType, TokenAmount, TokenId, createMetaUpdatePayload } from '@concordium/web-sdk/plt';
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
 
@@ -73,7 +67,7 @@ const client = new ConcordiumGRPCNodeClient(
 
         try {
             // Submit the fund transaction — tokens are transferred from the sender into the lock
-            const txHash = await Lock.fund(lock, sender, tokenId, amount, signer);
+            const txHash = await Lock.fund(lock, sender, { token: tokenId, amount }, signer);
             console.log(`Transaction submitted with hash: ${txHash}`);
 
             // Wait for the transaction to be finalized and inspect the outcome

@@ -78,7 +78,7 @@ const client = new ConcordiumGRPCNodeClient(
 
         try {
             // Submit the return transaction — locked funds are returned to the source account
-            const txHash = await Lock.returnFunds(lock, sender, tokenId, source, amount, signer);
+            const txHash = await Lock.returnFunds(lock, sender, { token: tokenId, source, amount }, signer);
             console.log(`Transaction submitted with hash: ${txHash}`);
 
             // Wait for the transaction to be finalized and inspect the outcome

@@ -75,6 +75,7 @@ export const validateNetwork = (value: string): value is Network => {
  */
 export const parseLockId = (input: string): LockId.Type => {
     const match = input.match(/^<(\d+),(\d+),(\d+)>$/);
-    if (!match) throw new Error(`Invalid lock ID format "${input}". Expected "<accountIndex,sequenceNumber,creationOrder>".`);
+    if (!match)
+        throw new Error(`Invalid lock ID format "${input}". Expected "<accountIndex,sequenceNumber,creationOrder>".`);
     return LockId.create(BigInt(match[1]), BigInt(match[2]), BigInt(match[3]));
 };

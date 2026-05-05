@@ -208,9 +208,15 @@ describe('PLT Lock validation', () => {
             Lock.canFund(
                 Lock.fromInfo(
                     mockGrpc({
-                        getAccountInfo: jest.fn().mockResolvedValue(
-                            createSenderAccountInfo(TOKEN_ID, TokenAmount.create(100n, 0), TokenAmount.create(100n, 0))
-                        ),
+                        getAccountInfo: jest
+                            .fn()
+                            .mockResolvedValue(
+                                createSenderAccountInfo(
+                                    TOKEN_ID,
+                                    TokenAmount.create(100n, 0),
+                                    TokenAmount.create(100n, 0)
+                                )
+                            ),
                     }),
                     createLockInfo([LockController.SimpleV0Capability.Fund])
                 ),
@@ -219,7 +225,16 @@ describe('PLT Lock validation', () => {
             )
         ).resolves.toBe(true);
         await expect(
-            Lock.canSend(Lock.fromInfo(mockGrpc(), createLockInfo([LockController.SimpleV0Capability.Send])), ACCOUNT_1)
+            Lock.canSend(
+                Lock.fromInfo(mockGrpc(), createLockInfo([LockController.SimpleV0Capability.Send])),
+                ACCOUNT_1,
+                {
+                    token: TOKEN_ID,
+                    source: ACCOUNT_1,
+                    amount: TokenAmount.create(10n, 0),
+                    recipient: ACCOUNT_2,
+                }
+            )
         ).resolves.toBe(true);
         await expect(
             Lock.canReturn(
@@ -232,17 +247,21 @@ describe('PLT Lock validation', () => {
     it('throws MissingCapabilityError when the sender lacks the required capability', async () => {
         const lock = Lock.fromInfo(
             mockGrpc({
-                getAccountInfo: jest.fn().mockResolvedValue(
-                    createSenderAccountInfo(TOKEN_ID, TokenAmount.create(100n, 0), TokenAmount.create(100n, 0))
-                ),
+                getAccountInfo: jest
+                    .fn()
+                    .mockResolvedValue(
+                        createSenderAccountInfo(TOKEN_ID, TokenAmount.create(100n, 0), TokenAmount.create(100n, 0))
+                    ),
             }),
             createLockInfo([LockController.SimpleV0Capability.Cancel])
         );
 
-        await expect(Lock.canFund(lock, ACCOUNT_1, { token: TOKEN_ID, amount: TokenAmount.create(10n, 0) })).rejects.toThrow(
-            Lock.MissingCapabilityError
-        );
-        await expect(Lock.canFund(lock, ACCOUNT_1, { token: TOKEN_ID, amount: TokenAmount.create(10n, 0) })).rejects.toMatchObject({
+        await expect(
+            Lock.canFund(lock, ACCOUNT_1, { token: TOKEN_ID, amount: TokenAmount.create(10n, 0) })
+        ).rejects.toThrow(Lock.MissingCapabilityError);
+        await expect(
+            Lock.canFund(lock, ACCOUNT_1, { token: TOKEN_ID, amount: TokenAmount.create(10n, 0) })
+        ).rejects.toMatchObject({
             code: Lock.LockErrorCode.MISSING_CAPABILITY,
             sender: ACCOUNT_1,
             capability: LockController.SimpleV0Capability.Fund,
@@ -253,17 +272,21 @@ describe('PLT Lock validation', () => {
     it('throws LockExpiredError when the lock is expired', async () => {
         const lock = Lock.fromInfo(
             mockGrpc({
-                getAccountInfo: jest.fn().mockResolvedValue(
-                    createSenderAccountInfo(TOKEN_ID, TokenAmount.create(100n, 0), TokenAmount.create(100n, 0))
-                ),
+                getAccountInfo: jest
+                    .fn()
+                    .mockResolvedValue(
+                        createSenderAccountInfo(TOKEN_ID, TokenAmount.create(100n, 0), TokenAmount.create(100n, 0))
+                    ),
             }),
             createLockInfo([LockController.SimpleV0Capability.Fund], pastEpoch())
         );
 
-        await expect(Lock.canFund(lock, ACCOUNT_1, { token: TOKEN_ID, amount: TokenAmount.create(10n, 0) })).rejects.toThrow(
-            Lock.LockExpiredError
-        );
-        await expect(Lock.canFund(lock, ACCOUNT_1, { token: TOKEN_ID, amount: TokenAmount.create(10n, 0) })).rejects.toMatchObject({
+        await expect(
+            Lock.canFund(lock, ACCOUNT_1, { token: TOKEN_ID, amount: TokenAmount.create(10n, 0) })
+        ).rejects.toThrow(Lock.LockExpiredError);
+        await expect(
+            Lock.canFund(lock, ACCOUNT_1, { token: TOKEN_ID, amount: TokenAmount.create(10n, 0) })
+        ).rejects.toMatchObject({
             code: Lock.LockErrorCode.LOCK_EXPIRED,
             lockId: LOCK_ID,
         });
@@ -272,21 +295,77 @@ describe('PLT Lock validation', () => {
     it('throws InsufficientFundsError when the sender does not have enough available balance to fund the lock', async () => {
         const lock = Lock.fromInfo(
             mockGrpc({
-                getAccountInfo: jest.fn().mockResolvedValue(
-                    createSenderAccountInfo(TOKEN_ID, TokenAmount.create(100n, 0), TokenAmount.create(5n, 0))
-                ),
+                getAccountInfo: jest
+                    .fn()
+                    .mockResolvedValue(
+                        createSenderAccountInfo(TOKEN_ID, TokenAmount.create(100n, 0), TokenAmount.create(5n, 0))
+                    ),
             }),
             createLockInfo([LockController.SimpleV0Capability.Fund])
         );
 
-        await expect(Lock.canFund(lock, ACCOUNT_1, { token: TOKEN_ID, amount: TokenAmount.create(10n, 0) })).rejects.toThrow(
-            Lock.InsufficientFundsError
-        );
-        await expect(Lock.canFund(lock, ACCOUNT_1, { token: TOKEN_ID, amount: TokenAmount.create(10n, 0) })).rejects.toMatchObject({
+        await expect(
+            Lock.canFund(lock, ACCOUNT_1, { token: TOKEN_ID, amount: TokenAmount.create(10n, 0) })
+        ).rejects.toThrow(Lock.InsufficientFundsError);
+        await expect(
+            Lock.canFund(lock, ACCOUNT_1, { token: TOKEN_ID, amount: TokenAmount.create(10n, 0) })
+        ).rejects.toMatchObject({
             code: Lock.LockErrorCode.INSUFFICIENT_FUNDS,
             sender: ACCOUNT_1,
             token: TOKEN_ID,
             requiredAmount: TokenAmount.create(10n, 0),
+        });
+    });
+
+    it('throws RecipientNotAllowedError when the recipient is not configured on the lock', async () => {
+        const lock = Lock.fromInfo(mockGrpc(), createLockInfo([LockController.SimpleV0Capability.Send]));
+        const recipient = ACCOUNT_1;
+
+        await expect(
+            Lock.canSend(lock, ACCOUNT_1, {
+                token: TOKEN_ID,
+                source: ACCOUNT_1,
+                amount: TokenAmount.create(10n, 0),
+                recipient,
+            })
+        ).rejects.toThrow(Lock.RecipientNotAllowedError);
+        await expect(
+            Lock.canSend(lock, ACCOUNT_1, {
+                token: TOKEN_ID,
+                source: ACCOUNT_1,
+                amount: TokenAmount.create(10n, 0),
+                recipient,
+            })
+        ).rejects.toMatchObject({
+            code: Lock.LockErrorCode.RECIPIENT_NOT_ALLOWED,
+            recipient,
+            lockId: LOCK_ID,
+        });
+    });
+
+    it('throws InsufficientFundsError when the source does not have enough locked funds to send', async () => {
+        const lock = Lock.fromInfo(mockGrpc(), createLockInfo([LockController.SimpleV0Capability.Send]));
+
+        await expect(
+            Lock.canSend(lock, ACCOUNT_1, {
+                token: TOKEN_ID,
+                source: ACCOUNT_1,
+                amount: TokenAmount.create(101n, 0),
+                recipient: ACCOUNT_2,
+            })
+        ).rejects.toThrow(Lock.InsufficientFundsError);
+        await expect(
+            Lock.canSend(lock, ACCOUNT_1, {
+                token: TOKEN_ID,
+                source: ACCOUNT_1,
+                amount: TokenAmount.create(101n, 0),
+                recipient: ACCOUNT_2,
+            })
+        ).rejects.toMatchObject({
+            code: Lock.LockErrorCode.INSUFFICIENT_FUNDS,
+            sender: ACCOUNT_1,
+            token: TOKEN_ID,
+            requiredAmount: TokenAmount.create(101n, 0),
         });
     });
 });

@@ -440,30 +440,34 @@ export function balanceOf(
 /**
  * Retrieves the available balance of a token for a given account info snapshot.
  *
- * @param token The token to inspect.
- * @param {AccountInfo | AccountAddress.Type} accountInfo - The account info to check the available balance for.
+ * @param token The token or token id to inspect.
+ * @param {AccountInfo} accountInfo - The account info to check the available balance for.
  *
  * @returns {BalanceOfResponse} The available balance of the token for the account.
  */
-export function availableBalanceOf(token: Token, accountInfo: AccountInfo): BalanceOfResponse;
+export function availableBalanceOf(token: Token | TokenId.Type, accountInfo: AccountInfo): BalanceOfResponse;
 /**
  * Retrieves the available balance of a token for a given account info snapshot.
  *
  * @param token The token to inspect.
- * @param {AccountInfo | AccountAddress.Type} account - The account to check the available balance for.
+ * @param {AccountAddress.Type} account - The account to check the available balance for.
  *
- * @returns {Promise<BalanceOfResponse> | BalanceOfResponse} The available balance of the token for the account.
+ * @returns {Promise<BalanceOfResponse>} The available balance of the token for the account.
  */
 export function availableBalanceOf(token: Token, account: AccountAddress.Type): Promise<BalanceOfResponse>;
 export function availableBalanceOf(
-    token: Token,
+    token: Token | TokenId.Type,
     account: AccountInfo | AccountAddress.Type
 ): BalanceOfResponse | Promise<BalanceOfResponse> {
     if (AccountAddress.instanceOf(account)) {
+        if (TokenId.instanceOf(token)) {
+            throw new Error('Cannot query account info from an address when only a token id is provided.');
+        }
         return token.grpc.getAccountInfo(account).then((accInfo) => availableBalanceOf(token, accInfo));
     }
 
-    const accountToken = account.accountTokens.find((t) => t.id.value === token.info.id.value)?.state;
+    const tokenId = TokenId.instanceOf(token) ? token : token.info.id;
+    const accountToken = account.accountTokens.find((t) => t.id.value === tokenId.value)?.state;
     if (accountToken?.moduleState === undefined) {
         return accountToken?.balance;
     }

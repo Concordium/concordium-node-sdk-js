@@ -21,6 +21,7 @@ import {
     LockSend,
     MetaUpdateOperation,
     MetaUpdateOperationType,
+    TokenAmount,
     createMetaUpdatePayload,
 } from './index.js';
 
@@ -30,8 +31,10 @@ export enum LockErrorCode {
     MISSING_CAPABILITY = 'MISSING_CAPABILITY',
     /** The lock has expired. */
     LOCK_EXPIRED = 'LOCK_EXPIRED',
-    /** The sender does not have enough available balance to fund the lock. */
+    /** The sender or source account does not have enough balance for the operation. */
     INSUFFICIENT_FUNDS = 'INSUFFICIENT_FUNDS',
+    /** The recipient is not among the lock's configured recipients. */
+    RECIPIENT_NOT_ALLOWED = 'RECIPIENT_NOT_ALLOWED',
     /** The high-level lock creation flow did not produce a usable lock. */
     CREATE_FAILED = 'CREATE_FAILED',
 }
@@ -83,13 +86,13 @@ export class LockExpiredError extends LockError {
     }
 }
 
-/** Error thrown when the sender does not have enough available token balance to fund a lock. */
+/** Error thrown when an account does not have enough token balance for a lock operation. */
 export class InsufficientFundsError extends LockError {
     public readonly code = LockErrorCode.INSUFFICIENT_FUNDS;
 
     /**
-     * @param sender The sender account lacking available balance.
-     * @param token The token being used to fund the lock.
+     * @param sender The account lacking sufficient balance.
+     * @param token The token involved in the operation.
      * @param requiredAmount The required amount for the operation.
      */
     constructor(
@@ -97,7 +100,23 @@ export class InsufficientFundsError extends LockError {
         public readonly token: LockFund['token'],
         public readonly requiredAmount: LockFund['amount']
     ) {
-        super(`Account ${sender.address} does not have enough available balance of token ${token} to fund the lock.`);
+        super(`Account ${sender.address} does not have enough balance of token ${token} for the lock operation.`);
+    }
+}
+
+/** Error thrown when the send recipient is not configured on the lock. */
+export class RecipientNotAllowedError extends LockError {
+    public readonly code = LockErrorCode.RECIPIENT_NOT_ALLOWED;
+
+    /**
+     * @param recipient The recipient not allowed by the lock configuration.
+     * @param lockId The lock whose recipients list was checked.
+     */
+    constructor(
+        public readonly recipient: AccountAddress.Type,
+        public readonly lockId: LockId.Type
+    ) {
+        super(`Account ${recipient.address} is not a configured recipient for lock ${lockId}.`);
     }
 }
 
@@ -468,6 +487,8 @@ async function validateCapability(
  * @param lock The lock to validate against.
  * @param sender The sender account to validate.
  * @returns `true` if the sender can cancel the lock.
+ * @throws {LockExpiredError} If the lock has expired.
+ * @throws {MissingCapabilityError} If the sender does not have the `cancel` capability for the lock.
  */
 export function canCancel(lock: Lock, sender: AccountAddress.Type): Promise<true> {
     return validateCapability(lock, sender, LockController.SimpleV0Capability.Cancel);
@@ -480,13 +501,15 @@ export function canCancel(lock: Lock, sender: AccountAddress.Type): Promise<true
  * @param sender The sender account to validate.
  * @param details The fund operation details, used to validate the sender's available balance.
  * @returns `true` if the sender can fund the lock.
+ * @throws {LockExpiredError} If the lock has expired.
+ * @throws {MissingCapabilityError} If the sender does not have the `fund` capability for the lock.
+ * @throws {InsufficientFundsError} If the sender does not have enough available balance of the token.
  */
 export async function canFund(lock: Lock, sender: AccountAddress.Type, details: FundDetails): Promise<true> {
     await validateCapability(lock, sender, LockController.SimpleV0Capability.Fund);
 
     const senderInfo = await lock.grpc.getAccountInfo(sender);
-    const token = await Token.fromId(lock.grpc, details.token);
-    const availableAmount = Token.availableBalanceOf(token, senderInfo);
+    const availableAmount = Token.availableBalanceOf(details.token, senderInfo);
     if (availableAmount === undefined || availableAmount.value < details.amount.value) {
         throw new InsufficientFundsError(sender, details.token, details.amount);
     }
@@ -499,10 +522,31 @@ export async function canFund(lock: Lock, sender: AccountAddress.Type, details: 
  *
  * @param lock The lock to validate against.
  * @param sender The sender account to validate.
+ * @param details The send operation details, used to validate the locked amount on the source account.
  * @returns `true` if the sender can send funds controlled by the lock.
+ * @throws {LockExpiredError} If the lock has expired.
+ * @throws {MissingCapabilityError} If the sender does not have the `send` capability for the lock.
+ * @throws {RecipientNotAllowedError} If the recipient is not configured on the lock.
+ * @throws {InsufficientFundsError} If the source account does not have enough of the token locked in the lock.
  */
-export function canSend(lock: Lock, sender: AccountAddress.Type): Promise<true> {
-    return validateCapability(lock, sender, LockController.SimpleV0Capability.Send);
+export async function canSend(lock: Lock, sender: AccountAddress.Type, details: SendDetails): Promise<true> {
+    await validateCapability(lock, sender, LockController.SimpleV0Capability.Send);
+
+    const recipientAllowed = lock.info.recipients.some(
+        (recipient) => recipient.address.address === details.recipient.address
+    );
+    if (!recipientAllowed) {
+        throw new RecipientNotAllowedError(details.recipient, lock.info.lock);
+    }
+
+    const lockedAmount = lock.info.funds
+        .find((fund) => fund.account.address.address === details.source.address)
+        ?.amounts.find((amount) => amount.token.value === details.token.value)?.amount;
+    if (lockedAmount === undefined || TokenAmount.toDecimal(lockedAmount).lt(TokenAmount.toDecimal(details.amount))) {
+        throw new InsufficientFundsError(details.source, details.token, details.amount);
+    }
+
+    return true;
 }
 
 /**
@@ -511,6 +555,8 @@ export function canSend(lock: Lock, sender: AccountAddress.Type): Promise<true> 
  * @param lock The lock to validate against.
  * @param sender The sender account to validate.
  * @returns `true` if the sender can return funds controlled by the lock.
+ * @throws {LockExpiredError} If the lock has expired.
+ * @throws {MissingCapabilityError} If the sender does not have the `return` capability for the lock.
  */
 export function canReturn(lock: Lock, sender: AccountAddress.Type): Promise<true> {
     return validateCapability(lock, sender, LockController.SimpleV0Capability.Return);
@@ -525,6 +571,8 @@ export function canReturn(lock: Lock, sender: AccountAddress.Type): Promise<true
  * @param metadata Optional transaction metadata such as expiry and nonce.
  * @param options Optional validation behavior.
  * @returns The hash of the submitted transaction.
+ * @throws {LockExpiredError} If `options.validate` is `true` and the lock has expired.
+ * @throws {MissingCapabilityError} If `options.validate` is `true` and the sender does not have the `cancel` capability.
  */
 export async function cancel(
     lock: Lock,
@@ -556,7 +604,9 @@ export async function cancel(
  * @param metadata Optional transaction metadata such as expiry and nonce.
  * @param options Optional validation behavior.
  * @returns The hash of the submitted transaction.
- * @throws {InsufficientFundsError} If the sender does not have enough available balance of the token.
+ * @throws {LockExpiredError} If `options.validate` is `true` and the lock has expired.
+ * @throws {MissingCapabilityError} If `options.validate` is `true` and the sender does not have the `fund` capability.
+ * @throws {InsufficientFundsError} If `options.validate` is `true` and the sender does not have enough available balance of the token.
  */
 export async function fund(
     lock: Lock,
@@ -589,17 +639,22 @@ export async function fund(
  * @param metadata Optional transaction metadata such as expiry and nonce.
  * @param options Optional validation behavior.
  * @returns The hash of the submitted transaction.
+ * @throws {LockExpiredError} If `options.validate` is `true` and the lock has expired.
+ * @throws {MissingCapabilityError} If `options.validate` is `true` and the sender does not have the `send` capability.
+ * @throws {RecipientNotAllowedError} If `options.validate` is `true` and the recipient is not configured on the lock.
+ * @throws {InsufficientFundsError} If `options.validate` is `true` and the source account does not have enough of the token locked in the lock.
  */
 export async function send(
     lock: Lock,
     sender: AccountAddress.Type,
-    { source, recipient, ...details }: SendDetails,
+    details: SendDetails,
     signer: AccountSigner,
     metadata?: LockUpdateMetadata,
     { validate = false }: LockOperationOptions = {}
 ): Promise<TransactionHash.Type> {
+    const { source, recipient, ...common } = details;
     if (validate) {
-        await canSend(lock, sender);
+        await canSend(lock, sender, details);
     }
 
     return sendOperations(
@@ -607,7 +662,7 @@ export async function send(
         sender,
         {
             [MetaUpdateOperationType.LockSend]: {
-                ...details,
+                ...common,
                 lock: lock.info.lock,
                 source: CborAccountAddress.fromAccountAddress(source),
                 recipient: CborAccountAddress.fromAccountAddress(recipient),
@@ -628,6 +683,8 @@ export async function send(
  * @param metadata Optional transaction metadata such as expiry and nonce.
  * @param options Optional validation behavior.
  * @returns The hash of the submitted transaction.
+ * @throws {LockExpiredError} If `options.validate` is `true` and the lock has expired.
+ * @throws {MissingCapabilityError} If `options.validate` is `true` and the sender does not have the `return` capability.
  */
 export async function returnFunds(
     lock: Lock,

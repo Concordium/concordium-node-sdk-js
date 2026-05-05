@@ -438,6 +438,41 @@ export function balanceOf(
 }
 
 /**
+ * Retrieves the available balance of a token for a given account info snapshot.
+ *
+ * @param token The token to inspect.
+ * @param {AccountInfo | AccountAddress.Type} accountInfo - The account info to check the available balance for.
+ *
+ * @returns {BalanceOfResponse} The available balance of the token for the account.
+ */
+export function availableBalanceOf(token: Token, accountInfo: AccountInfo): BalanceOfResponse;
+/**
+ * Retrieves the available balance of a token for a given account info snapshot.
+ *
+ * @param token The token to inspect.
+ * @param {AccountInfo | AccountAddress.Type} account - The account to check the available balance for.
+ *
+ * @returns {Promise<BalanceOfResponse> | BalanceOfResponse} The available balance of the token for the account.
+ */
+export function availableBalanceOf(token: Token, account: AccountAddress.Type): Promise<BalanceOfResponse>;
+export function availableBalanceOf(
+    token: Token,
+    account: AccountInfo | AccountAddress.Type
+): BalanceOfResponse | Promise<BalanceOfResponse> {
+    if (AccountAddress.instanceOf(account)) {
+        return token.grpc.getAccountInfo(account).then((accInfo) => availableBalanceOf(token, accInfo));
+    }
+
+    const accountToken = account.accountTokens.find((t) => t.id.value === token.info.id.value)?.state;
+    if (accountToken?.moduleState === undefined) {
+        return accountToken?.balance;
+    }
+
+    const accountModuleState = Cbor.decode(accountToken.moduleState, 'TokenModuleAccountState');
+    return accountModuleState.available ?? accountToken.balance;
+}
+
+/**
  * Validates a token transfer.
  *
  * @param {Token} token - The token to transfer.
@@ -465,8 +500,8 @@ export async function validateTransfer(
     const { decimals } = token.info.state;
     const senderInfo = await token.grpc.getAccountInfo(sender);
 
-    // Check the sender balance.
-    const senderBalance = balanceOf(token, senderInfo) ?? TokenAmount.zero(decimals); // We fall back to zero, as the `token` has already been validated at this point.
+    // Check the sender's available balance.
+    const senderBalance = availableBalanceOf(token, senderInfo) ?? TokenAmount.zero(decimals); // We fall back to zero, as the `token` has already been validated at this point.
     const payloadTotal = payloads.reduce(
         (acc, { amount }) => acc.add(TokenAmount.toDecimal(amount)),
         TokenAmount.toDecimal(TokenAmount.zero(decimals))

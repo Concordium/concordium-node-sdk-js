@@ -18,8 +18,23 @@ const ACCOUNT_2 = AccountAddress.fromBase58('3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWN
 const LOCK_ID = LockId.create(1n, 2n, 0n);
 const TOKEN_ID = TokenId.fromString('TEST');
 
-function mockGrpc() {
-    return {} as Lock.Type['grpc'];
+function mockGrpc(overrides: Partial<Lock.Type['grpc']> = {}) {
+    return overrides as Lock.Type['grpc'];
+}
+
+function createSenderAccountInfo(token: TokenId.Type, balance: TokenAmount.Type, available?: TokenAmount.Type) {
+    return {
+        accountAddress: ACCOUNT_1,
+        accountTokens: [
+            {
+                id: token,
+                state: {
+                    balance,
+                    moduleState: available === undefined ? undefined : Cbor.encode({ available }),
+                },
+            },
+        ],
+    };
 }
 
 function futureEpoch(): CborEpoch.Type {
@@ -190,7 +205,18 @@ describe('PLT Lock validation', () => {
             )
         ).resolves.toBe(true);
         await expect(
-            Lock.canFund(Lock.fromInfo(mockGrpc(), createLockInfo([LockController.SimpleV0Capability.Fund])), ACCOUNT_1)
+            Lock.canFund(
+                Lock.fromInfo(
+                    mockGrpc({
+                        getAccountInfo: jest.fn().mockResolvedValue(
+                            createSenderAccountInfo(TOKEN_ID, TokenAmount.create(100n, 0), TokenAmount.create(100n, 0))
+                        ),
+                    }),
+                    createLockInfo([LockController.SimpleV0Capability.Fund])
+                ),
+                ACCOUNT_1,
+                { token: TOKEN_ID, amount: TokenAmount.create(10n, 0) }
+            )
         ).resolves.toBe(true);
         await expect(
             Lock.canSend(Lock.fromInfo(mockGrpc(), createLockInfo([LockController.SimpleV0Capability.Send])), ACCOUNT_1)
@@ -204,10 +230,19 @@ describe('PLT Lock validation', () => {
     });
 
     it('throws MissingCapabilityError when the sender lacks the required capability', async () => {
-        const lock = Lock.fromInfo(mockGrpc(), createLockInfo([LockController.SimpleV0Capability.Cancel]));
+        const lock = Lock.fromInfo(
+            mockGrpc({
+                getAccountInfo: jest.fn().mockResolvedValue(
+                    createSenderAccountInfo(TOKEN_ID, TokenAmount.create(100n, 0), TokenAmount.create(100n, 0))
+                ),
+            }),
+            createLockInfo([LockController.SimpleV0Capability.Cancel])
+        );
 
-        await expect(Lock.canFund(lock, ACCOUNT_1)).rejects.toThrow(Lock.MissingCapabilityError);
-        await expect(Lock.canFund(lock, ACCOUNT_1)).rejects.toMatchObject({
+        await expect(Lock.canFund(lock, ACCOUNT_1, { token: TOKEN_ID, amount: TokenAmount.create(10n, 0) })).rejects.toThrow(
+            Lock.MissingCapabilityError
+        );
+        await expect(Lock.canFund(lock, ACCOUNT_1, { token: TOKEN_ID, amount: TokenAmount.create(10n, 0) })).rejects.toMatchObject({
             code: Lock.LockErrorCode.MISSING_CAPABILITY,
             sender: ACCOUNT_1,
             capability: LockController.SimpleV0Capability.Fund,
@@ -216,12 +251,42 @@ describe('PLT Lock validation', () => {
     });
 
     it('throws LockExpiredError when the lock is expired', async () => {
-        const lock = Lock.fromInfo(mockGrpc(), createLockInfo([LockController.SimpleV0Capability.Fund], pastEpoch()));
+        const lock = Lock.fromInfo(
+            mockGrpc({
+                getAccountInfo: jest.fn().mockResolvedValue(
+                    createSenderAccountInfo(TOKEN_ID, TokenAmount.create(100n, 0), TokenAmount.create(100n, 0))
+                ),
+            }),
+            createLockInfo([LockController.SimpleV0Capability.Fund], pastEpoch())
+        );
 
-        await expect(Lock.canFund(lock, ACCOUNT_1)).rejects.toThrow(Lock.LockExpiredError);
-        await expect(Lock.canFund(lock, ACCOUNT_1)).rejects.toMatchObject({
+        await expect(Lock.canFund(lock, ACCOUNT_1, { token: TOKEN_ID, amount: TokenAmount.create(10n, 0) })).rejects.toThrow(
+            Lock.LockExpiredError
+        );
+        await expect(Lock.canFund(lock, ACCOUNT_1, { token: TOKEN_ID, amount: TokenAmount.create(10n, 0) })).rejects.toMatchObject({
             code: Lock.LockErrorCode.LOCK_EXPIRED,
             lockId: LOCK_ID,
+        });
+    });
+
+    it('throws InsufficientFundsError when the sender does not have enough available balance to fund the lock', async () => {
+        const lock = Lock.fromInfo(
+            mockGrpc({
+                getAccountInfo: jest.fn().mockResolvedValue(
+                    createSenderAccountInfo(TOKEN_ID, TokenAmount.create(100n, 0), TokenAmount.create(5n, 0))
+                ),
+            }),
+            createLockInfo([LockController.SimpleV0Capability.Fund])
+        );
+
+        await expect(Lock.canFund(lock, ACCOUNT_1, { token: TOKEN_ID, amount: TokenAmount.create(10n, 0) })).rejects.toThrow(
+            Lock.InsufficientFundsError
+        );
+        await expect(Lock.canFund(lock, ACCOUNT_1, { token: TOKEN_ID, amount: TokenAmount.create(10n, 0) })).rejects.toMatchObject({
+            code: Lock.LockErrorCode.INSUFFICIENT_FUNDS,
+            sender: ACCOUNT_1,
+            token: TOKEN_ID,
+            requiredAmount: TokenAmount.create(10n, 0),
         });
     });
 });

@@ -7,6 +7,7 @@ import { TransactionSummaryType } from '../types.js';
 import { TransactionKindString } from '../types/blockItemSummary.js';
 import { SequenceNumber } from '../types/index.js';
 import { LockCreatedEvent, TransactionEventTag } from '../types/transactionEvent.js';
+import * as Token from './Token.js';
 import {
     Cbor,
     CborAccountAddress,
@@ -29,6 +30,8 @@ export enum LockErrorCode {
     MISSING_CAPABILITY = 'MISSING_CAPABILITY',
     /** The lock has expired. */
     LOCK_EXPIRED = 'LOCK_EXPIRED',
+    /** The sender does not have enough available balance to fund the lock. */
+    INSUFFICIENT_FUNDS = 'INSUFFICIENT_FUNDS',
     /** The high-level lock creation flow did not produce a usable lock. */
     CREATE_FAILED = 'CREATE_FAILED',
 }
@@ -77,6 +80,24 @@ export class LockExpiredError extends LockError {
      */
     constructor(public readonly lockId: LockId.Type) {
         super(`Lock ${lockId} has expired.`);
+    }
+}
+
+/** Error thrown when the sender does not have enough available token balance to fund a lock. */
+export class InsufficientFundsError extends LockError {
+    public readonly code = LockErrorCode.INSUFFICIENT_FUNDS;
+
+    /**
+     * @param sender The sender account lacking available balance.
+     * @param token The token being used to fund the lock.
+     * @param requiredAmount The required amount for the operation.
+     */
+    constructor(
+        public readonly sender: AccountAddress.Type,
+        public readonly token: LockFund['token'],
+        public readonly requiredAmount: LockFund['amount']
+    ) {
+        super(`Account ${sender.address} does not have enough available balance of token ${token} to fund the lock.`);
     }
 }
 
@@ -457,10 +478,20 @@ export function canCancel(lock: Lock, sender: AccountAddress.Type): Promise<true
  *
  * @param lock The lock to validate against.
  * @param sender The sender account to validate.
+ * @param details The fund operation details, used to validate the sender's available balance.
  * @returns `true` if the sender can fund the lock.
  */
-export function canFund(lock: Lock, sender: AccountAddress.Type): Promise<true> {
-    return validateCapability(lock, sender, LockController.SimpleV0Capability.Fund);
+export async function canFund(lock: Lock, sender: AccountAddress.Type, details: FundDetails): Promise<true> {
+    await validateCapability(lock, sender, LockController.SimpleV0Capability.Fund);
+
+    const senderInfo = await lock.grpc.getAccountInfo(sender);
+    const token = await Token.fromId(lock.grpc, details.token);
+    const availableAmount = Token.availableBalanceOf(token, senderInfo);
+    if (availableAmount === undefined || availableAmount.value < details.amount.value) {
+        throw new InsufficientFundsError(sender, details.token, details.amount);
+    }
+
+    return true;
 }
 
 /**
@@ -525,6 +556,7 @@ export async function cancel(
  * @param metadata Optional transaction metadata such as expiry and nonce.
  * @param options Optional validation behavior.
  * @returns The hash of the submitted transaction.
+ * @throws {InsufficientFundsError} If the sender does not have enough available balance of the token.
  */
 export async function fund(
     lock: Lock,
@@ -535,7 +567,7 @@ export async function fund(
     { validate = false }: LockOperationOptions = {}
 ): Promise<TransactionHash.Type> {
     if (validate) {
-        await canFund(lock, sender);
+        await canFund(lock, sender, details);
     }
 
     return sendOperations(

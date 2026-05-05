@@ -198,12 +198,12 @@ describe('PLT Lock.createAndSendOperations', () => {
 
 describe('PLT Lock validation', () => {
     it('validates lock operations when the sender has the required capability and the lock is not expired', async () => {
-        await expect(
+        expect(
             Lock.canCancel(
                 Lock.fromInfo(mockGrpc(), createLockInfo([LockController.SimpleV0Capability.Cancel])),
                 ACCOUNT_1
             )
-        ).resolves.toBe(true);
+        ).toBe(true);
         await expect(
             Lock.canFund(
                 Lock.fromInfo(
@@ -224,7 +224,7 @@ describe('PLT Lock validation', () => {
                 { token: TOKEN_ID, amount: TokenAmount.create(10n, 0) }
             )
         ).resolves.toBe(true);
-        await expect(
+        expect(
             Lock.canSend(
                 Lock.fromInfo(mockGrpc(), createLockInfo([LockController.SimpleV0Capability.Send])),
                 ACCOUNT_1,
@@ -235,13 +235,14 @@ describe('PLT Lock validation', () => {
                     recipient: ACCOUNT_2,
                 }
             )
-        ).resolves.toBe(true);
-        await expect(
+        ).toBe(true);
+        expect(
             Lock.canReturn(
                 Lock.fromInfo(mockGrpc(), createLockInfo([LockController.SimpleV0Capability.Return])),
-                ACCOUNT_1
+                ACCOUNT_1,
+                { token: TOKEN_ID, source: ACCOUNT_1, amount: TokenAmount.create(10n, 0) }
             )
-        ).resolves.toBe(true);
+        ).toBe(true);
     });
 
     it('throws MissingCapabilityError when the sender lacks the required capability', async () => {
@@ -292,6 +293,31 @@ describe('PLT Lock validation', () => {
         });
     });
 
+    it('throws TokenNotAllowedError when the token is not configured on the lock for funding', async () => {
+        const otherToken = TokenId.fromString('OTHER');
+        const lock = Lock.fromInfo(
+            mockGrpc({
+                getAccountInfo: jest
+                    .fn()
+                    .mockResolvedValue(
+                        createSenderAccountInfo(otherToken, TokenAmount.create(100n, 0), TokenAmount.create(100n, 0))
+                    ),
+            }),
+            createLockInfo([LockController.SimpleV0Capability.Fund])
+        );
+
+        await expect(
+            Lock.canFund(lock, ACCOUNT_1, { token: otherToken, amount: TokenAmount.create(10n, 0) })
+        ).rejects.toThrow(Lock.TokenNotAllowedError);
+        await expect(
+            Lock.canFund(lock, ACCOUNT_1, { token: otherToken, amount: TokenAmount.create(10n, 0) })
+        ).rejects.toMatchObject({
+            code: Lock.LockErrorCode.TOKEN_NOT_ALLOWED,
+            token: otherToken,
+            lockId: LOCK_ID,
+        });
+    });
+
     it('throws InsufficientFundsError when the sender does not have enough available balance to fund the lock', async () => {
         const lock = Lock.fromInfo(
             mockGrpc({
@@ -321,52 +347,85 @@ describe('PLT Lock validation', () => {
         const lock = Lock.fromInfo(mockGrpc(), createLockInfo([LockController.SimpleV0Capability.Send]));
         const recipient = ACCOUNT_1;
 
-        await expect(
+        expect(() =>
             Lock.canSend(lock, ACCOUNT_1, {
                 token: TOKEN_ID,
                 source: ACCOUNT_1,
                 amount: TokenAmount.create(10n, 0),
                 recipient,
             })
-        ).rejects.toThrow(Lock.RecipientNotAllowedError);
-        await expect(
+        ).toThrow(Lock.RecipientNotAllowedError);
+        try {
             Lock.canSend(lock, ACCOUNT_1, {
                 token: TOKEN_ID,
                 source: ACCOUNT_1,
                 amount: TokenAmount.create(10n, 0),
                 recipient,
+            });
+            fail('Expected canSend to throw');
+        } catch (error) {
+            expect(error).toMatchObject({
+                code: Lock.LockErrorCode.RECIPIENT_NOT_ALLOWED,
+                recipient,
+                lockId: LOCK_ID,
+            });
+        }
+    });
+
+    it('throws InsufficientFundsError when the source does not have enough locked funds to return', async () => {
+        const lock = Lock.fromInfo(mockGrpc(), createLockInfo([LockController.SimpleV0Capability.Return]));
+
+        expect(() =>
+            Lock.canReturn(lock, ACCOUNT_1, {
+                token: TOKEN_ID,
+                source: ACCOUNT_1,
+                amount: TokenAmount.create(101n, 0),
             })
-        ).rejects.toMatchObject({
-            code: Lock.LockErrorCode.RECIPIENT_NOT_ALLOWED,
-            recipient,
-            lockId: LOCK_ID,
-        });
+        ).toThrow(Lock.InsufficientFundsError);
+        try {
+            Lock.canReturn(lock, ACCOUNT_1, {
+                token: TOKEN_ID,
+                source: ACCOUNT_1,
+                amount: TokenAmount.create(101n, 0),
+            });
+            fail('Expected canReturn to throw');
+        } catch (error) {
+            expect(error).toMatchObject({
+                code: Lock.LockErrorCode.INSUFFICIENT_FUNDS,
+                sender: ACCOUNT_1,
+                token: TOKEN_ID,
+                requiredAmount: TokenAmount.create(101n, 0),
+            });
+        }
     });
 
     it('throws InsufficientFundsError when the source does not have enough locked funds to send', async () => {
         const lock = Lock.fromInfo(mockGrpc(), createLockInfo([LockController.SimpleV0Capability.Send]));
 
-        await expect(
+        expect(() =>
             Lock.canSend(lock, ACCOUNT_1, {
                 token: TOKEN_ID,
                 source: ACCOUNT_1,
                 amount: TokenAmount.create(101n, 0),
                 recipient: ACCOUNT_2,
             })
-        ).rejects.toThrow(Lock.InsufficientFundsError);
-        await expect(
+        ).toThrow(Lock.InsufficientFundsError);
+        try {
             Lock.canSend(lock, ACCOUNT_1, {
                 token: TOKEN_ID,
                 source: ACCOUNT_1,
                 amount: TokenAmount.create(101n, 0),
                 recipient: ACCOUNT_2,
-            })
-        ).rejects.toMatchObject({
-            code: Lock.LockErrorCode.INSUFFICIENT_FUNDS,
-            sender: ACCOUNT_1,
-            token: TOKEN_ID,
-            requiredAmount: TokenAmount.create(101n, 0),
-        });
+            });
+            fail('Expected canSend to throw');
+        } catch (error) {
+            expect(error).toMatchObject({
+                code: Lock.LockErrorCode.INSUFFICIENT_FUNDS,
+                sender: ACCOUNT_1,
+                token: TOKEN_ID,
+                requiredAmount: TokenAmount.create(101n, 0),
+            });
+        }
     });
 });
 

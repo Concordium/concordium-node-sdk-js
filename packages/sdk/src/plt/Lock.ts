@@ -22,6 +22,7 @@ import {
     MetaUpdateOperation,
     MetaUpdateOperationType,
     TokenAmount,
+    TokenId,
     createMetaUpdatePayload,
 } from './index.js';
 
@@ -33,6 +34,8 @@ export enum LockErrorCode {
     LOCK_EXPIRED = 'LOCK_EXPIRED',
     /** The sender or source account does not have enough balance for the operation. */
     INSUFFICIENT_FUNDS = 'INSUFFICIENT_FUNDS',
+    /** The token is not among the lock's configured tokens. */
+    TOKEN_NOT_ALLOWED = 'TOKEN_NOT_ALLOWED',
     /** The recipient is not among the lock's configured recipients. */
     RECIPIENT_NOT_ALLOWED = 'RECIPIENT_NOT_ALLOWED',
     /** The high-level lock creation flow did not produce a usable lock. */
@@ -101,6 +104,22 @@ export class InsufficientFundsError extends LockError {
         public readonly requiredAmount: LockFund['amount']
     ) {
         super(`Account ${sender.address} does not have enough balance of token ${token} for the lock operation.`);
+    }
+}
+
+/** Error thrown when a token is not configured on the lock. */
+export class TokenNotAllowedError extends LockError {
+    public readonly code = LockErrorCode.TOKEN_NOT_ALLOWED;
+
+    /**
+     * @param token The token not allowed by the lock configuration.
+     * @param lockId The lock whose token list was checked.
+     */
+    constructor(
+        public readonly token: TokenId.Type,
+        public readonly lockId: LockId.Type
+    ) {
+        super(`Token ${token} is not a configured token for lock ${lockId}.`);
     }
 }
 
@@ -452,12 +471,16 @@ function isExpired(lock: Lock): boolean {
     return lock.info.expiry.expiry.expiryEpochSeconds * 1000n <= BigInt(Date.now());
 }
 
+function simpleV0Controller(lock: Lock): LockController.Type[LockController.Variant.SimpleV0] | undefined {
+    return lock.info.controller[LockController.Variant.SimpleV0];
+}
+
 function hasCapability(
     lock: Lock,
     sender: AccountAddress.Type,
     capability: LockController.SimpleV0Capability
 ): boolean {
-    const simpleV0 = lock.info.controller[LockController.Variant.SimpleV0];
+    const simpleV0 = simpleV0Controller(lock);
     if (simpleV0 === undefined) {
         return true;
     }
@@ -467,11 +490,26 @@ function hasCapability(
     );
 }
 
-async function validateCapability(
+function allowsToken(lock: Lock, token: TokenId.Type): boolean {
+    const simpleV0 = simpleV0Controller(lock);
+    if (simpleV0 === undefined) {
+        return true;
+    }
+
+    return simpleV0.tokens.some((configured) => configured.value === token.value);
+}
+
+function lockedAmountOf(lock: Lock, source: AccountAddress.Type, token: TokenId.Type): TokenAmount.Type | undefined {
+    return lock.info.funds
+        .find((fund) => fund.account.address.address === source.address)
+        ?.amounts.find((amount) => amount.token.value === token.value)?.amount;
+}
+
+function validateCapability(
     lock: Lock,
     sender: AccountAddress.Type,
     capability: LockController.SimpleV0Capability
-): Promise<true> {
+): true {
     if (isExpired(lock)) {
         throw new LockExpiredError(lock.info.lock);
     }
@@ -488,9 +526,11 @@ async function validateCapability(
  * @param sender The sender account to validate.
  * @returns `true` if the sender can cancel the lock.
  * @throws {LockExpiredError} If the lock has expired.
- * @throws {MissingCapabilityError} If the sender does not have the `cancel` capability for the lock.
+ * @throws {MissingCapabilityError} If the sender does not have the `cancel` capability for a `simpleV0` lock controller.
+ *
+ * For unknown controller variants, the capability check is skipped.
  */
-export function canCancel(lock: Lock, sender: AccountAddress.Type): Promise<true> {
+export function canCancel(lock: Lock, sender: AccountAddress.Type): true {
     return validateCapability(lock, sender, LockController.SimpleV0Capability.Cancel);
 }
 
@@ -502,11 +542,18 @@ export function canCancel(lock: Lock, sender: AccountAddress.Type): Promise<true
  * @param details The fund operation details, used to validate the sender's available balance.
  * @returns `true` if the sender can fund the lock.
  * @throws {LockExpiredError} If the lock has expired.
- * @throws {MissingCapabilityError} If the sender does not have the `fund` capability for the lock.
+ * @throws {MissingCapabilityError} If the sender does not have the `fund` capability for a `simpleV0` lock controller.
+ * @throws {TokenNotAllowedError} If the token is not configured on a `simpleV0` lock controller.
  * @throws {InsufficientFundsError} If the sender does not have enough available balance of the token.
+ *
+ * For unknown controller variants, the capability and configured-token checks are skipped.
  */
 export async function canFund(lock: Lock, sender: AccountAddress.Type, details: FundDetails): Promise<true> {
-    await validateCapability(lock, sender, LockController.SimpleV0Capability.Fund);
+    validateCapability(lock, sender, LockController.SimpleV0Capability.Fund);
+
+    if (!allowsToken(lock, details.token)) {
+        throw new TokenNotAllowedError(details.token, lock.info.lock);
+    }
 
     const senderInfo = await lock.grpc.getAccountInfo(sender);
     const availableAmount = Token.availableBalanceOf(details.token, senderInfo);
@@ -525,12 +572,14 @@ export async function canFund(lock: Lock, sender: AccountAddress.Type, details: 
  * @param details The send operation details, used to validate the locked amount on the source account.
  * @returns `true` if the sender can send funds controlled by the lock.
  * @throws {LockExpiredError} If the lock has expired.
- * @throws {MissingCapabilityError} If the sender does not have the `send` capability for the lock.
+ * @throws {MissingCapabilityError} If the sender does not have the `send` capability for a `simpleV0` lock controller.
  * @throws {RecipientNotAllowedError} If the recipient is not configured on the lock.
  * @throws {InsufficientFundsError} If the source account does not have enough of the token locked in the lock.
+ *
+ * For unknown controller variants, the capability check is skipped.
  */
-export async function canSend(lock: Lock, sender: AccountAddress.Type, details: SendDetails): Promise<true> {
-    await validateCapability(lock, sender, LockController.SimpleV0Capability.Send);
+export function canSend(lock: Lock, sender: AccountAddress.Type, details: SendDetails): true {
+    validateCapability(lock, sender, LockController.SimpleV0Capability.Send);
 
     const recipientAllowed = lock.info.recipients.some(
         (recipient) => recipient.address.address === details.recipient.address
@@ -539,9 +588,7 @@ export async function canSend(lock: Lock, sender: AccountAddress.Type, details: 
         throw new RecipientNotAllowedError(details.recipient, lock.info.lock);
     }
 
-    const lockedAmount = lock.info.funds
-        .find((fund) => fund.account.address.address === details.source.address)
-        ?.amounts.find((amount) => amount.token.value === details.token.value)?.amount;
+    const lockedAmount = lockedAmountOf(lock, details.source, details.token);
     if (lockedAmount === undefined || TokenAmount.toDecimal(lockedAmount).lt(TokenAmount.toDecimal(details.amount))) {
         throw new InsufficientFundsError(details.source, details.token, details.amount);
     }
@@ -556,10 +603,20 @@ export async function canSend(lock: Lock, sender: AccountAddress.Type, details: 
  * @param sender The sender account to validate.
  * @returns `true` if the sender can return funds controlled by the lock.
  * @throws {LockExpiredError} If the lock has expired.
- * @throws {MissingCapabilityError} If the sender does not have the `return` capability for the lock.
+ * @throws {MissingCapabilityError} If the sender does not have the `return` capability for a `simpleV0` lock controller.
+ * @throws {InsufficientFundsError} If the source account does not have enough of the token locked in the lock.
+ *
+ * For unknown controller variants, the capability check is skipped.
  */
-export function canReturn(lock: Lock, sender: AccountAddress.Type): Promise<true> {
-    return validateCapability(lock, sender, LockController.SimpleV0Capability.Return);
+export function canReturn(lock: Lock, sender: AccountAddress.Type, details: ReturnDetails): true {
+    validateCapability(lock, sender, LockController.SimpleV0Capability.Return);
+
+    const lockedAmount = lockedAmountOf(lock, details.source, details.token);
+    if (lockedAmount === undefined || TokenAmount.toDecimal(lockedAmount).lt(TokenAmount.toDecimal(details.amount))) {
+        throw new InsufficientFundsError(details.source, details.token, details.amount);
+    }
+
+    return true;
 }
 
 /**
@@ -582,7 +639,7 @@ export async function cancel(
     { validate = false }: LockOperationOptions = {}
 ): Promise<TransactionHash.Type> {
     if (validate) {
-        await canCancel(lock, sender);
+        canCancel(lock, sender);
     }
 
     return sendOperations(
@@ -606,6 +663,7 @@ export async function cancel(
  * @returns The hash of the submitted transaction.
  * @throws {LockExpiredError} If `options.validate` is `true` and the lock has expired.
  * @throws {MissingCapabilityError} If `options.validate` is `true` and the sender does not have the `fund` capability.
+ * @throws {TokenNotAllowedError} If `options.validate` is `true` and the token is not configured on the lock.
  * @throws {InsufficientFundsError} If `options.validate` is `true` and the sender does not have enough available balance of the token.
  */
 export async function fund(
@@ -654,7 +712,7 @@ export async function send(
 ): Promise<TransactionHash.Type> {
     const { source, recipient, ...common } = details;
     if (validate) {
-        await canSend(lock, sender, details);
+        canSend(lock, sender, details);
     }
 
     return sendOperations(
@@ -685,25 +743,28 @@ export async function send(
  * @returns The hash of the submitted transaction.
  * @throws {LockExpiredError} If `options.validate` is `true` and the lock has expired.
  * @throws {MissingCapabilityError} If `options.validate` is `true` and the sender does not have the `return` capability.
+ * @throws {InsufficientFundsError} If `options.validate` is `true` and the source account does not have enough of the token locked in the lock.
  */
 export async function returnFunds(
     lock: Lock,
     sender: AccountAddress.Type,
-    { source, ...details }: ReturnDetails,
+    details: ReturnDetails,
     signer: AccountSigner,
     metadata?: LockUpdateMetadata,
     { validate = false }: LockOperationOptions = {}
 ): Promise<TransactionHash.Type> {
     if (validate) {
-        await canReturn(lock, sender);
+        canReturn(lock, sender, details);
     }
+
+    const { source, ...common } = details;
 
     return sendOperations(
         lock,
         sender,
         {
             [MetaUpdateOperationType.LockReturn]: {
-                ...details,
+                ...common,
                 lock: lock.info.lock,
                 source: CborAccountAddress.fromAccountAddress(source),
             },

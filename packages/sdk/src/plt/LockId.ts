@@ -35,6 +35,10 @@ class LockId {
         }
     }
 
+    public toString(): string {
+        return `<${this.accountIndex}, ${this.sequenceNumber}, ${this.creationOrder}>`;
+    }
+
     public toJSON(): JSON {
         return {
             accountIndex: this.accountIndex,
@@ -91,6 +95,22 @@ export async function fromAccount(
  */
 export function fromJSON(json: JSON): LockId {
     return create(BigInt(json.accountIndex), BigInt(json.sequenceNumber), BigInt(json.creationOrder));
+}
+
+/**
+ * Construct a lock identifier from its string representation `<accountIndex, sequenceNumber, creationOrder>`.
+ *
+ * Whitespace after commas is accepted.
+ *
+ * @param value string representation of a lock identifier.
+ * @returns a lock identifier.
+ */
+export function fromString(value: string): LockId {
+    const match = value.match(/^<(\d+),\s*(\d+),\s*(\d+)>$/);
+    if (!match) {
+        throw new Error(`Invalid lock ID format "${value}". Expected "<accountIndex, sequenceNumber, creationOrder>".`);
+    }
+    return create(BigInt(match[1]), BigInt(match[2]), BigInt(match[3]));
 }
 
 /**

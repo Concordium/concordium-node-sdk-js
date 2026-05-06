@@ -60,13 +60,7 @@ const client = new ConcordiumGRPCNodeClient(
  */
 (async () => {
     // #region documentation-snippet
-    const match = cli.flags.lockId.match(/^<(\d+),(\d+),(\d+)>$/);
-    if (!match)
-        throw new Error(
-            `Invalid lock ID format "${cli.flags.lockId}". Expected "<accountIndex,sequenceNumber,creationOrder>".`
-        );
-
-    const lockId = LockId.create(BigInt(match[1]), BigInt(match[2]), BigInt(match[3]));
+    const lockId = LockId.fromString(cli.flags.lockId);
     const blockHash = cli.flags.block === undefined ? undefined : BlockHash.fromHexString(cli.flags.block);
 
     const lockInfoResponse: LockInfoResponse = await client.getLockInfo(lockId, blockHash);

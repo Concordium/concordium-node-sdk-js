@@ -7,7 +7,6 @@ import {
     parseSimpleWallet,
     parseWallet,
 } from '@concordium/web-sdk';
-import { LockId } from '@concordium/web-sdk/plt';
 import { readFileSync } from 'node:fs';
 
 export const parseAddress = (input: string): AccountAddress.Type | ContractAddress.Type => {
@@ -68,14 +67,4 @@ export const parseKeysFile = (path: string): [AccountAddress.Type, AccountSigner
 
 export const validateNetwork = (value: string): value is Network => {
     return ['Testnet', 'Mainnet'].includes(value);
-};
-
-/**
- * Parse a lock ID from the string format "<accountIndex,sequenceNumber,creationOrder>".
- */
-export const parseLockId = (input: string): LockId.Type => {
-    const match = input.match(/^<(\d+),(\d+),(\d+)>$/);
-    if (!match)
-        throw new Error(`Invalid lock ID format "${input}". Expected "<accountIndex,sequenceNumber,creationOrder>".`);
-    return LockId.create(BigInt(match[1]), BigInt(match[2]), BigInt(match[3]));
 };

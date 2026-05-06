@@ -6,11 +6,18 @@ import {
     serializeAccountTransactionPayload,
 } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
-import { Lock, MetaUpdateOperationType, TokenAmount, TokenId, createMetaUpdatePayload } from '@concordium/web-sdk/plt';
+import {
+    Lock,
+    LockId,
+    MetaUpdateOperationType,
+    TokenAmount,
+    TokenId,
+    createMetaUpdatePayload,
+} from '@concordium/web-sdk/plt';
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
 
-import { parseEndpoint, parseKeysFile, parseLockId } from '../shared/util.js';
+import { parseEndpoint, parseKeysFile } from '../shared/util.js';
 
 const cli = meow(
     `
@@ -54,7 +61,7 @@ const client = new ConcordiumGRPCNodeClient(
     // #region documentation-snippet
 
     // Parse the lock, token, and amount arguments
-    const lockId = parseLockId(cli.flags.lockId);
+    const lockId = LockId.fromString(cli.flags.lockId);
     const tokenId = TokenId.fromString(cli.flags.token);
     const amount = TokenAmount.fromDecimal(cli.flags.amount, cli.flags.decimals);
 

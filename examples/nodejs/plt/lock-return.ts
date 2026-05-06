@@ -10,6 +10,7 @@ import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import {
     CborAccountAddress,
     Lock,
+    LockId,
     MetaUpdateOperationType,
     TokenAmount,
     TokenId,
@@ -18,7 +19,7 @@ import {
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
 
-import { parseEndpoint, parseKeysFile, parseLockId } from '../shared/util.js';
+import { parseEndpoint, parseKeysFile } from '../shared/util.js';
 
 const cli = meow(
     `
@@ -64,7 +65,7 @@ const client = new ConcordiumGRPCNodeClient(
     // #region documentation-snippet
 
     // Parse the lock, token, amount, and source account arguments
-    const lockId = parseLockId(cli.flags.lockId);
+    const lockId = LockId.fromString(cli.flags.lockId);
     const tokenId = TokenId.fromString(cli.flags.token);
     const source = AccountAddress.fromBase58(cli.flags.source);
     const amount = TokenAmount.fromDecimal(cli.flags.amount, cli.flags.decimals);

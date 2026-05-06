@@ -4,6 +4,7 @@ export {
     create,
     fromAccount,
     fromJSON,
+    fromString,
     instanceOf,
     toCBOR,
     fromCBOR,

@@ -918,6 +918,8 @@ export class TokenUpdateHandler
         const PLT_BURN_COST = 50n;
         const PLT_LIST_UPDATE_COST = 50n;
         const PLT_PAUSE_COST = 50n;
+        const PLT_ADMIN_ROLE_UPDATE_COST = 50n;
+        const PLT_METADATA_UPDATE_COST = 50n;
 
         for (const operation of operations) {
             switch (true) {
@@ -940,6 +942,14 @@ export class TokenUpdateHandler
                 case TokenOperationType.Unpause in operation:
                     energyCost += PLT_PAUSE_COST;
                     break;
+                case TokenOperationType.AssignAdminRoles in operation:
+                case TokenOperationType.RevokeAdminRoles in operation:
+                    energyCost += PLT_ADMIN_ROLE_UPDATE_COST;
+                    break;
+                case TokenOperationType.UpdateMetadata in operation:
+                    energyCost += PLT_METADATA_UPDATE_COST;
+                    break;
+
             }
         }
 

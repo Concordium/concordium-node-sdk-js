@@ -949,7 +949,6 @@ export class TokenUpdateHandler
                 case TokenOperationType.UpdateMetadata in operation:
                     energyCost += PLT_METADATA_UPDATE_COST;
                     break;
-
             }
         }
 

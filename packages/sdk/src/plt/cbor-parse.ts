@@ -10,38 +10,55 @@ import type { TokenListUpdate, TokenSupplyUpdate, TokenTransfer } from './TokenO
 export function parseTransfer(details: unknown): TokenTransfer {
     if (typeof details !== 'object' || details === null)
         throw new Error(`Invalid transfer details: ${JSON.stringify(details)}. Expected an object.`);
-    if (!('amount' in details) || !TokenAmount.instanceOf(details.amount))
+
+    const value = details as Record<string, unknown>;
+    if (!TokenAmount.instanceOf(value.amount))
         throw new Error(`Invalid transfer details: ${JSON.stringify(details)}. Expected 'amount' to be a TokenAmount`);
-    if (!('recipient' in details) || !CborAccountAddress.instanceOf(details.recipient))
+    if (!CborAccountAddress.instanceOf(value.recipient))
         throw new Error(
             `Invalid transfer details: ${JSON.stringify(details)}. Expected 'recipient' to be a TokenHolder`
         );
-    if ('memo' in details && !(details.memo instanceof Uint8Array || CborMemo.instanceOf(details.memo)))
+    if (value.memo !== undefined && !(value.memo instanceof Uint8Array || CborMemo.instanceOf(value.memo)))
         throw new Error(
             `Invalid transfer details: ${JSON.stringify(details)}. Expected 'memo' to be Uint8Array | CborMemo`
         );
-    return details as TokenTransfer;
+
+    return {
+        amount: value.amount,
+        recipient: value.recipient,
+        memo: value.memo,
+    };
 }
 
 export function parseSupplyUpdate(details: unknown): TokenSupplyUpdate {
     if (typeof details !== 'object' || details === null) {
         throw new Error(`Invalid supply update details: ${JSON.stringify(details)}. Expected an object.`);
     }
-    if (!('amount' in details) || !TokenAmount.instanceOf(details.amount))
+
+    const value = details as Record<string, unknown>;
+    if (!TokenAmount.instanceOf(value.amount))
         throw new Error(
             `Invalid supply update details: ${JSON.stringify(details)}. Expected 'amount' to be a TokenAmount`
         );
-    return details as TokenSupplyUpdate;
+
+    return {
+        amount: value.amount,
+    };
 }
 
 export function parseListUpdate(details: unknown): TokenListUpdate {
     if (typeof details !== 'object' || details === null)
         throw new Error(`Invalid list update details: ${JSON.stringify(details)}. Expected an object.`);
-    if (!('target' in details) || !CborAccountAddress.instanceOf(details.target))
+
+    const value = details as Record<string, unknown>;
+    if (!CborAccountAddress.instanceOf(value.target))
         throw new Error(
             `Invalid list update details: ${JSON.stringify(details)}. Expected 'target' to be a TokenHolder`
         );
-    return details as TokenListUpdate;
+
+    return {
+        target: value.target,
+    };
 }
 
 export function parseEmpty(details: unknown): {} {

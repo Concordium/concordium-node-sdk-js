@@ -580,25 +580,15 @@ export async function validateBurn(
     amountsList.forEach((amount) => validateAmount(token, amount));
 
     const { decimals } = token.info.state;
+    const senderInfo = AccountAddress.instanceOf(sender) ? await token.grpc.getAccountInfo(sender) : sender;
 
-    let senderBalance: BalanceOfResponse;
-    let senderAdderss: AccountAddress.Type;
-
-    if (AccountAddress.instanceOf(sender)) {
-        senderAdderss = sender;
-        senderBalance = await balanceOf(token, sender);
-    } else {
-        senderAdderss = sender.accountAddress;
-        senderBalance = balanceOf(token, sender);
-    }
-
-    const burnableAmount = senderBalance ?? TokenAmount.zero(decimals);
+    const burnableAmount = availableBalanceOf(token, senderInfo) ?? TokenAmount.zero(decimals);
     const payloadTotal = amountsList.reduce(
         (acc, amount) => acc.add(TokenAmount.toDecimal(amount)),
         TokenAmount.toDecimal(TokenAmount.zero(decimals))
     );
     if (TokenAmount.toDecimal(burnableAmount).lt(payloadTotal)) {
-        throw new InsufficientSupplyError(senderAdderss, TokenAmount.fromDecimal(payloadTotal, decimals));
+        throw new InsufficientSupplyError(senderInfo.accountAddress, TokenAmount.fromDecimal(payloadTotal, decimals));
     }
     return true;
 }

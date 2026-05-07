@@ -18,7 +18,7 @@ const cli = meow(
     $ yarn run-example <path-to-this-file> [options]
 
   Required
-    --lock-id,     -l  The lock ID as "<accountIndex,sequenceNumber,creationOrder>"
+    --lock-id,     -l  The lock ID as "P<accountIndex>L<sequenceNumber>T<creationOrder>L"
 
   Options
     --help,              Displays this message

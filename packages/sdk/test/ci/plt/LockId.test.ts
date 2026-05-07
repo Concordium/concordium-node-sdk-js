@@ -4,13 +4,12 @@ import { LockId } from '../../../src/pub/plt.ts';
 import { AccountAddress, SequenceNumber } from '../../../src/pub/types.ts';
 
 describe('PLT LockId', () => {
-    it('formats as <accountIndex, sequenceNumber, creationOrder>', () => {
-        expect(LockId.create(1n, 2n, 3n).toString()).toBe('<1, 2, 3>');
+    it('formats as P<accountIndex>L<sequenceNumber>T<creationOrder>L', () => {
+        expect(LockId.create(1n, 2n, 3n).toString()).toBe('P1L2T3L');
     });
 
-    it('parses from <accountIndex, sequenceNumber, creationOrder>', () => {
-        expect(LockId.fromString('<1,2,3>')).toEqual(LockId.create(1n, 2n, 3n));
-        expect(LockId.fromString('<1, 2, 3>')).toEqual(LockId.create(1n, 2n, 3n));
+    it('parses from P<accountIndex>L<sequenceNumber>T<creationOrder>L', () => {
+        expect(LockId.fromString('P1L2T3L')).toEqual(LockId.create(1n, 2n, 3n));
     });
 
     it('encodes using the protocol tag and raw tuple', () => {

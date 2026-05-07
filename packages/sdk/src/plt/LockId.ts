@@ -35,8 +35,14 @@ class LockId {
         }
     }
 
+    /**
+     * PLTL is an abbreviation for protocol-level token lock, which is used as delimiter characters in the
+     * representation.
+     *
+     * @returns the string representation
+     */
     public toString(): string {
-        return `<${this.accountIndex}, ${this.sequenceNumber}, ${this.creationOrder}>`;
+        return `P${this.accountIndex}L${this.sequenceNumber}T${this.creationOrder}L`;
     }
 
     public toJSON(): JSON {
@@ -98,17 +104,17 @@ export function fromJSON(json: JSON): LockId {
 }
 
 /**
- * Construct a lock identifier from its string representation `<accountIndex, sequenceNumber, creationOrder>`.
- *
- * Whitespace after commas is accepted.
+ * Construct a lock identifier from its string representation `P<accountIndex>L<sequenceNumber>T<creationOrder>L`.
  *
  * @param value string representation of a lock identifier.
  * @returns a lock identifier.
  */
 export function fromString(value: string): LockId {
-    const match = value.match(/^<(\d+),\s*(\d+),\s*(\d+)>$/);
+    const match = value.match(/^P(\d+)L(\d+)T(\d+)L$/);
     if (!match) {
-        throw new Error(`Invalid lock ID format "${value}". Expected "<accountIndex, sequenceNumber, creationOrder>".`);
+        throw new Error(
+            `Invalid lock ID format "${value}". Expected "P<accountIndex>L<sequenceNumber>T<creationOrder>L".`
+        );
     }
     return create(BigInt(match[1]), BigInt(match[2]), BigInt(match[3]));
 }

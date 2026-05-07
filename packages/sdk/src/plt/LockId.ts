@@ -1,3 +1,5 @@
+import bs58check from 'bs58check';
+import { Buffer } from 'buffer/index.js';
 import { decode } from 'cbor2/decoder';
 import { encode, registerEncoder } from 'cbor2/encoder';
 import { Tag } from 'cbor2/tag';
@@ -6,6 +8,7 @@ import { MAX_U64 } from '../constants.js';
 import type * as Proto from '../grpc-api/v2/concordium/protocol-level-tokens.js';
 import { ConcordiumGRPCClient } from '../grpc/GRPCClient.js';
 import type * as AccountAddress from '../types/AccountAddress.js';
+import { uleb128DecodeWithIndex, uleb128Encode } from '../uleb128.js';
 
 /** JSON representation of a lock identifier. */
 export type JSON = {
@@ -36,13 +39,20 @@ class LockId {
     }
 
     /**
-     * PLTL is an abbreviation for protocol-level token lock, which is used as delimiter characters in the
-     * representation.
+     * Encode the lock id as Base58Check with version byte 3 over the concatenated ULEB128 encodings of
+     * `(accountIndex, sequenceNumber, creationOrder)`.
      *
-     * @returns the string representation
+     * @returns the string representation.
      */
     public toString(): string {
-        return `P${this.accountIndex}L${this.sequenceNumber}T${this.creationOrder}L`;
+        return bs58check.encode(
+            Buffer.concat([
+                Buffer.of(BASE58CHECK_VERSION),
+                uleb128Encode(this.accountIndex),
+                uleb128Encode(this.sequenceNumber),
+                uleb128Encode(this.creationOrder),
+            ])
+        );
     }
 
     public toJSON(): JSON {
@@ -59,6 +69,8 @@ export type Type = LockId;
 
 /** CBOR tag used to encode a lock identifier (tag 40920). */
 const CBOR_TAG = 40920;
+/** Base58Check version byte used for lock identifier string representations. */
+const BASE58CHECK_VERSION = 3;
 
 /**
  * Construct a lock identifier.
@@ -104,19 +116,30 @@ export function fromJSON(json: JSON): LockId {
 }
 
 /**
- * Construct a lock identifier from its string representation `P<accountIndex>L<sequenceNumber>T<creationOrder>L`.
+ * Construct a lock identifier from its Base58Check string representation.
+ *
+ * The encoded bytes are expected to consist of version byte 3 followed by the ULEB128 encodings of
+ * `(accountIndex, sequenceNumber, creationOrder)`.
  *
  * @param value string representation of a lock identifier.
  * @returns a lock identifier.
  */
 export function fromString(value: string): LockId {
-    const match = value.match(/^P(\d+)L(\d+)T(\d+)L$/);
-    if (!match) {
+    const bytes = Buffer.from(bs58check.decode(value));
+    if (bytes[0] !== BASE58CHECK_VERSION) {
         throw new Error(
-            `Invalid lock ID format "${value}". Expected "P<accountIndex>L<sequenceNumber>T<creationOrder>L".`
+            `Invalid lock ID format "${value}". Expected a Base58Check string with version byte ${BASE58CHECK_VERSION}.`
         );
     }
-    return create(BigInt(match[1]), BigInt(match[2]), BigInt(match[3]));
+
+    const [accountIndex, i] = uleb128DecodeWithIndex(bytes, 1);
+    const [sequenceNumber, j] = uleb128DecodeWithIndex(bytes, i);
+    const [creationOrder, k] = uleb128DecodeWithIndex(bytes, j);
+    if (k !== bytes.length) {
+        throw new Error(`Invalid lock ID format "${value}". Expected exactly three ULEB128-encoded components.`);
+    }
+
+    return create(accountIndex, sequenceNumber, creationOrder);
 }
 
 /**

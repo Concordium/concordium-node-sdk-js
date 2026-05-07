@@ -4,12 +4,12 @@ import { LockId } from '../../../src/pub/plt.ts';
 import { AccountAddress, SequenceNumber } from '../../../src/pub/types.ts';
 
 describe('PLT LockId', () => {
-    it('formats as P<accountIndex>L<sequenceNumber>T<creationOrder>L', () => {
-        expect(LockId.create(1n, 2n, 3n).toString()).toBe('P1L2T3L');
+    it('formats as Base58Check(version=3, uleb128(accountIndex, sequenceNumber, creationOrder))', () => {
+        expect(LockId.create(1n, 2n, 3n).toString()).toBe('W9EXVYXZJq');
     });
 
-    it('parses from P<accountIndex>L<sequenceNumber>T<creationOrder>L', () => {
-        expect(LockId.fromString('P1L2T3L')).toEqual(LockId.create(1n, 2n, 3n));
+    it('parses from Base58Check(version=3, uleb128(accountIndex, sequenceNumber, creationOrder))', () => {
+        expect(LockId.fromString('W9EXVYXZJq')).toEqual(LockId.create(1n, 2n, 3n));
     });
 
     it('encodes using the protocol tag and raw tuple', () => {

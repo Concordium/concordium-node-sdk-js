@@ -27,7 +27,7 @@ const cli = meow(
     $ yarn run-example <path-to-this-file> [options]
 
   Required
-    --lock-id,     -l  The lock ID as "P<accountIndex>L<sequenceNumber>T<creationOrder>L"
+    --lock-id,     -l  The lock ID as a Base58Check string
     --token,       -t  Token id to send
     --source,      -f  Account whose locked funds are the source
     --recipient,   -r  Account receiving the locked funds

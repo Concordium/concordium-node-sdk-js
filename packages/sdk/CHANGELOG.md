@@ -5,6 +5,16 @@
 - Token operations for updating metadata, assigning and revoking admin roles have been added.
 - Token events for updating metadata, assigning and revoking admin roles have been added.
 - New Proto types, a translation function for those proto types and a new function getTokenAuthorizations
+- Added support for PLT MetaUpdate transactions:
+  - `AccountTransactionType.MetaUpdate` constant and `MetaUpdatePayload` payload type.
+  - `MetaUpdateHandler` for serializing, deserializing, and computing energy costs of MetaUpdate payloads.
+  - `Payload.metaUpdate` helper and full JSON round-trip support.
+  - New PLT modules: `LockId`, `LockController`, `LockConfig`, and `MetaUpdateOperation` covering all lock and token-scoped meta operation types.
+  - `MetaUpdateOperationType` enum for the five lock operation variants (`LockCreate`, `LockCancel`, `LockFund`, `LockSend`, `LockReturn`).
+  - `createMetaUpdatePayload`, `encodeMetaUpdateOperations`, `createMetaTokenOperation` helpers for constructing MetaUpdate payloads.
+  - `decodeMetaUpdateOperation`, `decodeMetaUpdateOperations` for decoding CBOR-encoded MetaUpdate operation arrays into typed SDK values.
+  - `MetaUpdateSummary` added to `AccountTransactionSummary`, adding `LockCreatedEvent` and `LockDestroyedEvent` alongside token-scoped events.
+  - `TransactionEventTag.LockCreated` and `TransactionEventTag.LockDestroyed` event tags.
 
 ## 12.0.2
 

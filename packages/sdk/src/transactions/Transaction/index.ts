@@ -8,6 +8,7 @@ export {
     transfer,
     isMultiSig,
     tokenUpdate,
+    metaUpdate,
     deployModule,
     initContract,
     isConfigured,

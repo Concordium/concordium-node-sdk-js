@@ -133,7 +133,7 @@ describe('PLT Lock.composeCreateOperations', () => {
     });
 });
 
-describe('PLT Lock.createAndSendOperations', () => {
+describe('PLT Lock.create', () => {
     it('submits a single meta update transaction with lockCreate followed by lock-bound operations', async () => {
         const addMetadata = jest.fn().mockReturnValue({ build: jest.fn().mockReturnValue('built-transaction') });
         const metaUpdate = jest.spyOn(Transaction, 'metaUpdate').mockReturnValue({ addMetadata } as never);
@@ -148,24 +148,15 @@ describe('PLT Lock.createAndSendOperations', () => {
         };
         const info = createLockInfo([LockController.SimpleV0Capability.Fund]);
 
-        await expect(
-            Lock.createAndSendOperations(
-                grpc as never,
-                ACCOUNT_1,
-                {
-                    recipients: info.recipients,
-                    expiry: info.expiry,
-                    controller: info.controller,
-                },
-                {
-                    lockFund: {
-                        token: TOKEN_ID,
-                        amount: TokenAmount.create(10n, 0),
-                    },
-                },
-                {} as never
-            )
-        ).resolves.toBe('tx-hash');
+        const transaction = await Lock.create(grpc as never, ACCOUNT_1, {
+            recipients: info.recipients,
+            expiry: info.expiry,
+            controller: info.controller,
+        })
+            .fund({ token: TOKEN_ID, amount: TokenAmount.create(10n, 0) })
+            .submit({} as never);
+
+        expect(transaction.transactionHash).toBe('tx-hash');
 
         expect(metaUpdate).toHaveBeenCalledTimes(1);
         const [payload] = metaUpdate.mock.calls[0];

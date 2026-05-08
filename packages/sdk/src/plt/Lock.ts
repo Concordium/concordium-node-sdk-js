@@ -182,16 +182,152 @@ class Lock {
     }
 }
 
+/** Handle for a submitted lock-creation transaction. */
+class LockCreateTransaction {
+    public constructor(
+        private readonly grpc: ConcordiumGRPCClient,
+        public readonly transactionHash: TransactionHash.Type
+    ) {}
+
+    /**
+     * Wait until the transaction is finalized and return the created lock.
+     *
+     * @param finalizationTimeoutSeconds Optional timeout in seconds for waiting for finalization.
+     * @returns The created lock.
+     */
+    public async waitUntilFinalized(finalizationTimeoutSeconds?: number): Promise<Type> {
+        const outcome = await this.grpc.waitForTransactionFinalization(
+            this.transactionHash,
+            finalizationTimeoutSeconds !== undefined ? finalizationTimeoutSeconds * 1000 : undefined
+        );
+
+        if (!isKnown(outcome.summary)) {
+            throw new CreateFailedError(this.transactionHash, 'finalization summary is unknown');
+        }
+        if (outcome.summary.type !== TransactionSummaryType.AccountTransaction) {
+            throw new CreateFailedError(this.transactionHash, 'finalization summary is not an account transaction');
+        }
+        if (outcome.summary.transactionType === TransactionKindString.Failed) {
+            throw new CreateFailedError(this.transactionHash, 'transaction was rejected');
+        }
+        if (outcome.summary.transactionType !== TransactionKindString.MetaUpdate) {
+            throw new CreateFailedError(this.transactionHash, 'transaction summary is not a meta update');
+        }
+
+        const event = outcome.summary.events.filter(isKnown).find(isLockCreatedEvent);
+        if (event === undefined) {
+            throw new CreateFailedError(this.transactionHash, 'missing LockCreated event');
+        }
+
+        return fromId(this.grpc, event.lockId);
+    }
+}
+
+/** Builder for a lockCreate transaction with optional subsequent operations. */
+class LockCreateProposal {
+    private readonly subsequent: SubsequentOperation[] = [];
+
+    public constructor(
+        private readonly grpc: ConcordiumGRPCClient,
+        private readonly sender: AccountAddress.Type,
+        private readonly config: LockConfig,
+        private readonly creationOrder: bigint | number = 0n
+    ) {}
+
+    /**
+     * Add a lockFund operation to the proposal.
+     *
+     * @param details The fund details excluding the lock id.
+     * @returns This proposal.
+     */
+    public fund(details: FundDetails): this {
+        this.subsequent.push({ [MetaUpdateOperationType.LockFund]: details });
+        return this;
+    }
+
+    /**
+     * Add a lockSend operation to the proposal.
+     *
+     * @param details The send details excluding the lock id.
+     * @returns This proposal.
+     */
+    public send(details: SendDetails): this {
+        this.subsequent.push({
+            [MetaUpdateOperationType.LockSend]: {
+                ...details,
+                source: CborAccountAddress.fromAccountAddress(details.source),
+                recipient: CborAccountAddress.fromAccountAddress(details.recipient),
+            },
+        });
+        return this;
+    }
+
+    /**
+     * Add a lockReturn operation to the proposal.
+     *
+     * @param details The return details excluding the lock id.
+     * @returns This proposal.
+     */
+    public returnFunds(details: ReturnDetails): this {
+        this.subsequent.push({
+            [MetaUpdateOperationType.LockReturn]: {
+                ...details,
+                source: CborAccountAddress.fromAccountAddress(details.source),
+            },
+        });
+        return this;
+    }
+
+    /**
+     * Add a lockCancel operation to the proposal.
+     *
+     * @returns This proposal.
+     */
+    public cancel(): this {
+        this.subsequent.push({ [MetaUpdateOperationType.LockCancel]: {} });
+        return this;
+    }
+
+    /**
+     * Submit the composed transaction.
+     *
+     * @param signer The signer used to sign the transaction.
+     * @param metadata Optional transaction metadata such as expiry and nonce.
+     * @returns A submitted transaction handle.
+     */
+    public async submit(signer: AccountSigner, metadata?: LockUpdateMetadata): Promise<CreateTransaction> {
+        const header = await resolveTransactionHeader(this.grpc, this.sender, metadata);
+        const accountInfo = await this.grpc.getAccountInfo(this.sender);
+        const lockId = LockId.create(accountInfo.accountIndex, header.nonce.value, BigInt(this.creationOrder));
+        const payload = createMetaUpdatePayload([
+            { [MetaUpdateOperationType.LockCreate]: this.config },
+            ...bindLockId(lockId, this.subsequent),
+        ]);
+        const transactionHash = await submitPayload(this.grpc, header, payload, signer);
+        return new LockCreateTransaction(this.grpc, transactionHash);
+    }
+}
+
+/** Public lock client type. */
 export type Type = Lock;
+
+/** Public lock-create proposal builder type. */
+export type CreateProposal = LockCreateProposal;
+
+/** Public submitted lock-create transaction handle type. */
+export type CreateTransaction = LockCreateTransaction;
 
 /** Transaction metadata for lock MetaUpdate transactions. */
 export type LockUpdateMetadata = {
+    /** Optional transaction expiry. Defaults to five minutes in the future when omitted. */
     expiry?: TransactionExpiry.Type;
+    /** Optional explicit account nonce. When omitted, the next account nonce is queried from chain. */
     nonce?: SequenceNumber.Type;
 };
 
 /** Options shared by high-level lock operations. */
 export type LockOperationOptions = {
+    /** Whether to run client-side validation before submission. */
     validate?: boolean;
 };
 
@@ -200,12 +336,15 @@ export type FundDetails = Omit<LockFund, 'lock'>;
 
 /** Details for sending locked funds. */
 export type SendDetails = Omit<LockSend, 'lock' | 'source' | 'recipient'> & {
+    /** Account that currently holds the locked funds. */
     source: AccountAddress.Type;
+    /** Account to receive the unlocked funds. */
     recipient: AccountAddress.Type;
 };
 
 /** Details for returning locked funds. */
 export type ReturnDetails = Omit<LockReturn, 'lock' | 'source'> & {
+    /** Account that currently holds the locked funds. */
     source: AccountAddress.Type;
 };
 
@@ -264,6 +403,30 @@ function bindLockId(
             },
         } as MetaUpdateOperation;
     });
+}
+
+async function resolveTransactionHeader(
+    grpc: ConcordiumGRPCClient,
+    sender: AccountAddress.Type,
+    { expiry = TransactionExpiry.futureMinutes(5), nonce }: LockUpdateMetadata = {}
+): Promise<Transaction.Metadata> {
+    const { nonce: nextNonce } = nonce ? { nonce } : await grpc.getNextAccountNonce(sender);
+    return {
+        expiry,
+        nonce: nextNonce,
+        sender,
+    };
+}
+
+async function submitPayload(
+    grpc: ConcordiumGRPCClient,
+    header: Transaction.Metadata,
+    payload: MetaUpdatePayload,
+    signer: AccountSigner
+): Promise<TransactionHash.Type> {
+    const transaction = Transaction.metaUpdate(payload).addMetadata(header).build();
+    const signed = await Transaction.signAndFinalize(transaction, signer);
+    return grpc.sendTransaction(signed);
 }
 
 /**
@@ -377,18 +540,10 @@ async function sendRawWithGrpc(
     sender: AccountAddress.Type,
     payload: MetaUpdatePayload,
     signer: AccountSigner,
-    { expiry = TransactionExpiry.futureMinutes(5), nonce }: LockUpdateMetadata = {}
+    metadata?: LockUpdateMetadata
 ): Promise<TransactionHash.Type> {
-    const { nonce: nextNonce } = nonce ? { nonce } : await grpc.getNextAccountNonce(sender);
-    const header: Transaction.Metadata = {
-        expiry,
-        nonce: nextNonce,
-        sender,
-    };
-
-    const transaction = Transaction.metaUpdate(payload).addMetadata(header).build();
-    const signed = await Transaction.signAndFinalize(transaction, signer);
-    return grpc.sendTransaction(signed);
+    const header = await resolveTransactionHeader(grpc, sender, metadata);
+    return submitPayload(grpc, header, payload, signer);
 }
 
 /**
@@ -418,49 +573,15 @@ export function createRaw(
 }
 
 /**
- * Create a lock, wait for finalization, and return a Lock instance for the created lock.
+ * Begin building a lockCreate transaction with optional subsequent lock operations.
  *
- * @param grpc The gRPC client used for submission, finalization waiting, and lock lookup.
+ * @param grpc The gRPC client used for nonce lookup, submission, and later finalization waiting.
  * @param sender The sender account that creates the lock.
- * @param config The lock configuration to encode into the `lockCreate` operation.
- * @param signer The signer used to sign the transaction.
- * @param metadata Optional transaction metadata such as expiry and nonce.
- * @param finalizationTimeoutSeconds Optional timeout in seconds for waiting for finalization.
- * @returns A lock client instance for the created lock.
+ * @param config The lock configuration to encode into the initial `lockCreate` operation.
+ * @returns A proposal builder for the lock-creation transaction.
  */
-export async function create(
-    grpc: ConcordiumGRPCClient,
-    sender: AccountAddress.Type,
-    config: LockConfig,
-    signer: AccountSigner,
-    metadata?: LockUpdateMetadata,
-    finalizationTimeoutSeconds?: number
-): Promise<Lock> {
-    const txHash = await createRaw(grpc, sender, config, signer, metadata);
-    const outcome = await grpc.waitForTransactionFinalization(
-        txHash,
-        finalizationTimeoutSeconds !== undefined ? finalizationTimeoutSeconds * 1000 : undefined
-    );
-
-    if (!isKnown(outcome.summary)) {
-        throw new CreateFailedError(txHash, 'finalization summary is unknown');
-    }
-    if (outcome.summary.type !== TransactionSummaryType.AccountTransaction) {
-        throw new CreateFailedError(txHash, 'finalization summary is not an account transaction');
-    }
-    if (outcome.summary.transactionType === TransactionKindString.Failed) {
-        throw new CreateFailedError(txHash, 'transaction was rejected');
-    }
-    if (outcome.summary.transactionType !== TransactionKindString.MetaUpdate) {
-        throw new CreateFailedError(txHash, 'transaction summary is not a meta update');
-    }
-
-    const event = outcome.summary.events.filter(isKnown).find(isLockCreatedEvent);
-    if (event === undefined) {
-        throw new CreateFailedError(txHash, 'missing LockCreated event');
-    }
-
-    return fromId(grpc, event.lockId);
+export function create(grpc: ConcordiumGRPCClient, sender: AccountAddress.Type, config: LockConfig): CreateProposal {
+    return new LockCreateProposal(grpc, sender, config);
 }
 
 function isLockCreatedEvent(event: { tag: TransactionEventTag }): event is LockCreatedEvent {

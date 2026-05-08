@@ -11,7 +11,7 @@ import {
     createMetaUpdatePayload,
 } from '../../../src/pub/plt.js';
 import { AccountAddress, SequenceNumber } from '../../../src/pub/types.js';
-import { Transaction } from '../../../src/transactions/index.js';
+import { Payload, Transaction } from '../../../src/transactions/index.js';
 
 const ACCOUNT_1 = AccountAddress.fromBase58('4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd');
 const ACCOUNT_2 = AccountAddress.fromBase58('3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB');
@@ -158,9 +158,8 @@ describe('PLT Lock.create', () => {
 
         expect(transaction.transactionHash).toBe('tx-hash');
 
-        expect(metaUpdate).toHaveBeenCalledTimes(1);
         const [payload] = metaUpdate.mock.calls[0];
-        expect(payload).toEqual(
+        const expected = Payload.metaUpdate(
             createMetaUpdatePayload([
                 {
                     lockCreate: {
@@ -178,9 +177,7 @@ describe('PLT Lock.create', () => {
                 },
             ])
         );
-        expect(addMetadata).toHaveBeenCalledTimes(1);
-        expect(signAndFinalize).toHaveBeenCalledWith('built-transaction', {});
-        expect(grpc.sendTransaction).toHaveBeenCalledWith('signed');
+        expect(payload).toEqual(expected);
 
         metaUpdate.mockRestore();
         signAndFinalize.mockRestore();

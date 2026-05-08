@@ -2,7 +2,7 @@ import { ConcordiumGRPCClient } from '../grpc/GRPCClient.js';
 import { isKnown } from '../grpc/upward.js';
 import { AccountAddress, MetaUpdatePayload, TransactionExpiry, TransactionHash } from '../pub/types.js';
 import { AccountSigner } from '../signHelpers.js';
-import { Transaction } from '../transactions/index.js';
+import { Payload, Transaction } from '../transactions/index.js';
 import { TransactionSummaryType } from '../types.js';
 import { TransactionKindString } from '../types/blockItemSummary.js';
 import { SequenceNumber } from '../types/index.js';
@@ -293,6 +293,27 @@ class LockCreateProposal {
     }
 
     /**
+     * Build the MetaUpdate payload for this lock-creation proposal.
+     *
+     * The lock id used by subsequent operations is derived from the creator account's index and the
+     * nonce that will be used for the submitted transaction.
+     *
+     * @param nonce Optional explicit nonce to use when deriving the predicted lock id. When omitted, the next account nonce is queried from chain.
+     * @returns The MetaUpdate payload containing the `lockCreate` operation and any subsequent lock operations.
+     */
+    public async payload(nonce?: SequenceNumber.Type): Promise<Payload.MetaUpdate> {
+        const accountInfo = await this.grpc.getAccountInfo(this.sender);
+        const { nonce: nextNonce } = nonce ? { nonce } : await this.grpc.getNextAccountNonce(this.sender);
+        const lockId = LockId.create(accountInfo.accountIndex, nextNonce.value, BigInt(this.creationOrder));
+        const payload = createMetaUpdatePayload([
+            { [MetaUpdateOperationType.LockCreate]: this.config },
+            ...bindLockId(lockId, this.subsequent),
+        ]);
+
+        return Payload.metaUpdate(payload);
+    }
+
+    /**
      * Submit the composed transaction.
      *
      * @param signer The signer used to sign the transaction.
@@ -301,12 +322,7 @@ class LockCreateProposal {
      */
     public async submit(signer: AccountSigner, metadata?: LockUpdateMetadata): Promise<CreateTransaction> {
         const header = await resolveTransactionHeader(this.grpc, this.sender, metadata);
-        const accountInfo = await this.grpc.getAccountInfo(this.sender);
-        const lockId = LockId.create(accountInfo.accountIndex, header.nonce.value, BigInt(this.creationOrder));
-        const payload = createMetaUpdatePayload([
-            { [MetaUpdateOperationType.LockCreate]: this.config },
-            ...bindLockId(lockId, this.subsequent),
-        ]);
+        const payload = await this.payload(metadata?.nonce);
         const transactionHash = await submitPayload(this.grpc, header, payload, signer);
         return new LockCreateTransaction(this.grpc, transactionHash);
     }

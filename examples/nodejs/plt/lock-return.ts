@@ -12,6 +12,7 @@ import {
     Lock,
     LockId,
     MetaUpdateOperationType,
+    Token,
     TokenAmount,
     TokenId,
     createMetaUpdatePayload,
@@ -31,7 +32,6 @@ const cli = meow(
     --token,       -t  Token id to return
     --source,      -f  Account whose locked funds are returned
     --amount,      -a  Token amount in decimal notation
-    --decimals,    -d  Token decimals
 
   Options
     --help,              Displays this message
@@ -48,8 +48,7 @@ const cli = meow(
             lockId: { type: 'string', alias: 'l', isRequired: true },
             token: { type: 'string', alias: 't', isRequired: true },
             source: { type: 'string', alias: 'f', isRequired: true },
-            amount: { type: 'string', alias: 'a', isRequired: true },
-            decimals: { type: 'number', alias: 'd', isRequired: true },
+            amount: { type: 'number', alias: 'a', isRequired: true },
         },
     }
 );
@@ -67,8 +66,9 @@ const client = new ConcordiumGRPCNodeClient(
     // Parse the lock, token, amount, and source account arguments
     const lockId = LockId.fromString(cli.flags.lockId);
     const tokenId = TokenId.fromString(cli.flags.token);
+    const token = await Token.fromId(client, tokenId);
     const source = AccountAddress.fromBase58(cli.flags.source);
-    const amount = TokenAmount.fromDecimal(cli.flags.amount, cli.flags.decimals);
+    const amount = TokenAmount.fromDecimal(cli.flags.amount, token.info.state.decimals);
 
     if (cli.flags.walletFile !== undefined) {
         // Read the wallet file to get the sender account and signer

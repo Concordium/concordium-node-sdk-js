@@ -94,28 +94,12 @@ const client = new ConcordiumGRPCNodeClient(
 
         try {
             // Submit the lock creation transaction
-            const txHash = await Lock.createRaw(client, sender, config, signer);
-            console.log(`Transaction submitted with hash: ${txHash}`);
+            const lockCreation = await Lock.create(client, sender, config).submit(signer);
+            console.log(`Transaction submitted with hash: ${lockCreation}`);
 
             // Wait for the transaction to be finalized and inspect the outcome
-            const result = await client.waitForTransactionFinalization(txHash);
-            console.log('Transaction finalized:', result);
-
-            if (!isKnown(result.summary)) throw new Error('Unexpected transaction outcome');
-            if (result.summary.type !== TransactionSummaryType.AccountTransaction)
-                throw new Error('Unexpected transaction type: ' + result.summary.type);
-
-            switch (result.summary.transactionType) {
-                case TransactionKindString.MetaUpdate:
-                    // Print each event — a LockCreated event should be present on success
-                    result.summary.events.filter(isKnown).forEach((e) => console.log('Event:', e));
-                    break;
-                case TransactionKindString.Failed:
-                    console.error('Transaction rejected:', result.summary.rejectReason);
-                    break;
-                default:
-                    throw new Error('Unexpected transaction kind: ' + result.summary.transactionType);
-            }
+            const lock = await lockCreation.waitUntilFinalized();
+            console.log('Lock finalized:', lock.info.lock);
         } catch (e) {
             console.error(e);
         }

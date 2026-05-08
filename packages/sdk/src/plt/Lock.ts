@@ -221,6 +221,10 @@ class LockCreateTransaction {
 
         return fromId(this.grpc, event.lockId);
     }
+
+    public toString(): string {
+        return this.transactionHash.toString();
+    }
 }
 
 /** Builder for a lockCreate transaction with optional subsequent operations. */

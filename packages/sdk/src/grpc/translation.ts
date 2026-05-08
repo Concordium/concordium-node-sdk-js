@@ -2815,6 +2815,12 @@ export function trTokenInfo(tokenInfo: GRPC.TokenInfo): PLT.TokenInfo {
     };
 }
 
+export function trLockInfoResponse(lockInfo: GRPC.LockInfo): PLT.LockInfoResponse {
+    return {
+        lockInfo: PLT.Cbor.fromProto(unwrap(lockInfo.lockInfo)),
+    };
+}
+
 // ---------------------------- //
 // --- V1 => V2 translation --- //
 // ---------------------------- //

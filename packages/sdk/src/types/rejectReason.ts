@@ -1,5 +1,6 @@
-import { EncodedTokenModuleRejectReason, TokenId } from '../plt/index.js';
+import { EncodedTokenModuleRejectReason, LockId, TokenId } from '../plt/index.js';
 import { Address, BakerId, Base58String, HexString } from '../types.js';
+import type * as AccountAddress from './AccountAddress.js';
 import type * as CcdAmount from './CcdAmount.js';
 import type * as ContractAddress from './ContractAddress.js';
 import type * as InitName from './InitName.js';
@@ -73,6 +74,14 @@ export enum RejectReasonTag {
     PoolClosed = 'PoolClosed',
     NonExistentTokenId = 'NonExistentTokenId',
     TokenUpdateTransactionFailed = 'TokenUpdateTransactionFailed',
+    NonExistentLockId = 'NonExistentLockId',
+    LockExpired = 'LockExpired',
+    LockFundNotAuthorized = 'LockFundNotAuthorized',
+    LockSendNotAuthorized = 'LockSendNotAuthorized',
+    LockReturnNotAuthorized = 'LockReturnNotAuthorized',
+    LockCancelNotAuthorized = 'LockCancelNotAuthorized',
+    LockTokenImpermissible = 'LockTokenImpermissible',
+    LockRecipientImpermissible = 'LockRecipientImpermissible',
 }
 
 export interface RejectedReceive {
@@ -143,6 +152,17 @@ export type StringRejectReasonTag =
 
 export type TokenRejectReasonTag = RejectReasonTag.NonExistentTokenId | RejectReasonTag.TokenUpdateTransactionFailed;
 
+export type LockIdRejectReasonTag = RejectReasonTag.NonExistentLockId | RejectReasonTag.LockExpired;
+
+export type LockIdAccountRejectReasonTag =
+    | RejectReasonTag.LockFundNotAuthorized
+    | RejectReasonTag.LockSendNotAuthorized
+    | RejectReasonTag.LockReturnNotAuthorized
+    | RejectReasonTag.LockCancelNotAuthorized
+    | RejectReasonTag.LockRecipientImpermissible;
+
+export type LockIdTokenIdRejectReasonTag = RejectReasonTag.LockTokenImpermissible;
+
 export interface StringRejectReason {
     tag: StringRejectReasonTag;
     contents: HexString | Base58String;
@@ -208,6 +228,40 @@ export type TokenUpdateTransactionFailedRejectReason = {
 
 export type TokenRejectReason = NonExistingTokenIdRejectReason | TokenUpdateTransactionFailedRejectReason;
 
+/** A reject reason carrying a lock identifier payload. */
+export interface LockIdRejectReason {
+    /** The specific lock-related reject reason variant. */
+    tag: LockIdRejectReasonTag;
+    /** The lock identifier associated with the rejection. */
+    contents: LockId.Type;
+}
+
+/** A reject reason carrying a lock identifier and account payload. */
+export interface LockIdAccountRejectReason {
+    /** The specific lock-and-account reject reason variant. */
+    tag: LockIdAccountRejectReasonTag;
+    /** The lock and account associated with the rejection. */
+    contents: {
+        /** The lock identifier associated with the rejection. */
+        lockId: LockId.Type;
+        /** The account associated with the rejection. */
+        account: AccountAddress.Type;
+    };
+}
+
+/** A reject reason carrying a lock identifier and token identifier payload. */
+export interface LockIdTokenIdRejectReason {
+    /** The specific lock-and-token reject reason variant. */
+    tag: LockIdTokenIdRejectReasonTag;
+    /** The lock and token associated with the rejection. */
+    contents: {
+        /** The lock identifier associated with the rejection. */
+        lockId: LockId.Type;
+        /** The token identifier associated with the rejection. */
+        tokenId: TokenId.Type;
+    };
+}
+
 type RejectReasonCommon =
     | SimpleRejectReason
     | StringRejectReason
@@ -222,4 +276,7 @@ export type RejectReason =
     | InvalidReceiveMethod
     | InvalidInitMethod
     | AmountTooLarge
-    | TokenRejectReason;
+    | TokenRejectReason
+    | LockIdRejectReason
+    | LockIdAccountRejectReason
+    | LockIdTokenIdRejectReason;

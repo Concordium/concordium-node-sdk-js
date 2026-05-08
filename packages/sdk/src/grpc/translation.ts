@@ -1211,6 +1211,64 @@ function trRejectReason(rejectReason: GRPC.RejectReason | undefined): Upward<SDK
                     details: PLT.Cbor.fromProto(unwrap(reason.tokenUpdateTransactionFailed.details)),
                 },
             };
+        case 'nonExistentLockId':
+            return {
+                tag: Tag.NonExistentLockId,
+                contents: PLT.LockId.fromProto(reason.nonExistentLockId),
+            };
+        case 'lockExpired':
+            return {
+                tag: Tag.LockExpired,
+                contents: PLT.LockId.fromProto(reason.lockExpired),
+            };
+        case 'lockFundNotAuthorized':
+            return {
+                tag: Tag.LockFundNotAuthorized,
+                contents: {
+                    lockId: PLT.LockId.fromProto(unwrap(reason.lockFundNotAuthorized.lockId)),
+                    account: AccountAddress.fromProto(unwrap(reason.lockFundNotAuthorized.account)),
+                },
+            };
+        case 'lockSendNotAuthorized':
+            return {
+                tag: Tag.LockSendNotAuthorized,
+                contents: {
+                    lockId: PLT.LockId.fromProto(unwrap(reason.lockSendNotAuthorized.lockId)),
+                    account: AccountAddress.fromProto(unwrap(reason.lockSendNotAuthorized.account)),
+                },
+            };
+        case 'lockReturnNotAuthorized':
+            return {
+                tag: Tag.LockReturnNotAuthorized,
+                contents: {
+                    lockId: PLT.LockId.fromProto(unwrap(reason.lockReturnNotAuthorized.lockId)),
+                    account: AccountAddress.fromProto(unwrap(reason.lockReturnNotAuthorized.account)),
+                },
+            };
+        case 'lockCancelNotAuthorized':
+            return {
+                tag: Tag.LockCancelNotAuthorized,
+                contents: {
+                    lockId: PLT.LockId.fromProto(unwrap(reason.lockCancelNotAuthorized.lockId)),
+                    account: AccountAddress.fromProto(unwrap(reason.lockCancelNotAuthorized.account)),
+                },
+            };
+        case 'lockTokenImpermissible':
+            return {
+                tag: Tag.LockTokenImpermissible,
+                contents: {
+                    lockId: PLT.LockId.fromProto(unwrap(reason.lockTokenImpermissible.lockId)),
+                    tokenId: PLT.TokenId.fromProto(unwrap(reason.lockTokenImpermissible.tokenId)),
+                },
+            };
+        case 'lockRecipientImpermissible':
+            return {
+                tag: Tag.LockRecipientImpermissible,
+                contents: {
+                    lockId: PLT.LockId.fromProto(unwrap(reason.lockRecipientImpermissible.lockId)),
+                    account: AccountAddress.fromProto(unwrap(reason.lockRecipientImpermissible.account)),
+                },
+            };
         case undefined:
             return null;
     }

@@ -27,8 +27,8 @@ export enum TokenAdminRole {
     UpdateAdminRoles = 'updateAdminRoles', //Gives authority to perform `token-assign-admin-roles` and `token-revoke-admin-roles` operations.
     Mint = 'mint', //Gives authority to perform `token-mint` operations.
     Burn = 'burn', //Gives authority to perform `token-burn` operations.
-    UpdateAllowList = 'allowList', //Gives authority to perform `token-add-allow-list` and `token-remove-allow-list` operations.
-    UpdateDenyList = 'denyList', //Gives authority to perform `token-add-deny-list` and `token-remove-deny-list` operations.
+    UpdateAllowList = 'updateAllowList', //Gives authority to perform `token-add-allow-list` and `token-remove-allow-list` operations.
+    UpdateDenyList = 'updateDenyList', //Gives authority to perform `token-add-deny-list` and `token-remove-deny-list` operations.
     Pause = 'pause', //Gives authority to perform `token-pause` and `token-unpause` operations.
     UpdateMetadata = 'updateMetadata', //Gives authority to perform `token-update-metadata` operations.
 }

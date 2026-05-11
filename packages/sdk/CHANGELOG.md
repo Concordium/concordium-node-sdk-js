@@ -5,6 +5,7 @@
 - Token operations for updating metadata, assigning and revoking admin roles have been added.
 - Token events for updating metadata, assigning and revoking admin roles have been added.
 - New Proto types, a translation function for those proto types and a new function getTokenAuthorizations
+- `TokenAdminRole.UpdateAllowList` value corrected from `'allowList'` to `'updateAllowList'`, and `TokenAdminRole.UpdateDenyList` from `'denyList'` to `'updateDenyList'`, to match the canonical CDDL role strings.
 
 ## 12.0.2
 

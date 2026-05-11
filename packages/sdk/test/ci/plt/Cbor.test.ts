@@ -2,7 +2,9 @@ import { CborAccountAddress, CborMemo } from '../../../src/plt/index.ts';
 import {
     Cbor,
     TokenAddDenyListOperation,
+    TokenAdminRole,
     TokenAmount,
+    TokenAuthorizationsDetails,
     TokenId,
     TokenMetadataUrl,
     TokenMintOperation,
@@ -1102,6 +1104,86 @@ describe('PLT Cbor', () => {
                     },
                 },
             ]);
+        });
+    });
+
+    describe('TokenAuthorizationsDetails', () => {
+        const addr1 = CborAccountAddress.fromAccountAddress(AccountAddress.fromBuffer(new Uint8Array(32).fill(0x15)));
+        const addr2 = CborAccountAddress.fromAccountAddress(AccountAddress.fromBuffer(new Uint8Array(32).fill(0x42)));
+
+        test('decodes all 7 roles with multiple accounts', () => {
+            // Note we modify the type using `Required` to ensure new roles will cause type errors here.
+            const input: Required<TokenAuthorizationsDetails> = {
+                [TokenAdminRole.UpdateAdminRoles]: { accounts: [addr1, addr2] },
+                [TokenAdminRole.Mint]: { accounts: [addr1] },
+                [TokenAdminRole.Burn]: { accounts: [addr2] },
+                [TokenAdminRole.UpdateAllowList]: { accounts: [addr1, addr2] },
+                [TokenAdminRole.UpdateDenyList]: { accounts: [addr1] },
+                [TokenAdminRole.Pause]: { accounts: [addr2] },
+                [TokenAdminRole.UpdateMetadata]: { accounts: [addr1] },
+            };
+
+            const encoded = Cbor.encode(input);
+            const decoded = Cbor.decode(encoded, 'TokenAuthorizationsDetails');
+
+            expect(decoded[TokenAdminRole.UpdateAdminRoles]?.accounts).toEqual([addr1, addr2]);
+            expect(decoded[TokenAdminRole.Mint]?.accounts).toEqual([addr1]);
+            expect(decoded[TokenAdminRole.Burn]?.accounts).toEqual([addr2]);
+            expect(decoded[TokenAdminRole.UpdateAllowList]?.accounts).toEqual([addr1, addr2]);
+            expect(decoded[TokenAdminRole.UpdateDenyList]?.accounts).toEqual([addr1]);
+            expect(decoded[TokenAdminRole.Pause]?.accounts).toEqual([addr2]);
+            expect(decoded[TokenAdminRole.UpdateMetadata]?.accounts).toEqual([addr1]);
+        });
+
+        test('decodes sparse map — absent roles are undefined', () => {
+            const input: TokenAuthorizationsDetails = {
+                [TokenAdminRole.UpdateAdminRoles]: { accounts: [addr1] },
+                [TokenAdminRole.Mint]: { accounts: [addr1, addr2] },
+            };
+
+            const encoded = Cbor.encode(input);
+            const decoded = Cbor.decode(encoded, 'TokenAuthorizationsDetails');
+
+            expect(Object.keys(decoded)).toHaveLength(2);
+            expect(decoded[TokenAdminRole.UpdateAdminRoles]?.accounts).toEqual([addr1]);
+            expect(decoded[TokenAdminRole.Mint]?.accounts).toEqual([addr1, addr2]);
+            expect(decoded[TokenAdminRole.Burn]).toBeUndefined();
+            expect(decoded[TokenAdminRole.UpdateDenyList]).toBeUndefined();
+        });
+
+        test('decodes role with empty accounts list', () => {
+            const input: TokenAuthorizationsDetails = {
+                [TokenAdminRole.Mint]: { accounts: [] },
+            };
+
+            const encoded = Cbor.encode(input);
+            const decoded = Cbor.decode(encoded, 'TokenAuthorizationsDetails');
+
+            expect(decoded[TokenAdminRole.Mint]?.accounts).toEqual([]);
+        });
+
+        test('throws on unknown role string', () => {
+            const input = { unknownRole: { accounts: [] } };
+            const encoded = Cbor.encode(input);
+
+            expect(() => Cbor.decode(encoded, 'TokenAuthorizationsDetails')).toThrow(
+                'Invalid TokenAuthorizationsDetails: unknown role "unknownRole"'
+            );
+        });
+
+        test('decodes correctly from known hex bytes', () => {
+            // Encodes: mint → [addr1(0x15*32), addr2(0x42*32)], updateAdminRoles → [addr1]
+            const hex =
+                'a2646d696e74a1686163636f756e747382d99d73a201d99d71a1011903970358201515151515151515151515151515151515151515151515151515151515151515d99d73a201d99d71a10119039703582042424242424242424242424242424242424242424242424242424242424242427075706461746541646d696e526f6c6573a1686163636f756e747381d99d73a201d99d71a1011903970358201515151515151515151515151515151515151515151515151515151515151515';
+
+            const decoded = Cbor.decode(Cbor.fromHexString(hex), 'TokenAuthorizationsDetails');
+
+            expect(Object.keys(decoded)).toHaveLength(2);
+            expect(decoded[TokenAdminRole.Mint]?.accounts).toHaveLength(2);
+            expect(decoded[TokenAdminRole.UpdateAdminRoles]?.accounts).toHaveLength(1);
+            expect(decoded[TokenAdminRole.Mint]?.accounts[0]).toEqual(addr1);
+            expect(decoded[TokenAdminRole.Mint]?.accounts[1]).toEqual(addr2);
+            expect(decoded[TokenAdminRole.UpdateAdminRoles]?.accounts[0]).toEqual(addr1);
         });
     });
 });

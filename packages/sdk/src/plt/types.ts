@@ -1,4 +1,5 @@
-import type { Cbor, TokenAmount, TokenId, TokenModuleReference } from './index.js';
+import type { TokenAdminRole } from './TokenOperation.js';
+import type { Cbor, CborAccountAddress, TokenAmount, TokenId, TokenModuleReference } from './index.js';
 
 /**
  * Represents a protocol level token state for an account.
@@ -76,8 +77,25 @@ export type CreatePLTPayload = {
 };
 
 /**
+ * Represents the authorizations held by accounts for a specific admin role on a token.
+ * An empty `accounts` array means no accounts currently hold the role.
+ */
+export type TokenRoleAuthorizations = {
+    accounts: CborAccountAddress.Type[];
+};
+
+/**
+ * The decoded form of the CBOR `token-authorizations` structure.
+ * A `Partial<Record>` because absent roles indicate that the corresponding feature
+ * is not enabled on the token (e.g. no `"updateDenyList"` key means the deny list
+ * is not active).
+ */
+export type TokenAuthorizationsDetails = Partial<Record<TokenAdminRole, TokenRoleAuthorizations>>;
+
+/**
  * Represents the authorizations of a token, such as allow/deny lists, at a specific block.
  * see {@link GRPCClient.getTokenAuthorizations} for more details.
+ * Use {@link Cbor.decode} with type `'TokenAuthorizationsDetails'` to decode `details`.
  */
 export type TokenAuthorizations = {
     tokenId: TokenId.Type;

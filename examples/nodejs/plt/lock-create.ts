@@ -92,7 +92,7 @@ const client = new ConcordiumGRPCNodeClient(
 
             // Wait for the transaction to be finalized and inspect the outcome
             const lock = await lockCreation.waitUntilFinalized();
-            console.log('Lock finalized:', lock.info.lock);
+            console.log('Lock finalized:', lock.info.lock.toString());
         } catch (e) {
             console.error(e);
         }

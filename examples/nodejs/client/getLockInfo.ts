@@ -66,7 +66,7 @@ const client = new ConcordiumGRPCNodeClient(
     const lockInfoResponse: LockInfoResponse = await client.getLockInfo(lockId, blockHash);
     const lockInfo: LockInfo = Cbor.decode(lockInfoResponse.lockInfo, 'LockInfo');
 
-    console.log('Lock ID:', lockInfo.lock.toJSON());
+    console.log('Lock ID:', lockInfo.lock.toString());
     console.log(
         'Recipients:',
         lockInfo.recipients.map((recipient) => recipient.toString())

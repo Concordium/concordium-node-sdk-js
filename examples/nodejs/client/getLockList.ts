@@ -57,6 +57,6 @@ const client = new ConcordiumGRPCNodeClient(
 
     console.log('Protocol level token locks that exist at the end of the given block:');
     for await (const lock of locks) {
-        console.log(lock.toJSON());
+        console.log(lock.toString());
     }
 })();

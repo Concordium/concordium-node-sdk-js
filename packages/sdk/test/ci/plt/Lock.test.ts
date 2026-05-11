@@ -72,67 +72,6 @@ function createLockInfo(
     };
 }
 
-describe('PLT Lock.composeCreateOperations', () => {
-    it('composes lockCreate with subsequent lock operations by injecting the predicted lock id', async () => {
-        const grpc = {
-            getAccountInfo: jest.fn().mockResolvedValue({
-                accountIndex: 9n,
-                accountNonce: { value: 12n },
-            }),
-        };
-        const info = createLockInfo([LockController.SimpleV0Capability.Fund]);
-        const composed = await Lock.composeCreateOperations(
-            grpc as never,
-            ACCOUNT_1,
-            {
-                recipients: info.recipients,
-                expiry: info.expiry,
-                controller: info.controller,
-            },
-            [
-                {
-                    lockFund: {
-                        token: TOKEN_ID,
-                        amount: TokenAmount.create(10n, 0),
-                    },
-                },
-                {
-                    lockReturn: {
-                        token: TOKEN_ID,
-                        source: CborAccountAddress.fromAccountAddress(ACCOUNT_1),
-                        amount: TokenAmount.create(5n, 0),
-                    },
-                },
-            ]
-        );
-
-        expect(composed).toEqual([
-            {
-                lockCreate: {
-                    recipients: info.recipients,
-                    expiry: info.expiry,
-                    controller: info.controller,
-                },
-            },
-            {
-                lockFund: {
-                    token: TOKEN_ID,
-                    lock: LockId.create(9n, 12n, 0n),
-                    amount: TokenAmount.create(10n, 0),
-                },
-            },
-            {
-                lockReturn: {
-                    token: TOKEN_ID,
-                    lock: LockId.create(9n, 12n, 0n),
-                    source: CborAccountAddress.fromAccountAddress(ACCOUNT_1),
-                    amount: TokenAmount.create(5n, 0),
-                },
-            },
-        ]);
-    });
-});
-
 describe('PLT Lock.create', () => {
     it('submits a single meta update transaction with lockCreate followed by lock-bound operations', async () => {
         const addMetadata = jest.fn().mockReturnValue({ build: jest.fn().mockReturnValue('built-transaction') });

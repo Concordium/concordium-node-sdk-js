@@ -450,92 +450,6 @@ async function submitPayload(
 }
 
 /**
- * Compose a lockCreate operation with subsequent lock operations that target the created lock.
- *
- * The returned operations can be submitted together in a single MetaUpdate transaction.
- *
- * This predicts the lock id using {@link LockId.fromAccount}, so the composed operations are only
- * accurate as long as no other transaction consumes the account's next nonce before submission.
- *
- * @param grpc The gRPC client used to resolve the predicted lock id from chain state.
- * @param account The account address or account index of the account that will create the lock.
- * @param config The lock configuration to use for the initial `lockCreate` operation.
- * @param operations The subsequent lock operations to apply to the created lock, excluding the `lock` field.
- * @param [creationOrder] The 0-based creation order of the `lockCreate` operation within the transaction. Defaults to `0`.
- *
- * @returns The composed operations beginning with `lockCreate`.
- */
-export async function composeCreateOperations(
-    grpc: ConcordiumGRPCClient,
-    account: AccountAddress.Type | bigint,
-    config: LockConfig,
-    operations: SubsequentOperation | SubsequentOperation[],
-    creationOrder: bigint | number = 0n
-): Promise<MetaUpdateOperation[]> {
-    const lockId = await LockId.fromAccount(grpc, account, creationOrder);
-    return [{ [MetaUpdateOperationType.LockCreate]: config }, ...bindLockId(lockId, operations)];
-}
-
-/**
- * Submit a single MetaUpdate transaction that creates a lock and immediately executes subsequent
- * operations against that created lock.
- *
- * This predicts the lock id using {@link LockId.fromAccount}, so the composed operations are
- * only accurate as long as no other transaction consumes the account's next nonce before submission.
- *
- * @param grpc The gRPC client used to resolve the predicted lock id and submit the transaction.
- * @param sender The sender account that creates the lock and submits the transaction.
- * @param config The lock configuration to use for the initial `lockCreate` operation.
- * @param operations The subsequent lock operations to apply to the created lock, excluding the `lock` field.
- * @param signer The signer used to sign the composed transaction.
- * @param [metadata] Optional transaction metadata such as expiry and nonce.
- * @param [creationOrder] The 0-based creation order of the `lockCreate` operation within the transaction. Defaults to `0`.
- *
- * @returns The hash of the submitted transaction.
- */
-export async function createAndSendOperations(
-    grpc: ConcordiumGRPCClient,
-    sender: AccountAddress.Type,
-    config: LockConfig,
-    operations: SubsequentOperation | SubsequentOperation[],
-    signer: AccountSigner,
-    metadata?: LockUpdateMetadata,
-    creationOrder: bigint | number = 0n
-): Promise<TransactionHash.Type> {
-    const composed = await composeCreateOperations(grpc, sender, config, operations, creationOrder);
-    return sendRawWithGrpc(grpc, sender, createMetaUpdatePayload(composed), signer, metadata);
-}
-
-/**
- * Submit a raw MetaUpdate payload for a lock operation.
- *
- * @param lock The lock client whose gRPC client is used for submission.
- * @param sender The sender account that submits the transaction.
- * @param payload The raw MetaUpdate payload to submit.
- * @param signer The signer used to sign the transaction.
- * @param metadata Optional transaction metadata such as expiry and nonce.
- * @returns The hash of the submitted transaction.
- */
-export async function sendRaw(
-    lock: Lock,
-    sender: AccountAddress.Type,
-    payload: MetaUpdatePayload,
-    signer: AccountSigner,
-    { expiry = TransactionExpiry.futureMinutes(5), nonce }: LockUpdateMetadata = {}
-): Promise<TransactionHash.Type> {
-    const { nonce: nextNonce } = nonce ? { nonce } : await lock.grpc.getNextAccountNonce(sender);
-    const header: Transaction.Metadata = {
-        expiry,
-        nonce: nextNonce,
-        sender,
-    };
-
-    const transaction = Transaction.metaUpdate(payload).addMetadata(header).build();
-    const signed = await Transaction.signAndFinalize(transaction, signer);
-    return lock.grpc.sendTransaction(signed);
-}
-
-/**
  * Submit one or more MetaUpdate operations for a lock.
  *
  * @param lock The lock client whose gRPC client is used for submission.
@@ -545,51 +459,16 @@ export async function sendRaw(
  * @param metadata Optional transaction metadata such as expiry and nonce.
  * @returns The hash of the submitted transaction.
  */
-export function sendOperations(
+export async function sendOperations(
     lock: Lock,
     sender: AccountAddress.Type,
     operations: MetaUpdateOperation | MetaUpdateOperation[],
     signer: AccountSigner,
-    metadata?: LockUpdateMetadata
+    metadata: LockUpdateMetadata = {}
 ): Promise<TransactionHash.Type> {
-    return sendRaw(lock, sender, createMetaUpdatePayload(operations), signer, metadata);
-}
-
-async function sendRawWithGrpc(
-    grpc: ConcordiumGRPCClient,
-    sender: AccountAddress.Type,
-    payload: MetaUpdatePayload,
-    signer: AccountSigner,
-    metadata?: LockUpdateMetadata
-): Promise<TransactionHash.Type> {
-    const header = await resolveTransactionHeader(grpc, sender, metadata);
-    return submitPayload(grpc, header, payload, signer);
-}
-
-/**
- * Submit a `lockCreate` MetaUpdate operation and return the transaction hash.
- *
- * @param grpc The gRPC client used for nonce lookup and submission.
- * @param sender The sender account that creates the lock.
- * @param config The lock configuration to encode into the `lockCreate` operation.
- * @param signer The signer used to sign the transaction.
- * @param metadata Optional transaction metadata such as expiry and nonce.
- * @returns The hash of the submitted transaction.
- */
-export function createRaw(
-    grpc: ConcordiumGRPCClient,
-    sender: AccountAddress.Type,
-    config: LockConfig,
-    signer: AccountSigner,
-    metadata?: LockUpdateMetadata
-): Promise<TransactionHash.Type> {
-    return sendRawWithGrpc(
-        grpc,
-        sender,
-        createMetaUpdatePayload({ [MetaUpdateOperationType.LockCreate]: config }),
-        signer,
-        metadata
-    );
+    const header = await resolveTransactionHeader(lock.grpc, sender, metadata);
+    const payload = createMetaUpdatePayload(operations);
+    return submitPayload(lock.grpc, header, payload, signer);
 }
 
 /**

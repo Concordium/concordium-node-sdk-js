@@ -550,7 +550,7 @@ function validateCapability(
  *
  * For unknown controller variants, the capability check is skipped.
  */
-export function canCancel(lock: Lock, sender: AccountAddress.Type): true {
+export function validateCancel(lock: Lock, sender: AccountAddress.Type): true {
     return validateCapability(lock, sender, LockController.SimpleV0Capability.Cancel);
 }
 
@@ -568,7 +568,7 @@ export function canCancel(lock: Lock, sender: AccountAddress.Type): true {
  *
  * For unknown controller variants, the capability and configured-token checks are skipped.
  */
-export async function canFund(lock: Lock, sender: AccountAddress.Type, details: FundDetails): Promise<true> {
+export async function validateFund(lock: Lock, sender: AccountAddress.Type, details: FundDetails): Promise<true> {
     validateCapability(lock, sender, LockController.SimpleV0Capability.Fund);
 
     if (!allowsToken(lock, details.token)) {
@@ -598,7 +598,7 @@ export async function canFund(lock: Lock, sender: AccountAddress.Type, details: 
  *
  * For unknown controller variants, the capability check is skipped.
  */
-export function canSend(lock: Lock, sender: AccountAddress.Type, details: SendDetails): true {
+export function validateSend(lock: Lock, sender: AccountAddress.Type, details: SendDetails): true {
     validateCapability(lock, sender, LockController.SimpleV0Capability.Send);
 
     const recipientAllowed = lock.info.recipients.some(
@@ -628,7 +628,7 @@ export function canSend(lock: Lock, sender: AccountAddress.Type, details: SendDe
  *
  * For unknown controller variants, the capability check is skipped.
  */
-export function canReturn(lock: Lock, sender: AccountAddress.Type, details: ReturnDetails): true {
+export function validateReturn(lock: Lock, sender: AccountAddress.Type, details: ReturnDetails): true {
     validateCapability(lock, sender, LockController.SimpleV0Capability.Return);
 
     const lockedAmount = lockedAmountOf(lock, details.source, details.token);
@@ -659,7 +659,7 @@ export async function cancel(
     { validate = false }: LockOperationOptions = {}
 ): Promise<TransactionHash.Type> {
     if (validate) {
-        canCancel(lock, sender);
+        validateCancel(lock, sender);
     }
 
     return sendOperations(
@@ -695,7 +695,7 @@ export async function fund(
     { validate = false }: LockOperationOptions = {}
 ): Promise<TransactionHash.Type> {
     if (validate) {
-        await canFund(lock, sender, details);
+        await validateFund(lock, sender, details);
     }
 
     return sendOperations(
@@ -732,7 +732,7 @@ export async function send(
 ): Promise<TransactionHash.Type> {
     const { source, recipient, ...common } = details;
     if (validate) {
-        canSend(lock, sender, details);
+        validateSend(lock, sender, details);
     }
 
     return sendOperations(
@@ -774,7 +774,7 @@ export async function returnFunds(
     { validate = false }: LockOperationOptions = {}
 ): Promise<TransactionHash.Type> {
     if (validate) {
-        canReturn(lock, sender, details);
+        validateReturn(lock, sender, details);
     }
 
     const { source, ...common } = details;

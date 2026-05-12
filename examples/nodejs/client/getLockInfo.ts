@@ -13,7 +13,7 @@ const cli = meow(
     $ yarn run-example <path-to-this-file> [options]
 
   Required
-    --lock-id, -l  The lock ID as "<accountIndex,sequenceNumber,creationOrder>", e.g. "<0,1,2>"
+    --lock-id, -l  The lock ID as a Base58Check string
 
   Options
     --help,              Displays this message
@@ -60,19 +60,13 @@ const client = new ConcordiumGRPCNodeClient(
  */
 (async () => {
     // #region documentation-snippet
-    const match = cli.flags.lockId.match(/^<(\d+),(\d+),(\d+)>$/);
-    if (!match)
-        throw new Error(
-            `Invalid lock ID format "${cli.flags.lockId}". Expected "<accountIndex,sequenceNumber,creationOrder>".`
-        );
-
-    const lockId = LockId.create(BigInt(match[1]), BigInt(match[2]), BigInt(match[3]));
+    const lockId = LockId.fromString(cli.flags.lockId);
     const blockHash = cli.flags.block === undefined ? undefined : BlockHash.fromHexString(cli.flags.block);
 
     const lockInfoResponse: LockInfoResponse = await client.getLockInfo(lockId, blockHash);
     const lockInfo: LockInfo = Cbor.decode(lockInfoResponse.lockInfo, 'LockInfo');
 
-    console.log('Lock ID:', lockInfo.lock.toJSON());
+    console.log('Lock ID:', lockInfo.lock.toString());
     console.log(
         'Recipients:',
         lockInfo.recipients.map((recipient) => recipient.toString())

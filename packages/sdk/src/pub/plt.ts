@@ -1,4 +1,5 @@
 import * as CborEpoch from '../plt/CborEpoch.js';
+import * as Lock from '../plt/Lock.js';
 import * as Token from '../plt/Token.js';
 // To limit the exports meant only for internal use, we re-create the module exports.
 import * as Cbor from './plt/Cbor.js';
@@ -22,6 +23,7 @@ export * from '../plt/MetaUpdateOperation.js';
 
 export {
     Token,
+    Lock,
     Cbor,
     TokenAmount,
     CborMemo,

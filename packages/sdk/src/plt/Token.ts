@@ -438,6 +438,45 @@ export function balanceOf(
 }
 
 /**
+ * Retrieves the available balance of a token for a given account info snapshot.
+ *
+ * @param token The token or token id to inspect.
+ * @param {AccountInfo} accountInfo - The account info to check the available balance for.
+ *
+ * @returns {BalanceOfResponse} The available balance of the token for the account.
+ */
+export function availableBalanceOf(token: Token | TokenId.Type, accountInfo: AccountInfo): BalanceOfResponse;
+/**
+ * Retrieves the available balance of a token for a given account info snapshot.
+ *
+ * @param token The token to inspect.
+ * @param {AccountAddress.Type} account - The account to check the available balance for.
+ *
+ * @returns {Promise<BalanceOfResponse>} The available balance of the token for the account.
+ */
+export function availableBalanceOf(token: Token, account: AccountAddress.Type): Promise<BalanceOfResponse>;
+export function availableBalanceOf(
+    token: Token | TokenId.Type,
+    account: AccountInfo | AccountAddress.Type
+): BalanceOfResponse | Promise<BalanceOfResponse> {
+    if (AccountAddress.instanceOf(account)) {
+        if (TokenId.instanceOf(token)) {
+            throw new Error('Cannot query account info from an address when only a token id is provided.');
+        }
+        return token.grpc.getAccountInfo(account).then((accInfo) => availableBalanceOf(token, accInfo));
+    }
+
+    const tokenId = TokenId.instanceOf(token) ? token : token.info.id;
+    const accountToken = account.accountTokens.find((t) => t.id.value === tokenId.value)?.state;
+    if (accountToken?.moduleState === undefined) {
+        return accountToken?.balance;
+    }
+
+    const accountModuleState = Cbor.decode(accountToken.moduleState, 'TokenModuleAccountState');
+    return accountModuleState.available ?? accountToken.balance;
+}
+
+/**
  * Validates a token transfer.
  *
  * @param {Token} token - The token to transfer.
@@ -465,8 +504,8 @@ export async function validateTransfer(
     const { decimals } = token.info.state;
     const senderInfo = await token.grpc.getAccountInfo(sender);
 
-    // Check the sender balance.
-    const senderBalance = balanceOf(token, senderInfo) ?? TokenAmount.zero(decimals); // We fall back to zero, as the `token` has already been validated at this point.
+    // Check the sender's available balance.
+    const senderBalance = availableBalanceOf(token, senderInfo) ?? TokenAmount.zero(decimals); // We fall back to zero, as the `token` has already been validated at this point.
     const payloadTotal = payloads.reduce(
         (acc, { amount }) => acc.add(TokenAmount.toDecimal(amount)),
         TokenAmount.toDecimal(TokenAmount.zero(decimals))
@@ -541,25 +580,15 @@ export async function validateBurn(
     amountsList.forEach((amount) => validateAmount(token, amount));
 
     const { decimals } = token.info.state;
+    const senderInfo = AccountAddress.instanceOf(sender) ? await token.grpc.getAccountInfo(sender) : sender;
 
-    let senderBalance: BalanceOfResponse;
-    let senderAdderss: AccountAddress.Type;
-
-    if (AccountAddress.instanceOf(sender)) {
-        senderAdderss = sender;
-        senderBalance = await balanceOf(token, sender);
-    } else {
-        senderAdderss = sender.accountAddress;
-        senderBalance = balanceOf(token, sender);
-    }
-
-    const burnableAmount = senderBalance ?? TokenAmount.zero(decimals);
+    const burnableAmount = availableBalanceOf(token, senderInfo) ?? TokenAmount.zero(decimals);
     const payloadTotal = amountsList.reduce(
         (acc, amount) => acc.add(TokenAmount.toDecimal(amount)),
         TokenAmount.toDecimal(TokenAmount.zero(decimals))
     );
     if (TokenAmount.toDecimal(burnableAmount).lt(payloadTotal)) {
-        throw new InsufficientSupplyError(senderAdderss, TokenAmount.fromDecimal(payloadTotal, decimals));
+        throw new InsufficientSupplyError(senderInfo.accountAddress, TokenAmount.fromDecimal(payloadTotal, decimals));
     }
     return true;
 }

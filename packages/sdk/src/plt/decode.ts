@@ -12,7 +12,7 @@ import {
     UnknownTokenOperation,
     decodeTokenOperations,
 } from './index.js';
-import { TokenAuthorizationsDetails, TokenRoleAuthorizations } from './types.js';
+import { TokenAuthorizationsDetails, TokenRoleAuthorizations } from './module.js';
 
 function decodeTokenAuthorizationsDetails(value: Cbor.Type): TokenAuthorizationsDetails {
     const decoded = cborDecode(value.bytes);
@@ -23,7 +23,7 @@ function decodeTokenAuthorizationsDetails(value: Cbor.Type): TokenAuthorizations
     const result: TokenAuthorizationsDetails = {};
     for (const [key, roleAuth] of Object.entries(decoded)) {
         if (!validRoles.has(key)) {
-            throw new Error(`Invalid TokenAuthorizationsDetails: unknown role "${key}"`);
+            continue;
         }
         if (typeof roleAuth !== 'object' || roleAuth === null || !('accounts' in roleAuth)) {
             throw new Error(`Invalid TokenAuthorizationsDetails: role "${key}" missing "accounts" field`);

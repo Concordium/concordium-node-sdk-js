@@ -1162,13 +1162,12 @@ describe('PLT Cbor', () => {
             expect(decoded[TokenAdminRole.Mint]?.accounts).toEqual([]);
         });
 
-        test('throws on unknown role string', () => {
+        test('silently skips unknown role strings', () => {
             const input = { unknownRole: { accounts: [] } };
             const encoded = Cbor.encode(input);
 
-            expect(() => Cbor.decode(encoded, 'TokenAuthorizationsDetails')).toThrow(
-                'Invalid TokenAuthorizationsDetails: unknown role "unknownRole"'
-            );
+            const decoded = Cbor.decode(encoded, 'TokenAuthorizationsDetails');
+            expect(Object.keys(decoded)).toHaveLength(0);
         });
 
         test('decodes correctly from known hex bytes', () => {

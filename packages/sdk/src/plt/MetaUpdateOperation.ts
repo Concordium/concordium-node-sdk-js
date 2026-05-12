@@ -190,11 +190,8 @@ function extractMetaToken(details: unknown, opType: string): [TokenId.Type, Reco
 }
 
 function parseLockIdField(value: unknown, context: string): LockId.Type {
-    try {
-        return LockId.fromCBORValue(value);
-    } catch {
-        throw new Error(`Invalid ${context}: invalid lock id`);
-    }
+    if (LockId.instanceOf(value)) return value;
+    throw new Error(`Invalid ${context}: invalid lock id`);
 }
 
 function parseMemoField(value: unknown, context: string): Memo | undefined {

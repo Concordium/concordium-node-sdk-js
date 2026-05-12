@@ -970,6 +970,7 @@ export class TokenUpdateHandler
         const ops = packBufferWithWord32Length(payload.operations.bytes);
         return Buffer.concat([tokenId, ops]);
     }
+
     deserialize(serializedPayload: Cursor): TokenUpdatePayload {
         let len = serializedPayload.read(1).readUInt8(0);
         const tokenId = TokenId.fromBytes(serializedPayload.read(len));
@@ -978,6 +979,7 @@ export class TokenUpdateHandler
         const operations = Cbor.fromBuffer(serializedPayload.read(len));
         return { tokenId, operations };
     }
+
     getBaseEnergyCost(payload: TokenUpdatePayload): bigint {
         const BASE_COST = 300n;
         const operations = Cbor.decode(payload.operations, 'TokenOperation[]');
@@ -986,12 +988,14 @@ export class TokenUpdateHandler
             BASE_COST
         );
     }
+
     toJSON(payload: TokenUpdatePayload): TokenUpdatePayloadJSON {
         return {
             tokenId: payload.tokenId.toJSON(),
             operations: payload.operations.toJSON(),
         };
     }
+
     fromJSON(json: TokenUpdatePayloadJSON): TokenUpdatePayload {
         return {
             tokenId: TokenId.fromJSON(json.tokenId),
@@ -1015,10 +1019,7 @@ export class MetaUpdateHandler
 
     getBaseEnergyCost(payload: MetaUpdatePayload): bigint {
         const BASE_COST = 300n;
-        const operations = Cbor.decode(payload.operations);
-        if (!Array.isArray(operations)) {
-            throw new Error('Invalid MetaUpdate operations: expected a CBOR array');
-        }
+        const operations = Cbor.decode(payload.operations, 'MetaUpdateOperation[]');
         return operations.reduce(
             (energyCost, operation) => energyCost + getMetaUpdateOperationEnergyCost(operation),
             BASE_COST

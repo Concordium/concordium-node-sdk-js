@@ -302,9 +302,9 @@ class LockCreateProposal {
      * @returns The MetaUpdate payload containing the `lockCreate` operation and any subsequent lock operations.
      */
     public async payload(nonce?: SequenceNumber.Type): Promise<Payload.MetaUpdate> {
-        const accountInfo = await this.grpc.getAccountInfo(this.sender);
-        const { nonce: nextNonce } = nonce ? { nonce } : await this.grpc.getNextAccountNonce(this.sender);
-        const lockId = LockId.create(accountInfo.accountIndex, nextNonce.value, BigInt(this.creationOrder));
+        const { accountIndex, accountNonce } = await this.grpc.getAccountInfo(this.sender);
+        const { value: nextNonce } = nonce ?? accountNonce;
+        const lockId = LockId.create(accountIndex, nextNonce, BigInt(this.creationOrder));
         const payload = createMetaUpdatePayload([
             { [MetaUpdateOperationType.LockCreate]: this.config },
             ...bindLockId(lockId, this.subsequent),
@@ -444,7 +444,10 @@ async function submitPayload(
     payload: MetaUpdatePayload,
     signer: AccountSigner
 ): Promise<TransactionHash.Type> {
-    const transaction = Transaction.metaUpdate(payload).addMetadata(header).build();
+    const transaction = Transaction.metaUpdate(payload)
+        .addMetadata(header)
+        .addMultiSig(signer.getSignatureCount())
+        .build();
     const signed = await Transaction.signAndFinalize(transaction, signer);
     return grpc.sendTransaction(signed);
 }

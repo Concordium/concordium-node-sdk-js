@@ -390,7 +390,10 @@ export async function sendRaw(
         sender,
     };
 
-    const transaction = Transaction.tokenUpdate(payload).addMetadata(header).build();
+    const transaction = Transaction.tokenUpdate(payload)
+        .addMetadata(header)
+        .addMultiSig(signer.getSignatureCount())
+        .build();
     const signed = await Transaction.signAndFinalize(transaction, signer);
     return token.grpc.sendTransaction(signed);
 }

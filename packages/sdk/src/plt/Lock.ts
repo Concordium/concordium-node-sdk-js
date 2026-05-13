@@ -444,7 +444,10 @@ async function submitPayload(
     payload: MetaUpdatePayload,
     signer: AccountSigner
 ): Promise<TransactionHash.Type> {
-    const transaction = Transaction.metaUpdate(payload).addMetadata(header).build();
+    const transaction = Transaction.metaUpdate(payload)
+        .addMetadata(header)
+        .addMultiSig(signer.getSignatureCount())
+        .build();
     const signed = await Transaction.signAndFinalize(transaction, signer);
     return grpc.sendTransaction(signed);
 }

@@ -1,40 +1,47 @@
 import {
+    ConfigureBakerHandler,
+    ConfigureDelegationHandler,
+    DeployModuleHandler,
+    InitContractHandler,
+    MetaUpdateHandler,
+    RegisterDataHandler,
+    SimpleTransferHandler,
+    SimpleTransferWithMemoHandler,
+    TokenUpdateHandler,
+    UpdateContractHandler,
+    UpdateCredentialsHandler,
+} from '../../accountTransactions.js';
+import * as JSONBig from '../../json-bigint.js';
+import type {
     AccountTransaction,
     AccountTransactionHeader,
     AccountTransactionInput,
-    AccountTransactionType,
-    ConfigureBakerHandler,
     ConfigureBakerPayload,
-    ConfigureDelegationHandler,
     ConfigureDelegationPayload,
-    DeployModuleHandler,
     DeployModulePayload,
-    InitContractHandler,
     InitContractInput,
     InitContractPayload,
     MakeOptional,
     MakeRequired,
-    MetaUpdateHandler,
     MetaUpdatePayload,
-    RegisterDataHandler,
     RegisterDataPayload,
-    SimpleTransferHandler,
     SimpleTransferPayload,
-    SimpleTransferWithMemoHandler,
     SimpleTransferWithMemoPayload,
-    TokenUpdateHandler,
     TokenUpdatePayload,
-    UpdateContractHandler,
     UpdateContractInput,
     UpdateContractPayload,
-    UpdateCredentialsHandler,
     UpdateCredentialsInput,
     UpdateCredentialsPayload,
-} from '../../index.js';
-import * as JSONBig from '../../json-bigint.js';
-import { AccountAddress, DataBlob, Energy, TransactionExpiry } from '../../types/index.js';
+} from '../../types.js';
+import { AccountTransactionType } from '../../types.js';
+import * as AccountAddress from '../../types/AccountAddress.js';
+import { DataBlob } from '../../types/DataBlob.js';
+import * as Energy from '../../types/Energy.js';
+import * as TransactionExpiry from '../../types/TransactionExpiry.js';
 import { assertIn, isDefined } from '../../util.js';
-import { AccountTransactionV0, AccountTransactionV1, Payload } from '../index.js';
+import * as AccountTransactionV0 from '../AccountTransactionV0.js';
+import * as AccountTransactionV1 from '../AccountTransactionV1.js';
+import * as Payload from '../Payload.js';
 import { Header, HeaderJSON, headerFromJSON, headerToJSON } from './shared.js';
 import { type Signable, SignableJSON, SignableV0, SignableV1, isSignable, signableToJSON } from './signable.js';
 

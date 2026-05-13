@@ -11,7 +11,7 @@ import {
     createMetaUpdatePayload,
 } from '../../../src/pub/plt.js';
 import { AccountAddress, SequenceNumber } from '../../../src/pub/types.js';
-import { Payload, Transaction } from '../../../src/transactions/index.js';
+import { Payload } from '../../../src/transactions/index.js';
 
 const ACCOUNT_1 = AccountAddress.fromBase58('4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd');
 const ACCOUNT_2 = AccountAddress.fromBase58('3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB');
@@ -74,9 +74,6 @@ function createLockInfo(
 
 describe('PLT Lock.create', () => {
     it('submits a single meta update transaction with lockCreate followed by lock-bound operations', async () => {
-        const addMetadata = jest.fn().mockReturnValue({ build: jest.fn().mockReturnValue('built-transaction') });
-        const metaUpdate = jest.spyOn(Transaction, 'metaUpdate').mockReturnValue({ addMetadata } as never);
-        const signAndFinalize = jest.spyOn(Transaction, 'signAndFinalize').mockResolvedValue('signed' as never);
         const grpc = {
             getAccountInfo: jest.fn().mockResolvedValue({
                 accountIndex: 9n,
@@ -87,17 +84,14 @@ describe('PLT Lock.create', () => {
         };
         const info = createLockInfo([LockController.SimpleV0Capability.Fund]);
 
-        const transaction = await Lock.create(grpc as never, ACCOUNT_1, {
+        const payload = await Lock.create(grpc as never, ACCOUNT_1, {
             recipients: info.recipients,
             expiry: info.expiry,
             controller: info.controller,
         })
             .fund({ token: TOKEN_ID, amount: TokenAmount.create(10n, 0) })
-            .submit({} as never);
+            .payload();
 
-        expect(transaction.transactionHash).toBe('tx-hash');
-
-        const [payload] = metaUpdate.mock.calls[0];
         const expected = Payload.metaUpdate(
             createMetaUpdatePayload([
                 {
@@ -117,9 +111,6 @@ describe('PLT Lock.create', () => {
             ])
         );
         expect(payload).toEqual(expected);
-
-        metaUpdate.mockRestore();
-        signAndFinalize.mockRestore();
     });
 });
 

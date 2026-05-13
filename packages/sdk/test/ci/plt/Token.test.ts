@@ -170,6 +170,37 @@ describe('PLT Token.validateTransfer', () => {
         await expect(Token.validateTransfer(token, sender, transfer)).rejects.toThrow(Token.InsufficientFundsError);
     });
 
+    it('should throw InsufficientFundsError when sender has sufficient balance but insufficient available balance', async () => {
+        const sender = ACCOUNT_1;
+        const recipient = ACCOUNT_2;
+        const tokenId = TokenId.fromString('3f1bfce9');
+        const decimals = 8;
+
+        const moduleState: TokenModuleState = {
+            name: 'Test Token',
+            metadata: TokenMetadataUrl.fromString('https://example.com/metadata'),
+            paused: false,
+            governanceAccount: CborAccountAddress.fromAccountAddress(sender),
+        };
+
+        const token = createMockToken(decimals, moduleState, tokenId);
+
+        const senderBalance = TokenAmount.create(BigInt(1000), decimals);
+        const senderAccountInfo = createAccountInfo(sender, tokenId, senderBalance, {
+            available: TokenAmount.create(BigInt(100), decimals),
+        });
+
+        token.grpc.getAccountInfo = jest.fn().mockResolvedValue(senderAccountInfo);
+
+        const transferAmount = TokenAmount.create(BigInt(500), decimals);
+        const transfer: TokenTransfer = {
+            amount: transferAmount,
+            recipient: CborAccountAddress.fromAccountAddress(recipient),
+        };
+
+        await expect(Token.validateTransfer(token, sender, transfer)).rejects.toThrow(Token.InsufficientFundsError);
+    });
+
     it('should throw NotAllowedError when account is on deny list', async () => {
         const sender = ACCOUNT_1;
         const recipient = ACCOUNT_2;

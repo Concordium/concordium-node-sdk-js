@@ -5,6 +5,9 @@
 - Token operations for updating metadata, assigning and revoking admin roles have been added.
 - Token events for updating metadata, assigning and revoking admin roles have been added.
 - New Proto types, a translation function for those proto types and a new function getTokenAuthorizations
+- `TokenAdminRole.UpdateAllowList` value corrected from `'allowList'` to `'updateAllowList'`, and `TokenAdminRole.UpdateDenyList` from `'denyList'` to `'updateDenyList'`, to match the canonical CDDL role strings.
+- Added `TokenRoleAuthorizations` and `TokenAuthorizationsDetails` types representing the decoded CBOR structure returned by `getTokenAuthorizations`.
+- `Cbor.decode` now accepts `'TokenAuthorizationsDetails'` as a type hint, decoding the CBOR `details` field of `TokenAuthorizations` into a `Partial<Record<TokenAdminRole, TokenRoleAuthorizations>>`.
 
 ## 12.0.2
 

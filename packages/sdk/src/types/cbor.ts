@@ -10,6 +10,7 @@ import { CborAccountAddress, CborMemo, TokenAmount, TokenMetadataUrl } from '../
  * - `AccountAddress`: For encoding Concordium account addresses in CBOR format
  * - `TokenAmount`: For encoding protocol-level token amounts in CBOR format
  * - `CborMemo`: For encoding protocol-level token memos in CBOR format
+ * - `TokenMetadataUrl`: For encoding token metadata used by protocol-level tokens in CBOR format
  */
 export function registerCBOREncoders(): void {
     CborAccountAddress.registerCBOREncoder();

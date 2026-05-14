@@ -78,6 +78,7 @@ export type CreatePLTPayload = {
 /**
  * Represents the authorizations of a token, such as allow/deny lists, at a specific block.
  * see {@link GRPCClient.getTokenAuthorizations} for more details.
+ * Use {@link Cbor.decode} with type `'TokenAuthorizationsDetails'` to decode `details`.
  */
 export type TokenAuthorizations = {
     tokenId: TokenId.Type;

@@ -1,4 +1,5 @@
 import { cborDecode } from '../types/cbor.js';
+import { TokenAdminRole } from './TokenOperation.js';
 import {
     Cbor,
     CborAccountAddress,
@@ -11,6 +12,35 @@ import {
     UnknownTokenOperation,
     decodeTokenOperations,
 } from './index.js';
+import { TokenAuthorizationsDetails, TokenRoleAuthorizations } from './module.js';
+
+function decodeTokenAuthorizationsDetails(value: Cbor.Type): TokenAuthorizationsDetails {
+    const decoded = cborDecode(value.bytes);
+    if (typeof decoded !== 'object' || decoded === null) {
+        throw new Error('Invalid CBOR data for TokenAuthorizationsDetails');
+    }
+    const validRoles = new Set<string>(Object.values(TokenAdminRole));
+    const result: TokenAuthorizationsDetails = {};
+    for (const [key, roleAuth] of Object.entries(decoded)) {
+        if (!validRoles.has(key)) {
+            continue;
+        }
+        if (typeof roleAuth !== 'object' || roleAuth === null || !('accounts' in roleAuth)) {
+            throw new Error(`Invalid TokenAuthorizationsDetails: role "${key}" missing "accounts" field`);
+        }
+        const { accounts } = roleAuth as { accounts: unknown };
+        if (!Array.isArray(accounts)) {
+            throw new Error(`Invalid TokenAuthorizationsDetails: role "${key}" accounts must be an array`);
+        }
+        for (const account of accounts) {
+            if (!CborAccountAddress.instanceOf(account)) {
+                throw new Error(`Invalid TokenAuthorizationsDetails: role "${key}" contains invalid account address`);
+            }
+        }
+        result[key as TokenAdminRole] = { accounts: accounts as TokenRoleAuthorizations['accounts'] };
+    }
+    return result;
+}
 
 function decodeTokenModuleState(value: Cbor.Type): TokenModuleState {
     const decoded = cborDecode(value.bytes);
@@ -96,6 +126,7 @@ function decodeTokenInitializationParameters(value: Cbor.Type): TokenInitializat
 }
 
 type DecodeTypeMap = {
+    TokenAuthorizationsDetails: TokenAuthorizationsDetails;
     TokenModuleState: TokenModuleState;
     TokenModuleAccountState: TokenModuleAccountState;
     TokenInitializationParameters: TokenInitializationParameters;
@@ -124,6 +155,8 @@ export function decode(cbor: Cbor.Type, type?: undefined): unknown;
  */
 export function decode<T extends keyof DecodeTypeMap | undefined>(cbor: Cbor.Type, type: T): unknown {
     switch (type) {
+        case 'TokenAuthorizationsDetails':
+            return decodeTokenAuthorizationsDetails(cbor);
         case 'TokenModuleState':
             return decodeTokenModuleState(cbor);
         case 'TokenModuleAccountState':

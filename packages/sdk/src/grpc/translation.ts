@@ -1253,20 +1253,20 @@ function trRejectReason(rejectReason: GRPC.RejectReason | undefined): Upward<SDK
                     account: AccountAddress.fromProto(unwrap(reason.lockCancelNotAuthorized.account)),
                 },
             };
-        case 'lockTokenImpermissible':
+        case 'lockTokenNotPermitted':
             return {
-                tag: Tag.LockTokenImpermissible,
+                tag: Tag.LockTokenNotPermitted,
                 contents: {
-                    lockId: PLT.LockId.fromProto(unwrap(reason.lockTokenImpermissible.lockId)),
-                    tokenId: PLT.TokenId.fromProto(unwrap(reason.lockTokenImpermissible.tokenId)),
+                    lockId: PLT.LockId.fromProto(unwrap(reason.lockTokenNotPermitted.lockId)),
+                    tokenId: PLT.TokenId.fromProto(unwrap(reason.lockTokenNotPermitted.tokenId)),
                 },
             };
-        case 'lockRecipientImpermissible':
+        case 'lockRecipientNotPermitted':
             return {
-                tag: Tag.LockRecipientImpermissible,
+                tag: Tag.LockRecipientNotPermitted,
                 contents: {
-                    lockId: PLT.LockId.fromProto(unwrap(reason.lockRecipientImpermissible.lockId)),
-                    account: AccountAddress.fromProto(unwrap(reason.lockRecipientImpermissible.account)),
+                    lockId: PLT.LockId.fromProto(unwrap(reason.lockRecipientNotPermitted.lockId)),
+                    account: AccountAddress.fromProto(unwrap(reason.lockRecipientNotPermitted.account)),
                 },
             };
         case undefined:

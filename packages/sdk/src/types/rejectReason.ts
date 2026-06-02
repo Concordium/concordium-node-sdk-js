@@ -80,8 +80,8 @@ export enum RejectReasonTag {
     LockSendNotAuthorized = 'LockSendNotAuthorized',
     LockReturnNotAuthorized = 'LockReturnNotAuthorized',
     LockCancelNotAuthorized = 'LockCancelNotAuthorized',
-    LockTokenImpermissible = 'LockTokenImpermissible',
-    LockRecipientImpermissible = 'LockRecipientImpermissible',
+    LockTokenNotPermitted = 'LockTokenNotPermitted',
+    LockRecipientNotPermitted = 'LockRecipientNotPermitted',
 }
 
 export interface RejectedReceive {
@@ -159,9 +159,9 @@ export type LockIdAccountRejectReasonTag =
     | RejectReasonTag.LockSendNotAuthorized
     | RejectReasonTag.LockReturnNotAuthorized
     | RejectReasonTag.LockCancelNotAuthorized
-    | RejectReasonTag.LockRecipientImpermissible;
+    | RejectReasonTag.LockRecipientNotPermitted;
 
-export type LockIdTokenIdRejectReasonTag = RejectReasonTag.LockTokenImpermissible;
+export type LockIdTokenIdRejectReasonTag = RejectReasonTag.LockTokenNotPermitted;
 
 export interface StringRejectReason {
     tag: StringRejectReasonTag;

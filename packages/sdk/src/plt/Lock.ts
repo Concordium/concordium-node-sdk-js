@@ -548,13 +548,18 @@ function validateCapability(
  * @param lock The lock to validate against.
  * @param sender The sender account to validate.
  * @returns `true` if the sender can cancel the lock.
- * @throws {LockExpiredError} If the lock has expired.
  * @throws {MissingCapabilityError} If the sender does not have the `cancel` capability for a `simpleV0` lock controller.
  *
  * For unknown controller variants, the capability check is skipped.
  */
 export function validateCancel(lock: Lock, sender: AccountAddress.Type): true {
-    return validateCapability(lock, sender, LockController.SimpleV0Capability.Cancel);
+    if (isExpired(lock)) {
+        return true;
+    }
+    if (!hasCapability(lock, sender, LockController.SimpleV0Capability.Cancel)) {
+        throw new MissingCapabilityError(sender, LockController.SimpleV0Capability.Cancel, lock.info.lock);
+    }
+    return true;
 }
 
 /**
@@ -651,7 +656,6 @@ export function validateReturn(lock: Lock, sender: AccountAddress.Type, details:
  * @param metadata Optional transaction metadata such as expiry and nonce.
  * @param options Optional validation behavior.
  * @returns The hash of the submitted transaction.
- * @throws {LockExpiredError} If `options.validate` is `true` and the lock has expired.
  * @throws {MissingCapabilityError} If `options.validate` is `true` and the sender does not have the `cancel` capability.
  */
 export async function cancel(

@@ -188,6 +188,15 @@ describe('PLT Lock validation', () => {
         });
     });
 
+    it('allows cancelling an expired lock without the cancel capability', () => {
+        const lock = Lock.fromInfo(
+            mockGrpc(),
+            createLockInfo([LockController.SimpleV0Capability.Fund], pastEpoch(), ACCOUNT_1)
+        );
+
+        expect(Lock.validateCancel(lock, ACCOUNT_2)).toBe(true);
+    });
+
     it('throws LockExpiredError when the lock is expired', async () => {
         const lock = Lock.fromInfo(
             mockGrpc({

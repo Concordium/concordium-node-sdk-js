@@ -19,6 +19,9 @@
   - `decodeMetaUpdateOperation`, `decodeMetaUpdateOperations` for decoding CBOR-encoded MetaUpdate operation arrays into typed SDK values.
   - `MetaUpdateSummary` added to `AccountTransactionSummary`, adding `LockCreatedEvent` and `LockDestroyedEvent` alongside token-scoped events.
   - `TransactionEventTag.LockCreated` and `TransactionEventTag.LockDestroyed` event tags.
+- `TokenAdminRole.UpdateAllowList` value corrected from `'allowList'` to `'updateAllowList'`, and `TokenAdminRole.UpdateDenyList` from `'denyList'` to `'updateDenyList'`, to match the canonical CDDL role strings.
+- Added `TokenRoleAuthorizations` and `TokenAuthorizationsDetails` types representing the decoded CBOR structure returned by `getTokenAuthorizations`.
+- `Cbor.decode` now accepts `'TokenAuthorizationsDetails'` as a type hint, decoding the CBOR `details` field of `TokenAuthorizations` into a `Partial<Record<TokenAdminRole, TokenRoleAuthorizations>>`.
 
 ## 12.0.2
 

@@ -7,7 +7,24 @@ import type * as LockId from './LockId.js';
 import type * as TokenAmount from './TokenAmount.js';
 import type * as TokenId from './TokenId.js';
 import type * as TokenMetadataUrl from './TokenMetadataUrl.js';
+import type { TokenAdminRole } from './TokenOperation.js';
 import type { CreatePLTPayload } from './types.js';
+
+/**
+ * Represents the authorizations held by accounts for a specific admin role on a token.
+ * An empty `accounts` array means no accounts currently hold the role.
+ */
+export type TokenRoleAuthorizations = {
+    accounts: CborAccountAddress.Type[];
+};
+
+/**
+ * The decoded form of the CBOR `token-authorizations` structure.
+ * A `Partial<Record>` because absent roles indicate that the corresponding feature
+ * is not enabled on the token (e.g. no `"updateDenyList"` key means the deny list
+ * is not active).
+ */
+export type TokenAuthorizationsDetails = Partial<Record<TokenAdminRole, TokenRoleAuthorizations>>;
 
 /**
  * The Token Module state represents global state information that is maintained by the Token Module,

@@ -1,6 +1,12 @@
 import { cborDecode } from '../types/cbor.js';
 import { TokenAdminRole } from './TokenOperation.js';
-import type { AccountLockAmount, LockAccountFund, LockInfo, TokenAuthorizationsDetails, TokenRoleAuthorizations } from './cbor-types.js';
+import type {
+    AccountLockAmount,
+    LockAccountFund,
+    LockInfo,
+    TokenAuthorizationsDetails,
+    TokenRoleAuthorizations,
+} from './cbor-types.js';
 import {
     Cbor,
     CborAccountAddress,

@@ -38,6 +38,14 @@ export type TokenInfo = {
 };
 
 /**
+ * The information for a particular lock as returned by the gRPC API. The details are CBOR encoded.
+ */
+export type LockInfoResponse = {
+    /** The CBOR-encoded lock information. */
+    lockInfo: Cbor.Type;
+};
+
+/**
  * The state of a particular token identified by an ID for an account.
  */
 export type TokenAccountInfo = {

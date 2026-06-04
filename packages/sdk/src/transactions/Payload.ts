@@ -10,6 +10,8 @@ import {
     DeployModulePayloadJSON,
     InitContractHandler,
     InitContractPayloadJSON,
+    MetaUpdateHandler,
+    MetaUpdatePayloadJSON,
     RegisterDataHandler,
     RegisterDataPayloadJSON,
     SimpleTransferHandler,
@@ -34,6 +36,7 @@ import {
     type ConfigureDelegationPayload,
     type DeployModulePayload,
     type InitContractPayload,
+    type MetaUpdatePayload,
     type RegisterDataPayload,
     type SimpleTransferPayload,
     type SimpleTransferWithMemoPayload,
@@ -360,6 +363,22 @@ export function tokenUpdate(payload: TokenUpdatePayload): TokenUpdate {
     return { type: AccountTransactionType.TokenUpdate, ...payload };
 }
 
+/**
+ * A meta update transaction payload.
+ */
+export type MetaUpdate = MetaUpdatePayload & {
+    readonly type: AccountTransactionType.MetaUpdate;
+};
+
+/**
+ * Creates a meta update payload.
+ * @param payload the meta update payload
+ * @returns a meta update payload
+ */
+export function metaUpdate(payload: MetaUpdatePayload): MetaUpdate {
+    return { type: AccountTransactionType.MetaUpdate, ...payload };
+}
+
 function tokenUpdateToJSON({
     type,
     ...value
@@ -373,6 +392,19 @@ function tokenUpdateFromJSON({ type, ...json }: ReturnType<typeof tokenUpdateToJ
     return tokenUpdate(handler.fromJSON(json));
 }
 
+function metaUpdateToJSON({
+    type,
+    ...value
+}: MetaUpdate): PayloadJSON<TransactionKindString.MetaUpdate, MetaUpdatePayloadJSON> {
+    const handler = new MetaUpdateHandler();
+    return { type: TransactionKindString.MetaUpdate, ...handler.toJSON(value) };
+}
+
+function metaUpdateFromJSON({ type, ...json }: ReturnType<typeof metaUpdateToJSON>): MetaUpdate {
+    const handler = new MetaUpdateHandler();
+    return metaUpdate(handler.fromJSON(json));
+}
+
 type Payload =
     | Transfer
     | TransferWithMemo
@@ -384,7 +416,8 @@ type Payload =
     | RegisterData
     | ConfigureDelegation
     | ConfigureValidator
-    | TokenUpdate;
+    | TokenUpdate
+    | MetaUpdate;
 
 /**
  * Union type of all supported transaction payloads.
@@ -404,7 +437,8 @@ export type JSON =
     | ReturnType<typeof registerDataToJSON>
     | ReturnType<typeof configureDelegationToJSON>
     | ReturnType<typeof configureValidatorToJSON>
-    | ReturnType<typeof tokenUpdateToJSON>;
+    | ReturnType<typeof tokenUpdateToJSON>
+    | ReturnType<typeof metaUpdateToJSON>;
 
 /**
  * Creates a typed transaction payload from a transaction type and raw payload data.
@@ -440,6 +474,8 @@ export function create(type: AccountTransactionType, payload: AccountTransaction
             return configureValidator(payload as ConfigureBakerPayload);
         case AccountTransactionType.TokenUpdate:
             return tokenUpdate(payload as TokenUpdatePayload);
+        case AccountTransactionType.MetaUpdate:
+            return metaUpdate(payload as MetaUpdatePayload);
         default:
             throw new Error('The provided transaction type is not supported: ' + type);
     }
@@ -465,6 +501,7 @@ export function toJSON(payload: RegisterData): ReturnType<typeof registerDataToJ
 export function toJSON(payload: ConfigureDelegation): ReturnType<typeof configureDelegationToJSON>;
 export function toJSON(payload: ConfigureValidator): ReturnType<typeof configureValidatorToJSON>;
 export function toJSON(payload: TokenUpdate): ReturnType<typeof tokenUpdateToJSON>;
+export function toJSON(payload: MetaUpdate): ReturnType<typeof metaUpdateToJSON>;
 export function toJSON(payload: Payload): JSON;
 
 export function toJSON(payload: Payload): JSON {
@@ -489,6 +526,8 @@ export function toJSON(payload: Payload): JSON {
             return configureValidatorToJSON(payload);
         case AccountTransactionType.TokenUpdate:
             return tokenUpdateToJSON(payload);
+        case AccountTransactionType.MetaUpdate:
+            return metaUpdateToJSON(payload);
         default:
             throw new Error('The provided transaction type is not supported: ' + (payload as any).type);
     }
@@ -527,6 +566,8 @@ export function fromJSON(json: unknown): Payload {
             return configureValidatorFromJSON(json as any);
         case getTransactionKindString(AccountTransactionType.TokenUpdate):
             return tokenUpdateFromJSON(json as any);
+        case getTransactionKindString(AccountTransactionType.MetaUpdate):
+            return metaUpdateFromJSON(json as any);
         default:
             throw new Error('The provided transaction type is not supported: ' + json.type);
     }
@@ -618,6 +659,9 @@ export function deserialize(value: Cursor | ArrayBuffer): Payload {
             break;
         case AccountTransactionType.TokenUpdate:
             payload = tokenUpdate(getAccountTransactionHandler(type).deserialize(cursor));
+            break;
+        case AccountTransactionType.MetaUpdate:
+            payload = metaUpdate(getAccountTransactionHandler(type).deserialize(cursor));
             break;
         case AccountTransactionType.UpdateCredentialKeys:
             payload = updateCredentialKeys(getAccountTransactionHandler(type).deserialize(cursor));

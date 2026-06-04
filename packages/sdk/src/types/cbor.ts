@@ -1,6 +1,6 @@
 import { decode, encode } from 'cbor2';
 
-import { CborAccountAddress, CborMemo, TokenAmount, TokenMetadataUrl } from '../plt/index.js';
+import { CborAccountAddress, CborEpoch, CborMemo, LockId, TokenAmount, TokenMetadataUrl } from '../plt/index.js';
 
 /**
  * Register CBOR encoders for all types.
@@ -16,7 +16,9 @@ export function registerCBOREncoders(): void {
     CborAccountAddress.registerCBOREncoder();
     TokenAmount.registerCBOREncoder();
     CborMemo.registerCBOREncoder();
+    CborEpoch.registerCBOREncoder();
     TokenMetadataUrl.registerCBOREncoder();
+    LockId.registerCBOREncoder();
 }
 
 /**
@@ -91,6 +93,8 @@ export function registerCBORDecoders(): (() => void)[] {
         CborAccountAddress.registerCBORDecoder(),
         TokenAmount.registerCBORDecoder(),
         CborMemo.registerCBORDecoder(),
+        CborEpoch.registerCBORDecoder(),
+        LockId.registerCBORDecoder(),
     ];
 }
 

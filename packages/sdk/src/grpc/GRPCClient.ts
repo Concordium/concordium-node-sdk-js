@@ -1604,6 +1604,42 @@ export class ConcordiumGRPCClient {
     }
 
     /**
+     * Get information about a protocol level token lock at a certain block.
+     * This endpoint is only supported for protocol version 11 and onwards.
+     *
+     * {@codeblock ~~:nodejs/client/getLockInfo.ts#documentation-snippet}
+     *
+     * @param lockId the ID of the lock to query information about.
+     * @param blockHash an optional block hash to get the info from, otherwise retrieves from last finalized block.
+     * @returns information about the corresponding lock.
+     */
+    async getLockInfo(lockId: PLT.LockId.Type, blockHash?: BlockHash.Type): Promise<PLT.LockInfoResponse> {
+        const blockHashInput = getBlockHashInput(blockHash);
+        const req: GRPC.LockInfoRequest = {
+            blockHash: blockHashInput,
+            lockId: PLT.LockId.toProto(lockId),
+        };
+        const res = await this.client.getLockInfo(req);
+        return translate.trLockInfoResponse(res.response);
+    }
+
+    /**
+     * Get all protocol level token lock IDs currently registered at a block.
+     * This endpoint is only supported for protocol version 11 and onwards.
+     *
+     * {@codeblock ~~:nodejs/client/getLockList.ts#documentation-snippet}
+     *
+     * @param blockHash optional block hash, otherwise retrieves from last finalized block.
+     * @param abortSignal an optional AbortSignal to close the stream.
+     * @returns All lock IDs registered at a block.
+     */
+    getLockList(blockHash?: BlockHash.Type, abortSignal?: AbortSignal): AsyncIterable<PLT.LockId.Type> {
+        const blockHashInput = getBlockHashInput(blockHash);
+        const lockIds = this.client.getLockList(blockHashInput, { abort: abortSignal }).responses;
+        return mapStream(lockIds, PLT.LockId.fromProto);
+    }
+
+    /**
      * Get the authorizations of a given token in the given block
      * @param tokenId the ID of the token to query information about
      * @param blockHash an optional block hash to get the info from, otherwise retrieves from last finalized block.

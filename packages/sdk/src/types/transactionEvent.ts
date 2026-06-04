@@ -64,6 +64,8 @@ export enum TransactionEventTag {
     TokenTransfer = 'TokenTransfer',
     TokenMint = 'TokenMint',
     TokenBurn = 'TokenBurn',
+    LockCreated = 'LockCreated',
+    LockDestroyed = 'LockDestroyed',
 }
 
 export type TransactionEvent =
@@ -402,6 +404,10 @@ export type TokenTransferEvent = {
     amount: PLT.TokenAmount.Type;
     /** An optional memo associated with the transfer. */
     memo?: PLT.CborMemo.Type;
+    /** The lock controlling the source funds, if the funds originate from a locked balance. */
+    fromLock?: PLT.LockId.Type;
+    /** The lock assuming control of the destination funds, if the funds are transferred into a lock. */
+    toLock?: PLT.LockId.Type;
 };
 
 /**
@@ -442,8 +448,31 @@ export type TokenBurnEvent = {
     amount: PLT.TokenAmount.Type;
 };
 
+/** Event emitted when a transaction creates a new lock. */
+export type LockCreatedEvent = {
+    /** The type of the event */
+    tag: TransactionEventTag.LockCreated;
+    /** The ID of the newly created lock. */
+    lockId: PLT.LockId.Type;
+    /** The CBOR-encoded lock configuration. */
+    lockConfig: PLT.Cbor.Type;
+};
+
+/** Event emitted when a transaction destroys an existing lock. */
+export type LockDestroyedEvent = {
+    /** The type of the event */
+    tag: TransactionEventTag.LockDestroyed;
+    /** The ID of the destroyed lock. */
+    lockId: PLT.LockId.Type;
+};
+
+/** Token-related event emitted by token update or meta update execution. */
 export type TokenEvent = EncodedTokenModuleEvent | TokenTransferEvent | TokenMintEvent | TokenBurnEvent;
+/** Event emitted by a meta update transaction. */
+export type MetaUpdateEvent = TokenEvent | LockCreatedEvent | LockDestroyedEvent;
+/** Event emitted as part of a smart contract execution trace. */
 export type ContractTraceEvent = ResumedEvent | InterruptedEvent | UpdatedEvent | UpgradedEvent | TransferredEvent;
+/** Event emitted by baker/validator configuration changes. */
 export type BakerEvent =
     | BakerSetTransactionFeeCommissionEvent
     | BakerSetBakingRewardCommissionEvent
@@ -458,6 +487,7 @@ export type BakerEvent =
     | BakerDelegationRemovedEvent
     | BakerSuspendedEvent
     | BakerResumedEvent;
+/** Event emitted by delegator configuration changes. */
 export type DelegationEvent =
     | DelegatorEvent
     | DelegationSetDelegationTargetEvent

@@ -13,6 +13,13 @@ import {
     ReceiveName,
     TransactionKindString,
 } from '../../../src/index.js';
+import {
+    LockId,
+    MetaUpdateOperationType,
+    TokenAmount,
+    TokenId,
+    createMetaUpdatePayload,
+} from '../../../src/pub/plt.ts';
 import { AccountAddress } from '../../../src/pub/types.js';
 import { Payload } from '../../../src/transactions/index.js';
 
@@ -353,6 +360,48 @@ describe('Payload', () => {
                 transactionFeeCommission: 10,
                 bakingRewardCommission: 5,
                 finalizationRewardCommission: 5,
+            });
+        });
+    });
+
+    describe('MetaUpdate', () => {
+        const metaUpdatePayload = Payload.metaUpdate(
+            createMetaUpdatePayload({
+                [MetaUpdateOperationType.LockFund]: {
+                    token: TokenId.fromString('tToken'),
+                    lock: LockId.create(1n, 2n, 3n),
+                    amount: TokenAmount.create(500n, 2),
+                },
+            })
+        );
+
+        test('serialize/deserialize roundtrip', () => {
+            const serialized = Payload.serialize(metaUpdatePayload);
+            const deserialized = Payload.deserialize(serialized);
+            expect(deserialized).toEqual(metaUpdatePayload);
+        });
+
+        test('toJSON/fromJSON roundtrip', () => {
+            const json = Payload.toJSON(metaUpdatePayload);
+            const jsonString = jsonBig.stringify(json);
+            const parsed = jsonBig.parse(jsonString);
+            const deserialized = Payload.fromJSON(parsed);
+            expect(deserialized).toEqual(metaUpdatePayload);
+        });
+
+        test('serialize produces fixed hex output', () => {
+            const serialized = Payload.serialize(metaUpdatePayload);
+            expect(Buffer.from(serialized).toString('hex')).toBe(
+                '1c0000003281a1686c6f636b46756e64a3646c6f636bd99fd88301020365746f6b656e6674546f6b656e66616d6f756e74c482211901f4'
+            );
+        });
+
+        test('toJSON produces fixed JSON output', () => {
+            const json = Payload.toJSON(metaUpdatePayload);
+            expect(json).toEqual({
+                type: TransactionKindString.MetaUpdate,
+                operations:
+                    '81a1686c6f636b46756e64a3646c6f636bd99fd88301020365746f6b656e6674546f6b656e66616d6f756e74c482211901f4',
             });
         });
     });

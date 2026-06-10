@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 13.0.0-alpha.0 (devnet-p11-2)
+
 - Added high-level `Lock` client for creating, funding, sending, returning, and cancelling protocol-level locks.
 - Updated PLT token transfer validation to check the sender's available token balance when the token account state includes the `available` field, falling back to the token balance otherwise.
 - Added gRPC client queries for PLT locks: `getLockInfo` and `getLockList`.

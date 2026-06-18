@@ -54,7 +54,7 @@ const client = new ConcordiumGRPCNodeClient(
     // #region documentation-snippet
 
     // Parse the lock configuration arguments
-    const recipients =
+    const recipients: 'any' | CborAccountAddress.Type[] =
         cli.flags.recipient.length === 1 && cli.flags.recipient[0] === 'any'
             ? 'any'
             : cli.flags.recipient.map((r) => CborAccountAddress.fromAccountAddress(AccountAddress.fromBase58(r)));

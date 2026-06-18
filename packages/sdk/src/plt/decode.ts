@@ -4,6 +4,7 @@ import type {
     AccountLockAmount,
     LockAccountFund,
     LockInfo,
+    LockRecipients,
     TokenAuthorizationsDetails,
     TokenRoleAuthorizations,
 } from './cbor-types.js';
@@ -230,15 +231,20 @@ function convertLockConfig(value: unknown): LockConfig {
     }
 
     const lockConfig = value as Record<string, unknown>;
-    if (!Array.isArray(lockConfig.recipients) || !lockConfig.recipients.every(CborAccountAddress.instanceOf)) {
-        throw new Error('Invalid lock config: expected recipients array');
+    let recipients: LockRecipients;
+    if (lockConfig.recipients === 'any') {
+        recipients = 'any';
+    } else if (Array.isArray(lockConfig.recipients) && lockConfig.recipients.every(CborAccountAddress.instanceOf)) {
+        recipients = lockConfig.recipients;
+    } else {
+        throw new Error('Invalid lock config: expected recipients to be "any" or an array of CBOR account addresses');
     }
     if (!CborEpoch.instanceOf(lockConfig.expiry)) {
         throw new Error('Invalid lock config: expected expiry as CBOR epoch time');
     }
 
     return {
-        recipients: lockConfig.recipients,
+        recipients,
         expiry: lockConfig.expiry,
         controller: LockController.fromCBORValue(lockConfig.controller),
     };

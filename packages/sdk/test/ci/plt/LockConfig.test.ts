@@ -39,13 +39,38 @@ describe('PLT LockConfig', () => {
         });
     });
 
-    it('throws if recipients is not an array of CBOR account addresses', () => {
+    it('encodes and decodes any-recipient locks', () => {
+        const anyConfig: LockConfig = {
+            ...config,
+            recipients: 'any',
+        };
+
+        expect(Buffer.from(Cbor.encode(anyConfig).bytes).toString('hex')).toBe(
+            'a366657870697279c10a6a636f6e74726f6c6c6572a16873696d706c655630a2666772616e747381a265726f6c6573826466756e646473656e64676163636f756e74d99d73a201d99d71a101190397035820151515151515151515151515151515151515151515151515151515151515151566746f6b656e73816674546f6b656e6a726563697069656e747363616e79'
+        );
+        expect(Cbor.decode(Cbor.encode(anyConfig), 'LockConfig')).toMatchObject(anyConfig);
+    });
+
+    it('throws if recipients is not "any" or an array of CBOR account addresses', () => {
         const invalid = Cbor.encode({
             ...config,
             recipients: ['not-an-account'],
         });
 
-        expect(() => Cbor.decode(invalid, 'LockConfig')).toThrow(/expected recipients array/);
+        expect(() => Cbor.decode(invalid, 'LockConfig')).toThrow(
+            /expected recipients to be "any" or an array of CBOR account addresses/
+        );
+    });
+
+    it('throws if recipients is invalid text', () => {
+        const invalid = Cbor.encode({
+            ...config,
+            recipients: 'everybody',
+        });
+
+        expect(() => Cbor.decode(invalid, 'LockConfig')).toThrow(
+            /expected recipients to be "any" or an array of CBOR account addresses/
+        );
     });
 
     it('throws if expiry is not a CBOR epoch time', () => {

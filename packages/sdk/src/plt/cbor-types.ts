@@ -149,10 +149,13 @@ export type TokenInitializationParameters = {
     burnable?: boolean;
 };
 
+/** Accounts that are permitted to receive funds controlled by a lock. */
+export type LockRecipients = 'any' | CborAccountAddress.Type[];
+
 /** Lock configuration used by `lockCreate` meta update operations. */
 export type LockConfig = {
-    /** Accounts that are permitted to receive funds controlled by the lock. */
-    recipients: CborAccountAddress.Type[];
+    /** Accounts that are permitted to receive funds controlled by the lock, or `'any'` for any eligible recipient. */
+    recipients: LockRecipients;
     /** Lock expiry time. */
     expiry: CborEpoch.Type;
     /** Lock controller configuration. */

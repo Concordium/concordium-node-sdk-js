@@ -48,11 +48,12 @@ function pastEpoch(): CborEpoch.Type {
 function createLockInfo(
     roles: LockController.SimpleV0Capability[],
     expiry: CborEpoch.Type = futureEpoch(),
-    account: AccountAddress.Type = ACCOUNT_1
+    account: AccountAddress.Type = ACCOUNT_1,
+    recipients: LockInfo['recipients'] = [CborAccountAddress.fromAccountAddress(ACCOUNT_2)]
 ): LockInfo {
     return {
         lock: LOCK_ID,
-        recipients: [CborAccountAddress.fromAccountAddress(ACCOUNT_2)],
+        recipients,
         expiry,
         controller: LockController.simpleV0(
             [
@@ -270,6 +271,22 @@ describe('PLT Lock validation', () => {
         });
     });
 
+    it('allows sending to any recipient when the lock recipients is "any"', () => {
+        const lock = Lock.fromInfo(
+            mockGrpc(),
+            createLockInfo([LockController.SimpleV0Capability.Send], futureEpoch(), ACCOUNT_1, 'any')
+        );
+
+        expect(
+            Lock.validateSend(lock, ACCOUNT_1, {
+                token: TOKEN_ID,
+                source: ACCOUNT_1,
+                amount: TokenAmount.create(10n, 0),
+                recipient: ACCOUNT_1,
+            })
+        ).toBe(true);
+    });
+
     it('throws RecipientNotAllowedError when the recipient is not configured on the lock', async () => {
         const lock = Lock.fromInfo(mockGrpc(), createLockInfo([LockController.SimpleV0Capability.Send]));
         const recipient = ACCOUNT_1;
@@ -365,6 +382,10 @@ describe('PLT Lock.fromCbor', () => {
         expect(lock.info.funds[0].account.address.address).toBe(ACCOUNT_1.address);
         expect(lock.info.funds[0].amounts[0].token).toEqual(TOKEN_ID);
         expect(lock.info.funds[0].amounts[0].amount).toEqual(TokenAmount.create(100n, 0));
+        expect(lock.info.recipients).not.toBe('any');
+        if (lock.info.recipients === 'any') {
+            fail('Expected limited recipients');
+        }
         expect(lock.info.recipients[0].address.address).toBe(ACCOUNT_2.address);
         expect(lock.info.expiry.expiry.expiryEpochSeconds).toBe(info.expiry.expiry.expiryEpochSeconds);
         expect(lock.info.controller).toEqual(info.controller);

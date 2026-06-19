@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 13.0.0-alpha.1 (devnet-p11-2)
+
+### Changed
+
+- Lock configurations can now be created with support for a special "any" value for the `recipients` field.
+
 ## 13.0.0-alpha.0 (devnet-p11-2)
 
 - Added high-level `Lock` client for creating, funding, sending, returning, and cancelling protocol-level locks.

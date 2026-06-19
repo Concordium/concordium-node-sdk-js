@@ -609,9 +609,9 @@ export async function validateFund(lock: Lock, sender: AccountAddress.Type, deta
 export function validateSend(lock: Lock, sender: AccountAddress.Type, details: SendDetails): true {
     validateCapability(lock, sender, LockController.SimpleV0Capability.Send);
 
-    const recipientAllowed = lock.info.recipients.some(
-        (recipient) => recipient.address.address === details.recipient.address
-    );
+    const recipientAllowed =
+        lock.info.recipients === 'any' ||
+        lock.info.recipients.some((recipient) => recipient.address.address === details.recipient.address);
     if (!recipientAllowed) {
         throw new RecipientNotAllowedError(details.recipient, lock.info.lock);
     }

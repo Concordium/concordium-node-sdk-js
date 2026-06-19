@@ -69,7 +69,7 @@ const client = new ConcordiumGRPCNodeClient(
     console.log('Lock ID:', lockInfo.lock.toString());
     console.log(
         'Recipients:',
-        lockInfo.recipients.map((recipient) => recipient.toString())
+        lockInfo.recipients === 'any' ? 'any' : lockInfo.recipients.map((recipient) => recipient.toString())
     );
     console.log('Expiry:', lockInfo.expiry.expiry.toString());
     console.log('Funds:', JSON.stringify(lockInfo.funds, null, 2));

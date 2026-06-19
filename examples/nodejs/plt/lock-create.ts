@@ -20,7 +20,7 @@ const cli = meow(
     $ yarn run-example <path-to-this-file> [options]
 
   Required
-    --recipient,   -r  Account(s) allowed to receive funds from the lock (repeat for multiple)
+    --recipient,   -r  Account(s) allowed to receive funds from the lock, or 'any' (repeat for multiple addresses)
     --token,       -t  Token id(s) the lock can hold (repeat for multiple)
     --expiry,      -x  Lock expiry as seconds since Unix epoch
 
@@ -54,9 +54,13 @@ const client = new ConcordiumGRPCNodeClient(
     // #region documentation-snippet
 
     // Parse the lock configuration arguments
-    const recipients = cli.flags.recipient.map((r) =>
-        CborAccountAddress.fromAccountAddress(AccountAddress.fromBase58(r))
-    );
+    const recipients: 'any' | CborAccountAddress.Type[] =
+        cli.flags.recipient.length === 1 && cli.flags.recipient[0] === 'any'
+            ? 'any'
+            : cli.flags.recipient.map((r) => CborAccountAddress.fromAccountAddress(AccountAddress.fromBase58(r)));
+    if (recipients !== 'any' && cli.flags.recipient.includes('any')) {
+        throw new Error("Use either '--recipient any' or one or more account addresses, not both.");
+    }
     const tokenIds = cli.flags.token.map(TokenId.fromString);
     const expiry = CborEpoch.fromEpochSeconds(cli.flags.expiry);
 
@@ -99,6 +103,7 @@ const client = new ConcordiumGRPCNodeClient(
     } else {
         // Or from a wallet perspective:
         // Build the lockCreate operation payload without submitting.
+        // Use `recipients: 'any'` instead of an address array to allow any eligible recipient.
         // The controller grants and token list should be configured to match the intended access model.
         const config = {
             recipients,

@@ -20,7 +20,7 @@ const cli = meow(
     $ yarn run-example <path-to-this-file> [options]
 
   Required
-    --recipient,   -r  Account(s) allowed to receive funds from the lock (repeat for multiple)
+    --recipient,   -r  Account(s) allowed to receive funds from the lock, or 'any' (repeat for multiple addresses)
     --token,       -t  Token id the lock can hold and fund with
     --expiry,      -x  Lock expiry as seconds since Unix epoch
     --amount,      -a  Token amount to fund in decimal notation
@@ -58,9 +58,13 @@ const client = new ConcordiumGRPCNodeClient(
     // #region documentation-snippet
 
     // Parse the lock configuration and fund operation arguments
-    const recipients = cli.flags.recipient.map((r) =>
-        CborAccountAddress.fromAccountAddress(AccountAddress.fromBase58(r))
-    );
+    const recipients: 'any' | CborAccountAddress.Type[] =
+        cli.flags.recipient.length === 1 && cli.flags.recipient[0] === 'any'
+            ? 'any'
+            : cli.flags.recipient.map((r) => CborAccountAddress.fromAccountAddress(AccountAddress.fromBase58(r)));
+    if (recipients !== 'any' && cli.flags.recipient.includes('any')) {
+        throw new Error("Use either '--recipient any' or one or more account addresses, not both.");
+    }
     const tokenId = TokenId.fromString(cli.flags.token);
     const expiry = CborEpoch.fromEpochSeconds(cli.flags.expiry);
 
@@ -74,6 +78,7 @@ const client = new ConcordiumGRPCNodeClient(
 
         // Build the lock configuration. Here the sender is granted all capabilities,
         // but this can be adjusted to fit the desired access control model.
+        // Use `recipients: 'any'` instead of the parsed address array to allow any eligible recipient.
         const config = {
             recipients,
             expiry,
@@ -115,6 +120,7 @@ const client = new ConcordiumGRPCNodeClient(
         // Or from a wallet perspective:
         // Build the lockCreate + lockFund payload without submitting.
         // The sender is still needed so the proposal can derive the predicted lock id from chain state.
+        // Use `recipients: 'any'` instead of the parsed address array to allow any eligible recipient.
         const sender = AccountAddress.fromBase58(cli.flags.sender);
         const config = {
             recipients,

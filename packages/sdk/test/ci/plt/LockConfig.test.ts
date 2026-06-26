@@ -1,6 +1,6 @@
 import { Buffer } from 'buffer/index.js';
 
-import { Cbor, CborAccountAddress, CborEpoch, LockController, TokenId } from '../../../src/pub/plt.ts';
+import { Cbor, CborAccountAddress, CborEpoch, LockController, LockMetadata, TokenId } from '../../../src/pub/plt.ts';
 import type { LockConfig } from '../../../src/pub/plt.ts';
 import { AccountAddress } from '../../../src/pub/types.ts';
 
@@ -37,6 +37,43 @@ describe('PLT LockConfig', () => {
                 },
             },
         });
+    });
+
+    it('encodes and decodes metadata as raw CBOR bytes', () => {
+        const metadata = LockMetadata.encode({
+            name: 'Vesting lock',
+            description: 'Tokens locked',
+            issuer: 'Concordium',
+        });
+        const configWithMetadata: LockConfig = {
+            ...config,
+            metadata,
+        };
+
+        const encoded = Cbor.encode(configWithMetadata);
+        const decoded = Cbor.decode(encoded, 'LockConfig');
+        expect(decoded).toMatchObject(configWithMetadata);
+        expect(LockMetadata.decode(decoded.metadata!)).toEqual({
+            name: 'Vesting lock',
+            description: 'Tokens locked',
+            issuer: 'Concordium',
+        });
+    });
+
+    it('preserves invalid metadata bytes for helper decoding to reject', () => {
+        const metadata = new Uint8Array([0x01]);
+        const decoded = Cbor.decode(Cbor.encode({ ...config, metadata }), 'LockConfig');
+        expect(decoded.metadata).toEqual(metadata);
+        expect(() => LockMetadata.decode(decoded.metadata!)).toThrow(/Invalid LockMetadata/);
+    });
+
+    it('throws if metadata is not raw CBOR bytes', () => {
+        const invalid = Cbor.encode({
+            ...config,
+            metadata: { name: 'not raw bytes' },
+        });
+
+        expect(() => Cbor.decode(invalid, 'LockConfig')).toThrow(/expected metadata as CBOR bytes/);
     });
 
     it('encodes and decodes any-recipient locks', () => {

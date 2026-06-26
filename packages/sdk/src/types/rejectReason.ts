@@ -237,7 +237,7 @@ export interface LockIdRejectReason {
 }
 
 /** A reject reason carrying a lock identifier and account payload. */
-export interface LockIdAccountRejectReason {
+export interface LockAccountRejectReason {
     /** The specific lock-and-account reject reason variant. */
     tag: LockIdAccountRejectReasonTag;
     /** The lock and account associated with the rejection. */
@@ -250,7 +250,7 @@ export interface LockIdAccountRejectReason {
 }
 
 /** A reject reason carrying a lock identifier and token identifier payload. */
-export interface LockIdTokenIdRejectReason {
+export interface LockTokenRejectReason {
     /** The specific lock-and-token reject reason variant. */
     tag: LockIdTokenIdRejectReasonTag;
     /** The lock and token associated with the rejection. */
@@ -278,5 +278,5 @@ export type RejectReason =
     | AmountTooLarge
     | TokenRejectReason
     | LockIdRejectReason
-    | LockIdAccountRejectReason
-    | LockIdTokenIdRejectReason;
+    | LockAccountRejectReason
+    | LockTokenRejectReason;

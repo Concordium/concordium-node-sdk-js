@@ -3,6 +3,7 @@ import {
     Cbor,
     CborEpoch,
     LockId,
+    LockMetadata,
     TokenAddDenyListOperation,
     TokenAdminRole,
     TokenAmount,
@@ -212,6 +213,35 @@ describe('PLT Cbor', () => {
 
             // Roundtrip: re-encoding the decoded value must reproduce the fixture
             expect(Cbor.toHexString(Cbor.encode(decoded))).toBe(Cbor.toHexString(cbor));
+        });
+
+        test('should decode LockInfo metadata as raw bytes', () => {
+            const metadata = LockMetadata.encode({
+                name: 'Lock info metadata',
+                description: 'Decoded from lock info',
+                issuer: 'Concordium',
+            });
+            const encoded = Cbor.encode({
+                lock,
+                recipients: [account],
+                expiry: CborEpoch.fromTransactionExpiry(expiry),
+                controller: {
+                    simpleV0: {
+                        grants: [{ account, roles: ['fund'] }],
+                        tokens: [token],
+                    },
+                },
+                metadata,
+                funds: [],
+            });
+
+            const decoded = Cbor.decode(encoded, 'LockInfo');
+            expect(decoded.metadata).toEqual(metadata);
+            expect(LockMetadata.decode(decoded.metadata!)).toEqual({
+                name: 'Lock info metadata',
+                description: 'Decoded from lock info',
+                issuer: 'Concordium',
+            });
         });
 
         test('should throw error if LockInfo has invalid field types', () => {

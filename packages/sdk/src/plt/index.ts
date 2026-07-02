@@ -19,3 +19,4 @@ export * as CborAccountAddress from './CborAccountAddress.js';
 export * as TokenHolder from './TokenHolder.js';
 export * as CborContractAddress from './CborContractAddress.js';
 export * as LockId from './LockId.js';
+export * as LockMetadata from './LockMetadata.js';

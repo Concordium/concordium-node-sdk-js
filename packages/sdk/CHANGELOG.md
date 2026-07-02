@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## Unreleased (devnet-p11-x)
+
+### Added
+
+- A `metadata` field has been added added to both `LockConfiguration` and `LockInfo`.
+
 ## 13.0.0-alpha.1 (devnet-p11-2)
 
 ### Changed

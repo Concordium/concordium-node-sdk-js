@@ -243,10 +243,19 @@ function convertLockConfig(value: unknown): LockConfig {
         throw new Error('Invalid lock config: expected expiry as CBOR epoch time');
     }
 
+    let metadata: Uint8Array | undefined;
+    if ('metadata' in lockConfig) {
+        if (!(lockConfig.metadata instanceof Uint8Array)) {
+            throw new Error('Invalid lock config: expected metadata as CBOR bytes');
+        }
+        metadata = lockConfig.metadata;
+    }
+
     return {
         recipients,
         expiry: lockConfig.expiry,
         controller: LockController.fromCBORValue(lockConfig.controller),
+        metadata,
     };
 }
 

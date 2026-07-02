@@ -160,6 +160,8 @@ export type LockConfig = {
     expiry: CborEpoch.Type;
     /** Lock controller configuration. */
     controller: LockController.Type;
+    /** Optional raw CBOR bytes encoding user-facing lock metadata. Use `LockMetadata.encode` and `LockMetadata.decode` for typed metadata. */
+    metadata?: Uint8Array;
 };
 
 /**

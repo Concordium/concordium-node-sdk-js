@@ -1,3 +1,4 @@
+import { Buffer } from 'buffer/index.js';
 import JSONBig from 'json-bigint';
 
 import { Cursor } from '../../../src/deserializationHelpers.ts';
@@ -6,6 +7,7 @@ import {
     CborEpoch,
     LockController,
     LockId,
+    LockMetadata,
     MetaUpdateOperationType,
     TokenAdminRole,
     TokenAmount,
@@ -145,6 +147,16 @@ describe('PLT MetaUpdateOperation', () => {
         ],
     ])('encodes %s meta update operation', (_name, operation, expected) => {
         expect(encodeMetaUpdateOperations(operation).toString()).toBe(expected);
+    });
+
+    it('encodes lockCreate metadata as raw CBOR bytes', () => {
+        const metadata = LockMetadata.encode({ name: 'Metadata lock', issuer: 'Concordium' });
+        const operations = encodeMetaUpdateOperations({
+            [MetaUpdateOperationType.LockCreate]: { ...lockConfig, metadata },
+        });
+
+        expect(operations.toString()).toContain('686d65746164617461');
+        expect(operations.toString()).toContain(Buffer.from(metadata).toString('hex'));
     });
 
     it('encodes lockCreate and lockCancel meta operations', () => {

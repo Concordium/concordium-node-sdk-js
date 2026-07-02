@@ -8,6 +8,7 @@ import * as CborContractAddress from './plt/CborContractAddress.js';
 import * as CborMemo from './plt/CborMemo.js';
 import * as LockController from './plt/LockController.js';
 import * as LockId from './plt/LockId.js';
+import * as LockMetadata from './plt/LockMetadata.js';
 import * as TokenAmount from './plt/TokenAmount.js';
 import * as TokenHolder from './plt/TokenHolder.js';
 import * as TokenId from './plt/TokenId.js';
@@ -36,4 +37,5 @@ export {
     CborContractAddress,
     LockController,
     LockId,
+    LockMetadata,
 };

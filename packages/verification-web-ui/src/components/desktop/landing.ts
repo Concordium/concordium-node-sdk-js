@@ -10,6 +10,55 @@ import { getConfig, getGlobalContainer } from '@/index';
 import type { HideModalFunction, ModalFunction, ShowModalFunction } from '@/types';
 import { openAppStoreForConcordiumID } from '@/utils/mobileAppDetection';
 
+function openMobileDeepLinkWithFallback(deepLink: string): void {
+    const isAndroid = /android/i.test(navigator.userAgent);
+
+    let appOpened = false;
+    const markAppOpened = () => {
+        console.log('[Mobile] App opened detected');
+        appOpened = true;
+    };
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) markAppOpened();
+    });
+    window.addEventListener('pagehide', markAppOpened);
+    window.addEventListener('blur', markAppOpened);
+
+    if (isAndroid) {
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.src = deepLink;
+        document.body.appendChild(iframe);
+
+        setTimeout(() => {
+            window.location.href = deepLink;
+        }, 100);
+
+        setTimeout(() => {
+            if (!appOpened && !document.hidden) {
+                console.log('[Mobile] App not detected after timeout, redirecting to Play Store...');
+                window.location.href = ID_APP_STORE.android;
+            }
+            if (iframe.parentNode) {
+                iframe.parentNode.removeChild(iframe);
+            }
+        }, 2500);
+    } else {
+        const link = document.createElement('a');
+        link.href = deepLink;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+
+        setTimeout(() => {
+            if (link.parentNode) {
+                link.parentNode.removeChild(link);
+            }
+        }, 100);
+    }
+}
+
 export const createLandingModal: ModalFunction = () => {
     const landingHTML = `
     <div class="desktop--modal-overlay">
@@ -72,13 +121,30 @@ export const createLandingModal: ModalFunction = () => {
 
         if (isMobile) {
             // On mobile, try to open the Concordium ID app directly
-            // First, we need to initialize WalletConnect to get a URI
             try {
+                const { ModalConstants } = await import('@/constants/modal.constants');
+                const { getConcordiumIdDeepLink } = await import('@/constants/wallet.registry');
+                const connectionMode = localStorage.getItem(ModalConstants.LOCAL_STORAGE_FLAGS.CONNECTION_MODE);
+                const merchantWalletConnectUri = localStorage.getItem(
+                    ModalConstants.LOCAL_STORAGE_FLAGS.WALLET_CONNECT_URI
+                );
+
+                if (connectionMode === 'merchant-provided') {
+                    if (!merchantWalletConnectUri) {
+                        throw new Error('Merchant-managed flow requires a WalletConnect URI');
+                    }
+
+                    localStorage.setItem(ModalConstants.LOCAL_STORAGE_FLAGS.CONNECTED_WALLET_NAME, 'Concordium ID');
+
+                    const deepLink = getConcordiumIdDeepLink(merchantWalletConnectUri);
+                    console.log('[Mobile] Opening merchant-provided deep link:', deepLink.substring(0, 80) + '...');
+                    openMobileDeepLinkWithFallback(deepLink);
+                    return;
+                }
+
                 console.log('[Mobile] Opening ID App - initializing WalletConnect...');
                 const { ServiceFactory } = await import('@/services');
-                const { ModalConstants } = await import('@/constants/modal.constants');
                 const { WalletConnectConstants } = await import('@/constants/walletconnect.constants');
-                const { getConcordiumIdDeepLink } = await import('@/constants/wallet.registry');
 
                 // Get WalletConnect service and generate URI
                 const wcService = ServiceFactory.createWalletConnectService();
@@ -129,61 +195,7 @@ export const createLandingModal: ModalFunction = () => {
                 // Generate deep link
                 const deepLink = getConcordiumIdDeepLink(uri);
                 console.log('[Mobile] Opening deep link:', deepLink.substring(0, 80) + '...');
-
-                const isAndroid = /android/i.test(navigator.userAgent);
-
-                // Track if app opened (page loses visibility)
-                let appOpened = false;
-                const markAppOpened = () => {
-                    console.log('[Mobile] App opened detected');
-                    appOpened = true;
-                };
-
-                document.addEventListener('visibilitychange', () => {
-                    if (document.hidden) markAppOpened();
-                });
-                window.addEventListener('pagehide', markAppOpened);
-                window.addEventListener('blur', markAppOpened);
-
-                if (isAndroid) {
-                    // Android: Try deep link, fall back to Play Store after timeout
-                    // Use iframe trick for more reliable detection
-                    const iframe = document.createElement('iframe');
-                    iframe.style.display = 'none';
-                    iframe.src = deepLink;
-                    document.body.appendChild(iframe);
-
-                    // Also try window.location as backup
-                    setTimeout(() => {
-                        window.location.href = deepLink;
-                    }, 100);
-
-                    // After 2.5 seconds, if still on page, redirect to Play Store
-                    setTimeout(() => {
-                        if (!appOpened && !document.hidden) {
-                            console.log('[Mobile] App not detected after timeout, redirecting to Play Store...');
-                            window.location.href = ID_APP_STORE.android;
-                        }
-                        // Clean up iframe
-                        if (iframe.parentNode) {
-                            iframe.parentNode.removeChild(iframe);
-                        }
-                    }, 2500);
-                } else {
-                    // iOS: Use a hidden link click for better Safari compatibility
-                    const link = document.createElement('a');
-                    link.href = deepLink;
-                    link.style.display = 'none';
-                    document.body.appendChild(link);
-                    link.click();
-
-                    // Clean up
-                    setTimeout(() => {
-                        if (link.parentNode) {
-                            link.parentNode.removeChild(link);
-                        }
-                    }, 100);
-                }
+                openMobileDeepLinkWithFallback(deepLink);
             } catch (error) {
                 console.error('Failed to open Concordium ID app:', error);
                 // Fallback to app store if something goes wrong

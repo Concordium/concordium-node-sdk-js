@@ -178,28 +178,34 @@ const { uri, approval } = await wcClient.connect({
 });
 ```
 
-### Step 2: Show QR Code via SDK
+### Step 2: Show QR Code or Deeplink via SDK
 
 ```typescript
 import { ConcordiumVerificationWebUI } from '@concordium/verification-web-ui';
 
-const sdk = new ConcordiumVerificationWebUI({ network: 'testnet' });
+const sdk = new ConcordiumVerificationWebUI({
+    network: 'testnet',
+    walletConnectUri: uri,
+});
 
-// SDK will display the QR code
-await sdk.showWalletConnectPopup(uri);
+// SDK only renders the merchant-provided URI.
+// It does not initialize WalletConnect or create a new pairing in this mode.
+await sdk.renderUIModals();
 ```
 
 ### Step 3: Handle Session Approval
 
-```typescript
-const session = await approval();
+In merchant-managed mode, your app owns the WalletConnect client, `approval()`, session lifecycle, and all WalletConnect requests. Call `handleSessionApproval()` if you want the SDK to show the processing UI and emit the `session_approved` event.
 
-// SDK emits session_approved event
-window.addEventListener('@concordium/verification-web-ui-event', async (event) => {
+```typescript
+window.addEventListener('verification-web-ui-event', async (event) => {
     if (event.detail.type === 'session_approved') {
-        // Send your presentation request through YOUR WalletConnect client
+        const { topic } = event.detail.data;
+
+        // Send your presentation request through YOUR WalletConnect client.
+        // Do not use sdk.sendPresentationRequest() in merchant-managed mode.
         const response = await wcClient.request({
-            topic: session.topic,
+            topic,
             chainId: 'ccd:4221332d34e1694168c2a0c0b3fd0f27',
             request: {
                 method: 'request_verifiable_presentation_v1',
@@ -213,6 +219,9 @@ window.addEventListener('@concordium/verification-web-ui-event', async (event) =
         }
     }
 });
+
+const session = await approval();
+await sdk.handleSessionApproval(session);
 ```
 
 ---

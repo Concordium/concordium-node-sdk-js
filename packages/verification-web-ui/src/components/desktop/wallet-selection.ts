@@ -440,6 +440,17 @@ export const createWalletSelectionModal: ModalFunction = () => {
  */
 async function initializeWalletConnect(): Promise<void> {
     try {
+        const connectionMode = localStorage.getItem(ModalConstants.LOCAL_STORAGE_FLAGS.CONNECTION_MODE);
+        if (connectionMode === 'merchant-provided') {
+            const storedUri = localStorage.getItem(ModalConstants.LOCAL_STORAGE_FLAGS.WALLET_CONNECT_URI);
+            if (!storedUri) {
+                throw new Error('Merchant-managed flow requires a WalletConnect URI.');
+            }
+
+            currentWcUri = storedUri;
+            return;
+        }
+
         // Check for SDK-managed config in localStorage
         const projectId = localStorage.getItem(ModalConstants.LOCAL_STORAGE_FLAGS.SDK_PROJECT_ID);
         const network =

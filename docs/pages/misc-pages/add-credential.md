@@ -106,9 +106,3 @@ exposes these secrets through an API, by design.
 The material is seed-derived and the wallet does not expose it. The user
 must sign in their own wallet.
 
-## Term mapping
-
-| Older term / gap | Use now |
-| --- | --- |
-| "Construct `IdentityInput`" (was a TODO) | Derive from the seed, as above |
-| `createCredentialDeploymentPayload` (deprecated) | `createCredentialTransaction` |

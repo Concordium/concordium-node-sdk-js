@@ -105,4 +105,3 @@ exposes these secrets through an API, by design.
 **"Can I add a credential to a user's account without their seed?"** No.
 The material is seed-derived and the wallet does not expose it. The user
 must sign in their own wallet.
-

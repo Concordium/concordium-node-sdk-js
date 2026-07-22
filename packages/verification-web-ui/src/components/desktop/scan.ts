@@ -254,6 +254,12 @@ export const createScanModal: ModalFunction = () => {
             // Generate and open deep link directly (simpler approach)
             const deepLink = generateDeepLink(currentSelectedWallet, currentQRCodeUri!);
 
+            console.info('[verification-web-ui] scan Open in wallet deep link', {
+                wallet: currentSelectedWallet,
+                walletConnectUri: currentQRCodeUri,
+                deepLink,
+            });
+
             if (deepLink) {
                 window.location.href = deepLink;
             } else {

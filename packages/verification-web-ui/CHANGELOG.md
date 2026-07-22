@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### 0.2.2
+
+**Merchant-provided WalletConnect fix:**
+
+- Merchant-managed flow no longer initializes WalletConnect SignClient or generates a new pairing URI (no `projectId` in this mode).
+- Mobile "Open with ID App" and wallet-selection now deep-link using the merchant-provided `wc:` URI as-is.
+- Persist connection mode + network when constructing with `walletConnectUri`; add console logs to compare deep links during debugging.
+
 ### 0.2.1
 
 **Mobile deep link and session handling improvements:**

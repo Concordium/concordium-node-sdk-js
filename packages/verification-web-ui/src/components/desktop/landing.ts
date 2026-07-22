@@ -71,98 +71,109 @@ export const createLandingModal: ModalFunction = () => {
         const isMobile = isMobileScreen();
 
         if (isMobile) {
-            // On mobile, try to open the Concordium ID app directly
-            // First, we need to initialize WalletConnect to get a URI
+            // On mobile, open Concordium ID via deep link.
+            // Merchant-provided: use merchant URI only — do NOT init SignClient / generate a new URI.
+            // SDK-managed: init WC, generate URI, listen for session approval, then deep link.
             try {
-                const { ServiceFactory } = await import('@/services');
                 const { ModalConstants } = await import('@/constants/modal.constants');
-                const { WalletConnectConstants } = await import('@/constants/walletconnect.constants');
                 const { getConcordiumIdDeepLink } = await import('@/constants/wallet.registry');
 
-                // Ensure __CONCORDIUM_WC_CONFIG__ is populated if we're in sdk-managed mode
-                if (!(window as any).__CONCORDIUM_WC_CONFIG__) {
-                    const projectId = localStorage.getItem(ModalConstants.LOCAL_STORAGE_FLAGS.SDK_PROJECT_ID);
-                    const network = localStorage.getItem(ModalConstants.LOCAL_STORAGE_FLAGS.SDK_NETWORK) || 'testnet';
-                    const storedMetadata = localStorage.getItem('sdkWalletConnectMetadata');
-                    const metadata = storedMetadata ? JSON.parse(storedMetadata) : null;
+                const connectionMode = localStorage.getItem(ModalConstants.LOCAL_STORAGE_FLAGS.CONNECTION_MODE);
+                const merchantUri = localStorage.getItem(ModalConstants.LOCAL_STORAGE_FLAGS.WALLET_CONNECT_URI);
 
-                    if (projectId) {
-                        (window as any).__CONCORDIUM_WC_CONFIG__ = {
-                            projectId,
-                            network,
-                            metadata: metadata || WalletConnectConstants.getDefaultMetadata(),
-                        };
+                let uri: string;
+
+                if (connectionMode === 'merchant-provided') {
+                    if (!merchantUri?.startsWith('wc:')) {
+                        throw new Error('Merchant WalletConnect URI not found');
                     }
+                    uri = merchantUri;
+                } else {
+                    const { ServiceFactory } = await import('@/services');
+                    const { WalletConnectConstants } = await import('@/constants/walletconnect.constants');
+
+                    // Ensure __CONCORDIUM_WC_CONFIG__ is populated if we're in sdk-managed mode
+                    if (!(window as any).__CONCORDIUM_WC_CONFIG__) {
+                        const projectId = localStorage.getItem(ModalConstants.LOCAL_STORAGE_FLAGS.SDK_PROJECT_ID);
+                        const network =
+                            localStorage.getItem(ModalConstants.LOCAL_STORAGE_FLAGS.SDK_NETWORK) || 'testnet';
+                        const storedMetadata = localStorage.getItem('sdkWalletConnectMetadata');
+                        const metadata = storedMetadata ? JSON.parse(storedMetadata) : null;
+
+                        if (projectId) {
+                            (window as any).__CONCORDIUM_WC_CONFIG__ = {
+                                projectId,
+                                network,
+                                metadata: metadata || WalletConnectConstants.getDefaultMetadata(),
+                            };
+                        }
+                    }
+
+                    const wcService = ServiceFactory.createWalletConnectService();
+                    await wcService.initialize();
+                    await wcService.clearAllSessionsForNewPairing();
+
+                    const network =
+                        (localStorage.getItem(ModalConstants.LOCAL_STORAGE_FLAGS.SDK_NETWORK) as
+                            | 'mainnet'
+                            | 'testnet') || 'testnet';
+                    const chainIds = WalletConnectConstants.CHAIN_IDS[network];
+
+                    const { uri: generatedUri, approval } = await wcService.connect({
+                        ccd: {
+                            methods: [...WalletConnectConstants.ALL_METHODS],
+                            chains: chainIds,
+                            events: [...WalletConnectConstants.EVENTS],
+                        },
+                    });
+
+                    if (!generatedUri) {
+                        throw new Error('Failed to generate WalletConnect URI');
+                    }
+
+                    uri = generatedUri;
+                    localStorage.setItem(ModalConstants.LOCAL_STORAGE_FLAGS.WALLET_CONNECT_URI, uri);
+                    localStorage.setItem(ModalConstants.LOCAL_STORAGE_FLAGS.CONNECTED_WALLET_NAME, 'Concordium ID');
+
+                    let sessionProcessed = false;
+
+                    const processApprovedSession = async (session: any) => {
+                        if (sessionProcessed) return;
+                        sessionProcessed = true;
+
+                        const { handleSessionApproval } = await import('./scan');
+                        await handleSessionApproval(session);
+                    };
+
+                    approval()
+                        .then(processApprovedSession)
+                        .catch(() => {});
+
+                    const tryRecoverApprovedSession = async () => {
+                        if (document.hidden || sessionProcessed) return;
+
+                        const activeSessions = wcService.getActiveSessions();
+                        if (activeSessions.length > 0) {
+                            await processApprovedSession(activeSessions[0]);
+                        }
+                    };
+
+                    document.addEventListener('visibilitychange', () => {
+                        void tryRecoverApprovedSession();
+                    });
+
+                    window.addEventListener('focus', () => {
+                        void tryRecoverApprovedSession();
+                    });
                 }
 
-                // Get WalletConnect service and generate URI
-                const wcService = ServiceFactory.createWalletConnectService();
-                await wcService.initialize();
-
-                // Clear existing sessions to ensure fresh pairing
-                await wcService.clearAllSessionsForNewPairing();
-
-                const network =
-                    (localStorage.getItem(ModalConstants.LOCAL_STORAGE_FLAGS.SDK_NETWORK) as 'mainnet' | 'testnet') ||
-                    'testnet';
-                const chainIds = WalletConnectConstants.CHAIN_IDS[network];
-
-                // Generate WalletConnect URI by calling connect()
-                const { uri, approval } = await wcService.connect({
-                    ccd: {
-                        // Request all methods for broad wallet compatibility
-                        methods: [...WalletConnectConstants.ALL_METHODS],
-                        chains: chainIds,
-                        events: [...WalletConnectConstants.EVENTS],
-                    },
-                });
-
-                if (!uri) {
-                    throw new Error('Failed to generate WalletConnect URI');
-                }
-
-                // Store URI for later use
-                localStorage.setItem(ModalConstants.LOCAL_STORAGE_FLAGS.WALLET_CONNECT_URI, uri);
-
-                // Store connected wallet name
-                localStorage.setItem(ModalConstants.LOCAL_STORAGE_FLAGS.CONNECTED_WALLET_NAME, 'Concordium ID');
-
-                let sessionProcessed = false;
-
-                const processApprovedSession = async (session: any) => {
-                    if (sessionProcessed) return;
-                    sessionProcessed = true;
-
-                    const { handleSessionApproval } = await import('./scan');
-                    await handleSessionApproval(session);
-                };
-
-                // Handle session approval in the background
-                approval()
-                    .then(processApprovedSession)
-                    .catch(() => {});
-
-                const tryRecoverApprovedSession = async () => {
-                    if (document.hidden || sessionProcessed) return;
-
-                    const activeSessions = wcService.getActiveSessions();
-                    if (activeSessions.length > 0) {
-                        await processApprovedSession(activeSessions[0]);
-                    }
-                };
-
-                document.addEventListener('visibilitychange', () => {
-                    void tryRecoverApprovedSession();
-                });
-
-                window.addEventListener('focus', () => {
-                    void tryRecoverApprovedSession();
-                });
-
-                // Generate deep link
                 const deepLink = getConcordiumIdDeepLink(uri);
+                console.info('[verification-web-ui] Open with ID App deep link', {
+                    mode: connectionMode,
+                    walletConnectUri: uri,
+                    deepLink,
+                });
 
-                // Track if app opened (page loses visibility)
                 let appOpened = false;
                 const markAppOpened = () => {
                     appOpened = true;
@@ -176,8 +187,7 @@ export const createLandingModal: ModalFunction = () => {
                 window.addEventListener('pagehide', markAppOpened);
                 window.addEventListener('blur', markAppOpened);
 
-                // Use one direct deep link format on both Android and iOS.
-                // This avoids Android intent chooser edge-cases where the browser prompt can remain stuck.
+                // One direct deep link on Android and iOS — avoids intent-chooser stuck prompts.
                 const link = document.createElement('a');
                 link.href = deepLink;
                 link.style.display = 'none';

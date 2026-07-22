@@ -510,10 +510,26 @@ export const createWalletSelectionModal: ModalFunction = () => {
 };
 
 /**
- * Initialize WalletConnect and get URI
+ * Resolve WalletConnect URI for wallet selection.
+ * Merchant-provided: use stored URI only (no SignClient).
+ * SDK-managed: init client and generate a pairing URI.
  */
 async function initializeWalletConnect(): Promise<void> {
     try {
+        const connectionMode = localStorage.getItem(ModalConstants.LOCAL_STORAGE_FLAGS.CONNECTION_MODE);
+
+        if (connectionMode === 'merchant-provided') {
+            const storedUri = localStorage.getItem(ModalConstants.LOCAL_STORAGE_FLAGS.WALLET_CONNECT_URI);
+            if (!storedUri?.startsWith('wc:')) {
+                throw new Error(
+                    'Merchant WalletConnect URI not found. Please call setWalletConnectUri() or pass walletConnectUri to the constructor.'
+                );
+            }
+            currentWcUri = storedUri;
+            console.info('[verification-web-ui] wallet-selection merchant URI', { walletConnectUri: storedUri });
+            return;
+        }
+
         // Check for SDK-managed config in localStorage
         const projectId = localStorage.getItem(ModalConstants.LOCAL_STORAGE_FLAGS.SDK_PROJECT_ID);
         const network =
@@ -589,8 +605,11 @@ export const showWalletSelectionModal: ShowModalFunction = async () => {
     try {
         await initializeWalletConnect();
     } catch {
+        const connectionMode = localStorage.getItem(ModalConstants.LOCAL_STORAGE_FLAGS.CONNECTION_MODE);
         alert(
-            'WalletConnect not configured. Please ensure the SDK is properly initialized with initWalletConnect() before opening the wallet selection.'
+            connectionMode === 'merchant-provided'
+                ? 'WalletConnect URI not found. Please pass walletConnectUri to the SDK constructor or call setWalletConnectUri().'
+                : 'WalletConnect not configured. Please ensure the SDK is properly initialized with initWalletConnect() before opening the wallet selection.'
         );
         return;
     }

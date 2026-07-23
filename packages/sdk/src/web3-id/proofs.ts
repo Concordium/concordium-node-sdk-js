@@ -250,13 +250,9 @@ function verifyAtomicStatement<AttributeKey>(
  */
 function verifyAtomicStatementInContext<AttributeKey>(
     statement: AtomicStatementV2<AttributeKey>,
-    existingStatements: AtomicStatementV2<AttributeKey>[],
     schema?: CredentialSchemaSubject
 ) {
     verifyAtomicStatement(statement, schema);
-    if (existingStatements.some((v) => v.attributeTag === statement.attributeTag)) {
-        throw new Error('Only 1 statement is allowed for each attribute');
-    }
 }
 
 /**
@@ -269,7 +265,7 @@ export function verifyAtomicStatements(statements: AtomicStatementV2[], schema?:
     }
     const checkedStatements: AtomicStatementV2[] = [];
     for (const s of statements) {
-        verifyAtomicStatementInContext(s, checkedStatements, schema);
+        verifyAtomicStatementInContext(s, schema);
         checkedStatements.push(s);
     }
     return true;
@@ -324,7 +320,7 @@ export class AtomicStatementBuilder<AttributeKey = string> implements InternalBu
      */
     private check(statement: AtomicStatementV2<AttributeKey>) {
         if (this.schema) {
-            verifyAtomicStatementInContext(statement, this.statements, this.schema);
+            verifyAtomicStatementInContext(statement, this.schema);
         }
     }
 

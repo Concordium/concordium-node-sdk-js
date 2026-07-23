@@ -137,7 +137,7 @@ function verifySetStatement(statement: MembershipStatement | NonMembershipStatem
     }
 }
 
-function verifyAtomicStatement(statement: AtomicStatement, existingStatements: IdStatement) {
+function verifyAtomicStatement(statement: AtomicStatement) {
     if (statement.type === undefined) {
         throw new Error('Statements must contain a type field');
     }
@@ -146,9 +146,6 @@ function verifyAtomicStatement(statement: AtomicStatement, existingStatements: I
     }
     if (!(statement.attributeTag in AttributeKeyString)) {
         throw new Error('Unknown attributeTag: ' + statement.attributeTag);
-    }
-    if (existingStatements.some((v) => v.attributeTag === statement.attributeTag)) {
-        throw new Error('Only 1 statement is allowed for each attribute');
     }
     switch (statement.type) {
         case StatementTypes.AttributeInRange:
@@ -177,7 +174,7 @@ export function verifyIdstatement(statements: IdStatement): boolean {
     }
     const checkedStatements = [];
     for (const s of statements) {
-        verifyAtomicStatement(s, checkedStatements);
+        verifyAtomicStatement(s);
         checkedStatements.push(s);
     }
     return true;
@@ -205,7 +202,7 @@ export class IdStatementBuilder implements StatementBuilder {
      */
     private check(statement: AtomicStatement) {
         if (this.checkConstraints) {
-            verifyAtomicStatement(statement, this.statements);
+            verifyAtomicStatement(statement);
         }
     }
 

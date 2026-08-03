@@ -86,7 +86,12 @@ owner with an update credentials transaction. See [Create an update credentials
 transaction](#create-an-update-credentials-transaction) for how to create this
 transaction payload using the output from the example below:
 
-<!-- TODO: Recreate documentation for `Construct IdentityInput` -->
+This path requires an `IdentityInput`. If you have only a seed phrase
+(e.g. a browser/mobile wallet), see [Add a Credential
+(IdentityInput)](./misc-pages/add-credential.md) for how to construct it
+from the seed. To construct it from a mobile wallet export or user-cli
+file instead, see [Old
+GRPC-Client](./misc-pages/grpc-v1.md#construct-identityinput-for-creating-credentials).
 
 ```ts
     const lastFinalizedBlockHash = (await client.getConsensusStatus()).lastFinalizedBlock;
@@ -95,9 +100,17 @@ transaction payload using the output from the example below:
         throw new Error('Cryptographic parameters were not found on a block that has been finalized.');
     }
 
-    // The parts of the identity required to create a new credential, parsed from
-    // e.g. a wallet export.
-    const identityInput: IdentityInput = ...
+    // The parts of the identity required to create a new credential.
+    // Construct this from the seed phrase (or a wallet export / user-cli
+    // file). See the "Add a Credential (IdentityInput)" page.
+    const wallet = ConcordiumHdWallet.fromSeedPhrase(seedPhrase, net);
+    const identityInput: IdentityInput = {
+        identityObject,
+        identityProvider: { ipInfo, arsInfos },
+        idCredSecret: wallet.getIdCredSec(ipIndex, identityIndex).toString('hex'),
+        prfKey: wallet.getPrfKey(ipIndex, identityIndex).toString('hex'),
+        randomness: wallet.getSignatureBlindingRandomness(ipIndex, identityIndex).toString('hex'),
+    };
 
     // Require just one key on the credential to sign. This can be any number
     // up to the number of public keys added to the credential.

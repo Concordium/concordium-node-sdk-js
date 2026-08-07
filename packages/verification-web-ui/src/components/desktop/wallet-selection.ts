@@ -11,10 +11,11 @@ import { ModalConstants } from '@/constants/modal.constants';
 import {
     WALLET_REGISTRY,
     type WalletInfo,
-    buildQrRedirectUrl,
     buildWalletDeepLink,
+    getConcordiumIdDeepLink,
     getIdAppStoreUrl,
     getQrRedirectCleanUrl,
+    getQrRedirectInstallId,
     getQrRedirectUri,
 } from '@/constants/wallet.registry';
 import { WalletConnectConstants } from '@/constants/walletconnect.constants';
@@ -69,6 +70,7 @@ function tryOpenDeepLink(url: string, timeoutMs: number = 1800): Promise<boolean
         window.addEventListener('pagehide', onPageHide, { once: true });
         window.addEventListener('blur', onBlur, { once: true });
 
+        // Prefer top-level open so TestFlight / installed ID app receives the WC URI.
         window.location.href = url;
 
         setTimeout(() => {
@@ -125,10 +127,13 @@ async function openWalletApp(wcUri: string, options: OpenWalletOptions = {}): Pr
         }
 
         if (shouldRedirectToStore) {
-            // No wallet opened, redirect to ID app store as fallback
+            // No wallet opened — register bridge session then redirect to ID app store
             setTimeout(() => {
                 if (!document.hidden) {
-                    window.location.href = getIdAppStoreUrl();
+                    void (async () => {
+                        const { redirectToIdAppStore } = await import('@/utils/mobileAppDetection');
+                        await redirectToIdAppStore(wcUri);
+                    })();
                 }
             }, 400);
         }
@@ -181,10 +186,13 @@ async function openWalletApp(wcUri: string, options: OpenWalletOptions = {}): Pr
     }
 
     if (shouldRedirectToStore) {
-        // No wallet opened, redirect to ID app store
+        // No wallet opened — register bridge session then redirect to ID app store
         setTimeout(() => {
             if (!document.hidden) {
-                window.location.href = getIdAppStoreUrl();
+                void (async () => {
+                    const { redirectToIdAppStore } = await import('@/utils/mobileAppDetection');
+                    await redirectToIdAppStore(wcUri);
+                })();
             }
         }, 400);
     }
@@ -193,8 +201,8 @@ async function openWalletApp(wcUri: string, options: OpenWalletOptions = {}): Pr
 }
 
 /**
- * Render QR code for desktop with a redirect URL.
- * Camera apps reliably handle https URLs, then the redirect page deep-links into installed wallets.
+ * Render QR code for desktop with a bridge HTTPS redirect URL.
+ * Camera opens this page → registerSession + deep link / store with install_id.
  */
 async function renderDesktopQr(uri: string): Promise<void> {
     const qrContainer = document.querySelector('#wallet-qr-container');
@@ -208,11 +216,11 @@ async function renderDesktopQr(uri: string): Promise<void> {
 
     try {
         const { default: QRCode } = await import('qrcode');
+        const { prepareBridgeQrPayload } = await import('@/services/bridge.service');
 
-        // Use a web redirect URL so camera scans trigger the mobile deep-link flow.
-        const qrValue = buildQrRedirectUrl(uri);
+        const { qrUrl, installId } = await prepareBridgeQrPayload(uri);
 
-        const qrCodeDataURL = await QRCode.toDataURL(qrValue, {
+        const qrCodeDataURL = await QRCode.toDataURL(qrUrl, {
             width: 200,
             margin: 2,
             color: { dark: '#000000', light: '#ffffff' },
@@ -223,6 +231,11 @@ async function renderDesktopQr(uri: string): Promise<void> {
         const loopbackWarning = isLoopbackHost
             ? '<p class="text-xs text-center mt-3 text-amber-700 max-w-[280px]">This page is running on localhost. Phone camera scans cannot open localhost on another device. Use a LAN/public URL.</p>'
             : '';
+
+        console.info('[IDApp Bridge] desktop QR encoded', {
+            install_id: installId,
+            qrUrlLength: qrUrl.length,
+        });
 
         qrContainer.innerHTML = `
             <div class="text-center min-h-[200px] flex flex-col justify-center items-center">
@@ -256,19 +269,21 @@ async function ensureDocumentBody(): Promise<void> {
     });
 }
 
-async function showRedirectFallbackPanel(uri: string): Promise<void> {
+async function showRedirectFallbackPanel(uri: string, installId?: string | null): Promise<void> {
     if (!isMobile) return;
 
     await ensureDocumentBody();
     removeRedirectFallbackPanel();
 
+    const storeUrl = getIdAppStoreUrl(installId);
+
     const panel = document.createElement('div');
     panel.id = REDIRECT_FALLBACK_CONTAINER_ID;
     panel.className = 'mobile--redirect-fallback-panel';
     panel.innerHTML = `
-        <p class="mobile--redirect-fallback-panel__text">Tap to open an installed wallet app.</p>
-        <button id="${REDIRECT_FALLBACK_OPEN_BUTTON_ID}" class="mobile--redirect-fallback-panel__button">Open Wallet App</button>
-        <p class="mobile--redirect-fallback-panel__footer">No wallet installed? <a href="${getIdAppStoreUrl()}" target="_blank" rel="noopener noreferrer" class="mobile--redirect-fallback-panel__link">Install Concordium ID</a></p>
+        <p class="mobile--redirect-fallback-panel__text">Tap to open Concordium ID.</p>
+        <button id="${REDIRECT_FALLBACK_OPEN_BUTTON_ID}" class="mobile--redirect-fallback-panel__button">Open Concordium ID</button>
+        <p class="mobile--redirect-fallback-panel__footer">App not installed? <a href="${storeUrl}" target="_blank" rel="noopener noreferrer" class="mobile--redirect-fallback-panel__link">Install Concordium ID</a></p>
     `;
 
     document.body.appendChild(panel);
@@ -280,9 +295,10 @@ async function showRedirectFallbackPanel(uri: string): Promise<void> {
         openBtn.disabled = true;
         openBtn.textContent = 'Opening...';
 
-        const opened = await openWalletApp(uri, { redirectToStoreOnFailure: false });
+        const opened = await tryOpenConcordiumIdFromQr(uri);
         if (!opened && !document.hidden) {
-            window.location.href = getIdAppStoreUrl();
+            const { redirectToIdAppStore } = await import('@/utils/mobileAppDetection');
+            await redirectToIdAppStore(uri);
         }
     });
 
@@ -311,16 +327,44 @@ async function hasActiveWalletConnectSession(): Promise<boolean> {
 }
 
 /**
- * Handle QR redirect on page load
- * When user scans QR code on mobile, they land on this page with uri param
+ * Try Concordium ID deep link after QR camera open (bridge-aware).
+ */
+async function tryOpenConcordiumIdFromQr(wcUri: string): Promise<boolean> {
+    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+
+    // iOS: register first so short bridge scheme can recover wc: via deferred-match.
+    if (isIOSDevice) {
+        try {
+            const { registerSession } = await import('@/services/bridge.service');
+            await registerSession(wcUri);
+        } catch (error) {
+            console.warn('[IDApp Bridge] QR iOS register before open failed', error);
+        }
+    }
+
+    const deepLink = getConcordiumIdDeepLink(wcUri);
+    return tryOpenDeepLink(deepLink, isIOSDevice ? 2500 : 1500);
+}
+
+/**
+ * Handle QR redirect on page load (phone camera scanned HTTPS QR).
+ * Registers bridge session → opens Concordium ID → store fallback with install_id.
  */
 export async function handleQrRedirectOnLoad(): Promise<void> {
     const uri = getQrRedirectUri();
     if (!uri) return;
 
+    const carriedInstallId = getQrRedirectInstallId();
+
     // Clean up URL without redirect params while preserving route/search/hash context.
     const cleanUrl = getQrRedirectCleanUrl();
     window.history.replaceState({}, document.title, cleanUrl);
+
+    try {
+        localStorage.setItem('walletConnectUri', uri);
+    } catch {
+        /* ignore */
+    }
 
     // If pairing already succeeded, do not trigger another app-open attempt.
     const hasActiveSession = await hasActiveWalletConnectSession();
@@ -329,13 +373,51 @@ export async function handleQrRedirectOnLoad(): Promise<void> {
         return;
     }
 
-    // Try opening wallets without forcing immediate app-store redirect.
-    const opened = await handleWalletUri(uri, { redirectToStoreOnFailure: false });
+    console.info('[IDApp Bridge] QR redirect handoff START', {
+        uriPreview: `${uri.slice(0, 28)}…`,
+        carriedInstallId,
+        isMobile,
+    });
 
-    // Some mobile browsers block automatic deep-link opens unless initiated by a user tap.
-    if (isMobile && !opened && !document.hidden) {
-        await showRedirectFallbackPanel(uri);
+    // Refresh / ensure bridge session (desktop may have registered already).
+    let installId = carriedInstallId;
+    try {
+        const { registerSession } = await import('@/services/bridge.service');
+        const result = await registerSession(uri);
+        if (result.installId) {
+            installId = result.installId;
+        }
+    } catch (error) {
+        console.warn('[IDApp Bridge] QR redirect register failed', error);
     }
+
+    if (!isMobile) {
+        console.info('[IDApp Bridge] QR redirect on desktop — skipping deep link');
+        return;
+    }
+
+    const opened = await tryOpenConcordiumIdFromQr(uri);
+
+    if (opened || document.hidden) {
+        try {
+            const { showWaitingForPairingState } = await import('@/components/desktop/processing');
+            await showWaitingForPairingState();
+        } catch {
+            /* ignore */
+        }
+        return;
+    }
+
+    // Auto deep-link blocked (common) — tap fallback + delayed store with install_id.
+    await showRedirectFallbackPanel(uri, installId);
+
+    setTimeout(() => {
+        void (async () => {
+            if (document.hidden) return;
+            const { redirectToIdAppStore } = await import('@/utils/mobileAppDetection');
+            await redirectToIdAppStore(uri);
+        })();
+    }, 2800);
 }
 
 /**
@@ -614,9 +696,9 @@ export const showWalletSelectionModal: ShowModalFunction = async () => {
         return;
     }
 
-    // On mobile, directly open wallet deep links instead of showing QR code
+    // On mobile, deep-link into wallets; on desktop, show bridge HTTPS QR.
     if (isMobileView && currentWcUri) {
-        await openWalletApp(currentWcUri);
+        await handleWalletUri(currentWcUri);
         return;
     }
 
@@ -636,11 +718,11 @@ export const showWalletSelectionModal: ShowModalFunction = async () => {
         walletSelectionModalElement.classList.add('is-visible');
     }, 10);
 
-    // Display QR code on desktop using redirect URL for camera compatibility
+    // Display QR code on desktop using bridge redirect URL for camera compatibility
     if (currentWcUri) {
         // Small delay to ensure DOM is ready
         await new Promise((resolve) => setTimeout(resolve, 50));
-        await renderDesktopQr(currentWcUri);
+        await handleWalletUri(currentWcUri);
     }
 };
 

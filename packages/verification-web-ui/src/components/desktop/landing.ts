@@ -5,10 +5,9 @@ import modalGraphic from '@/assets/modal-graphic.svg';
 import playstoreIcon from '@/assets/playstore-icon.svg';
 import sectionSeparator from '@/assets/section-separator.svg';
 import { isMobileScreen } from '@/config.state';
-import { ID_APP_STORE } from '@/constants/wallet.registry';
 import { getGlobalContainer } from '@/index';
 import type { HideModalFunction, ModalFunction, ShowModalFunction } from '@/types';
-import { openAppStoreForConcordiumID } from '@/utils/mobileAppDetection';
+import { redirectToIdAppStore } from '@/utils/mobileAppDetection';
 
 export const createLandingModal: ModalFunction = () => {
     const landingHTML = `
@@ -43,10 +42,10 @@ export const createLandingModal: ModalFunction = () => {
           <div class="flex flex-col items-center" style="border-radius: var(--semantic-radius-l, 16px); background: var(--semantic-surface-primary-a5, rgba(0, 0, 0, 0.05)); padding: 16px; gap: 12px;">
             <p class="desktop--landing-description" style="margin: 0;">Download Concordium ID</p>
             <div class="flex items-center justify-center" style="gap: 8px;">
-              <a href="https://apps.apple.com/ca/app/concordium-id/id6746754485" target="_blank" rel="noopener noreferrer">
+              <a href="https://apps.apple.com/in/app/concordium-id-app/id6746754485" target="_blank" rel="noopener noreferrer">
                 <img src="${appstoreIcon}" alt="Download on App Store" />
               </a>
-              <a href="https://play.google.com/store/apps/details?id=com.idwallet.app&hl=en_CA" target="_blank" rel="noopener noreferrer">
+              <a href="https://play.google.com/store/apps/details?id=com.idwallet.app&hl=en" target="_blank" rel="noopener noreferrer">
                 <img src="${playstoreIcon}" alt="Get it on Google Play" />
               </a>
             </div>
@@ -69,6 +68,8 @@ export const createLandingModal: ModalFunction = () => {
     const startBtn = landingContainer.querySelector('#start-verification-btn') as HTMLButtonElement | null;
     startBtn?.addEventListener('click', async () => {
         const isMobile = isMobileScreen();
+        const { bridgeTrace } = await import('@/utils/bridgeTrace');
+        bridgeTrace('Open with ID App tapped', { isMobile, userAgent: navigator.userAgent });
 
         if (isMobile) {
             // On mobile, open Concordium ID via deep link.
@@ -83,8 +84,17 @@ export const createLandingModal: ModalFunction = () => {
 
                 let uri: string;
 
+                bridgeTrace('resolving WalletConnect URI', {
+                    connectionMode: connectionMode ?? '(none)',
+                    hasMerchantUri: Boolean(merchantUri),
+                    merchantUriLooksValid: Boolean(merchantUri?.startsWith('wc:')),
+                });
+
                 if (connectionMode === 'merchant-provided') {
                     if (!merchantUri?.startsWith('wc:')) {
+                        bridgeTrace('ABORT — merchant WalletConnect URI missing or malformed', {
+                            merchantUri: merchantUri ?? '(null)',
+                        });
                         throw new Error('Merchant WalletConnect URI not found');
                     }
                     uri = merchantUri;
@@ -167,11 +177,56 @@ export const createLandingModal: ModalFunction = () => {
                     });
                 }
 
-                const deepLink = getConcordiumIdDeepLink(uri);
+                const isIOS =
+                    /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+                const qs = new URLSearchParams(window.location.search);
+                // Force App Store / deferred path: ?forceIdAppStore=1
+                const forceStore =
+                    qs.get('forceIdAppStore') === '1' || localStorage.getItem('forceIdAppStore') === '1';
+                // Never open any store — register + deep link only.
+                // ?skipStoreFallback=1 or localStorage skipStoreFallback=1
+                const skipStoreFallback =
+                    qs.get('skipStoreFallback') === '1' ||
+                    localStorage.getItem('skipStoreFallback') === '1';
+                // ?tf=1 sends iOS testers to TestFlight instead of the App Store.
+                const { isTestFlightMode } = await import('@/constants/wallet.registry');
+                const testFlightMode = isTestFlightMode();
+
+                // Explicit deferred / store-only test path
+                if (forceStore) {
+                    await redirectToIdAppStore(uri);
+                    return;
+                }
+
+                let deepLink: string;
+                let registeredInstallId: string | null = null;
+                if (isIOS) {
+                    // Register wc: on bridge, then open SHORT scheme link (Safari rejects long URIs).
+                    const { registerSession } = await import('@/services/bridge.service');
+                    const { getConcordiumIdBridgeDeepLink } = await import('@/constants/wallet.registry');
+                    try {
+                        const result = await registerSession(uri);
+                        registeredInstallId = result.installId;
+                    } catch (error) {
+                        console.warn('[verification-web-ui] bridge register before iOS open failed', error);
+                        bridgeTrace('iOS register threw before deep link', { message: String(error) });
+                    }
+                    deepLink = getConcordiumIdBridgeDeepLink();
+                } else {
+                    deepLink = getConcordiumIdDeepLink(uri);
+                }
+
+                bridgeTrace('opening deep link', { platform: isIOS ? 'ios' : 'other', deepLink });
+
                 console.info('[verification-web-ui] Open with ID App deep link', {
                     mode: connectionMode,
                     walletConnectUri: uri,
                     deepLink,
+                    deepLinkLength: deepLink.length,
+                    platform: isIOS ? 'ios' : 'other',
+                    forceStore,
+                    skipStoreFallback,
+                    testFlightMode,
                 });
 
                 let appOpened = false;
@@ -187,30 +242,67 @@ export const createLandingModal: ModalFunction = () => {
                 window.addEventListener('pagehide', markAppOpened);
                 window.addEventListener('blur', markAppOpened);
 
-                // One direct deep link on Android and iOS — avoids intent-chooser stuck prompts.
-                const link = document.createElement('a');
-                link.href = deepLink;
-                link.style.display = 'none';
-                document.body.appendChild(link);
-                link.click();
+                // Try custom scheme (TestFlight / installed). Short on iOS.
+                // Tip: fresh Safari tab if you previously Cancel'd "Open in …?".
+                // Never use window.location.href for custom schemes on iOS —
+                // Safari shows "address is invalid" when the app does not open.
+                if (isIOS) {
+                    const { openIosCustomScheme } = await import('@/constants/wallet.registry');
+                    openIosCustomScheme(deepLink);
+                } else {
+                    const link = document.createElement('a');
+                    link.href = deepLink;
+                    link.style.display = 'none';
+                    document.body.appendChild(link);
+                    link.click();
+                    setTimeout(() => link.remove(), 100);
+                }
 
                 setTimeout(() => {
-                    if (!appOpened && !document.hidden && document.visibilityState === 'visible') {
-                        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
-                        window.location.href = isIOS ? ID_APP_STORE.ios : ID_APP_STORE.android;
-                    }
-
-                    document.removeEventListener('visibilitychange', visibilityHandler);
-                    window.removeEventListener('pagehide', markAppOpened);
-                    window.removeEventListener('blur', markAppOpened);
-
-                    if (link.parentNode) {
-                        link.parentNode.removeChild(link);
-                    }
-                }, 3500);
+                    void (async () => {
+                        if (
+                            !skipStoreFallback &&
+                            !appOpened &&
+                            !document.hidden &&
+                            document.visibilityState === 'visible'
+                        ) {
+                            // iOS already registered above — do not call session/register again.
+                            await redirectToIdAppStore(uri, {
+                                skipRegister: isIOS,
+                                installId: registeredInstallId,
+                            });
+                        } else if (skipStoreFallback && !appOpened) {
+                            console.info(
+                                '[verification-web-ui] skipStoreFallback — not opening any store. Open the app manually; bridge session already registered.'
+                            );
+                            try {
+                                const { showWaitingForPairingState } = await import(
+                                    '@/components/desktop/processing'
+                                );
+                                await showWaitingForPairingState();
+                            } catch {
+                                /* ignore */
+                            }
+                        } else if (appOpened) {
+                            // App installed and opened — pairing / proof is in progress.
+                            try {
+                                const { showVerificationInProgressState } = await import(
+                                    '@/components/desktop/processing'
+                                );
+                                await showVerificationInProgressState();
+                            } catch {
+                                /* ignore */
+                            }
+                        }
+                        document.removeEventListener('visibilitychange', visibilityHandler);
+                        window.removeEventListener('pagehide', markAppOpened);
+                        window.removeEventListener('blur', markAppOpened);
+                    })();
+                }, isIOS ? 2500 : 3500);
             } catch {
                 // Fallback to app store if something goes wrong
-                openAppStoreForConcordiumID();
+                const fallbackUri = localStorage.getItem('walletConnectUri');
+                void redirectToIdAppStore(fallbackUri);
             }
         } else {
             // On desktop, show the scan modal with QR code

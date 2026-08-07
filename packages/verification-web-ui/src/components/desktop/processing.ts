@@ -7,9 +7,17 @@ import type { HideModalFunction, ShowModalFunction } from '@/types';
 
 type ProcessingState = 'loading' | 'success' | 'error';
 
+export type ProcessingCopy = {
+    title?: string;
+    message?: string;
+    buttonLabel?: string;
+};
+
 // Global variables for modal state management following your pattern
 let processingModalElement: HTMLElement | null = null;
 let eventListenerCleanup: (() => void) | null = null;
+let currentProcessingState: ProcessingState | null = null;
+let successShown = false;
 
 /**
  * Get the connected wallet name from localStorage, with fallback
@@ -18,8 +26,19 @@ function getConnectedWalletName(): string {
     return localStorage.getItem(ModalConstants.LOCAL_STORAGE_FLAGS.CONNECTED_WALLET_NAME) || 'Wallet';
 }
 
-export const createProcessingModal = (state: ProcessingState = 'loading'): HTMLElement => {
-    const walletName = getConnectedWalletName();
+function resolveLoadingCopy(copy?: ProcessingCopy): { title: string; message: string; buttonLabel: string } {
+    return {
+        title: copy?.title || 'Verification in Progress',
+        message: copy?.message || `Approve in your ${getConnectedWalletName()}`,
+        buttonLabel: copy?.buttonLabel || 'Please wait',
+    };
+}
+
+export const createProcessingModal = (
+    state: ProcessingState = 'loading',
+    copy?: ProcessingCopy
+): HTMLElement => {
+    const loading = resolveLoadingCopy(copy);
 
     const processingHTML = `
     <div class="desktop--modal-overlay">
@@ -49,7 +68,7 @@ export const createProcessingModal = (state: ProcessingState = 'loading'): HTMLE
                     <p class="font-medium text-[20px] leading-[25px] tracking-[0.2px] font-jakarta" style="color: #0D0F11;">
                         ${
                             state === 'loading'
-                                ? 'Verification in Progress'
+                                ? loading.title
                                 : state === 'success'
                                   ? 'Success!'
                                   : 'Verification Failed!'
@@ -58,7 +77,7 @@ export const createProcessingModal = (state: ProcessingState = 'loading'): HTMLE
                     <p class="desktop--processing-text">
                         ${
                             state === 'loading'
-                                ? `Approve in your ${walletName}`
+                                ? loading.message
                                 : state === 'success'
                                   ? 'Verification completed'
                                   : 'Something went wrong with your verification. Please repeat the process'
@@ -70,7 +89,7 @@ export const createProcessingModal = (state: ProcessingState = 'loading'): HTMLE
                     ${
                         state === 'loading'
                             ? `<button disabled class="desktop--disabled-button" id="approve-btn">
-                               <span>Please wait</span>
+                               <span>${loading.buttonLabel}</span>
                            </button>`
                             : state === 'success'
                               ? `<button class="desktop--primary-button" id="close-btn">
@@ -136,10 +155,7 @@ export const createProcessingModal = (state: ProcessingState = 'loading'): HTMLE
     return processingContainer.firstElementChild as HTMLElement;
 };
 
-export const showProcessingModal: ShowModalFunction = async () => {
-    // Check for active sessions before showing processing modal
-    // Continue with normal processing modal flow
-
+async function mountProcessingModal(state: ProcessingState, copy?: ProcessingCopy, eventMessage?: string): Promise<void> {
     const { getGlobalContainer } = await import('../../index');
     const targetContainer = getGlobalContainer();
 
@@ -147,66 +163,143 @@ export const showProcessingModal: ShowModalFunction = async () => {
         return;
     }
 
-    // Find existing modal to crossfade
-    const existingModal = targetContainer.querySelector('.desktop--modal-overlay') as HTMLElement | null;
+    if (state === 'loading') {
+        successShown = false;
+    }
 
-    // Create and store modal element reference
-    processingModalElement = createProcessingModal('loading');
-    processingModalElement.id = 'processing-modal';
+    // Avoid remount flicker when already on success
+    if (state === 'success' && successShown && processingModalElement) {
+        return;
+    }
 
-    // For smooth transitions, start with modal-entering then transition to modal-visible
-    processingModalElement.classList.add('modal-entering');
-    targetContainer.appendChild(processingModalElement);
+    const existingModal =
+        processingModalElement ||
+        (targetContainer.querySelector('.desktop--modal-overlay') as HTMLElement | null);
 
-    // Force a reflow to ensure the initial hidden state is applied
-    processingModalElement.offsetHeight;
+    const newModal = createProcessingModal(state, copy);
+    newModal.id = 'processing-modal';
+    newModal.classList.add('modal-entering');
+    targetContainer.appendChild(newModal);
 
-    // Use a small delay to ensure DOM is fully ready
-    setTimeout(() => {
-        // Start simultaneous crossfade
-        if (existingModal) {
+    requestAnimationFrame(() => {
+        if (existingModal && existingModal !== newModal) {
             existingModal.classList.add('modal-exiting');
-            setTimeout(() => {
-                existingModal.parentNode?.removeChild(existingModal);
-            }, 350);
+            setTimeout(() => existingModal.parentNode?.removeChild(existingModal), 350);
         }
+        requestAnimationFrame(() => {
+            newModal.classList.remove('modal-entering');
+            newModal.classList.add('modal-visible');
+        });
+    });
 
-        // Reveal new modal
-        processingModalElement!.classList.remove('modal-entering');
-        processingModalElement!.classList.add('modal-visible');
-    }, 10);
+    processingModalElement = newModal;
+    currentProcessingState = state;
 
-    // Dispatch initial event
     const { dispatchConcordiumEvent } = await import('../../index');
     dispatchConcordiumEvent({
-        type: 'processing',
+        type: state === 'loading' ? 'processing' : state === 'success' ? 'success' : 'error',
         source: 'desktop',
         modalType: 'processing',
         data: {
-            state: 'loading',
-            message: 'Verification in progress',
+            state,
+            message: eventMessage || copy?.message || resolveLoadingCopy(copy).message,
         },
     });
+}
 
-    // Listen for verification-completed event to show success state
+export const showProcessingModal: ShowModalFunction = async () => {
+    successShown = false;
+    await mountProcessingModal('loading');
+
+    // Listen for verification-completed event to show success state (once)
     const handleVerificationCompleted = (event: Event) => {
         const customEvent = event as CustomEvent;
-        if (customEvent.detail?.type === 'verification-completed') {
-            // Show success state in processing modal
-            showSuccessState();
+        if (customEvent.detail?.type === 'verification-completed' && !successShown) {
+            void showSuccessState();
         }
     };
 
-    // Add event listener with the named function for proper cleanup
     window.addEventListener('concordium-event', handleVerificationCompleted);
 
-    // Store cleanup function with the correct reference
+    if (eventListenerCleanup) {
+        eventListenerCleanup();
+    }
     eventListenerCleanup = () => {
         window.removeEventListener('concordium-event', handleVerificationCompleted);
     };
 };
 
+/** No app installed — redirecting user to store (or TestFlight in beta test mode). */
+export async function showStoreRedirectState(): Promise<void> {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+    const { isTestFlightMode } = await import('@/constants/wallet.registry');
+    const storeName = isIOS ? (isTestFlightMode() ? 'TestFlight' : 'App Store') : 'Play Store';
+    console.log('[verification-web-ui] Showing store redirect loading state', { storeName });
+    await mountProcessingModal(
+        'loading',
+        {
+            title: 'Opening store…',
+            message: `Concordium ID is not installed. Redirecting you to the ${storeName} to download it.`,
+            buttonLabel: 'Please wait',
+        },
+        `Redirecting to ${storeName}`
+    );
+}
+
+/** After store open — wait while user installs, creates identity, then pairs. */
+export async function showWaitingForPairingState(): Promise<void> {
+    console.log('[verification-web-ui] Showing waiting-for-pairing loading state');
+    await mountProcessingModal(
+        'loading',
+        {
+            title: 'Waiting for pairing…',
+            message:
+                'Install Concordium ID (TestFlight for beta testers), create your account and identity, then return here. We will continue automatically when pairing starts.',
+            buttonLabel: 'Waiting…',
+        },
+        'Waiting for pairing'
+    );
+
+    // When the wallet pairs, upgrade copy to Verification in Progress.
+    void watchForSessionThenShowVerificationProgress();
+}
+
+/**
+ * App already opened / pairing in flight — show Verification in Progress immediately.
+ */
+export async function showVerificationInProgressState(): Promise<void> {
+    console.log('[verification-web-ui] Showing verification-in-progress loading state');
+    await showProcessingModal();
+}
+
+async function watchForSessionThenShowVerificationProgress(): Promise<void> {
+    const started = Date.now();
+    const timeoutMs = 5 * 60 * 1000;
+
+    while (Date.now() - started < timeoutMs) {
+        try {
+            const { ServiceFactory } = await import('@/services');
+            const wcService =
+                ServiceFactory.getWalletConnectService() || ServiceFactory.createWalletConnectService();
+            await wcService.initialize();
+            const sessions = wcService.getActiveSessions();
+            if (sessions.length > 0) {
+                console.log(
+                    '[verification-web-ui] Active WC session detected — switching to Verification in Progress'
+                );
+                await showProcessingModal();
+                return;
+            }
+        } catch {
+            /* keep waiting */
+        }
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+    }
+}
+
 export const hideProcessingModal: HideModalFunction = () => {
+    successShown = false;
+    currentProcessingState = null;
     if (processingModalElement) {
         // Add fade-out animation
         processingModalElement.classList.add('modal-exiting');
@@ -236,43 +329,44 @@ export const hideProcessingModal: HideModalFunction = () => {
 
 // Function to transition to success state following your commented pattern
 export async function showSuccessState(): Promise<void> {
+    // Prevent flicker from multiple callers (scan + merchant poll + event loop).
+    if (successShown && currentProcessingState === 'success' && processingModalElement) {
+        console.log('[verification-web-ui] Success modal already visible — skip remount');
+        return;
+    }
+    successShown = true;
+    currentProcessingState = 'success';
+
     const { getGlobalContainer } = await import('../../index');
     const targetContainer = getGlobalContainer();
 
-    if (!targetContainer || !processingModalElement) {
+    if (!targetContainer) {
+        console.warn('[verification-web-ui] showSuccessState: no container');
+        successShown = false;
         return;
     }
 
-    // Get current modal for crossfade
     const currentModal = processingModalElement;
 
-    // Create and show success modal with crossfade
+    // Create and show success modal (works even if processing modal was closed)
     const newModal = createProcessingModal('success');
     newModal.id = 'processing-modal';
-
-    // Add new modal with entering class (starts hidden)
     newModal.classList.add('modal-entering');
     targetContainer.appendChild(newModal);
 
-    // Use requestAnimationFrame to ensure DOM is ready
     requestAnimationFrame(() => {
-        // Start crossfade: fade out old, fade in new simultaneously
-        if (currentModal) {
+        if (currentModal && currentModal !== newModal) {
             currentModal.classList.add('modal-exiting');
         }
-
-        // Trigger animation by removing entering class and adding visible
         requestAnimationFrame(() => {
             newModal.classList.remove('modal-entering');
             newModal.classList.add('modal-visible');
         });
     });
 
-    // Update reference
     processingModalElement = newModal;
 
-    // Remove old modal after transition completes
-    if (currentModal) {
+    if (currentModal && currentModal !== newModal) {
         setTimeout(() => {
             if (currentModal.parentNode) {
                 currentModal.parentNode.removeChild(currentModal);
@@ -280,7 +374,16 @@ export async function showSuccessState(): Promise<void> {
         }, 300);
     }
 
-    // Dispatch success event
+    // Remove leftover non-processing overlays without remounting success again
+    targetContainer.querySelectorAll('.desktop--modal-overlay').forEach((el) => {
+        if (el !== newModal) {
+            el.classList.add('modal-exiting');
+            setTimeout(() => el.parentNode?.removeChild(el), 300);
+        }
+    });
+
+    console.log('[verification-web-ui] Showing Verification Success modal');
+
     const { dispatchConcordiumEvent } = await import('../../index');
     dispatchConcordiumEvent({
         type: 'success',
@@ -291,6 +394,19 @@ export async function showSuccessState(): Promise<void> {
             message: 'Verification completed successfully',
         },
     });
+
+    // Do NOT dispatch verification-completed here — that re-enters showSuccessState via listener.
+
+    window.dispatchEvent(
+        new CustomEvent('verification-web-ui-event', {
+            detail: {
+                type: 'verification_success',
+                data: { message: 'Verification completed successfully' },
+            },
+            bubbles: true,
+            composed: true,
+        })
+    );
 }
 
 /**

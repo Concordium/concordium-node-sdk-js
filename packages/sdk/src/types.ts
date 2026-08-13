@@ -485,8 +485,10 @@ export interface ValidatorScoreParameters {
 /** Chain parameters used from protocol version 8 */
 export type ChainParametersV3 = Omit<ChainParametersV2, 'version'> & {
     version: 3;
-    /** The current validator score parameters */
+    /** The current validator score parameters. */
     validatorScoreParameters: ValidatorScoreParameters;
+    /** The maximum relative duration of a protocol-level token lock. Available from protocol version 11. */
+    maxLockDuration?: Duration.Type;
 };
 
 /** Union of all chain parameters across all protocol versions */
@@ -534,8 +536,10 @@ export interface AuthorizationsV1 extends AuthorizationsCommon {
     version: 1;
     cooldownParameters: Authorization;
     timeParameters: Authorization;
-    /** Available from protocol 9 */
+    /** Available from protocol version 9. */
     createPlt?: Authorization;
+    /** Authorization for token and lock-related chain parameter updates. Available from protocol version 11. */
+    tokenParameters?: Authorization;
 }
 
 export type Authorizations = AuthorizationsV0 | AuthorizationsV1;
@@ -1314,6 +1318,8 @@ export interface NextUpdateSequenceNumbers {
     finalizationCommiteeParameters: bigint;
     validatorScoreParameters: bigint;
     protocolLevelTokens: bigint;
+    /** Next sequence number for maximum lock duration updates. */
+    maxLockDuration: bigint;
 }
 
 export type BlockFinalizationSummary = BlockFinalizationSummary_None | BlockFinalizationSummary_Record;

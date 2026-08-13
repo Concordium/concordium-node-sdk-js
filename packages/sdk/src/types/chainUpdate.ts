@@ -88,6 +88,9 @@ export type MinBlockTimeUpdate = ChainUpdate<UpdateType.MinBlockTime, Duration.T
 /** An update to maximum amount of energy per block, used from protocol version 6 */
 export type BlockEnergyLimitUpdate = ChainUpdate<UpdateType.BlockEnergyLimit, Energy.Type>;
 
+/** An update to the maximum relative duration of a protocol-level token lock, used from protocol version 11. */
+export type MaxLockDurationUpdate = ChainUpdate<UpdateType.MaxLockDuration, Duration.Type>;
+
 /** An update to finalization committee parameters, used from protocol version 6 */
 export type FinalizationCommitteeParametersUpdate = ChainUpdate<
     UpdateType.FinalizationCommitteeParameters,
@@ -131,6 +134,7 @@ export type CommonUpdate =
     | TimeoutParametersUpdate
     | MinBlockTimeUpdate
     | BlockEnergyLimitUpdate
+    | MaxLockDurationUpdate
     | FinalizationCommitteeParametersUpdate
     | PendingValidatorScoreUpdate
     | CreatePLTUpdate;
@@ -183,6 +187,7 @@ export enum UpdateType {
     FinalizationCommitteeParameters = 'finalizationCommitteeParameters',
     ValidatorScoreParameters = 'validatorScoreParameters',
     CreatePLT = 'createPLT',
+    MaxLockDuration = 'maxLockDuration',
 }
 
 export type KeyUpdate = HigherLevelKeyUpdate | AuthorizationKeysUpdate;

@@ -573,7 +573,7 @@ function trChainParametersV2(params: GRPC.ChainParametersV2 | GRPC.ChainParamete
     };
 }
 
-function trChainParametersV3(params: GRPC.ChainParametersV3): SDK.ChainParametersV3 {
+export function trChainParametersV3(params: GRPC.ChainParametersV3): SDK.ChainParametersV3 {
     const { version, ...common } = trChainParametersV2(params);
     return {
         ...common,
@@ -581,6 +581,7 @@ function trChainParametersV3(params: GRPC.ChainParametersV3): SDK.ChainParameter
         validatorScoreParameters: {
             maxMissedRounds: unwrap(params.validatorScoreParameters?.maximumMissedRounds),
         },
+        maxLockDuration: params.maxLockDuration === undefined ? undefined : Duration.fromProto(params.maxLockDuration),
     };
 }
 
@@ -1013,7 +1014,7 @@ function trDelegationEvent(
     }
 }
 
-function trRejectReason(rejectReason: GRPC.RejectReason | undefined): Upward<SDK.RejectReason> {
+export function trRejectReason(rejectReason: GRPC.RejectReason | undefined): Upward<SDK.RejectReason> {
     function simpleReason(tag: SDK.SimpleRejectReasonTag): SDK.RejectReason {
         return {
             tag: SDK.RejectReasonTag[tag],
@@ -1220,6 +1221,11 @@ function trRejectReason(rejectReason: GRPC.RejectReason | undefined): Upward<SDK
             return {
                 tag: Tag.LockExpired,
                 contents: PLT.LockId.fromProto(reason.lockExpired),
+            };
+        case 'lockDurationTooLong':
+            return {
+                tag: Tag.LockDurationTooLong,
+                contents: PLT.LockId.fromProto(reason.lockDurationTooLong),
             };
         case 'lockFundNotAuthorized':
             return {
@@ -1570,12 +1576,17 @@ export function trPendingUpdateEffect(pendingUpdate: GRPC.PendingUpdate): Upward
                     maxMissedRounds: effect.validatorScoreParameters.maximumMissedRounds,
                 },
             };
+        case 'maxLockDuration':
+            return {
+                updateType: SDK.UpdateType.MaxLockDuration,
+                update: Duration.fromProto(effect.maxLockDuration),
+            };
         case undefined:
             return null;
     }
 }
 
-function trUpdatePayload(updatePayload: GRPC.UpdatePayload | undefined): Upward<SDK.UpdateInstructionPayload> {
+export function trUpdatePayload(updatePayload: GRPC.UpdatePayload | undefined): Upward<SDK.UpdateInstructionPayload> {
     if (updatePayload === undefined) {
         throw new Error('Unexpected missing update payload');
     }
@@ -1658,6 +1669,11 @@ function trUpdatePayload(updatePayload: GRPC.UpdatePayload | undefined): Upward<
                     ),
                 },
             };
+        case 'maxLockDurationUpdate':
+            return {
+                updateType: SDK.UpdateType.MaxLockDuration,
+                update: Duration.fromProto(payload.maxLockDurationUpdate),
+            };
         case undefined:
             return null;
     }
@@ -1718,19 +1734,11 @@ function trKeyUpdate(keyUpdate: GRPC.RootUpdate | GRPC.Level1Update): SDK.KeyUpd
                 updatePayload: trAuthorizationsV0(update),
             };
         }
-        case 'level2KeysUpdateV1': {
-            const update = keyUpdate.updateType.level2KeysUpdateV1;
-            const v0 = unwrap(update.v0);
+        case 'level2KeysUpdateV1':
             return {
                 typeOfUpdate: SDK.AuthorizationKeysUpdateType.Level2KeysUpdateV1,
-                updatePayload: {
-                    ...trAuthorizationsV0(v0),
-                    version: 1,
-                    cooldownParameters: trAccessStructure(update.parameterCooldown),
-                    timeParameters: trAccessStructure(update.parameterTime),
-                },
+                updatePayload: trAuthorizationsV1(keyUpdate.updateType.level2KeysUpdateV1),
             };
-        }
         case undefined:
             throw new Error('Unexpected missing update type');
     }
@@ -1755,13 +1763,14 @@ function trAuthorizationsV0(auths: GRPC.AuthorizationsV0): SDK.AuthorizationsV0 
     };
 }
 
-function trAuthorizationsV1(auths: GRPC.AuthorizationsV1): SDK.AuthorizationsV1 {
+export function trAuthorizationsV1(auths: GRPC.AuthorizationsV1): SDK.AuthorizationsV1 {
     return {
         ...trAuthorizationsV0(unwrap(auths.v0)),
         version: 1,
         cooldownParameters: trAccessStructure(auths.parameterCooldown),
         timeParameters: trAccessStructure(auths.parameterTime),
         createPlt: trOptionalAccessStructure(auths.createPlt),
+        tokenParameters: trOptionalAccessStructure(auths.tokenParameters),
     };
 }
 
@@ -2504,6 +2513,7 @@ export function nextUpdateSequenceNumbers(nextNums: GRPC.NextUpdateSequenceNumbe
         // We fall back to be backwards compatible.
         validatorScoreParameters: nextNums.validatorScoreParameters?.value ?? 1n,
         protocolLevelTokens: nextNums.protocolLevelTokens?.value ?? 1n,
+        maxLockDuration: nextNums.maxLockDuration?.value ?? 1n,
     };
 }
 

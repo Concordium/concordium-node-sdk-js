@@ -7,6 +7,7 @@
 ### Added
 
 - A `metadata` field has been added added to both `LockConfiguration` and `LockInfo`.
+- Support for querying and reporting the P11 maximum lock duration chain parameter, token parameter authorization, chain updates, next update sequence number, and `LockDurationTooLong` rejection reason.
 
 ## 13.0.0-alpha.1 (devnet-p11-2)
 

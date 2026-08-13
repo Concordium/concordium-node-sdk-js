@@ -15,7 +15,6 @@ import {
     getConcordiumIdDeepLink,
     getIdAppStoreUrl,
     getQrRedirectCleanUrl,
-    getQrRedirectInstallId,
     getQrRedirectUri,
 } from '@/constants/wallet.registry';
 import { WalletConnectConstants } from '@/constants/walletconnect.constants';
@@ -201,8 +200,8 @@ async function openWalletApp(wcUri: string, options: OpenWalletOptions = {}): Pr
 }
 
 /**
- * Render QR code for desktop with a bridge HTTPS redirect URL.
- * Camera opens this page → registerSession + deep link / store with install_id.
+ * Render QR code for desktop with an HTTPS redirect URL embedding wc:.
+ * Camera opens this page → deep link / store (no bridge register).
  */
 async function renderDesktopQr(uri: string): Promise<void> {
     const qrContainer = document.querySelector('#wallet-qr-container');
@@ -216,9 +215,9 @@ async function renderDesktopQr(uri: string): Promise<void> {
 
     try {
         const { default: QRCode } = await import('qrcode');
-        const { prepareBridgeQrPayload } = await import('@/services/bridge.service');
+        const { prepareQrHandoffPayload } = await import('@/services/bridge.service');
 
-        const { qrUrl, installId } = await prepareBridgeQrPayload(uri);
+        const { qrUrl } = await prepareQrHandoffPayload(uri);
 
         const qrCodeDataURL = await QRCode.toDataURL(qrUrl, {
             width: 200,
@@ -232,8 +231,7 @@ async function renderDesktopQr(uri: string): Promise<void> {
             ? '<p class="text-xs text-center mt-3 text-amber-700 max-w-[280px]">This page is running on localhost. Phone camera scans cannot open localhost on another device. Use a LAN/public URL.</p>'
             : '';
 
-        console.info('[IDApp Bridge] desktop QR encoded', {
-            install_id: installId,
+        console.info('[IDApp] desktop QR encoded', {
             qrUrlLength: qrUrl.length,
         });
 
@@ -269,13 +267,13 @@ async function ensureDocumentBody(): Promise<void> {
     });
 }
 
-async function showRedirectFallbackPanel(uri: string, installId?: string | null): Promise<void> {
+async function showRedirectFallbackPanel(uri: string): Promise<void> {
     if (!isMobile) return;
 
     await ensureDocumentBody();
     removeRedirectFallbackPanel();
 
-    const storeUrl = getIdAppStoreUrl(installId);
+    const storeUrl = getIdAppStoreUrl(uri);
 
     const panel = document.createElement('div');
     panel.id = REDIRECT_FALLBACK_CONTAINER_ID;
@@ -327,18 +325,18 @@ async function hasActiveWalletConnectSession(): Promise<boolean> {
 }
 
 /**
- * Try Concordium ID deep link after QR camera open (bridge-aware).
+ * Try Concordium ID deep link after QR camera open.
  */
 async function tryOpenConcordiumIdFromQr(wcUri: string): Promise<boolean> {
     const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
 
-    // iOS: register first so short bridge scheme can recover wc: via deferred-match.
+    // iOS only: clipboard for Create Account after short wake (Android = deep link / referrer).
     if (isIOSDevice) {
         try {
-            const { registerSession } = await import('@/services/bridge.service');
-            await registerSession(wcUri);
+            const { handoffIosClipboard } = await import('@/services/bridge.service');
+            await handoffIosClipboard(wcUri);
         } catch (error) {
-            console.warn('[IDApp Bridge] QR iOS register before open failed', error);
+            console.warn('[IDApp] QR clipboard before open failed', error);
         }
     }
 
@@ -348,13 +346,11 @@ async function tryOpenConcordiumIdFromQr(wcUri: string): Promise<boolean> {
 
 /**
  * Handle QR redirect on page load (phone camera scanned HTTPS QR).
- * Registers bridge session → opens Concordium ID → store fallback with install_id.
+ * Opens Concordium ID with embedded wc: (Android) or clipboard + wake (iOS).
  */
 export async function handleQrRedirectOnLoad(): Promise<void> {
     const uri = getQrRedirectUri();
     if (!uri) return;
-
-    const carriedInstallId = getQrRedirectInstallId();
 
     // Clean up URL without redirect params while preserving route/search/hash context.
     const cleanUrl = getQrRedirectCleanUrl();
@@ -373,26 +369,13 @@ export async function handleQrRedirectOnLoad(): Promise<void> {
         return;
     }
 
-    console.info('[IDApp Bridge] QR redirect handoff START', {
+    console.info('[IDApp] QR redirect handoff START', {
         uriPreview: `${uri.slice(0, 28)}…`,
-        carriedInstallId,
         isMobile,
     });
 
-    // Refresh / ensure bridge session (desktop may have registered already).
-    let installId = carriedInstallId;
-    try {
-        const { registerSession } = await import('@/services/bridge.service');
-        const result = await registerSession(uri);
-        if (result.installId) {
-            installId = result.installId;
-        }
-    } catch (error) {
-        console.warn('[IDApp Bridge] QR redirect register failed', error);
-    }
-
     if (!isMobile) {
-        console.info('[IDApp Bridge] QR redirect on desktop — skipping deep link');
+        console.info('[IDApp] QR redirect on desktop — skipping deep link');
         return;
     }
 
@@ -408,8 +391,7 @@ export async function handleQrRedirectOnLoad(): Promise<void> {
         return;
     }
 
-    // Auto deep-link blocked (common) — tap fallback + delayed store with install_id.
-    await showRedirectFallbackPanel(uri, installId);
+    await showRedirectFallbackPanel(uri);
 
     setTimeout(() => {
         void (async () => {

@@ -95,8 +95,9 @@ export function getIdAppTestFlightUrl(): string {
 
 /**
  * Native store URL that opens Play Store / App Store *apps* (not browser).
+ * Android: attach Play Install Referrer with encoded wc: URI for deferred pairing.
  */
-export function getIdAppNativeStoreUrl(installId?: string | null): string {
+export function getIdAppNativeStoreUrl(walletConnectUri?: string | null): string {
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
     if (isIOS) {
         return isTestFlightMode() ? getIdAppTestFlightUrl() : ID_APP_STORE.iosNative;
@@ -104,22 +105,47 @@ export function getIdAppNativeStoreUrl(installId?: string | null): string {
 
     const isAndroid = /android/i.test(navigator.userAgent);
     if (isAndroid) {
-        const referrer = installId
-            ? `&referrer=${encodeURIComponent(`install_id=${installId}`)}`
-            : '';
-        // Intent opens com.android.vending directly — no browser Play listing.
-        return `intent://details?id=${ID_APP_PACKAGE}${referrer}#Intent;scheme=market;package=com.android.vending;end`;
+        return buildAndroidPlayStoreUrl(walletConnectUri, 'intent');
     }
 
-    return getIdAppStoreUrl(installId);
+    return getIdAppStoreUrl(walletConnectUri);
+}
+
+/**
+ * Encode wc: for Play `referrer=` (must be encodeURIComponent — raw wc: breaks the URL).
+ */
+export function buildPlayInstallReferrer(walletConnectUri: string): string {
+    return encodeURIComponent(walletConnectUri);
+}
+
+/**
+ * Android Play / market / intent URL with optional referrer=wc:…
+ * @param mode intent = open Play app; market = market://; https = browser listing
+ */
+export function buildAndroidPlayStoreUrl(
+    walletConnectUri?: string | null,
+    mode: 'intent' | 'market' | 'https' = 'intent'
+): string {
+    const baseQuery = `id=${ID_APP_PACKAGE}`;
+    const referrer =
+        walletConnectUri?.startsWith('wc:') ? `&referrer=${buildPlayInstallReferrer(walletConnectUri)}` : '';
+
+    if (mode === 'https') {
+        return `https://play.google.com/store/apps/details?${baseQuery}${referrer}&hl=en`;
+    }
+    if (mode === 'market') {
+        return `market://details?${baseQuery}${referrer}`;
+    }
+    // Intent opens com.android.vending with referrer intact
+    return `intent://details?${baseQuery}${referrer}#Intent;scheme=market;package=com.android.vending;end`;
 }
 
 /**
  * Get ID App store URL for current platform.
- * Android: market:// / intent opens the Play Store app (keeps install referrer for bridge).
- * iOS: itms-apps:// opens App Store app; HTTPS used for static badge links.
+ * Android: market:// with optional referrer=wc:
+ * iOS: HTTPS App Store / TestFlight.
  */
-export function getIdAppStoreUrl(installId?: string | null): string {
+export function getIdAppStoreUrl(walletConnectUri?: string | null): string {
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
     if (isIOS) {
         return isTestFlightMode() ? getIdAppTestFlightUrl() : ID_APP_STORE.iosNative;
@@ -127,27 +153,17 @@ export function getIdAppStoreUrl(installId?: string | null): string {
 
     const isAndroid = /android/i.test(navigator.userAgent);
     if (isAndroid) {
-        if (installId) {
-            return `${ID_APP_STORE.androidMarket}&referrer=${encodeURIComponent(`install_id=${installId}`)}`;
-        }
-        return ID_APP_STORE.androidMarket;
+        return buildAndroidPlayStoreUrl(walletConnectUri, 'market');
     }
 
-    // Desktop / unknown — HTTPS Play listing
-    if (!installId) {
-        return ID_APP_STORE.android;
-    }
-    return `${ID_APP_STORE.android}&referrer=${encodeURIComponent(`install_id=${installId}`)}`;
+    return buildAndroidPlayStoreUrl(walletConnectUri, 'https');
 }
 
 /**
  * HTTPS Play Store listing (badges / rare fallback only — prefer native store URL).
  */
-export function getIdAppPlayStoreHttpsUrl(installId?: string | null): string {
-    if (!installId) {
-        return ID_APP_STORE.android;
-    }
-    return `${ID_APP_STORE.android}&referrer=${encodeURIComponent(`install_id=${installId}`)}`;
+export function getIdAppPlayStoreHttpsUrl(walletConnectUri?: string | null): string {
+    return buildAndroidPlayStoreUrl(walletConnectUri, 'https');
 }
 
 /**
@@ -173,8 +189,7 @@ export function getConcordiumWalletDeepLink(wcUri: string): string | null {
  * Get deep link for Concordium ID App.
  *
  * iOS Safari rejects very long custom-scheme URLs (full wc: URI) with
- * "address is invalid". Use a short bridge handoff link instead; the app
- * recovers the wc: URI via deferred-match after registerSession().
+ * "address is invalid". Use a short wake link; app recovers wc: from clipboard.
  *
  * Android keeps the full URI in the link (Intent handles length).
  *
@@ -183,18 +198,23 @@ export function getConcordiumWalletDeepLink(wcUri: string): string | null {
 export function getConcordiumIdDeepLink(wcUri: string): string {
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
     if (isIOS) {
-        return getConcordiumIdBridgeDeepLink();
+        return getConcordiumIdWakeDeepLink();
     }
     const encodedUri = encodeURIComponent(wcUri);
     return `concordiumidapp://wc?uri=${encodedUri}&_t=${Date.now()}`;
 }
 
 /**
- * Short iOS handoff — no wc: payload. App must call deferred-match.
- * Caller must registerSession(wcUri) before opening this link.
+ * Short iOS wake link — no wc: payload. App reads clipboard handoff on Create Account.
+ * @deprecated alias — use getConcordiumIdWakeDeepLink
  */
 export function getConcordiumIdBridgeDeepLink(): string {
-    return `concordiumidapp://open?source=bridge&_t=${Date.now()}`;
+    return getConcordiumIdWakeDeepLink();
+}
+
+/** Short iOS wake link — clipboard carries the wc: URI. */
+export function getConcordiumIdWakeDeepLink(): string {
+    return `concordiumidapp://open?source=clipboard&_t=${Date.now()}`;
 }
 
 /**
@@ -240,12 +260,9 @@ export function openIosCustomScheme(deepLink: string): void {
  * Build HTTPS QR redirect URL for phone camera scans.
  *
  * Camera apps open https reliably; custom schemes (`concordiumidapp://`) often fail.
- * Phone lands on this page → handleQrRedirectOnLoad runs bridge register + deep link / store.
+ * Phone lands on this page → deep link / store with embedded wc: URI (no bridge).
  */
-export function buildQrRedirectUrl(
-    wcUri: string,
-    options?: { installId?: string | null }
-): string {
+export function buildQrRedirectUrl(wcUri: string): string {
     const url = new URL(window.location.href);
     url.searchParams.delete('wc_redirect');
     url.searchParams.delete('uri');
@@ -254,10 +271,7 @@ export function buildQrRedirectUrl(
 
     url.searchParams.set('wc_redirect', '1');
     url.searchParams.set('uri', wcUri);
-    url.searchParams.set('source', 'bridge');
-    if (options?.installId) {
-        url.searchParams.set('install_id', options.installId);
-    }
+    url.searchParams.set('source', 'qr');
     return url.toString();
 }
 
@@ -268,13 +282,6 @@ export function getQrRedirectUri(): string | null {
     const params = new URLSearchParams(window.location.search);
     if (params.get('wc_redirect') !== '1') return null;
     return params.get('uri');
-}
-
-/** Optional install_id carried from desktop QR (Android Play referrer handoff). */
-export function getQrRedirectInstallId(): string | null {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('wc_redirect') !== '1') return null;
-    return params.get('install_id');
 }
 
 /**

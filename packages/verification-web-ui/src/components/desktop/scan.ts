@@ -265,8 +265,8 @@ export const createScanModal: ModalFunction = () => {
                     /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
                 if (isIOS && appType === 'concordium-id') {
                     try {
-                        const { registerSession } = await import('@/services/bridge.service');
-                        await registerSession(currentQRCodeUri!);
+                        const { handoffIosClipboard } = await import('@/services/bridge.service');
+                        await handoffIosClipboard(currentQRCodeUri!);
                     } catch {
                         /* fail-open */
                     }
@@ -648,6 +648,18 @@ export async function autoSendPresentationRequestIfConfigured(topic: string): Pr
             })
         );
 
+        // iOS: wake ID App so it drains the session_request while Safari may stay foregrounded briefly.
+        try {
+            const isIOS =
+                /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+            if (isIOS) {
+                const { openIosCustomScheme } = await import('@/constants/wallet.registry');
+                openIosCustomScheme(`concordiumidapp://r?_t=${Date.now()}`);
+            }
+        } catch (error) {
+            console.warn('[verification-web-ui] post-send iOS wake failed', error);
+        }
+
         // Keep processing modal on "in progress" until merchant confirms VERIFIED / verifyProof.
         // If no merchant handler will call showSuccessState, still show success after a short settle.
         setTimeout(() => {
@@ -743,14 +755,14 @@ async function displayQRCode(uri: string): Promise<void> {
         const { default: QRCode } = await import('qrcode');
         const { getConfig } = await import('@/config.state');
         const { getIdAppStoreUrl } = await import('@/constants/wallet.registry');
-        const { prepareBridgeQrPayload } = await import('@/services/bridge.service');
+        const { prepareQrHandoffPayload } = await import('@/services/bridge.service');
         const config = getConfig();
 
         const qrContainer = document.querySelector(SELECTORS.QR_CONTAINER);
 
         if (qrContainer) {
-            // HTTPS bridge redirect — camera opens page → deep link / store with install_id.
-            const { qrUrl, installId } = await prepareBridgeQrPayload(uri);
+            // HTTPS redirect with embedded wc: — camera opens page → deep link / store.
+            const { qrUrl } = await prepareQrHandoffPayload(uri);
 
             const qrCodeDataURL = await QRCode.toDataURL(qrUrl, {
                 width: 200,
@@ -773,10 +785,9 @@ async function displayQRCode(uri: string): Promise<void> {
                 ? `<p id="qr-countdown" class="desktop--qr-countdown">Expires in: <span class="font-semibold">${initialCountdown}</span></p>`
                 : '';
 
-            const appStoreUrl = getIdAppStoreUrl(installId);
+            const appStoreUrl = getIdAppStoreUrl();
 
-            console.info('[IDApp Bridge] scan QR encoded', {
-                install_id: installId,
+            console.info('[IDApp] scan QR encoded', {
                 qrUrlLength: qrUrl.length,
             });
 
@@ -1095,9 +1106,9 @@ function generateDeepLink(walletType: WalletTypeValues, uri: string): string | n
         }
     } else if (walletType === WALLET_TYPES.CONCORDIUM_ID) {
         const isIOS = /iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream;
-        // iOS: short bridge handoff only (full wc: → Safari "address is invalid").
+        // iOS: short wake only (full wc: → Safari "address is invalid"); URI via clipboard.
         deepLink = isIOS
-            ? `concordiumidapp://open?source=bridge&_t=${Date.now()}`
+            ? `concordiumidapp://open?source=clipboard&_t=${Date.now()}`
             : `concordiumidapp://wc?uri=${encodeURIComponent(uri)}&_t=${Date.now()}`;
     }
 
@@ -1114,11 +1125,11 @@ async function displayQRCodeMobile(uri: string, container: HTMLElement): Promise
         const { default: QRCode } = await import('qrcode');
         const { getConfig } = await import('@/config.state');
         const { getIdAppStoreUrl } = await import('@/constants/wallet.registry');
-        const { prepareBridgeQrPayload } = await import('@/services/bridge.service');
+        const { prepareQrHandoffPayload } = await import('@/services/bridge.service');
 
         const config = getConfig();
 
-        const { qrUrl, installId } = await prepareBridgeQrPayload(uri);
+        const { qrUrl } = await prepareQrHandoffPayload(uri);
 
         const qrCodeDataURL = await QRCode.toDataURL(qrUrl, {
             width: 200,
@@ -1135,7 +1146,7 @@ async function displayQRCodeMobile(uri: string, container: HTMLElement): Promise
             ? `<p id="qr-countdown" class="desktop--qr-countdown">Expires in: <span class="font-semibold">${initialCountdown}</span></p>`
             : '';
 
-        const appStoreUrl = getIdAppStoreUrl(installId);
+        const appStoreUrl = getIdAppStoreUrl();
 
         container.innerHTML = `
       <div class="text-center py-4">

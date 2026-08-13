@@ -6,11 +6,6 @@ import { type ConcordiumConfig, getConfig, resolveContainer, setConfig } from '.
 import { ModalConstants } from './constants/modal.constants';
 import { getQrRedirectUri } from './constants/wallet.registry';
 import './styles/index.css';
-import { bridgeTrace, installBridgeTrace } from './utils/bridgeTrace';
-
-installBridgeTrace();
-
-export { bridgeTrace, clearBridgeTrace, dumpBridgeTrace } from './utils/bridgeTrace';
 
 // Export SDK class
 export { ConcordiumVerificationWebUI, sdk } from './sdk';
@@ -46,7 +41,6 @@ async function tryHandleQrRedirectOnBootstrap(): Promise<boolean> {
             return false;
         }
 
-        bridgeTrace('qr-redirect detected on page load');
         const { handleQrRedirectOnLoad } = await import('./components/desktop/wallet-selection');
         await handleQrRedirectOnLoad();
         qrRedirectHandled = true;

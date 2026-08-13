@@ -149,10 +149,17 @@ export const createLandingModal: ModalFunction = () => {
 
                     const processApprovedSession = async (session: any) => {
                         if (sessionProcessed) return;
-                        sessionProcessed = true;
 
                         const { handleSessionApproval } = await import('./scan');
-                        await handleSessionApproval(session);
+                        try {
+                            await handleSessionApproval(session);
+                            sessionProcessed = true;
+                        } catch (error) {
+                            console.warn(
+                                '[verification-web-ui] session approval / proof send failed — will retry on focus',
+                                error
+                            );
+                        }
                     };
 
                     approval()
@@ -162,6 +169,18 @@ export const createLandingModal: ModalFunction = () => {
                     const tryRecoverApprovedSession = async () => {
                         if (document.hidden || sessionProcessed) return;
 
+                        try {
+                            const signClient: any = wcService.getSignClient?.() || (wcService as any).signClient;
+                            const relayer: any = signClient?.core?.relayer;
+                            if (relayer && typeof relayer.restartTransport === 'function') {
+                                if (!relayer.connected) {
+                                    await relayer.restartTransport();
+                                }
+                            }
+                        } catch (error) {
+                            console.warn('[verification-web-ui] relay restart on focus failed', error);
+                        }
+
                         const activeSessions = wcService.getActiveSessions();
                         if (activeSessions.length > 0) {
                             await processApprovedSession(activeSessions[0]);
@@ -169,10 +188,14 @@ export const createLandingModal: ModalFunction = () => {
                     };
 
                     document.addEventListener('visibilitychange', () => {
-                        void tryRecoverApprovedSession();
+                        if (!document.hidden) void tryRecoverApprovedSession();
                     });
 
                     window.addEventListener('focus', () => {
+                        void tryRecoverApprovedSession();
+                    });
+
+                    window.addEventListener('pageshow', () => {
                         void tryRecoverApprovedSession();
                     });
                 }
@@ -199,20 +222,19 @@ export const createLandingModal: ModalFunction = () => {
                 }
 
                 let deepLink: string;
-                let registeredInstallId: string | null = null;
                 if (isIOS) {
-                    // Register wc: on bridge, then open SHORT scheme link (Safari rejects long URIs).
-                    const { registerSession } = await import('@/services/bridge.service');
-                    const { getConcordiumIdBridgeDeepLink } = await import('@/constants/wallet.registry');
+                    // Clipboard wc: (gesture-hot) + short wake link (Safari rejects long URIs).
+                    const { handoffIosClipboard } = await import('@/services/bridge.service');
+                    const { getConcordiumIdWakeDeepLink } = await import('@/constants/wallet.registry');
                     try {
-                        const result = await registerSession(uri);
-                        registeredInstallId = result.installId;
+                        await handoffIosClipboard(uri);
                     } catch (error) {
-                        console.warn('[verification-web-ui] bridge register before iOS open failed', error);
-                        bridgeTrace('iOS register threw before deep link', { message: String(error) });
+                        console.warn('[verification-web-ui] iOS clipboard before open failed', error);
+                        bridgeTrace('iOS clipboard threw before deep link', { message: String(error) });
                     }
-                    deepLink = getConcordiumIdBridgeDeepLink();
+                    deepLink = getConcordiumIdWakeDeepLink();
                 } else {
+                    // Android: full wc: deep link (+ Play referrer on store fallback). No clipboard.
                     deepLink = getConcordiumIdDeepLink(uri);
                 }
 
@@ -266,14 +288,10 @@ export const createLandingModal: ModalFunction = () => {
                             !document.hidden &&
                             document.visibilityState === 'visible'
                         ) {
-                            // iOS already registered above — do not call session/register again.
-                            await redirectToIdAppStore(uri, {
-                                skipRegister: isIOS,
-                                installId: registeredInstallId,
-                            });
+                            await redirectToIdAppStore(uri);
                         } else if (skipStoreFallback && !appOpened) {
                             console.info(
-                                '[verification-web-ui] skipStoreFallback — not opening any store. Open the app manually; bridge session already registered.'
+                                '[verification-web-ui] skipStoreFallback — not opening any store. Open the app manually; clipboard may already hold wc:.'
                             );
                             try {
                                 const { showWaitingForPairingState } = await import(

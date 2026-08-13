@@ -170,82 +170,61 @@ export function openAppStore(appType: 'concordium-wallet' | 'concordium-id' = 'c
 }
 
 /**
- * Register WC context with IDApp Bridge, show waiting UI, open native store app.
+ * Show waiting UI and open native store app.
  * Does NOT navigate this tab to play.google.com — keeps dApp page alive for pairing.
- *
- * @param options.skipRegister — when true, do not call session/register again (caller
- *   already registered, e.g. iOS landing before the short deep link).
- * @param options.installId — reuse install_id from a prior register (Android referrer).
+ * iOS: clipboard should already hold wc: (written on Open tap). No bridge register.
  */
-export async function redirectToIdAppStore(
-    walletConnectUri?: string | null,
-    options?: { skipRegister?: boolean; installId?: string | null }
-): Promise<void> {
+export async function redirectToIdAppStore(walletConnectUri?: string | null): Promise<void> {
     const { getIdAppNativeStoreUrl } = await import('@/constants/wallet.registry');
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
     const isAndroid = /android/i.test(navigator.userAgent);
     const platform = isIOS ? 'ios' : isAndroid ? 'android' : 'other';
-    const skipRegister = options?.skipRegister === true;
 
-    console.log('[IDApp Bridge] store redirect START', {
+    console.log('[IDApp] store redirect START', {
         platform,
         hasWalletConnectUri: Boolean(walletConnectUri),
-        skipRegister,
     });
     const { bridgeTrace } = await import('@/utils/bridgeTrace');
     bridgeTrace('store redirect START', {
         platform,
         hasWalletConnectUri: Boolean(walletConnectUri),
-        skipRegister,
     });
 
-    // 1) Loading: redirecting to store
+    // Mobile: clipboard wc: before store — iOS only (Android uses Play referrer).
+    if (isIOS && walletConnectUri) {
+        try {
+            const { handoffIosClipboard } = await import('@/services/bridge.service');
+            await handoffIosClipboard(walletConnectUri);
+        } catch {
+            /* fail-open */
+        }
+    }
+
     try {
         const { showStoreRedirectState } = await import('@/components/desktop/processing');
         await showStoreRedirectState();
     } catch (error) {
-        console.warn('[IDApp Bridge] could not show store redirect UI', error);
-    }
-
-    let installId: string | null = options?.installId ?? null;
-
-    if (skipRegister) {
-        console.info('[IDApp Bridge] store redirect — skipRegister (already registered upstream)');
-        bridgeTrace('store redirect skipRegister', { install_id: installId });
-    } else if (walletConnectUri) {
-        try {
-            const { registerSession } = await import('@/services/bridge.service');
-            const result = await registerSession(walletConnectUri);
-            installId = result.installId;
-        } catch (error) {
-            console.error('[IDApp Bridge] register before store redirect threw', error);
-        }
-    } else {
-        console.warn('[IDApp Bridge] store redirect without WC URI — skipping register');
-        bridgeTrace('store redirect WITHOUT WC URI — nothing registered, app will get 404');
+        console.warn('[IDApp] could not show store redirect UI', error);
     }
 
     const { isTestFlightMode } = await import('@/constants/wallet.registry');
-    const storeUrl = getIdAppNativeStoreUrl(installId);
+    const storeUrl = getIdAppNativeStoreUrl(walletConnectUri);
 
-    console.log('[IDApp Bridge] store redirect GO (native app only)', {
+    console.log('[IDApp] store redirect GO (native app only)', {
         platform,
-        install_id: installId,
-        storeUrl,
+        storeUrl: storeUrl.replace(/referrer=[^&#]+/, 'referrer=…'),
+        hasReferrer: Boolean(walletConnectUri?.startsWith('wc:')),
         target: isIOS && isTestFlightMode() ? 'TestFlight' : isIOS ? 'App Store' : 'Play Store',
         keepPageAlive: true,
     });
     bridgeTrace('store redirect GO', {
         platform,
-        install_id: installId,
         target: isIOS && isTestFlightMode() ? 'TestFlight' : isIOS ? 'App Store' : 'Play Store',
-        storeUrl,
+        hasReferrer: Boolean(walletConnectUri?.startsWith('wc:')),
     });
 
-    // Brief pause so user sees "Opening store…" before handoff
     await new Promise((resolve) => setTimeout(resolve, 600));
 
-    // 2) Open Play Store / App Store *app* — never unload this tab into browser Play listing
     const link = document.createElement('a');
     link.href = storeUrl;
     link.rel = 'noopener';
@@ -254,15 +233,13 @@ export async function redirectToIdAppStore(
     link.click();
     link.remove();
 
-    // 3) Waiting for pairing while user installs + creates identity
     try {
         const { showWaitingForPairingState } = await import('@/components/desktop/processing');
-        // Small delay so store handoff can start before we update copy
         setTimeout(() => {
             void showWaitingForPairingState();
         }, 900);
     } catch (error) {
-        console.warn('[IDApp Bridge] could not show waiting-for-pairing UI', error);
+        console.warn('[IDApp] could not show waiting-for-pairing UI', error);
     }
 }
 
@@ -275,7 +252,7 @@ export function openAppStoreForConcordiumID(): void {
 }
 
 /**
- * Async Concordium ID store redirect with optional bridge registration.
+ * Async Concordium ID store redirect.
  */
 export async function openAppStoreForConcordiumIDAsync(walletConnectUri?: string | null): Promise<void> {
     await redirectToIdAppStore(walletConnectUri);
@@ -291,20 +268,20 @@ export async function openAppStoreForConcordiumIDAsync(walletConnectUri?: string
 export async function tryOpenConcordiumIDApp(walletConnectUri: string): Promise<boolean> {
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
 
-    // iOS: short bridge scheme only (full wc: URI → Safari "address is invalid").
+    // iOS: clipboard wc: + short wake (full wc: URI → Safari "address is invalid").
+    // Android: full deep link only (Play referrer on store fallback — no clipboard toast).
     let deepLink: string;
     if (isIOS) {
         try {
-            const { registerSession } = await import('@/services/bridge.service');
-            await registerSession(walletConnectUri);
+            const { handoffIosClipboard } = await import('@/services/bridge.service');
+            await handoffIosClipboard(walletConnectUri);
         } catch (error) {
-            console.warn('[verification-web-ui] bridge register before tryOpen failed', error);
+            console.warn('[verification-web-ui] clipboard before tryOpen failed', error);
         }
-        const { getConcordiumIdBridgeDeepLink, openIosCustomScheme } = await import(
+        const { getConcordiumIdWakeDeepLink, openIosCustomScheme } = await import(
             '@/constants/wallet.registry'
         );
-        deepLink = getConcordiumIdBridgeDeepLink();
-        // Open without top-level navigation (avoids Safari invalid-address alert).
+        deepLink = getConcordiumIdWakeDeepLink();
         openIosCustomScheme(deepLink);
     } else {
         deepLink = `concordiumidapp://wc?uri=${encodeURIComponent(walletConnectUri)}&_t=${Date.now()}`;
@@ -415,20 +392,21 @@ export function openDeepLink(appType: 'concordium-wallet' | 'concordium-id', wal
             return;
         }
     } else if (isIOS) {
-        // Short bridge link only — long wc: URI → Safari "address is invalid".
+        // Clipboard wc: + short wake — long wc: URI → Safari "address is invalid".
         void (async () => {
             try {
-                const { registerSession } = await import('@/services/bridge.service');
-                await registerSession(walletConnectUri);
+                const { handoffIosClipboard } = await import('@/services/bridge.service');
+                await handoffIosClipboard(walletConnectUri);
             } catch {
                 /* fail-open */
             }
-            const { getConcordiumIdBridgeDeepLink, openIosCustomScheme } = await import(
+            const { getConcordiumIdWakeDeepLink, openIosCustomScheme } = await import(
                 '@/constants/wallet.registry'
             );
-            openIosCustomScheme(getConcordiumIdBridgeDeepLink());
+            openIosCustomScheme(getConcordiumIdWakeDeepLink());
         })();
     } else {
+        // Android: full wc: Intent (+ Play referrer if store fallback). No clipboard.
         const redirectUrl = encodeURIComponent(window.location.origin);
         openScheme(
             `concordiumidapp://wc?uri=${encodeURIComponent(walletConnectUri)}&redirect=${redirectUrl}&_t=${Date.now()}`

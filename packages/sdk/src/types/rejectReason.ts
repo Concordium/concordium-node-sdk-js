@@ -82,6 +82,7 @@ export enum RejectReasonTag {
     LockCancelNotAuthorized = 'LockCancelNotAuthorized',
     LockTokenNotPermitted = 'LockTokenNotPermitted',
     LockRecipientNotPermitted = 'LockRecipientNotPermitted',
+    LockDurationTooLong = 'LockDurationTooLong',
 }
 
 export interface RejectedReceive {
@@ -152,7 +153,10 @@ export type StringRejectReasonTag =
 
 export type TokenRejectReasonTag = RejectReasonTag.NonExistentTokenId | RejectReasonTag.TokenUpdateTransactionFailed;
 
-export type LockIdRejectReasonTag = RejectReasonTag.NonExistentLockId | RejectReasonTag.LockExpired;
+export type LockIdRejectReasonTag =
+    | RejectReasonTag.NonExistentLockId
+    | RejectReasonTag.LockExpired
+    | RejectReasonTag.LockDurationTooLong;
 
 export type LockIdAccountRejectReasonTag =
     | RejectReasonTag.LockFundNotAuthorized

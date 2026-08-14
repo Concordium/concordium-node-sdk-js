@@ -545,6 +545,7 @@ export const seqNums: NextUpdateSequenceNumbers = {
     finalizationCommiteeParameters: 1n,
     validatorScoreParameters: 1n,
     protocolLevelTokens: 1n,
+    maxLockDuration: 1n,
 };
 
 export const specialEventList: BlockSpecialEvent[] = [

@@ -66,7 +66,26 @@ export const createLandingModal: ModalFunction = () => {
 
     // Add event listener for the start verification button
     const startBtn = landingContainer.querySelector('#start-verification-btn') as HTMLButtonElement | null;
+    const startBtnLabel = startBtn?.querySelector('span');
+    const startBtnDefaultLabel = startBtnLabel?.textContent?.trim() || 'Open with ID App';
+    let openInFlight = false;
+
+    const setOpenBusy = (busy: boolean) => {
+        if (!startBtn) return;
+        startBtn.disabled = busy;
+        startBtn.setAttribute('aria-busy', busy ? 'true' : 'false');
+        startBtn.classList.toggle('desktop--primary-button--busy', busy);
+        if (startBtnLabel) {
+            startBtnLabel.textContent = busy ? 'Opening…' : startBtnDefaultLabel;
+        }
+    };
+
     startBtn?.addEventListener('click', async () => {
+        if (openInFlight || startBtn.disabled) return;
+        openInFlight = true;
+        setOpenBusy(true);
+
+        try {
         const isMobile = isMobileScreen();
         const { bridgeTrace } = await import('@/utils/bridgeTrace');
         bridgeTrace('Open with ID App tapped', { isMobile, userAgent: navigator.userAgent });
@@ -318,16 +337,26 @@ export const createLandingModal: ModalFunction = () => {
                     })();
                 }, isIOS ? 2500 : 3500);
             } catch {
-                // Fallback to app store if something goes wrong
+                // Fallback to app store if something goes wrong — keep button locked
+                // so a second tap does not start another pairing while install/open runs.
                 const fallbackUri = localStorage.getItem('walletConnectUri');
                 void redirectToIdAppStore(fallbackUri);
             }
         } else {
             // On desktop, show the scan modal with QR code
-            const { showScanModal } = await import('./scan');
-            const { hideLandingModal } = await import('./landing');
-            hideLandingModal();
-            await showScanModal();
+            try {
+                const { showScanModal } = await import('./scan');
+                const { hideLandingModal } = await import('./landing');
+                hideLandingModal();
+                await showScanModal();
+            } catch {
+                openInFlight = false;
+                setOpenBusy(false);
+            }
+        }
+        } catch {
+            openInFlight = false;
+            setOpenBusy(false);
         }
     });
 

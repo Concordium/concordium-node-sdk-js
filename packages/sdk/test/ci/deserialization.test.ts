@@ -394,6 +394,25 @@ test('test deserialize ConfigureDelegation with no restake', () => {
     deserializeAccountTransactionBase(transaction);
 });
 
+test('test deserialize ConfigureDelegation with passive delegation', () => {
+    const payload: ConfigureDelegationPayload = {
+        stake: CcdAmount.fromMicroCcd(0),
+
+        restakeEarnings: true,
+
+        delegationTarget: {
+            delegateType: DelegationTargetType.PassiveDelegation,
+        },
+    };
+
+    const transaction: AccountTransaction = {
+        header,
+        type: AccountTransactionType.ConfigureDelegation,
+        payload,
+    };
+    deserializeAccountTransactionBase(transaction);
+});
+
 test('test deserialize ConfigureDelegation with no delegation', () => {
     const payload: ConfigureDelegationPayload = {
         stake: CcdAmount.fromMicroCcd(0),

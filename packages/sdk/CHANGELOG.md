@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+- Deserializing a `configureDelegation` payload with a passive delegation target no longer fails with "Failed to read 8 bytes from the cursor." The deserializer was unconditionally reading an 8-byte baker ID even though passive delegation targets do not encode one.
+
 ## 12.0.2
 
 ### Changed

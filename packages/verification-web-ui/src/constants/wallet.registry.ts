@@ -186,35 +186,48 @@ export function getConcordiumWalletDeepLink(wcUri: string): string | null {
 }
 
 /**
- * Get deep link for Concordium ID App.
+ * Custom-scheme pair link with the wc: URI in the query.
  *
- * iOS Safari rejects very long custom-scheme URLs (full wc: URI) with
- * "address is invalid". Use a short wake link; app recovers wc: from clipboard.
- *
- * Android keeps the full URI in the link (Intent handles length).
+ * Camera QR loads this page with no user gesture, so iOS clipboard write fails.
+ * Short wake (`concordiumidapp://open`) then opens the app empty → "expired" /
+ * incomplete pairing. Embed the URI like Android so pair() has a payload.
  *
  * `_t` cache-busts Safari scheme blacklisting after user taps Cancel.
  */
+export function getConcordiumIdPairDeepLink(wcUri: string, source = 'qr'): string {
+    const encodedUri = encodeURIComponent(wcUri);
+    return `concordiumidapp://wc?uri=${encodedUri}&source=${encodeURIComponent(source)}&_t=${Date.now()}`;
+}
+
 export function getConcordiumIdDeepLink(wcUri: string): string {
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
     if (isIOS) {
-        return getConcordiumIdWakeDeepLink();
+        // Camera / Safari hops have no paste gesture. Put wc: on the wake link.
+        return getConcordiumIdWakeDeepLink(wcUri);
     }
-    const encodedUri = encodeURIComponent(wcUri);
-    return `concordiumidapp://wc?uri=${encodedUri}&_t=${Date.now()}`;
+    return getConcordiumIdPairDeepLink(wcUri, 'mobile');
 }
 
 /**
  * Short iOS wake link — no wc: payload. App reads clipboard handoff on Create Account.
  * @deprecated alias — use getConcordiumIdWakeDeepLink
  */
-export function getConcordiumIdBridgeDeepLink(): string {
-    return getConcordiumIdWakeDeepLink();
+export function getConcordiumIdBridgeDeepLink(wcUri?: string): string {
+    return getConcordiumIdWakeDeepLink(wcUri);
 }
 
-/** Short iOS wake link — clipboard carries the wc: URI. */
-export function getConcordiumIdWakeDeepLink(): string {
-    return `concordiumidapp://open?source=clipboard&_t=${Date.now()}`;
+/**
+ * iOS wake link. Pass `wcUri` so camera/Safari hops can pair without clipboard.
+ * Clipboard remains a fallback when the user taps Open with ID App.
+ */
+export function getConcordiumIdWakeDeepLink(wcUri?: string): string {
+    const params = new URLSearchParams();
+    params.set('source', wcUri ? 'qr' : 'clipboard');
+    params.set('_t', String(Date.now()));
+    if (wcUri?.startsWith('wc:')) {
+        params.set('uri', wcUri);
+    }
+    return `concordiumidapp://open?${params.toString()}`;
 }
 
 /**

@@ -281,7 +281,7 @@ export async function tryOpenConcordiumIDApp(walletConnectUri: string): Promise<
         const { getConcordiumIdWakeDeepLink, openIosCustomScheme } = await import(
             '@/constants/wallet.registry'
         );
-        deepLink = getConcordiumIdWakeDeepLink();
+        deepLink = getConcordiumIdWakeDeepLink(walletConnectUri);
         openIosCustomScheme(deepLink);
     } else {
         deepLink = `concordiumidapp://wc?uri=${encodeURIComponent(walletConnectUri)}&_t=${Date.now()}`;
@@ -403,7 +403,7 @@ export function openDeepLink(appType: 'concordium-wallet' | 'concordium-id', wal
             const { getConcordiumIdWakeDeepLink, openIosCustomScheme } = await import(
                 '@/constants/wallet.registry'
             );
-            openIosCustomScheme(getConcordiumIdWakeDeepLink());
+            openIosCustomScheme(getConcordiumIdWakeDeepLink(walletConnectUri));
         })();
     } else {
         // Android: full wc: Intent (+ Play referrer if store fallback). No clipboard.

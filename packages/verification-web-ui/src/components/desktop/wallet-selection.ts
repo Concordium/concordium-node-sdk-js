@@ -12,7 +12,7 @@ import {
     WALLET_REGISTRY,
     type WalletInfo,
     buildWalletDeepLink,
-    getConcordiumIdDeepLink,
+    getConcordiumIdPairDeepLink,
     getIdAppStoreUrl,
     getQrRedirectCleanUrl,
     getQrRedirectUri,
@@ -340,13 +340,17 @@ async function tryOpenConcordiumIdFromQr(wcUri: string): Promise<boolean> {
         }
     }
 
-    const deepLink = getConcordiumIdDeepLink(wcUri);
+    // Camera page-load is not a user gesture — iOS clipboard write fails.
+    // Put wc: in the custom scheme so the installed app can pair without paste.
+    const deepLink = getConcordiumIdPairDeepLink(wcUri, 'qr');
+    // Camera page-load has no user gesture — iframe/click custom schemes are blocked.
+    // Top-level location.href can open the installed app with the wc: payload.
     return tryOpenDeepLink(deepLink, isIOSDevice ? 2500 : 1500);
 }
 
 /**
  * Handle QR redirect on page load (phone camera scanned HTTPS QR).
- * Opens Concordium ID with embedded wc: (Android) or clipboard + wake (iOS).
+ * Opens Concordium ID with embedded wc: in the custom-scheme pair link.
  */
 export async function handleQrRedirectOnLoad(): Promise<void> {
     const uri = getQrRedirectUri();

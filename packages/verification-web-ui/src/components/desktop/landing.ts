@@ -251,7 +251,7 @@ export const createLandingModal: ModalFunction = () => {
                         console.warn('[verification-web-ui] iOS clipboard before open failed', error);
                         bridgeTrace('iOS clipboard threw before deep link', { message: String(error) });
                     }
-                    deepLink = getConcordiumIdWakeDeepLink();
+                    deepLink = getConcordiumIdWakeDeepLink(uri);
                 } else {
                     // Android: full wc: deep link (+ Play referrer on store fallback). No clipboard.
                     deepLink = getConcordiumIdDeepLink(uri);

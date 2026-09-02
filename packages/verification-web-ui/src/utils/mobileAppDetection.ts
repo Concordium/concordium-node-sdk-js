@@ -155,11 +155,12 @@ export function openAppStore(appType: 'concordium-wallet' | 'concordium-id' = 'c
             return;
         }
     } else {
-        // Concordium ID - Updated app store URLs
+        // Concordium ID — open Play Store / App Store *app*
         if (isIOS) {
-            storeUrl = 'https://apps.apple.com/ca/app/concordium-id/id6746754485';
+            // HTTPS opens App Store app from Safari without itms-apps "invalid address"
+            storeUrl = 'https://apps.apple.com/app/id6746754485';
         } else if (isAndroid) {
-            storeUrl = 'https://play.google.com/store/apps/details?id=com.idwallet.app&hl=en_CA';
+            storeUrl = 'intent://details?id=com.idwallet.app#Intent;scheme=market;package=com.android.vending;end';
         } else {
             return;
         }
@@ -169,11 +170,92 @@ export function openAppStore(appType: 'concordium-wallet' | 'concordium-id' = 'c
 }
 
 /**
+ * Show waiting UI and open native store app.
+ * Does NOT navigate this tab to play.google.com — keeps dApp page alive for pairing.
+ * iOS: clipboard should already hold wc: (written on Open tap). No bridge register.
+ */
+export async function redirectToIdAppStore(walletConnectUri?: string | null): Promise<void> {
+    const { getIdAppNativeStoreUrl } = await import('@/constants/wallet.registry');
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+    const isAndroid = /android/i.test(navigator.userAgent);
+    const platform = isIOS ? 'ios' : isAndroid ? 'android' : 'other';
+
+    console.log('[IDApp] store redirect START', {
+        platform,
+        hasWalletConnectUri: Boolean(walletConnectUri),
+    });
+    const { bridgeTrace } = await import('@/utils/bridgeTrace');
+    bridgeTrace('store redirect START', {
+        platform,
+        hasWalletConnectUri: Boolean(walletConnectUri),
+    });
+
+    // Mobile: clipboard wc: before store — iOS only (Android uses Play referrer).
+    if (isIOS && walletConnectUri) {
+        try {
+            const { handoffIosClipboard } = await import('@/services/bridge.service');
+            await handoffIosClipboard(walletConnectUri);
+        } catch {
+            /* fail-open */
+        }
+    }
+
+    try {
+        const { showStoreRedirectState } = await import('@/components/desktop/processing');
+        await showStoreRedirectState();
+    } catch (error) {
+        console.warn('[IDApp] could not show store redirect UI', error);
+    }
+
+    const { isTestFlightMode } = await import('@/constants/wallet.registry');
+    const storeUrl = getIdAppNativeStoreUrl(walletConnectUri);
+
+    console.log('[IDApp] store redirect GO (native app only)', {
+        platform,
+        storeUrl: storeUrl.replace(/referrer=[^&#]+/, 'referrer=…'),
+        hasReferrer: Boolean(walletConnectUri?.startsWith('wc:')),
+        target: isIOS && isTestFlightMode() ? 'TestFlight' : isIOS ? 'App Store' : 'Play Store',
+        keepPageAlive: true,
+    });
+    bridgeTrace('store redirect GO', {
+        platform,
+        target: isIOS && isTestFlightMode() ? 'TestFlight' : isIOS ? 'App Store' : 'Play Store',
+        hasReferrer: Boolean(walletConnectUri?.startsWith('wc:')),
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 600));
+
+    const link = document.createElement('a');
+    link.href = storeUrl;
+    link.rel = 'noopener';
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    try {
+        const { showWaitingForPairingState } = await import('@/components/desktop/processing');
+        setTimeout(() => {
+            void showWaitingForPairingState();
+        }, 900);
+    } catch (error) {
+        console.warn('[IDApp] could not show waiting-for-pairing UI', error);
+    }
+}
+
+/**
  * Opens the app store specifically for Concordium ID app
  * Convenience function that ensures correct store URLs are used
  */
 export function openAppStoreForConcordiumID(): void {
     openAppStore('concordium-id');
+}
+
+/**
+ * Async Concordium ID store redirect.
+ */
+export async function openAppStoreForConcordiumIDAsync(walletConnectUri?: string | null): Promise<void> {
+    await redirectToIdAppStore(walletConnectUri);
 }
 
 /**
@@ -186,9 +268,24 @@ export function openAppStoreForConcordiumID(): void {
 export async function tryOpenConcordiumIDApp(walletConnectUri: string): Promise<boolean> {
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
 
-    // Create deep link for Concordium ID
-    const redirectUrl = encodeURIComponent(window.location.href);
-    const deepLink = `concordiumidapp://wc?uri=${encodeURIComponent(walletConnectUri)}&redirect=${redirectUrl}`;
+    // iOS: clipboard wc: + short wake (full wc: URI → Safari "address is invalid").
+    // Android: full deep link only (Play referrer on store fallback — no clipboard toast).
+    let deepLink: string;
+    if (isIOS) {
+        try {
+            const { handoffIosClipboard } = await import('@/services/bridge.service');
+            await handoffIosClipboard(walletConnectUri);
+        } catch (error) {
+            console.warn('[verification-web-ui] clipboard before tryOpen failed', error);
+        }
+        const { getConcordiumIdWakeDeepLink, openIosCustomScheme } = await import(
+            '@/constants/wallet.registry'
+        );
+        deepLink = getConcordiumIdWakeDeepLink(walletConnectUri);
+        openIosCustomScheme(deepLink);
+    } else {
+        deepLink = `concordiumidapp://wc?uri=${encodeURIComponent(walletConnectUri)}&_t=${Date.now()}`;
+    }
 
     return new Promise((resolve) => {
         let appOpened = false;
@@ -240,32 +337,18 @@ export async function tryOpenConcordiumIDApp(walletConnectUri: string): Promise<
         window.addEventListener('pagehide', handlePageHide, { once: true });
         document.addEventListener('visibilitychange', handleVisibilityChange);
 
-        // For iOS, use a hidden link click approach which is more reliable
-        if (isIOS) {
-            const link = document.createElement('a');
-            link.href = deepLink;
-            link.style.display = 'none';
-            document.body.appendChild(link);
-
-            link.click();
-
-            // Clean up the link
-            setTimeout(() => {
-                if (link.parentNode) {
-                    link.parentNode.removeChild(link);
-                }
-            }, 100);
-        } else if (/android/i.test(navigator.userAgent)) {
-            const intentUrl = `intent://wc?uri=${encodeURIComponent(
-                walletConnectUri
-            )}#Intent;scheme=concordiumidapp;package=com.idwallet.app;end`;
-            window.location.href = intentUrl;
-        } else {
-            window.location.href = deepLink;
+        if (!isIOS) {
+            if (/android/i.test(navigator.userAgent)) {
+                const intentUrl = `intent://wc?uri=${encodeURIComponent(
+                    walletConnectUri
+                )}#Intent;scheme=concordiumidapp;package=com.idwallet.app;end`;
+                window.location.href = intentUrl;
+            } else {
+                window.location.href = deepLink;
+            }
         }
 
         // Timeout - if we haven't detected app opening by now, assume not installed
-        // Use shorter timeout for iOS since the hidden link approach is faster
         const timeout = isIOS ? 1500 : 2500;
         timeoutId = setTimeout(() => {
             cleanup();
@@ -288,30 +371,56 @@ export function openDeepLink(appType: 'concordium-wallet' | 'concordium-id', wal
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
     const isAndroid = /android/i.test(navigator.userAgent);
 
-    let deepLink: string;
+    const openScheme = (deepLink: string) => {
+        if (isIOS) {
+            void import('@/constants/wallet.registry').then(({ openIosCustomScheme }) => {
+                openIosCustomScheme(deepLink);
+            });
+        } else {
+            window.location.href = deepLink;
+        }
+    };
 
     if (appType === 'concordium-wallet') {
         if (isIOS) {
-            deepLink = `cryptox${network}://wc?uri=${encodeURIComponent(walletConnectUri)}&redirect=googlechrome://`;
+            openScheme(
+                `cryptox${network}://wc?uri=${encodeURIComponent(walletConnectUri)}&redirect=googlechrome://`
+            );
         } else if (isAndroid) {
-            deepLink = `cryptox-wc-${network}://wc?uri=${encodeURIComponent(walletConnectUri)}&go_back=true`;
+            openScheme(`cryptox-wc-${network}://wc?uri=${encodeURIComponent(walletConnectUri)}&go_back=true`);
         } else {
             return;
         }
+    } else if (isIOS) {
+        // Clipboard wc: + short wake — long wc: URI → Safari "address is invalid".
+        void (async () => {
+            try {
+                const { handoffIosClipboard } = await import('@/services/bridge.service');
+                await handoffIosClipboard(walletConnectUri);
+            } catch {
+                /* fail-open */
+            }
+            const { getConcordiumIdWakeDeepLink, openIosCustomScheme } = await import(
+                '@/constants/wallet.registry'
+            );
+            openIosCustomScheme(getConcordiumIdWakeDeepLink(walletConnectUri));
+        })();
     } else {
-        // Concordium ID - with redirect to origin
+        // Android: full wc: Intent (+ Play referrer if store fallback). No clipboard.
         const redirectUrl = encodeURIComponent(window.location.origin);
-        deepLink = `concordiumidapp://wc?uri=${encodeURIComponent(walletConnectUri)}&redirect=${redirectUrl}`;
+        openScheme(
+            `concordiumidapp://wc?uri=${encodeURIComponent(walletConnectUri)}&redirect=${redirectUrl}&_t=${Date.now()}`
+        );
     }
-
-    // Attempt to open the deep link
-    window.location.href = deepLink;
 
     // Fallback to app store if app doesn't open within 2 seconds
     setTimeout(() => {
-        // Check if page is still visible (app didn't open)
         if (!document.hidden) {
-            openAppStore(appType);
+            if (appType === 'concordium-id') {
+                void redirectToIdAppStore(walletConnectUri);
+            } else {
+                openAppStore(appType);
+            }
         }
     }, 2000);
 }

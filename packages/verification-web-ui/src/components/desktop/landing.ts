@@ -5,10 +5,9 @@ import modalGraphic from '@/assets/modal-graphic.svg';
 import playstoreIcon from '@/assets/playstore-icon.svg';
 import sectionSeparator from '@/assets/section-separator.svg';
 import { isMobileScreen } from '@/config.state';
-import { ID_APP_STORE } from '@/constants/wallet.registry';
 import { getGlobalContainer } from '@/index';
 import type { HideModalFunction, ModalFunction, ShowModalFunction } from '@/types';
-import { openAppStoreForConcordiumID } from '@/utils/mobileAppDetection';
+import { redirectToIdAppStore } from '@/utils/mobileAppDetection';
 
 export const createLandingModal: ModalFunction = () => {
     const landingHTML = `
@@ -43,10 +42,10 @@ export const createLandingModal: ModalFunction = () => {
           <div class="flex flex-col items-center" style="border-radius: var(--semantic-radius-l, 16px); background: var(--semantic-surface-primary-a5, rgba(0, 0, 0, 0.05)); padding: 16px; gap: 12px;">
             <p class="desktop--landing-description" style="margin: 0;">Download Concordium ID</p>
             <div class="flex items-center justify-center" style="gap: 8px;">
-              <a href="https://apps.apple.com/ca/app/concordium-id/id6746754485" target="_blank" rel="noopener noreferrer">
+              <a href="https://apps.apple.com/in/app/concordium-id-app/id6746754485" target="_blank" rel="noopener noreferrer">
                 <img src="${appstoreIcon}" alt="Download on App Store" />
               </a>
-              <a href="https://play.google.com/store/apps/details?id=com.idwallet.app&hl=en_CA" target="_blank" rel="noopener noreferrer">
+              <a href="https://play.google.com/store/apps/details?id=com.idwallet.app&hl=en" target="_blank" rel="noopener noreferrer">
                 <img src="${playstoreIcon}" alt="Get it on Google Play" />
               </a>
             </div>
@@ -67,102 +66,210 @@ export const createLandingModal: ModalFunction = () => {
 
     // Add event listener for the start verification button
     const startBtn = landingContainer.querySelector('#start-verification-btn') as HTMLButtonElement | null;
+    const startBtnLabel = startBtn?.querySelector('span');
+    const startBtnDefaultLabel = startBtnLabel?.textContent?.trim() || 'Open with ID App';
+    let openInFlight = false;
+
+    const setOpenBusy = (busy: boolean) => {
+        if (!startBtn) return;
+        startBtn.disabled = busy;
+        startBtn.setAttribute('aria-busy', busy ? 'true' : 'false');
+        startBtn.classList.toggle('desktop--primary-button--busy', busy);
+        if (startBtnLabel) {
+            startBtnLabel.textContent = busy ? 'Opening…' : startBtnDefaultLabel;
+        }
+    };
+
     startBtn?.addEventListener('click', async () => {
+        if (openInFlight || startBtn.disabled) return;
+        openInFlight = true;
+        setOpenBusy(true);
+
+        try {
         const isMobile = isMobileScreen();
+        const { bridgeTrace } = await import('@/utils/bridgeTrace');
+        bridgeTrace('Open with ID App tapped', { isMobile, userAgent: navigator.userAgent });
 
         if (isMobile) {
-            // On mobile, try to open the Concordium ID app directly
-            // First, we need to initialize WalletConnect to get a URI
+            // On mobile, open Concordium ID via deep link.
+            // Merchant-provided: use merchant URI only — do NOT init SignClient / generate a new URI.
+            // SDK-managed: init WC, generate URI, listen for session approval, then deep link.
             try {
-                const { ServiceFactory } = await import('@/services');
                 const { ModalConstants } = await import('@/constants/modal.constants');
-                const { WalletConnectConstants } = await import('@/constants/walletconnect.constants');
                 const { getConcordiumIdDeepLink } = await import('@/constants/wallet.registry');
 
-                // Ensure __CONCORDIUM_WC_CONFIG__ is populated if we're in sdk-managed mode
-                if (!(window as any).__CONCORDIUM_WC_CONFIG__) {
-                    const projectId = localStorage.getItem(ModalConstants.LOCAL_STORAGE_FLAGS.SDK_PROJECT_ID);
-                    const network = localStorage.getItem(ModalConstants.LOCAL_STORAGE_FLAGS.SDK_NETWORK) || 'testnet';
-                    const storedMetadata = localStorage.getItem('sdkWalletConnectMetadata');
-                    const metadata = storedMetadata ? JSON.parse(storedMetadata) : null;
+                const connectionMode = localStorage.getItem(ModalConstants.LOCAL_STORAGE_FLAGS.CONNECTION_MODE);
+                const merchantUri = localStorage.getItem(ModalConstants.LOCAL_STORAGE_FLAGS.WALLET_CONNECT_URI);
 
-                    if (projectId) {
-                        (window as any).__CONCORDIUM_WC_CONFIG__ = {
-                            projectId,
-                            network,
-                            metadata: metadata || WalletConnectConstants.getDefaultMetadata(),
-                        };
+                let uri: string;
+
+                bridgeTrace('resolving WalletConnect URI', {
+                    connectionMode: connectionMode ?? '(none)',
+                    hasMerchantUri: Boolean(merchantUri),
+                    merchantUriLooksValid: Boolean(merchantUri?.startsWith('wc:')),
+                });
+
+                if (connectionMode === 'merchant-provided') {
+                    if (!merchantUri?.startsWith('wc:')) {
+                        bridgeTrace('ABORT — merchant WalletConnect URI missing or malformed', {
+                            merchantUri: merchantUri ?? '(null)',
+                        });
+                        throw new Error('Merchant WalletConnect URI not found');
                     }
+                    uri = merchantUri;
+                } else {
+                    const { ServiceFactory } = await import('@/services');
+                    const { WalletConnectConstants } = await import('@/constants/walletconnect.constants');
+
+                    // Ensure __CONCORDIUM_WC_CONFIG__ is populated if we're in sdk-managed mode
+                    if (!(window as any).__CONCORDIUM_WC_CONFIG__) {
+                        const projectId = localStorage.getItem(ModalConstants.LOCAL_STORAGE_FLAGS.SDK_PROJECT_ID);
+                        const network =
+                            localStorage.getItem(ModalConstants.LOCAL_STORAGE_FLAGS.SDK_NETWORK) || 'testnet';
+                        const storedMetadata = localStorage.getItem('sdkWalletConnectMetadata');
+                        const metadata = storedMetadata ? JSON.parse(storedMetadata) : null;
+
+                        if (projectId) {
+                            (window as any).__CONCORDIUM_WC_CONFIG__ = {
+                                projectId,
+                                network,
+                                metadata: metadata || WalletConnectConstants.getDefaultMetadata(),
+                            };
+                        }
+                    }
+
+                    const wcService = ServiceFactory.createWalletConnectService();
+                    await wcService.initialize();
+                    await wcService.clearAllSessionsForNewPairing();
+
+                    const network =
+                        (localStorage.getItem(ModalConstants.LOCAL_STORAGE_FLAGS.SDK_NETWORK) as
+                            | 'mainnet'
+                            | 'testnet') || 'testnet';
+                    const chainIds = WalletConnectConstants.CHAIN_IDS[network];
+
+                    const { uri: generatedUri, approval } = await wcService.connect({
+                        ccd: {
+                            methods: [...WalletConnectConstants.ALL_METHODS],
+                            chains: chainIds,
+                            events: [...WalletConnectConstants.EVENTS],
+                        },
+                    });
+
+                    if (!generatedUri) {
+                        throw new Error('Failed to generate WalletConnect URI');
+                    }
+
+                    uri = generatedUri;
+                    localStorage.setItem(ModalConstants.LOCAL_STORAGE_FLAGS.WALLET_CONNECT_URI, uri);
+                    localStorage.setItem(ModalConstants.LOCAL_STORAGE_FLAGS.CONNECTED_WALLET_NAME, 'Concordium ID');
+
+                    let sessionProcessed = false;
+
+                    const processApprovedSession = async (session: any) => {
+                        if (sessionProcessed) return;
+
+                        const { handleSessionApproval } = await import('./scan');
+                        try {
+                            await handleSessionApproval(session);
+                            sessionProcessed = true;
+                        } catch (error) {
+                            console.warn(
+                                '[verification-web-ui] session approval / proof send failed — will retry on focus',
+                                error
+                            );
+                        }
+                    };
+
+                    approval()
+                        .then(processApprovedSession)
+                        .catch(() => {});
+
+                    const tryRecoverApprovedSession = async () => {
+                        if (document.hidden || sessionProcessed) return;
+
+                        try {
+                            const signClient: any = wcService.getSignClient?.() || (wcService as any).signClient;
+                            const relayer: any = signClient?.core?.relayer;
+                            if (relayer && typeof relayer.restartTransport === 'function') {
+                                if (!relayer.connected) {
+                                    await relayer.restartTransport();
+                                }
+                            }
+                        } catch (error) {
+                            console.warn('[verification-web-ui] relay restart on focus failed', error);
+                        }
+
+                        const activeSessions = wcService.getActiveSessions();
+                        if (activeSessions.length > 0) {
+                            await processApprovedSession(activeSessions[0]);
+                        }
+                    };
+
+                    document.addEventListener('visibilitychange', () => {
+                        if (!document.hidden) void tryRecoverApprovedSession();
+                    });
+
+                    window.addEventListener('focus', () => {
+                        void tryRecoverApprovedSession();
+                    });
+
+                    window.addEventListener('pageshow', () => {
+                        void tryRecoverApprovedSession();
+                    });
                 }
 
-                // Get WalletConnect service and generate URI
-                const wcService = ServiceFactory.createWalletConnectService();
-                await wcService.initialize();
+                const isIOS =
+                    /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+                const qs = new URLSearchParams(window.location.search);
+                // Force App Store / deferred path: ?forceIdAppStore=1
+                const forceStore =
+                    qs.get('forceIdAppStore') === '1' || localStorage.getItem('forceIdAppStore') === '1';
+                // Never open any store — register + deep link only.
+                // ?skipStoreFallback=1 or localStorage skipStoreFallback=1
+                const skipStoreFallback =
+                    qs.get('skipStoreFallback') === '1' ||
+                    localStorage.getItem('skipStoreFallback') === '1';
+                // ?tf=1 sends iOS testers to TestFlight instead of the App Store.
+                const { isTestFlightMode } = await import('@/constants/wallet.registry');
+                const testFlightMode = isTestFlightMode();
 
-                // Clear existing sessions to ensure fresh pairing
-                await wcService.clearAllSessionsForNewPairing();
-
-                const network =
-                    (localStorage.getItem(ModalConstants.LOCAL_STORAGE_FLAGS.SDK_NETWORK) as 'mainnet' | 'testnet') ||
-                    'testnet';
-                const chainIds = WalletConnectConstants.CHAIN_IDS[network];
-
-                // Generate WalletConnect URI by calling connect()
-                const { uri, approval } = await wcService.connect({
-                    ccd: {
-                        // Request all methods for broad wallet compatibility
-                        methods: [...WalletConnectConstants.ALL_METHODS],
-                        chains: chainIds,
-                        events: [...WalletConnectConstants.EVENTS],
-                    },
-                });
-
-                if (!uri) {
-                    throw new Error('Failed to generate WalletConnect URI');
+                // Explicit deferred / store-only test path
+                if (forceStore) {
+                    await redirectToIdAppStore(uri);
+                    return;
                 }
 
-                // Store URI for later use
-                localStorage.setItem(ModalConstants.LOCAL_STORAGE_FLAGS.WALLET_CONNECT_URI, uri);
-
-                // Store connected wallet name
-                localStorage.setItem(ModalConstants.LOCAL_STORAGE_FLAGS.CONNECTED_WALLET_NAME, 'Concordium ID');
-
-                let sessionProcessed = false;
-
-                const processApprovedSession = async (session: any) => {
-                    if (sessionProcessed) return;
-                    sessionProcessed = true;
-
-                    const { handleSessionApproval } = await import('./scan');
-                    await handleSessionApproval(session);
-                };
-
-                // Handle session approval in the background
-                approval()
-                    .then(processApprovedSession)
-                    .catch(() => {});
-
-                const tryRecoverApprovedSession = async () => {
-                    if (document.hidden || sessionProcessed) return;
-
-                    const activeSessions = wcService.getActiveSessions();
-                    if (activeSessions.length > 0) {
-                        await processApprovedSession(activeSessions[0]);
+                let deepLink: string;
+                if (isIOS) {
+                    // Clipboard wc: (gesture-hot) + short wake link (Safari rejects long URIs).
+                    const { handoffIosClipboard } = await import('@/services/bridge.service');
+                    const { getConcordiumIdWakeDeepLink } = await import('@/constants/wallet.registry');
+                    try {
+                        await handoffIosClipboard(uri);
+                    } catch (error) {
+                        console.warn('[verification-web-ui] iOS clipboard before open failed', error);
+                        bridgeTrace('iOS clipboard threw before deep link', { message: String(error) });
                     }
-                };
+                    deepLink = getConcordiumIdWakeDeepLink(uri);
+                } else {
+                    // Android: full wc: deep link (+ Play referrer on store fallback). No clipboard.
+                    deepLink = getConcordiumIdDeepLink(uri);
+                }
 
-                document.addEventListener('visibilitychange', () => {
-                    void tryRecoverApprovedSession();
+                bridgeTrace('opening deep link', { platform: isIOS ? 'ios' : 'other', deepLink });
+
+                console.info('[verification-web-ui] Open with ID App deep link', {
+                    mode: connectionMode,
+                    walletConnectUri: uri,
+                    deepLink,
+                    deepLinkLength: deepLink.length,
+                    platform: isIOS ? 'ios' : 'other',
+                    forceStore,
+                    skipStoreFallback,
+                    testFlightMode,
                 });
 
-                window.addEventListener('focus', () => {
-                    void tryRecoverApprovedSession();
-                });
-
-                // Generate deep link
-                const deepLink = getConcordiumIdDeepLink(uri);
-
-                // Track if app opened (page loses visibility)
                 let appOpened = false;
                 const markAppOpened = () => {
                     appOpened = true;
@@ -176,38 +283,80 @@ export const createLandingModal: ModalFunction = () => {
                 window.addEventListener('pagehide', markAppOpened);
                 window.addEventListener('blur', markAppOpened);
 
-                // Use one direct deep link format on both Android and iOS.
-                // This avoids Android intent chooser edge-cases where the browser prompt can remain stuck.
-                const link = document.createElement('a');
-                link.href = deepLink;
-                link.style.display = 'none';
-                document.body.appendChild(link);
-                link.click();
+                // Try custom scheme (TestFlight / installed). Short on iOS.
+                // Tip: fresh Safari tab if you previously Cancel'd "Open in …?".
+                // Never use window.location.href for custom schemes on iOS —
+                // Safari shows "address is invalid" when the app does not open.
+                if (isIOS) {
+                    const { openIosCustomScheme } = await import('@/constants/wallet.registry');
+                    openIosCustomScheme(deepLink);
+                } else {
+                    const link = document.createElement('a');
+                    link.href = deepLink;
+                    link.style.display = 'none';
+                    document.body.appendChild(link);
+                    link.click();
+                    setTimeout(() => link.remove(), 100);
+                }
 
                 setTimeout(() => {
-                    if (!appOpened && !document.hidden && document.visibilityState === 'visible') {
-                        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
-                        window.location.href = isIOS ? ID_APP_STORE.ios : ID_APP_STORE.android;
-                    }
-
-                    document.removeEventListener('visibilitychange', visibilityHandler);
-                    window.removeEventListener('pagehide', markAppOpened);
-                    window.removeEventListener('blur', markAppOpened);
-
-                    if (link.parentNode) {
-                        link.parentNode.removeChild(link);
-                    }
-                }, 3500);
+                    void (async () => {
+                        if (
+                            !skipStoreFallback &&
+                            !appOpened &&
+                            !document.hidden &&
+                            document.visibilityState === 'visible'
+                        ) {
+                            await redirectToIdAppStore(uri);
+                        } else if (skipStoreFallback && !appOpened) {
+                            console.info(
+                                '[verification-web-ui] skipStoreFallback — not opening any store. Open the app manually; clipboard may already hold wc:.'
+                            );
+                            try {
+                                const { showWaitingForPairingState } = await import(
+                                    '@/components/desktop/processing'
+                                );
+                                await showWaitingForPairingState();
+                            } catch {
+                                /* ignore */
+                            }
+                        } else if (appOpened) {
+                            // App installed and opened — pairing / proof is in progress.
+                            try {
+                                const { showVerificationInProgressState } = await import(
+                                    '@/components/desktop/processing'
+                                );
+                                await showVerificationInProgressState();
+                            } catch {
+                                /* ignore */
+                            }
+                        }
+                        document.removeEventListener('visibilitychange', visibilityHandler);
+                        window.removeEventListener('pagehide', markAppOpened);
+                        window.removeEventListener('blur', markAppOpened);
+                    })();
+                }, isIOS ? 2500 : 3500);
             } catch {
-                // Fallback to app store if something goes wrong
-                openAppStoreForConcordiumID();
+                // Fallback to app store if something goes wrong — keep button locked
+                // so a second tap does not start another pairing while install/open runs.
+                const fallbackUri = localStorage.getItem('walletConnectUri');
+                void redirectToIdAppStore(fallbackUri);
             }
         } else {
             // On desktop, show the scan modal with QR code
-            const { showScanModal } = await import('./scan');
-            const { hideLandingModal } = await import('./landing');
-            hideLandingModal();
-            await showScanModal();
+            try {
+                const { showScanModal } = await import('./scan');
+                const { hideLandingModal } = await import('./landing');
+                hideLandingModal();
+                await showScanModal();
+            } catch {
+                openInFlight = false;
+                setOpenBusy(false);
+            }
+        }
+        } catch {
+            openInFlight = false;
+            setOpenBusy(false);
         }
     });
 

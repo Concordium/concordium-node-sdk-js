@@ -254,10 +254,31 @@ export const createScanModal: ModalFunction = () => {
             // Generate and open deep link directly (simpler approach)
             const deepLink = generateDeepLink(currentSelectedWallet, currentQRCodeUri!);
 
+            console.info('[verification-web-ui] scan Open in wallet deep link', {
+                wallet: currentSelectedWallet,
+                walletConnectUri: currentQRCodeUri,
+                deepLink,
+            });
+
             if (deepLink) {
-                window.location.href = deepLink;
+                const isIOS =
+                    /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+                if (isIOS && appType === 'concordium-id') {
+                    try {
+                        const { handoffIosClipboard } = await import('@/services/bridge.service');
+                        await handoffIosClipboard(currentQRCodeUri!);
+                    } catch {
+                        /* fail-open */
+                    }
+                    const { openIosCustomScheme } = await import('@/constants/wallet.registry');
+                    openIosCustomScheme(deepLink);
+                } else {
+                    window.location.href = deepLink;
+                }
+            } else if (appType === 'concordium-id') {
+                const { redirectToIdAppStore } = await import('@/utils/mobileAppDetection');
+                await redirectToIdAppStore(currentQRCodeUri);
             } else {
-                // Fallback: try to open app store
                 const { openAppStore } = await import('@/utils/mobileAppDetection');
                 openAppStore(appType);
             }
@@ -614,7 +635,8 @@ export async function autoSendPresentationRequestIfConfigured(topic: string): Pr
             metadata,
         });
 
-        // Emit the response to merchant
+        // Emit proof to merchant; merchant / verifyPresentationProof shows Success.
+        // Avoid remounting success here — duplicate calls caused flicker.
         window.dispatchEvent(
             new CustomEvent('verification-web-ui-event', {
                 detail: {
@@ -626,9 +648,25 @@ export async function autoSendPresentationRequestIfConfigured(topic: string): Pr
             })
         );
 
-        // Show success state
-        const { showSuccessState } = await import('./processing');
-        await showSuccessState();
+        // iOS: wake ID App so it drains the session_request while Safari may stay foregrounded briefly.
+        try {
+            const isIOS =
+                /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+            if (isIOS) {
+                const { openIosCustomScheme } = await import('@/constants/wallet.registry');
+                openIosCustomScheme(`concordiumidapp://r?_t=${Date.now()}`);
+            }
+        } catch (error) {
+            console.warn('[verification-web-ui] post-send iOS wake failed', error);
+        }
+
+        // Keep processing modal on "in progress" until merchant confirms VERIFIED / verifyProof.
+        // If no merchant handler will call showSuccessState, still show success after a short settle.
+        setTimeout(() => {
+            void import('./processing').then(({ showSuccessState }) => {
+                void showSuccessState();
+            });
+        }, 400);
     } catch (error) {
         // Emit error event
         window.dispatchEvent(
@@ -685,7 +723,7 @@ export async function handleSessionApproval(sessionData: any): Promise<void> {
             })
         );
 
-        // Show the processing modal (it will handle crossfade with scan modal)
+        // Show Verification in Progress (replaces any Waiting for pairing state)
         const { showProcessingModal } = await import('./processing');
         await showProcessingModal();
 
@@ -716,16 +754,17 @@ async function displayQRCode(uri: string): Promise<void> {
         // Dynamic import following your coding instructions pattern
         const { default: QRCode } = await import('qrcode');
         const { getConfig } = await import('@/config.state');
-        const { buildQrRedirectUrl } = await import('@/constants/wallet.registry');
+        const { getIdAppStoreUrl } = await import('@/constants/wallet.registry');
+        const { prepareQrHandoffPayload } = await import('@/services/bridge.service');
         const config = getConfig();
 
         const qrContainer = document.querySelector(SELECTORS.QR_CONTAINER);
 
         if (qrContainer) {
-            // Use redirect URL so camera scans open this page and run wallet deeplink detection.
-            const qrValue = buildQrRedirectUrl(uri);
+            // HTTPS redirect with embedded wc: — camera opens page → deep link / store.
+            const { qrUrl } = await prepareQrHandoffPayload(uri);
 
-            const qrCodeDataURL = await QRCode.toDataURL(qrValue, {
+            const qrCodeDataURL = await QRCode.toDataURL(qrUrl, {
                 width: 200,
                 margin: 2,
                 color: { dark: '#000000', light: '#ffffff' },
@@ -746,9 +785,11 @@ async function displayQRCode(uri: string): Promise<void> {
                 ? `<p id="qr-countdown" class="desktop--qr-countdown">Expires in: <span class="font-semibold">${initialCountdown}</span></p>`
                 : '';
 
-            // Determine app store link based on user's device
-            const { getIdAppStoreUrl } = await import('@/constants/wallet.registry');
             const appStoreUrl = getIdAppStoreUrl();
+
+            console.info('[IDApp] scan QR encoded', {
+                qrUrlLength: qrUrl.length,
+            });
 
             qrContainer.innerHTML = `
         <div class="text-center" style="min-height: 350px; display: flex; flex-direction: column; justify-content: center;">
@@ -1064,8 +1105,11 @@ function generateDeepLink(walletType: WalletTypeValues, uri: string): string | n
             deepLink = `cryptox-wc-${network}://wc?uri=${encodeURIComponent(uri)}&go_back=true`;
         }
     } else if (walletType === WALLET_TYPES.CONCORDIUM_ID) {
-        // Concordium ID deep link format expected by the app
-        deepLink = `concordiumidapp://wc?uri=${encodeURIComponent(uri)}`;
+        const isIOS = /iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream;
+        // iOS: short wake only (full wc: → Safari "address is invalid"); URI via clipboard.
+        deepLink = isIOS
+            ? `concordiumidapp://open?source=clipboard&_t=${Date.now()}`
+            : `concordiumidapp://wc?uri=${encodeURIComponent(uri)}&_t=${Date.now()}`;
     }
 
     return deepLink;
@@ -1080,14 +1124,14 @@ async function displayQRCodeMobile(uri: string, container: HTMLElement): Promise
     try {
         const { default: QRCode } = await import('qrcode');
         const { getConfig } = await import('@/config.state');
-        const { buildQrRedirectUrl, getIdAppStoreUrl } = await import('@/constants/wallet.registry');
+        const { getIdAppStoreUrl } = await import('@/constants/wallet.registry');
+        const { prepareQrHandoffPayload } = await import('@/services/bridge.service');
 
         const config = getConfig();
 
-        // Use redirect URL for better wallet compatibility
-        const qrValue = buildQrRedirectUrl(uri);
+        const { qrUrl } = await prepareQrHandoffPayload(uri);
 
-        const qrCodeDataURL = await QRCode.toDataURL(qrValue, {
+        const qrCodeDataURL = await QRCode.toDataURL(qrUrl, {
             width: 200,
             margin: 2,
             color: { dark: '#000000', light: '#ffffff' },

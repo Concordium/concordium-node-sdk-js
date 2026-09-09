@@ -1,14 +1,6 @@
 import { AccountAddress, Payload } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
-import {
-    CborAccountAddress,
-    CborEpoch,
-    Lock,
-    LockController,
-    Token,
-    TokenAmount,
-    TokenId,
-} from '@concordium/web-sdk/plt';
+import { CborAccountAddress, CborEpoch, Lock, LockConfig, Token, TokenAmount, TokenId } from '@concordium/web-sdk/plt';
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
 
@@ -79,24 +71,22 @@ const client = new ConcordiumGRPCNodeClient(
         // Build the lock configuration. Here the sender is granted all capabilities,
         // but this can be adjusted to fit the desired access control model.
         // Use `recipients: 'any'` instead of the parsed address array to allow any eligible recipient.
-        const config = {
+        const config = LockConfig.simpleV0(
             recipients,
             expiry,
-            controller: LockController.simpleV0(
-                [
-                    {
-                        account: CborAccountAddress.fromAccountAddress(sender),
-                        roles: [
-                            LockController.SimpleV0Capability.Fund,
-                            LockController.SimpleV0Capability.Send,
-                            LockController.SimpleV0Capability.Return,
-                            LockController.SimpleV0Capability.Cancel,
-                        ],
-                    },
-                ],
-                [tokenId]
-            ),
-        };
+            [
+                {
+                    account: CborAccountAddress.fromAccountAddress(sender),
+                    roles: [
+                        LockConfig.SimpleV0Capability.Fund,
+                        LockConfig.SimpleV0Capability.Send,
+                        LockConfig.SimpleV0Capability.Return,
+                        LockConfig.SimpleV0Capability.Cancel,
+                    ],
+                },
+            ],
+            [tokenId]
+        );
 
         try {
             // Submit a transaction that creates the lock and immediately funds it
@@ -122,11 +112,7 @@ const client = new ConcordiumGRPCNodeClient(
         // The sender is still needed so the proposal can derive the predicted lock id from chain state.
         // Use `recipients: 'any'` instead of the parsed address array to allow any eligible recipient.
         const sender = AccountAddress.fromBase58(cli.flags.sender);
-        const config = {
-            recipients,
-            expiry,
-            controller: LockController.simpleV0([], [tokenId]),
-        };
+        const config = LockConfig.simpleV0(recipients, expiry, [], [tokenId]);
 
         const payload = await Lock.create(client, sender, config)
             .fund({ token: tokenId, amount: fundAmount })

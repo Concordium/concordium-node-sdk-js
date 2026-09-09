@@ -2,6 +2,7 @@ import type { MetaUpdatePayload } from '../types.js';
 import * as Cbor from './Cbor.js';
 import * as CborAccountAddress from './CborAccountAddress.js';
 import * as CborMemo from './CborMemo.js';
+import type * as LockConfig from './LockConfig.js';
 import * as LockId from './LockId.js';
 import * as TokenAmount from './TokenAmount.js';
 import * as TokenId from './TokenId.js';
@@ -14,7 +15,6 @@ import {
     TokenUpdateAdminRolesDetails,
 } from './TokenOperation.js';
 import { parseEmpty, parseListUpdate, parseSupplyUpdate, parseTransfer } from './cbor-parse.js';
-import type { LockConfig } from './cbor-types.js';
 
 /** Enum representing the types of meta update operations. */
 export enum MetaUpdateOperationType {
@@ -35,7 +35,7 @@ type MetaUpdateOperationGen<Type extends MetaUpdateOperationType | TokenOperatio
 };
 
 /** Meta operation that creates a lock. */
-export type LockCreateOperation = MetaUpdateOperationGen<MetaUpdateOperationType.LockCreate, LockConfig>;
+export type LockCreateOperation = MetaUpdateOperationGen<MetaUpdateOperationType.LockCreate, LockConfig.Type>;
 
 /** Details for cancelling a lock. */
 export type LockCancel = {
@@ -304,7 +304,7 @@ function parseMetaUpdateOperation(decoded: unknown): MetaUpdateOperation | Unkno
             return { [type]: { token } };
         }
         case MetaUpdateOperationType.LockCreate:
-            return { [type]: details as LockConfig };
+            return { [type]: details as LockConfig.Type };
         case MetaUpdateOperationType.LockCancel:
             return { [type]: parseLockCancel(details) };
         case MetaUpdateOperationType.LockFund:

@@ -4,6 +4,10 @@
 
 ## Unreleased (devnet-p11-x)
 
+### Changed
+
+- **Breaking:** Lock configurations now use the tagged `{ simpleV0: { recipients, expiry, grants, tokens, keepAlive?, memo?, metadata? } }` shape. Lock queries now return `{ lock, config, funds }`; use `LockConfig.simpleV0` and inspect `info.config.simpleV0`.
+
 ### Added
 
 - A `metadata` field has been added added to both `LockConfiguration` and `LockInfo`.

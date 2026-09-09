@@ -2,6 +2,7 @@ import { CborAccountAddress, CborMemo } from '../../../src/plt/index.ts';
 import {
     Cbor,
     CborEpoch,
+    LockConfig,
     LockId,
     LockMetadata,
     TokenAddDenyListOperation,
@@ -196,60 +197,50 @@ describe('PLT Cbor', () => {
         const amount = TokenAmount.fromDecimal('42.123456', 6);
         const expiry = TransactionExpiry.fromEpochSeconds(1_700_000_000n);
 
-        test('should decode LockInfo correctly', () => {
-            // Fixture: LockInfo with lock(1,2,0), USDT amount 42.123456, one recipient,
-            // simpleV0 controller, and one fund entry.
-            const cbor = Cbor.fromHexString(
-                'a5646c6f636bd99fd8830102006566756e647381a2676163636f756e74d99d73a201d99d71a101190397035820151515151515151515151515151515151515151515151515151515151515151567616d6f756e747381a265746f6b656e645553445466616d6f756e74c482251a0282c0c066657870697279c11a6553f1006a636f6e74726f6c6c6572a16873696d706c655630a2666772616e747381a265726f6c6573826466756e646473656e64676163636f756e74d99d73a201d99d71a101190397035820151515151515151515151515151515151515151515151515151515151515151566746f6b656e738164555344546a726563697069656e747381d99d73a201d99d71a1011903970358201515151515151515151515151515151515151515151515151515151515151515'
-            );
-            const decoded = Cbor.decode(cbor, 'LockInfo');
-
-            expect(decoded.lock).toEqual(lock);
-            expect(decoded.recipients).toEqual([account]);
-            expect(decoded.expiry).toEqual(CborEpoch.fromTransactionExpiry(expiry));
+        test('decodes and re-encodes the canonical { lock, config, funds } fixture', () => {
+            // Independent fixture, including tagged simpleV0 and nested metadata bytes.
+            const fixture =
+                'a3646c6f636bd99fd88319271105006566756e647381a2676163636f756e74d99d73a201d99d71a1011903970358200102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f2067616d6f756e747381a265746f6b656e62745466616d6f756e74c4822219300c66636f6e666967a16873696d706c655630a566657870697279c11a6b932770666772616e747381a265726f6c6573826466756e646473656e64676163636f756e74d99d73a201d99d71a1011903970358200102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f2066746f6b656e7381627454686d657461646174615848a4646e616d656c56657374696e67206c6f636b666973737565726a436f6e636f726469756d6776657273696f6e016b6465736372697074696f6e6d546f6b656e73206c6f636b65646a726563697069656e747381d99d73a201d99d71a1011903970358200102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20';
+            const decoded = Cbor.decode(Cbor.fromHexString(fixture), 'LockInfo');
+            expect(decoded.lock).toEqual(LockId.create(10001n, 5n, 0n));
             expect(decoded.funds).toHaveLength(1);
-            expect(decoded.funds[0].account).toEqual(account);
-            expect(decoded.funds[0].amounts).toEqual([{ token, amount }]);
-
-            // Roundtrip: re-encoding the decoded value must reproduce the fixture
-            expect(Cbor.toHexString(Cbor.encode(decoded))).toBe(Cbor.toHexString(cbor));
+            expect(decoded.config.simpleV0.recipients).not.toBe('any');
+            expect(LockMetadata.decode(decoded.config.simpleV0.metadata!)).toMatchObject({ name: 'Vesting lock' });
+            expect(Cbor.toHexString(Cbor.encode(decoded))).toBe(fixture);
         });
 
-        test('should decode LockInfo metadata as raw bytes', () => {
-            const metadata = LockMetadata.encode({
-                name: 'Lock info metadata',
-                description: 'Decoded from lock info',
-                issuer: 'Concordium',
-            });
-            const encoded = Cbor.encode({
-                lock,
-                recipients: [account],
-                expiry: CborEpoch.fromTransactionExpiry(expiry),
-                controller: {
-                    simpleV0: {
-                        grants: [{ account, roles: ['fund'] }],
-                        tokens: [token],
-                    },
-                },
+        test('preserves metadata inside the configuration payload', () => {
+            const metadata = LockMetadata.encode({ name: 'Lock info metadata', issuer: 'Concordium' });
+            const config = LockConfig.simpleV0([account], CborEpoch.fromTransactionExpiry(expiry), [], [token], {
                 metadata,
-                funds: [],
             });
-
-            const decoded = Cbor.decode(encoded, 'LockInfo');
-            expect(decoded.metadata).toEqual(metadata);
-            expect(LockMetadata.decode(decoded.metadata!)).toEqual({
+            const decoded = Cbor.decode(Cbor.encode({ lock, config, funds: [] }), 'LockInfo');
+            expect(LockMetadata.decode(decoded.config.simpleV0.metadata!)).toEqual({
                 name: 'Lock info metadata',
-                description: 'Decoded from lock info',
                 issuer: 'Concordium',
             });
         });
 
-        test('should throw error if LockInfo has invalid field types', () => {
-            expect(() => Cbor.decode(Cbor.encode([]), 'LockInfo')).toThrow(/Invalid CBOR data for LockInfo/);
+        test('rejects malformed envelopes and nested values', () => {
+            expect(() => Cbor.decode(Cbor.encode([]), 'LockInfo')).toThrow(/Invalid CBOR data/);
             expect(() => Cbor.decode(Cbor.encode({ funds: [] }), 'LockInfo')).toThrow(/missing or invalid 'lock'/);
             expect(() => Cbor.decode(Cbor.encode({ lock, funds: 'invalid' }), 'LockInfo')).toThrow(
                 /'funds' must be an array/
             );
+            expect(() => Cbor.decode(Cbor.encode({ lock, funds: [] }), 'LockInfo')).toThrow(/invalid 'config'/);
+            expect(() => Cbor.decode(Cbor.encode({ lock, config: {}, funds: [] }), 'LockInfo')).toThrow(
+                /simpleV0 variant/
+            );
+            const config = LockConfig.simpleV0([account], CborEpoch.fromTransactionExpiry(expiry), [], [token]);
+            expect(() => Cbor.decode(Cbor.encode({ lock, config, funds: [{}] }), 'LockInfo')).toThrow(
+                /invalid 'account'/
+            );
+            expect(() =>
+                Cbor.decode(Cbor.encode({ lock, config, funds: [{ account, amounts: 'invalid' }] }), 'LockInfo')
+            ).toThrow(/'amounts' must be an array/);
+            expect(() =>
+                Cbor.decode(Cbor.encode({ lock, config, funds: [{ account, amounts: [{}] }] }), 'LockInfo')
+            ).toThrow(/invalid 'token'/);
         });
     });
 

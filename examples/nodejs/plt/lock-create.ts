@@ -4,7 +4,7 @@ import {
     CborAccountAddress,
     CborEpoch,
     Lock,
-    LockController,
+    LockConfig,
     MetaUpdateOperationType,
     TokenId,
     createMetaUpdatePayload,
@@ -70,24 +70,22 @@ const client = new ConcordiumGRPCNodeClient(
 
         // Build the lock configuration. Here the sender is granted all capabilities,
         // but this can be adjusted to fit the desired access control model.
-        const config = {
+        const config = LockConfig.simpleV0(
             recipients,
             expiry,
-            controller: LockController.simpleV0(
-                [
-                    {
-                        account: CborAccountAddress.fromAccountAddress(sender),
-                        roles: [
-                            LockController.SimpleV0Capability.Fund,
-                            LockController.SimpleV0Capability.Send,
-                            LockController.SimpleV0Capability.Return,
-                            LockController.SimpleV0Capability.Cancel,
-                        ],
-                    },
-                ],
-                tokenIds
-            ),
-        };
+            [
+                {
+                    account: CborAccountAddress.fromAccountAddress(sender),
+                    roles: [
+                        LockConfig.SimpleV0Capability.Fund,
+                        LockConfig.SimpleV0Capability.Send,
+                        LockConfig.SimpleV0Capability.Return,
+                        LockConfig.SimpleV0Capability.Cancel,
+                    ],
+                },
+            ],
+            tokenIds
+        );
 
         try {
             // Submit the lock creation transaction
@@ -105,11 +103,7 @@ const client = new ConcordiumGRPCNodeClient(
         // Build the lockCreate operation payload without submitting.
         // Use `recipients: 'any'` instead of an address array to allow any eligible recipient.
         // The controller grants and token list should be configured to match the intended access model.
-        const config = {
-            recipients,
-            expiry,
-            controller: LockController.simpleV0([], tokenIds),
-        };
+        const config = LockConfig.simpleV0(recipients, expiry, [], tokenIds);
 
         const payload = createMetaUpdatePayload({ [MetaUpdateOperationType.LockCreate]: config });
         console.log('Created payload:', payload);

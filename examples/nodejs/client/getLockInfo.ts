@@ -66,12 +66,13 @@ const client = new ConcordiumGRPCNodeClient(
     const lockInfoResponse: LockInfoResponse = await client.getLockInfo(lockId, blockHash);
     const lockInfo: LockInfo = Cbor.decode(lockInfoResponse.lockInfo, 'LockInfo');
 
+    const config = lockInfo.config.simpleV0;
     console.log('Lock ID:', lockInfo.lock.toString());
     console.log(
         'Recipients:',
-        lockInfo.recipients === 'any' ? 'any' : lockInfo.recipients.map((recipient) => recipient.toString())
+        config.recipients === 'any' ? 'any' : config.recipients.map((recipient) => recipient.toString())
     );
-    console.log('Expiry:', lockInfo.expiry.expiry.toString());
+    console.log('Expiry:', config.expiry.expiry.toString());
     console.log('Funds:', JSON.stringify(lockInfo.funds, null, 2));
     // #endregion documentation-snippet
 })();

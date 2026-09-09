@@ -211,9 +211,15 @@ describe('PLT Cbor', () => {
 
         test('preserves metadata inside the configuration payload', () => {
             const metadata = LockMetadata.encode({ name: 'Lock info metadata', issuer: 'Concordium' });
-            const config = LockConfig.simpleV0([account], CborEpoch.fromTransactionExpiry(expiry), [], [token], {
-                metadata,
-            });
+            const config = LockConfig.simpleV0(
+                [account],
+                CborEpoch.fromTransactionExpiry(expiry),
+                [],
+                [token],
+                undefined,
+                undefined,
+                metadata
+            );
             const decoded = Cbor.decode(Cbor.encode({ lock, config, funds: [] }), 'LockInfo');
             expect(LockMetadata.decode(decoded.config.simpleV0.metadata!)).toEqual({
                 name: 'Lock info metadata',

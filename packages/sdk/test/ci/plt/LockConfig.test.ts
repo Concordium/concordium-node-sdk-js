@@ -43,11 +43,15 @@ describe('PLT LockConfig', () => {
         const decoded = Cbor.decode(Cbor.fromHexString(fixture), 'LockConfig');
 
         expect(decoded).toEqual(
-            LockConfig.simpleV0([account], CborEpoch.fromEpochSeconds(10n), [], [token], {
-                keepAlive: true,
-                memo: new Uint8Array([1, 2]),
-                metadata: LockMetadata.encode({ name: 'Vesting lock', issuer: 'Concordium' }),
-            })
+            LockConfig.simpleV0(
+                [account],
+                CborEpoch.fromEpochSeconds(10n),
+                [],
+                [token],
+                true,
+                new Uint8Array([1, 2]),
+                LockMetadata.encode({ name: 'Vesting lock', issuer: 'Concordium' })
+            )
         );
         expect(Buffer.from(Cbor.encode(decoded).bytes).toString('hex')).toBe(fixture);
     });
@@ -68,7 +72,17 @@ describe('PLT LockConfig', () => {
             issuer: 'Concordium',
         });
         const decoded = Cbor.decode(
-            Cbor.encode(LockConfig.simpleV0([account], CborEpoch.fromEpochSeconds(10n), [], [token], { metadata })),
+            Cbor.encode(
+                LockConfig.simpleV0(
+                    [account],
+                    CborEpoch.fromEpochSeconds(10n),
+                    [],
+                    [token],
+                    undefined,
+                    undefined,
+                    metadata
+                )
+            ),
             'LockConfig'
         );
         expect(LockMetadata.decode(decoded.simpleV0.metadata!)).toEqual({
@@ -80,7 +94,15 @@ describe('PLT LockConfig', () => {
         const invalid = new Uint8Array([0x01]);
         const invalidDecoded = Cbor.decode(
             Cbor.encode(
-                LockConfig.simpleV0([account], CborEpoch.fromEpochSeconds(10n), [], [token], { metadata: invalid })
+                LockConfig.simpleV0(
+                    [account],
+                    CborEpoch.fromEpochSeconds(10n),
+                    [],
+                    [token],
+                    undefined,
+                    undefined,
+                    invalid
+                )
             ),
             'LockConfig'
         );
@@ -90,14 +112,26 @@ describe('PLT LockConfig', () => {
 
     it('constructs complete simpleV0 configurations with default and explicit optional fields', () => {
         expect(LockConfig.simpleV0([account], CborEpoch.fromEpochSeconds(10n), [], [token])).toEqual({
-            simpleV0: { recipients: [account], expiry: CborEpoch.fromEpochSeconds(10n), grants: [], tokens: [token] },
+            simpleV0: {
+                recipients: [account],
+                expiry: CborEpoch.fromEpochSeconds(10n),
+                grants: [],
+                tokens: [token],
+                keepAlive: undefined,
+                memo: undefined,
+                metadata: undefined,
+            },
         });
         expect(
-            LockConfig.simpleV0([account], CborEpoch.fromEpochSeconds(10n), [], [token], {
-                keepAlive: true,
-                memo: new Uint8Array([1, 2]),
-                metadata: new Uint8Array([3]),
-            })
+            LockConfig.simpleV0(
+                [account],
+                CborEpoch.fromEpochSeconds(10n),
+                [],
+                [token],
+                true,
+                new Uint8Array([1, 2]),
+                new Uint8Array([3])
+            )
         ).toEqual({
             simpleV0: {
                 recipients: [account],

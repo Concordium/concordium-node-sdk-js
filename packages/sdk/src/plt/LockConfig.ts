@@ -13,15 +13,21 @@ export enum Variant {
 
 /** Capabilities that can be granted for a simple v0 lock. */
 export enum SimpleV0Capability {
+    /** Authorizes funding the lock with a permitted token. */
     Fund = 'fund',
+    /** Authorizes returning funds from the lock. */
     Return = 'return',
+    /** Authorizes sending funds from the lock to an eligible recipient. */
     Send = 'send',
+    /** Authorizes cancelling the lock. */
     Cancel = 'cancel',
 }
 
 /** A grant of simple v0 lock capabilities to an account. */
 export type SimpleV0Grant = {
+    /** Account receiving the capabilities. */
     account: CborAccountAddress.Type;
+    /** Capabilities granted to the account. */
     roles: SimpleV0Capability[];
 };
 
@@ -30,11 +36,17 @@ export type Recipients = 'any' | CborAccountAddress.Type[];
 
 /** Simple v0 lock configuration payload. */
 export type SimpleV0 = {
+    /** Accounts eligible to receive funds from the lock. */
     recipients: Recipients;
+    /** Time at which the lock expires. */
     expiry: CborEpoch.Type;
+    /** Capability grants authorizing accounts to operate the lock. */
     grants: SimpleV0Grant[];
+    /** Tokens that may be funded into the lock. */
     tokens: TokenId.Type[];
+    /** Whether to retain the lock after all funds are returned. */
     keepAlive?: boolean;
+    /** Optional memo attached to the lock. */
     memo?: Memo;
     /** Raw CBOR bytes. Use `LockMetadata.encode` and `LockMetadata.decode` for typed metadata. */
     metadata?: Uint8Array;
@@ -43,15 +55,33 @@ export type SimpleV0 = {
 /** Tagged lock configuration. */
 export type Type = { [Variant.SimpleV0]: SimpleV0 };
 
-/** Construct a simple v0 lock configuration. */
+/**
+ * Construct a simple v0 lock configuration.
+ *
+ * @param recipients Accounts eligible to receive funds from the lock.
+ * @param expiry Time at which the lock expires.
+ * @param grants Capability grants authorizing accounts to operate the lock.
+ * @param tokens Tokens that may be funded into the lock.
+ * @param keepAlive Whether to retain the lock after all funds are returned.
+ * @param memo Optional memo attached to the lock.
+ * @param metadata Optional raw CBOR metadata.
+ * @returns Tagged simple v0 lock configuration.
+ *
+ * @example
+ * ```ts
+ * const config = LockConfig.simpleV0(recipients, expiry, grants, tokens);
+ * ```
+ */
 export function simpleV0(
     recipients: Recipients,
     expiry: CborEpoch.Type,
     grants: SimpleV0Grant[],
     tokens: TokenId.Type[],
-    options: { keepAlive?: boolean; memo?: Memo; metadata?: Uint8Array } = {}
+    keepAlive?: boolean,
+    memo?: Memo,
+    metadata?: Uint8Array
 ): Type {
-    return { [Variant.SimpleV0]: { recipients, expiry, grants, tokens, ...options } };
+    return { [Variant.SimpleV0]: { recipients, expiry, grants, tokens, keepAlive, memo, metadata } };
 }
 
 /** Decode a lock configuration from its CBOR-compatible value. */
@@ -107,11 +137,15 @@ export function fromCBORValue(decoded: unknown): Type {
     if (config.memo !== undefined && !(config.memo instanceof Uint8Array) && !CborMemo.instanceOf(config.memo))
         throw new Error('Invalid simpleV0 lock config: expected memo as CBOR bytes or memo');
 
-    return simpleV0(config.recipients, config.expiry, grants, tokens, {
-        keepAlive: config.keepAlive,
-        memo: config.memo as SimpleV0['memo'],
-        metadata: config.metadata as Uint8Array | undefined,
-    });
+    return simpleV0(
+        config.recipients,
+        config.expiry,
+        grants,
+        tokens,
+        config.keepAlive,
+        config.memo as SimpleV0['memo'],
+        config.metadata as Uint8Array | undefined
+    );
 }
 
 /** Decode CBOR-encoded lock configuration bytes. */

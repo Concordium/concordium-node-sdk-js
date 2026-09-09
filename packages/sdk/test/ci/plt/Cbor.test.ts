@@ -194,7 +194,6 @@ describe('PLT Cbor', () => {
         const account = CborAccountAddress.fromAccountAddress(AccountAddress.fromBuffer(new Uint8Array(32).fill(0x15)));
         const lock = LockId.create(1n, 2n, 0n);
         const token = TokenId.fromString('USDT');
-        const amount = TokenAmount.fromDecimal('42.123456', 6);
         const expiry = TransactionExpiry.fromEpochSeconds(1_700_000_000n);
 
         test('decodes and re-encodes the canonical { lock, config, funds } fixture', () => {

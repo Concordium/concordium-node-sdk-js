@@ -11,7 +11,6 @@ import type {
 import {
     Cbor,
     CborAccountAddress,
-    CborEpoch,
     LockId,
     MetaUpdateOperation,
     TokenAmount,

@@ -1,7 +1,6 @@
 import { MAX_U8 } from '../constants.js';
 import * as Cbor from './Cbor.js';
 import type * as CborAccountAddress from './CborAccountAddress.js';
-import type * as CborEpoch from './CborEpoch.js';
 import type * as LockConfig from './LockConfig.js';
 import type * as LockId from './LockId.js';
 import type * as TokenAmount from './TokenAmount.js';

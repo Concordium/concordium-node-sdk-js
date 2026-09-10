@@ -78,7 +78,7 @@ export enum RejectReasonTag {
     LockExpired = 'LockExpired',
     LockFundNotAuthorized = 'LockFundNotAuthorized',
     LockSendNotAuthorized = 'LockSendNotAuthorized',
-    LockReturnNotAuthorized = 'LockReturnNotAuthorized',
+    LockReleaseNotAuthorized = 'LockReleaseNotAuthorized',
     LockCancelNotAuthorized = 'LockCancelNotAuthorized',
     LockTokenNotPermitted = 'LockTokenNotPermitted',
     LockRecipientNotPermitted = 'LockRecipientNotPermitted',
@@ -161,7 +161,7 @@ export type LockIdRejectReasonTag =
 export type LockIdAccountRejectReasonTag =
     | RejectReasonTag.LockFundNotAuthorized
     | RejectReasonTag.LockSendNotAuthorized
-    | RejectReasonTag.LockReturnNotAuthorized
+    | RejectReasonTag.LockReleaseNotAuthorized
     | RejectReasonTag.LockCancelNotAuthorized
     | RejectReasonTag.LockRecipientNotPermitted;
 

@@ -79,7 +79,7 @@ const client = new ConcordiumGRPCNodeClient(
                     roles: [
                         LockConfig.SimpleV0Capability.Fund,
                         LockConfig.SimpleV0Capability.Send,
-                        LockConfig.SimpleV0Capability.Return,
+                        LockConfig.SimpleV0Capability.Release,
                         LockConfig.SimpleV0Capability.Cancel,
                     ],
                 },

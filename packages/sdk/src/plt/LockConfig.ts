@@ -15,8 +15,8 @@ export enum Variant {
 export enum SimpleV0Capability {
     /** Authorizes funding the lock with a permitted token. */
     Fund = 'fund',
-    /** Authorizes returning funds from the lock. */
-    Return = 'return',
+    /** Authorizes releasing funds from the lock. */
+    Release = 'release',
     /** Authorizes sending funds from the lock to an eligible recipient. */
     Send = 'send',
     /** Authorizes cancelling the lock. */
@@ -44,7 +44,7 @@ export type SimpleV0 = {
     grants: SimpleV0Grant[];
     /** Tokens that may be funded into the lock. */
     tokens: TokenId.Type[];
-    /** Whether to retain the lock after all funds are returned. */
+    /** Whether to retain the lock after all funds are released. */
     keepAlive?: boolean;
     /** Optional memo attached to the lock. */
     memo?: Memo;
@@ -62,7 +62,7 @@ export type Type = { [Variant.SimpleV0]: SimpleV0 };
  * @param expiry Time at which the lock expires.
  * @param grants Capability grants authorizing accounts to operate the lock.
  * @param tokens Tokens that may be funded into the lock.
- * @param keepAlive Whether to retain the lock after all funds are returned.
+ * @param keepAlive Whether to retain the lock after all funds are released.
  * @param memo Optional memo attached to the lock.
  * @param metadata Optional raw CBOR metadata.
  * @returns Tagged simple v0 lock configuration.

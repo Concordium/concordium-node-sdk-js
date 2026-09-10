@@ -1243,12 +1243,12 @@ export function trRejectReason(rejectReason: GRPC.RejectReason | undefined): Upw
                     account: AccountAddress.fromProto(unwrap(reason.lockSendNotAuthorized.account)),
                 },
             };
-        case 'lockReturnNotAuthorized':
+        case 'lockReleaseNotAuthorized':
             return {
-                tag: Tag.LockReturnNotAuthorized,
+                tag: Tag.LockReleaseNotAuthorized,
                 contents: {
-                    lockId: PLT.LockId.fromProto(unwrap(reason.lockReturnNotAuthorized.lockId)),
-                    account: AccountAddress.fromProto(unwrap(reason.lockReturnNotAuthorized.account)),
+                    lockId: PLT.LockId.fromProto(unwrap(reason.lockReleaseNotAuthorized.lockId)),
+                    account: AccountAddress.fromProto(unwrap(reason.lockReleaseNotAuthorized.account)),
                 },
             };
         case 'lockCancelNotAuthorized':

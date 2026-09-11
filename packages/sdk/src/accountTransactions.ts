@@ -29,7 +29,6 @@ import {
     encodeWord8FromString,
     encodeWord32,
     encodeWord64,
-    mapTagToType,
     packBufferWithWord8Length,
     packBufferWithWord16Length,
     packBufferWithWord32Length,
@@ -838,18 +837,24 @@ export class ConfigureDelegationHandler
 
         const restakeEarnings = hasRestakeEarnings ? serializedPayload.read(1).readUInt8(0) !== 0 : false;
 
-        let delegationTarget;
+        let delegationTarget: DelegationTarget | undefined;
         if (hasDelegationTarget) {
             const tag = serializedPayload.read(1).readUInt8(0);
 
             const tagMapping = DelegationTargetTypeNumeric[tag];
             if (tagMapping === undefined) throw new Error(`Unknown tag id ${tag}`);
 
-            const validatorId = serializedPayload.read(8).readBigUInt64BE(0);
-            delegationTarget = {
-                delegateType: mapTagToType[tag],
-                bakerId: validatorId,
-            };
+            if (tag === DelegationTargetTypeNumeric.Baker) {
+                const validatorId = serializedPayload.read(8).readBigUInt64BE(0);
+                delegationTarget = {
+                    delegateType: DelegationTargetType.Baker,
+                    bakerId: validatorId,
+                };
+            } else {
+                delegationTarget = {
+                    delegateType: DelegationTargetType.PassiveDelegation,
+                };
+            }
         }
 
         return {

@@ -45,11 +45,8 @@ export async function initializeWalletConnect(config?: Partial<WalletConnectConf
         throw new Error('WalletConnect projectId is required. Get one from https://cloud.walletconnect.com');
     }
 
-    // Warn about test/development project IDs
     if (finalConfig.projectId.includes('test') || finalConfig.projectId.includes('development')) {
-        console.warn(
-            '🚨 Using test/development WalletConnect project ID. This may not work properly. Get a real project ID from https://cloud.walletconnect.com'
-        );
+        // Silently allow test/development project IDs
     }
 
     try {
@@ -61,7 +58,6 @@ export async function initializeWalletConnect(config?: Partial<WalletConnectConf
 
         return signClient;
     } catch (error) {
-        console.error('Failed to initialize WalletConnect:', error);
         if (
             (error instanceof Error && error.message?.includes('projectId')) ||
             finalConfig.projectId.includes('test')
@@ -92,7 +88,6 @@ export async function handleSessionApproval(approval: Promise<SessionTypes.Struc
         const session = await approval;
         return session;
     } catch (error) {
-        console.error('Failed to get session approval:', error);
         throw error;
     }
 }
@@ -113,7 +108,6 @@ export async function connectWallet(namespaces: Record<string, any>) {
         });
         return { uri, approval };
     } catch (error) {
-        console.error('Failed to connect wallet:', error);
         throw error;
     }
 }
@@ -140,7 +134,6 @@ export async function disconnectAll(): Promise<void> {
 
         await Promise.all(disconnectPromises);
     } catch (error) {
-        console.error('Failed to disconnect:', error);
         throw error;
     }
 }

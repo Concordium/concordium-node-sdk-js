@@ -38,6 +38,10 @@
 - Added `TokenRoleAuthorizations` and `TokenAuthorizationsDetails` types representing the decoded CBOR structure returned by `getTokenAuthorizations`.
 - `Cbor.decode` now accepts `'TokenAuthorizationsDetails'` as a type hint, decoding the CBOR `details` field of `TokenAuthorizations` into a `Partial<Record<TokenAdminRole, TokenRoleAuthorizations>>`.
 
+### Fixed
+
+- Deserializing a `configureDelegation` payload with a passive delegation target no longer fails with "Failed to read 8 bytes from the cursor." The deserializer was unconditionally reading an 8-byte baker ID even though passive delegation targets do not encode one.
+
 ## 12.0.2
 
 ### Changed
@@ -49,8 +53,8 @@
 
 ### Fixed
 
-- An issue where WASM functionality could not be used when using the browser UMD library, or in a web context 
-  without applying the bundler optimization. 
+- An issue where WASM functionality could not be used when using the browser UMD library, or in a web context
+  without applying the bundler optimization.
 
 ## 12.0.0
 
@@ -63,7 +67,7 @@ This release adds compatibility with version 10 concordium nodes
 - Deserialize function for `UpdateContractPayload` implemented instead of throwing an exception of not supporting deserialize
 - Deserialize function for `UpdateCredentialsPayload` implemented instead of throwing an exception of not supporting deserialize
 - `deserializeBlockItem` to deserialize block items from their encoding as received by concordium nodes.
-- Move out `CdiRandomness` from `CredentialDeploymentPayload` to ensure payload is as per bluepaper and still support wallet 
+- Move out `CdiRandomness` from `CredentialDeploymentPayload` to ensure payload is as per bluepaper and still support wallet
   in constructing credential information with CdiRandomness.
 - `UpdateCredentialKeysPayload` and corresponding deserialize and serialize functions implemented
 - `ConfigureBakerPayload` deserialization supported
@@ -83,8 +87,8 @@ This release adds compatibility with version 10 concordium nodes
   creating transactions - use `Transaction` instead.
 - `ConcordiumGRPCClient.sendTransaction` to support submitting transactions created with the new `Transaction`
   API.
-- New account transaction format `AccountTransactionV1` and support for creating transactions of this format through the 
-  `Transaction` API. 
+- New account transaction format `AccountTransactionV1` and support for creating transactions of this format through the
+  `Transaction` API.
   - For now, this only adds support for sponsoring transactions, i.e. having another party than the
     "sender" of the transaction pay for the transaction fees.
 - Extended `AccountTransactionSummary` with optional sponsor details in case the transaction summary details a sponsored
@@ -103,15 +107,15 @@ This release adds compatibility with version 10 concordium nodes
 - Removed `deserializeAccountTransaction`, as it deserializes an intermediary account transaction format which is not supported
   by the chain.
 - Remove the `maxContractExecutionEnergy` from `UpdateContractPayload`. This field actually represent the base energy amount
-  and it must be passed in manually instead of deriving from payload. 
+  and it must be passed in manually instead of deriving from payload.
   - A corresponding replacement type `UpdateContractInput` has been added, which can be used in place of the
     old type definition.
 - Remove the `maxContractExecutionEnergy` from `InitContractPayload`. This field actually represent the base energy amount
-  and it must be passed in manually instead of deriving from payload. 
+  and it must be passed in manually instead of deriving from payload.
   - A corresponding replacement type `InitContractInput` has been added, which can be used in place of the
     old type definition.
 - Remove the `currentNumberOfCredentials` from `UpdateCredentialsPayload`. This field is needed to calculate the base energy amount
-  and it must be passed in manually instead of deriving from payload. 
+  and it must be passed in manually instead of deriving from payload.
   - A corresponding replacement type `UpdateCredentialsInput` has been added, which can be used in place of the
     old type definition.
 
@@ -127,8 +131,8 @@ This release adds compatibility with version 10 concordium nodes
 
 ### Fixed
 
-- An issue where WASM functionality could not be used when using the browser UMD library, or in a web context 
-  without applying the bundler optimization. 
+- An issue where WASM functionality could not be used when using the browser UMD library, or in a web context
+  without applying the bundler optimization.
 
 ## 11.1.0
 
@@ -285,7 +289,7 @@ the context of the verification request.
   - `TokenMetadataUrl`: An object containing the url for token metadata
   - `TokenHolder`: A representation of the different token holder entities. Currently, only accounts are supported.
   - `TokenAccountState`, `TokenState`, `TokenInfo`, and `TokenAccountInfo`, all representing PLT related data returned by the
-    GRPC API of a Concordium node. 
+    GRPC API of a Concordium node.
 - `Token`, which is a client for interacting with PLTs
 - `parseModuleEvent`, which attempts to parse an `EncodedTokenModuleEvent` into a `TokenModuleEvent`.
 - CBOR conversion functionality to `AccountAddress`.
@@ -361,7 +365,7 @@ the context of the verification request.
 ### Changed
 
 - Energy cost of PLT mint/burn changed from 100 to 50
-- Changed the functions exposed for submitting token updates on `Token` to take optional `TokenUpdateMetadata` instead of 
+- Changed the functions exposed for submitting token updates on `Token` to take optional `TokenUpdateMetadata` instead of
   getting the corresponding data from chain.
 
 ## 10.0.0-alpha.11
@@ -425,7 +429,7 @@ the context of the verification request.
   - `TokenMetadataUrl`: An object containing the url for token metadata
   - `TokenHolder`: A representation of the different token holder entities. Currently, only accounts are supported.
   - `TokenAccountState`, `TokenState`, `TokenInfo`, and `TokenAccountInfo`, all representing PLT related data returned by the
-    GRPC API of a Concordium node. 
+    GRPC API of a Concordium node.
 - `Token`, which is a client for interacting with PLTs
 - `parseModuleEvent`, which attempts to parse an `EncodedTokenModuleEvent` into a `TokenModuleEvent`.
 - CBOR conversion functionality to `AccountAddress`.

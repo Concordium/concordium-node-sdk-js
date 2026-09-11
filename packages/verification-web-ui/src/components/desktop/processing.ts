@@ -144,7 +144,6 @@ export const showProcessingModal: ShowModalFunction = async () => {
     const targetContainer = getGlobalContainer();
 
     if (!targetContainer) {
-        console.error('Container not found for processing modal');
         return;
     }
 
@@ -155,48 +154,26 @@ export const showProcessingModal: ShowModalFunction = async () => {
     processingModalElement = createProcessingModal('loading');
     processingModalElement.id = 'processing-modal';
 
-    // Get the modal container for transforms
-    const modalContainer = processingModalElement.querySelector('.desktop--modal-container') as HTMLElement;
-
-    // For smooth transitions, prepare new modal completely before showing
-    processingModalElement.style.opacity = '0';
-    modalContainer.style.transform = 'translateY(-20px) scale(0.95)';
-    modalContainer.style.transition = 'transform 0.3s ease-out';
+    // For smooth transitions, start with modal-entering then transition to modal-visible
+    processingModalElement.classList.add('modal-entering');
     targetContainer.appendChild(processingModalElement);
 
-    // Force a reflow to ensure the styles are applied
+    // Force a reflow to ensure the initial hidden state is applied
     processingModalElement.offsetHeight;
-
-    // Now start the transition
-    processingModalElement.style.transition = 'opacity 0.3s ease-out';
 
     // Use a small delay to ensure DOM is fully ready
     setTimeout(() => {
         // Start simultaneous crossfade
         if (existingModal) {
-            const existingContainer = existingModal.querySelector('.desktop--modal-container') as HTMLElement;
-            existingModal.style.transition = 'opacity 0.3s ease-in';
-            if (existingContainer) {
-                existingContainer.style.transition = 'transform 0.3s ease-in';
-                existingContainer.style.transform = 'translateY(-20px) scale(0.95)';
-            }
-            existingModal.style.opacity = '0';
-            existingModal.style.pointerEvents = 'none';
-            existingModal.style.zIndex = '9998';
-        }
-
-        // Show new modal
-        processingModalElement!.style.opacity = '1';
-        modalContainer.style.transform = 'translateY(0) scale(1)';
-
-        // Remove old modal after transition completes
-        if (existingModal) {
+            existingModal.classList.add('modal-exiting');
             setTimeout(() => {
-                if (existingModal.parentNode) {
-                    existingModal.parentNode.removeChild(existingModal);
-                }
+                existingModal.parentNode?.removeChild(existingModal);
             }, 350);
         }
+
+        // Reveal new modal
+        processingModalElement!.classList.remove('modal-entering');
+        processingModalElement!.classList.add('modal-visible');
     }, 10);
 
     // Dispatch initial event
@@ -263,7 +240,6 @@ export async function showSuccessState(): Promise<void> {
     const targetContainer = getGlobalContainer();
 
     if (!targetContainer || !processingModalElement) {
-        console.error('Container or modal element not found');
         return;
     }
 
@@ -327,7 +303,6 @@ export async function showErrorState(): Promise<void> {
     const targetContainer = getGlobalContainer();
 
     if (!targetContainer) {
-        console.error('Container not found for error modal');
         return;
     }
 

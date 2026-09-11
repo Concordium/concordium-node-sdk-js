@@ -29,8 +29,8 @@ const cli = meow(
 
   Required
     --lock-id,     -l  The lock ID as a Base58Check string
-    --token,       -t  Token id to return
-    --source,      -f  Account whose locked funds are returned
+    --token,       -t  Token id to release
+    --source,      -f  Account whose locked funds are released
     --amount,      -a  Token amount in decimal notation
 
   Options
@@ -78,8 +78,8 @@ const client = new ConcordiumGRPCNodeClient(
         const lock = await Lock.fromId(client, lockId);
 
         try {
-            // Submit the return transaction — locked funds are returned to the source account
-            const txHash = await Lock.returnFunds(lock, sender, { token: tokenId, source, amount }, signer);
+            // Submit the release transaction — locked funds are released to the source account
+            const txHash = await Lock.releaseFunds(lock, sender, { token: tokenId, source, amount }, signer);
             console.log(`Transaction submitted with hash: ${txHash}`);
 
             // Wait for the transaction to be finalized and inspect the outcome
@@ -105,10 +105,10 @@ const client = new ConcordiumGRPCNodeClient(
         }
     } else {
         // Or from a wallet perspective:
-        // Build the lockReturn operation payload without submitting.
+        // Build the lockRelease operation payload without submitting.
         // The source account must be provided as a CborAccountAddress value.
         const payload = createMetaUpdatePayload({
-            [MetaUpdateOperationType.LockReturn]: {
+            [MetaUpdateOperationType.LockRelease]: {
                 token: tokenId,
                 lock: lockId,
                 source: CborAccountAddress.fromAccountAddress(source),

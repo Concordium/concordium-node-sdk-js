@@ -26,8 +26,8 @@ export enum MetaUpdateOperationType {
     LockFund = 'lockFund',
     /** Sends locked tokens to a recipient from a lock the sender controls. */
     LockSend = 'lockSend',
-    /** Returns locked tokens to the account that owns the lock. */
-    LockReturn = 'lockReturn',
+    /** Releases locked tokens to the account that owns the lock. */
+    LockRelease = 'lockRelease',
 }
 
 type MetaUpdateOperationGen<Type extends MetaUpdateOperationType | TokenOperationType, T extends object> = {
@@ -82,22 +82,22 @@ export type LockSend = {
 /** Meta operation that sends locked tokens to a recipient. */
 export type LockSendOperation = MetaUpdateOperationGen<MetaUpdateOperationType.LockSend, LockSend>;
 
-/** Details for returning locked funds to their owner account. */
-export type LockReturn = {
-    /** Token id of the locked token to return. */
+/** Details for releasing locked funds to their owner account. */
+export type LockRelease = {
+    /** Token id of the locked token to release. */
     token: TokenId.Type;
     /** Identifier of the lock holding the tokens. */
     lock: LockId.Type;
     /** Account that currently holds the locked funds. */
     source: CborAccountAddress.Type;
-    /** Amount of locked tokens to return to the owning account. */
+    /** Amount of locked tokens to release to the owning account. */
     amount: TokenAmount.Type;
     /** Optional memo to include with the operation. */
     memo?: Memo;
 };
 
-/** Meta operation that returns locked tokens to the account that owns the lock. */
-export type LockReturnOperation = MetaUpdateOperationGen<MetaUpdateOperationType.LockReturn, LockReturn>;
+/** Meta operation that releases locked tokens to the account that owns the lock. */
+export type LockReleaseOperation = MetaUpdateOperationGen<MetaUpdateOperationType.LockRelease, LockRelease>;
 
 type FromTokenOperation<Type extends TokenOperationType, T extends object> = MetaUpdateOperationGen<
     Type,
@@ -129,7 +129,7 @@ export type MetaUpdateOperation =
     | LockCancelOperation
     | LockFundOperation
     | LockSendOperation
-    | LockReturnOperation;
+    | LockReleaseOperation;
 
 /**
  * Convert an existing token operation into a MetaUpdate token operation by adding an explicit token id.
@@ -240,18 +240,18 @@ function parseLockSend(details: unknown): LockSend {
     };
 }
 
-function parseLockReturn(details: unknown): LockReturn {
-    const [token, d] = extractMetaToken(details, 'lockReturn');
+function parseLockRelease(details: unknown): LockRelease {
+    const [token, d] = extractMetaToken(details, 'lockRelease');
     if (!TokenAmount.instanceOf(d.amount))
-        throw new Error('Invalid lockReturn details: expected amount to be a TokenAmount');
+        throw new Error('Invalid lockRelease details: expected amount to be a TokenAmount');
     if (!CborAccountAddress.instanceOf(d.source))
-        throw new Error('Invalid lockReturn details: expected source to be a CborAccountAddress');
+        throw new Error('Invalid lockRelease details: expected source to be a CborAccountAddress');
     return {
         token,
-        lock: parseLockIdField(d.lock, 'lockReturn'),
+        lock: parseLockIdField(d.lock, 'lockRelease'),
         source: d.source,
         amount: d.amount,
-        memo: parseMemoField(d.memo, 'lockReturn'),
+        memo: parseMemoField(d.memo, 'lockRelease'),
     };
 }
 
@@ -311,8 +311,8 @@ function parseMetaUpdateOperation(decoded: unknown): MetaUpdateOperation | Unkno
             return { [type]: parseLockFund(details) };
         case MetaUpdateOperationType.LockSend:
             return { [type]: parseLockSend(details) };
-        case MetaUpdateOperationType.LockReturn:
-            return { [type]: parseLockReturn(details) };
+        case MetaUpdateOperationType.LockRelease:
+            return { [type]: parseLockRelease(details) };
         default:
             return decoded as UnknownMetaUpdateOperation;
     }

@@ -146,8 +146,8 @@ describe('PLT Lock validation', () => {
             )
         ).toBe(true);
         expect(
-            Lock.validateReturn(
-                Lock.fromInfo(mockGrpc(), createLockInfo([LockConfig.SimpleV0Capability.Return])),
+            Lock.validateRelease(
+                Lock.fromInfo(mockGrpc(), createLockInfo([LockConfig.SimpleV0Capability.Release])),
                 ACCOUNT_1,
                 { token: TOKEN_ID, source: ACCOUNT_1, amount: TokenAmount.create(10n, 0) }
             )
@@ -306,23 +306,23 @@ describe('PLT Lock validation', () => {
         }
     });
 
-    it('throws InsufficientFundsError when the source does not have enough locked funds to return', async () => {
-        const lock = Lock.fromInfo(mockGrpc(), createLockInfo([LockConfig.SimpleV0Capability.Return]));
+    it('throws InsufficientFundsError when the source does not have enough locked funds to release', async () => {
+        const lock = Lock.fromInfo(mockGrpc(), createLockInfo([LockConfig.SimpleV0Capability.Release]));
 
         expect(() =>
-            Lock.validateReturn(lock, ACCOUNT_1, {
+            Lock.validateRelease(lock, ACCOUNT_1, {
                 token: TOKEN_ID,
                 source: ACCOUNT_1,
                 amount: TokenAmount.create(101n, 0),
             })
         ).toThrow(Lock.InsufficientFundsError);
         try {
-            Lock.validateReturn(lock, ACCOUNT_1, {
+            Lock.validateRelease(lock, ACCOUNT_1, {
                 token: TOKEN_ID,
                 source: ACCOUNT_1,
                 amount: TokenAmount.create(101n, 0),
             });
-            fail('Expected canReturn to throw');
+            fail('Expected canRelease to throw');
         } catch (error) {
             expect(error).toMatchObject({
                 code: Lock.LockErrorCode.INSUFFICIENT_FUNDS,

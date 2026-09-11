@@ -16,7 +16,7 @@ import {
     LockFund,
     LockId,
     LockInfo,
-    LockReturn,
+    LockRelease,
     LockSend,
     MetaUpdateOperation,
     MetaUpdateOperationType,
@@ -266,14 +266,14 @@ class LockCreateProposal {
     }
 
     /**
-     * Add a lockReturn operation to the proposal.
+     * Add a lockRelease operation to the proposal.
      *
-     * @param details The return details excluding the lock id.
+     * @param details The release details excluding the lock id.
      * @returns This proposal.
      */
-    public returnFunds(details: ReturnDetails): this {
+    public releaseFunds(details: ReleaseDetails): this {
         this.subsequent.push({
-            [MetaUpdateOperationType.LockReturn]: {
+            [MetaUpdateOperationType.LockRelease]: {
                 ...details,
                 source: CborAccountAddress.fromAccountAddress(details.source),
             },
@@ -361,8 +361,8 @@ export type SendDetails = Omit<LockSend, 'lock' | 'source' | 'recipient'> & {
     recipient: AccountAddress.Type;
 };
 
-/** Details for returning locked funds. */
-export type ReturnDetails = Omit<LockReturn, 'lock' | 'source'> & {
+/** Details for releasing locked funds. */
+export type ReleaseDetails = Omit<LockRelease, 'lock' | 'source'> & {
     /** Account that currently holds the locked funds. */
     source: AccountAddress.Type;
 };
@@ -372,7 +372,7 @@ export type SubsequentOperation =
     | { [MetaUpdateOperationType.LockCancel]: Omit<LockCancel, 'lock'> }
     | { [MetaUpdateOperationType.LockFund]: Omit<LockFund, 'lock'> }
     | { [MetaUpdateOperationType.LockSend]: Omit<LockSend, 'lock'> }
-    | { [MetaUpdateOperationType.LockReturn]: Omit<LockReturn, 'lock'> };
+    | { [MetaUpdateOperationType.LockRelease]: Omit<LockRelease, 'lock'> };
 
 /**
  * Create a Lock instance from a lock id by querying the node.
@@ -623,19 +623,19 @@ export function validateSend(lock: Lock, sender: AccountAddress.Type, details: S
 }
 
 /**
- * Check whether the sender can return funds controlled by the lock.
+ * Check whether the sender can release funds controlled by the lock.
  *
  * @param lock The lock to validate against.
  * @param sender The sender account to validate.
- * @returns `true` if the sender can return funds controlled by the lock.
+ * @returns `true` if the sender can release funds controlled by the lock.
  * @throws {LockExpiredError} If the lock has expired.
- * @throws {MissingCapabilityError} If the sender does not have the `return` capability for a `simpleV0` lock controller.
+ * @throws {MissingCapabilityError} If the sender does not have the `release` capability for a `simpleV0` lock controller.
  * @throws {InsufficientFundsError} If the source account does not have enough of the token locked in the lock.
  *
  * For unknown lock configuration variants, the capability check is skipped.
  */
-export function validateReturn(lock: Lock, sender: AccountAddress.Type, details: ReturnDetails): true {
-    validateCapability(lock, sender, LockConfig.SimpleV0Capability.Return);
+export function validateRelease(lock: Lock, sender: AccountAddress.Type, details: ReleaseDetails): true {
+    validateCapability(lock, sender, LockConfig.SimpleV0Capability.Release);
 
     const lockedAmount = lockedAmountOf(lock, details.source, details.token);
     if (lockedAmount === undefined || TokenAmount.toDecimal(lockedAmount).lt(TokenAmount.toDecimal(details.amount))) {
@@ -757,7 +757,7 @@ export async function send(
 }
 
 /**
- * Return locked funds to their owner account.
+ * Release locked funds to their owner account.
  *
  * @param lock The lock controlling the funds.
  * @param sender The sender account that submits the transaction.
@@ -767,19 +767,19 @@ export async function send(
  * @param options Optional validation behavior.
  * @returns The hash of the submitted transaction.
  * @throws {LockExpiredError} If `options.validate` is `true` and the lock has expired.
- * @throws {MissingCapabilityError} If `options.validate` is `true` and the sender does not have the `return` capability.
+ * @throws {MissingCapabilityError} If `options.validate` is `true` and the sender does not have the `release` capability.
  * @throws {InsufficientFundsError} If `options.validate` is `true` and the source account does not have enough of the token locked in the lock.
  */
-export async function returnFunds(
+export async function releaseFunds(
     lock: Lock,
     sender: AccountAddress.Type,
-    details: ReturnDetails,
+    details: ReleaseDetails,
     signer: AccountSigner,
     metadata?: LockUpdateMetadata,
     { validate = false }: LockOperationOptions = {}
 ): Promise<TransactionHash.Type> {
     if (validate) {
-        validateReturn(lock, sender, details);
+        validateRelease(lock, sender, details);
     }
 
     const { source, ...common } = details;
@@ -788,7 +788,7 @@ export async function returnFunds(
         lock,
         sender,
         {
-            [MetaUpdateOperationType.LockReturn]: {
+            [MetaUpdateOperationType.LockRelease]: {
                 ...common,
                 lock: lock.info.lock,
                 source: CborAccountAddress.fromAccountAddress(source),

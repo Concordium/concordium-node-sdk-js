@@ -949,7 +949,7 @@ function getMetaUpdateOperationEnergyCost(operation: unknown): bigint {
     switch (true) {
         case MetaUpdateOperationType.LockFund in op:
         case MetaUpdateOperationType.LockSend in op:
-        case MetaUpdateOperationType.LockReturn in op:
+        case MetaUpdateOperationType.LockRelease in op:
             return LOCK_TRANSFER_COST;
         case MetaUpdateOperationType.LockCreate in op:
             return PLT_LOCK_CREATE_COST;

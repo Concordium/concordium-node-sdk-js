@@ -33,7 +33,6 @@ export class Carousel {
 
     private init(): void {
         if (!this.track || !this.wrapper || this.totalItems === 0) {
-            console.error('Carousel: Required elements not found');
             return;
         }
 

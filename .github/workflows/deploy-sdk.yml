@@ -83,7 +83,7 @@ jobs:
         run: yarn build:docs
 
       - name: Store build-release
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: build-release
           path: |
@@ -93,7 +93,7 @@ jobs:
             packages/sdk/README.md
 
       - name: Store typedoc
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: typedoc-build
           path: typedoc
@@ -133,7 +133,7 @@ jobs:
           echo "npm_tag=$npm_tag" >> $GITHUB_OUTPUT
 
       - name: Get build-output
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: build-release
           path: packages/sdk
@@ -167,7 +167,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Get typedoc
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           path: typedoc
           name: typedoc-build
@@ -219,7 +219,7 @@ jobs:
       #  - https://github.com/orgs/community/discussions/25305#discussioncomment-8256560
       #  - https://github.com/actions/create-github-app-token?tab=readme-ov-file#use-app-token-with-actionscheckout
       - name: Create GitHub App Token
-        uses: actions/create-github-app-token@v2
+        uses: actions/create-github-app-token@v3
         id: app-token
         with:
           app-id: ${{ vars.DEPLOYER_APPID }}

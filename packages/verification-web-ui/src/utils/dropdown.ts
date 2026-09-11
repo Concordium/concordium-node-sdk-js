@@ -1,4 +1,5 @@
 // dropdown.ts - Reusable Dropdown Utility
+import browserWalletIcon from '@/assets/browser-wallet-icon.svg';
 import chevronUpDownIcon from '@/assets/chevron-up-down.svg';
 
 import type { DropdownConfig, WalletOption } from '../types';
@@ -30,6 +31,8 @@ const DEFAULT_CONFIG: Required<Omit<DropdownConfig, 'onSelect'>> = {
     lastOptionClass:
         'flex items-center gap-2 bg-dropdown-item px-4 py-3 cursor-pointer hover:bg-opacity-80 transition-colors rounded-[16px]',
 };
+
+const ICON_FALLBACK_ON_ERROR = `this.onerror=null;this.src='${browserWalletIcon}';`;
 
 interface DropdownElements {
     trigger: HTMLElement | null;
@@ -71,7 +74,6 @@ export class Dropdown {
 
     private init(): void {
         if (!this.elements.trigger || !this.elements.menu) {
-            console.error('Required dropdown elements not found in container');
             return;
         }
 
@@ -236,7 +238,7 @@ function createOptionHTML(
 
     return `
     <label class="${className}">
-      <img src="${option.icon}" alt="${option.text}" class="h-8 w-8" />
+            <img src="${option.icon}" alt="${option.text}" class="h-8 w-8" onerror="${ICON_FALLBACK_ON_ERROR}" />
       <span class="font-inter font-medium text-[16px] leading-4" style="color: #0D0F11;">${option.text}</span>
       <input type="radio" name="wallet" value="${option.value}" data-icon="${option.icon}" class="hidden" ${checked}>
     </label>`;
@@ -247,7 +249,6 @@ function createOptionHTML(
  */
 export function createDropdownHTML(options: WalletOption[], userConfig: DropdownConfig = {}): string {
     if (!Array.isArray(options) || options.length === 0) {
-        console.error('Invalid options provided to createDropdownHTML');
         return '';
     }
 
@@ -262,7 +263,7 @@ export function createDropdownHTML(options: WalletOption[], userConfig: Dropdown
     <div data-dropdown-list class="${config.containerClass}">
       <button data-dropdown-trigger class="${config.triggerClass}">
         <span class="flex items-center gap-2">
-          <img data-dropdown-selected-icon src="${selectedOption.icon}" alt="${selectedOption.text}" class="h-8 w-8" />
+                    <img data-dropdown-selected-icon src="${selectedOption.icon}" alt="${selectedOption.text}" class="h-8 w-8" onerror="${ICON_FALLBACK_ON_ERROR}" />
           <span data-dropdown-selected-text class="font-inter font-medium text-[16px] leading-4" style="color: #0D0F11;">${selectedOption.text}</span>
         </span>
         <span>

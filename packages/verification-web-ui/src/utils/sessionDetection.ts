@@ -31,8 +31,7 @@ export function isAppInstalled(): boolean {
         // If flag doesn't exist or is false, we consider app potentially available
         // This follows the pattern where flags are set to false by default in setDefaultFlags()
         return appNotInstalled === 'false' || appNotInstalled === null;
-    } catch (e) {
-        console.error('Error checking app installation status:', e);
+    } catch {
         return false;
     }
 }
@@ -78,8 +77,8 @@ export function updateWalletFlags(): void {
         // Set onlyOneOption flag if only one wallet type is available
         const onlyOneOption = (concordiumIDInstalled && !appInstalled) || (!concordiumIDInstalled && appInstalled);
         localStorage.setItem(ModalConstants.LOCAL_STORAGE_FLAGS.ONLY_ONE_OPTION, JSON.stringify(onlyOneOption));
-    } catch (e) {
-        console.error('Failed to update wallet flags:', e);
+    } catch {
+        // Ignore localStorage errors
     }
 }
 
@@ -104,8 +103,7 @@ export function getAppState(): {
                 localStorage.getItem(ModalConstants.LOCAL_STORAGE_FLAGS.CONCORDIUM_ID_NOT_INSTALLED) || 'false'
             ),
         };
-    } catch (e) {
-        console.error('Error reading app state from localStorage:', e);
+    } catch {
         return {
             onlyOneOption: false,
             appNotInstalled: false,

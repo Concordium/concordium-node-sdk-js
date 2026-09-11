@@ -56,6 +56,10 @@ module.exports = {
                                 source: 'account-creation.md',
                             },
                             {
+                                name: 'Add a Credential (IdentityInput)',
+                                source: 'add-credential.md',
+                            },
+                            {
                                 name: 'Optimizing bundled applications',
                                 source: 'bundler-optimizations.md',
                             },

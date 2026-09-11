@@ -41,9 +41,96 @@ const SELECTORS = {
     SCAN_MODAL: '#scan-modal',
     BACK_BTN: '#back-btn',
     QR_CONTAINER: '#qr-container',
-    BROWSER_BTN: '#browser-btn',
-    BROWSER_WALLET_BTN: '#browser-wallet-btn',
 } as const;
+
+const AUTO_SEND_READINESS_RETRY_DELAYS_MS = [400, 900, 1600] as const;
+
+function sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function waitForActiveSessionTopic(
+    wcService: ReturnType<typeof ServiceFactory.getWalletConnectService>,
+    topic: string,
+    timeoutMs = 6000,
+    pollIntervalMs = 200
+): Promise<void> {
+    const deadline = Date.now() + timeoutMs;
+
+    while (Date.now() < deadline) {
+        const active = wcService?.getActiveSessions() || [];
+        if (active.some((session) => session.topic === topic)) {
+            return;
+        }
+
+        await sleep(pollIntervalMs);
+    }
+
+    throw new Error(`Session topic ${topic} was not active before timeout`);
+}
+
+async function sendPresentationWithReadinessRetry({
+    wcService,
+    topic,
+    chainId,
+    presentationRequest,
+    metadata,
+}: {
+    wcService: NonNullable<ReturnType<typeof ServiceFactory.getWalletConnectService>>;
+    topic: string;
+    chainId: string;
+    presentationRequest: any;
+    metadata: any;
+}): Promise<{ response: any; methodUsed: 'v1' | 'v0' }> {
+    const maxAttempts = AUTO_SEND_READINESS_RETRY_DELAYS_MS.length + 1;
+    let lastError: unknown;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+            await waitForActiveSessionTopic(wcService, topic);
+
+            try {
+                const response = await wcService.request({
+                    topic,
+                    chainId,
+                    request: {
+                        method: 'request_verifiable_presentation_v1',
+                        params: {
+                            ...presentationRequest,
+                            metadata,
+                        },
+                    },
+                });
+
+                return { response, methodUsed: 'v1' };
+            } catch (v1Error) {
+                const response = await wcService.request({
+                    topic,
+                    chainId,
+                    request: {
+                        method: 'request_verifiable_presentation',
+                        params: {
+                            ...presentationRequest,
+                            metadata,
+                        },
+                    },
+                });
+
+                return { response, methodUsed: 'v0' };
+            }
+        } catch (error) {
+            lastError = error;
+            if (attempt === maxAttempts) {
+                break;
+            }
+
+            const retryDelay = AUTO_SEND_READINESS_RETRY_DELAYS_MS[attempt - 1];
+            await sleep(retryDelay);
+        }
+    }
+
+    throw lastError instanceof Error ? lastError : new Error('Failed to auto-send presentation request');
+}
 
 // Helper function to create desktop HTML
 function createDesktopScanHTML(): string {
@@ -68,12 +155,6 @@ function createDesktopScanHTML(): string {
             </div>
           </div>
 
-          <div id="browser-btn" class="${CSS_CLASSES.HIDDEN} ${CSS_CLASSES.FLEX_COL} items-center gap-4">
-            <button class="desktop--primary-button" id="browser-wallet-btn">
-              <span>Verify with Browser Wallet</span>
-              <img src="${arrowRight}" alt="arrow-right-icon" />
-            </button>
-          </div>
         </div>
       </div>
     </div>
@@ -137,7 +218,6 @@ export const createScanModal: ModalFunction = () => {
     // Cache DOM elements for better performance
     const elements = {
         backBtn: scanContainer.querySelector(SELECTORS.BACK_BTN) as HTMLButtonElement | null,
-        browserWalletBtn: scanContainer.querySelector(SELECTORS.BROWSER_WALLET_BTN) as HTMLButtonElement | null,
         openInWalletBtn: scanContainer.querySelector('#open-in-wallet-btn') as HTMLButtonElement | null,
         openOtherDeviceBtn: scanContainer.querySelector('#open-other-device-btn') as HTMLButtonElement | null,
         qrContainer: scanContainer.querySelector(SELECTORS.QR_CONTAINER) as HTMLElement | null,
@@ -148,11 +228,6 @@ export const createScanModal: ModalFunction = () => {
         const { showLandingModal } = await import('./landing');
         hideScanModal();
         await showLandingModal();
-    };
-
-    const handleBrowserWallet = async (): Promise<void> => {
-        // Processing modal will be shown automatically after session approval
-        // Don't hide scan modal - keep it visible until session is established
     };
 
     // Mobile-specific handlers
@@ -186,8 +261,7 @@ export const createScanModal: ModalFunction = () => {
                 const { openAppStore } = await import('@/utils/mobileAppDetection');
                 openAppStore(appType);
             }
-        } catch (error) {
-            console.error('[Mobile] handleOpenInWallet failed:', error);
+        } catch {
             alert('Failed to open wallet app. Please try again.');
         }
     };
@@ -205,7 +279,6 @@ export const createScanModal: ModalFunction = () => {
 
     // Attach event listeners with null safety
     elements.backBtn?.addEventListener('click', handleBack);
-    elements.browserWalletBtn?.addEventListener('click', handleBrowserWallet);
 
     // Mobile-specific event listeners
     if (isMobile) {
@@ -221,34 +294,19 @@ export const showScanModal: ShowModalFunction = async () => {
     const targetContainer = getGlobalContainer();
 
     if (!targetContainer) {
-        console.error('Container not found for modal');
         return;
     }
-
-    // Detect mobile/desktop mode
-    const isMobile = isMobileScreen();
-    const containerClass = isMobile ? '.mobile--modal-container' : '.desktop--modal-container';
 
     // Create and store modal element reference
     scanModalElement = createScanModal();
     scanModalElement.id = 'scan-modal';
 
-    // Get the modal container for transforms
-    const modalContainer = scanModalElement.querySelector(containerClass) as HTMLElement | null;
-
-    // For smooth transitions, prepare new modal completely before showing
-    scanModalElement.style.opacity = '0';
-    if (modalContainer) {
-        modalContainer.style.transform = 'translateY(-20px) scale(0.95)';
-        modalContainer.style.transition = 'transform 0.3s ease-out';
-    }
+    // For smooth transitions, start hidden then trigger enter
+    scanModalElement.classList.add('modal-wrapper');
     targetContainer.appendChild(scanModalElement);
 
-    // Force a reflow to ensure the styles are applied
+    // Force a reflow to ensure the initial hidden state is applied
     scanModalElement.offsetHeight;
-
-    // Now start the transition
-    scanModalElement.style.transition = 'opacity 0.3s ease-out';
 
     // Use a small delay to ensure DOM is fully ready
     setTimeout(() => {
@@ -257,11 +315,8 @@ export const showScanModal: ShowModalFunction = async () => {
             return;
         }
 
-        // Show new modal
-        scanModalElement.style.opacity = '1';
-        if (modalContainer) {
-            modalContainer.style.transform = 'translateY(0) scale(1)';
-        }
+        // Show modal
+        scanModalElement.classList.add('is-visible');
     }, 10);
 
     // Set up event listeners for session approval and verification completion
@@ -408,7 +463,6 @@ async function initializeWalletConnection(): Promise<void> {
             await initializeMerchantProvidedConnection();
         }
     } catch (error) {
-        console.error('Wallet connection failed:', error);
         showQRError('Failed to generate QR code. Please try again.');
     }
 }
@@ -462,9 +516,7 @@ async function initializeSDKManagedConnection(): Promise<void> {
         .then(async (session) => {
             await handleSessionApproval(session);
         })
-        .catch((error) => {
-            console.error('Session approval failed:', error);
-        });
+        .catch(() => {});
 
     // Check if mobile screen
     if (isMobileScreen()) {
@@ -527,17 +579,14 @@ export async function autoSendPresentationRequestIfConfigured(topic: string): Pr
             ModalConstants.LOCAL_STORAGE_FLAGS.SDK_PRESENTATION_REQUEST
         );
         if (!presentationRequestStr) {
-            console.log('No presentation request configured, waiting for merchant to send request');
             return;
         }
 
         const presentationRequest = JSON.parse(presentationRequestStr);
-        console.log('Auto-sending presentation request:', presentationRequest);
 
         // Get the WalletConnect service
         const wcService = ServiceFactory.getWalletConnectService();
         if (!wcService) {
-            console.error('WalletConnect service not available for auto-send');
             return;
         }
 
@@ -557,43 +606,13 @@ export async function autoSendPresentationRequestIfConfigured(topic: string): Pr
             icons: storedMetadata?.icons || [],
         };
 
-        // Try v1 method first (ID App), then fallback to v0 (Concordium Wallet)
-        let response: any;
-        let methodUsed: string;
-
-        try {
-            // Try v1 first (Concordium ID App)
-            console.log('Trying v1 method (request_verifiable_presentation_v1)...');
-            response = await wcService.request({
-                topic,
-                chainId,
-                request: {
-                    method: 'request_verifiable_presentation_v1',
-                    params: {
-                        ...presentationRequest,
-                        metadata,
-                    },
-                },
-            });
-            methodUsed = 'v1';
-        } catch (v1Error) {
-            console.log('v1 method failed, trying v0 method...', v1Error);
-            // Fallback to v0 (Concordium Wallet)
-            response = await wcService.request({
-                topic,
-                chainId,
-                request: {
-                    method: 'request_verifiable_presentation',
-                    params: {
-                        ...presentationRequest,
-                        metadata,
-                    },
-                },
-            });
-            methodUsed = 'v0';
-        }
-
-        console.log(`Presentation response received (method ${methodUsed}):`, response);
+        const { response } = await sendPresentationWithReadinessRetry({
+            wcService,
+            topic,
+            chainId,
+            presentationRequest,
+            metadata,
+        });
 
         // Emit the response to merchant
         window.dispatchEvent(
@@ -611,8 +630,6 @@ export async function autoSendPresentationRequestIfConfigured(topic: string): Pr
         const { showSuccessState } = await import('./processing');
         await showSuccessState();
     } catch (error) {
-        console.error('Failed to auto-send presentation request:', error);
-
         // Emit error event
         window.dispatchEvent(
             new CustomEvent('verification-web-ui-event', {
@@ -675,8 +692,6 @@ export async function handleSessionApproval(sessionData: any): Promise<void> {
         // Check if there's a presentation request to auto-send
         await autoSendPresentationRequestIfConfigured(topic);
     } catch (error) {
-        console.error('Error handling session approval:', error);
-
         // Emit error event
         window.dispatchEvent(
             new CustomEvent('verification-web-ui-event', {
@@ -701,16 +716,14 @@ async function displayQRCode(uri: string): Promise<void> {
         // Dynamic import following your coding instructions pattern
         const { default: QRCode } = await import('qrcode');
         const { getConfig } = await import('@/config.state');
-        const { getConcordiumIdDeepLink } = await import('@/constants/wallet.registry');
+        const { buildQrRedirectUrl } = await import('@/constants/wallet.registry');
         const config = getConfig();
 
         const qrContainer = document.querySelector(SELECTORS.QR_CONTAINER);
 
         if (qrContainer) {
-            // Use Concordium ID app deep link format: concordiumidapp://wc?uri=<encoded-wc-uri>
-            // This allows ID app to scan and recognize its own deep link format
-            const qrValue = getConcordiumIdDeepLink(uri);
-            console.log('Generated QR code value:', qrValue);
+            // Use redirect URL so camera scans open this page and run wallet deeplink detection.
+            const qrValue = buildQrRedirectUrl(uri);
 
             const qrCodeDataURL = await QRCode.toDataURL(qrValue, {
                 width: 200,
@@ -718,9 +731,19 @@ async function displayQRCode(uri: string): Promise<void> {
                 color: { dark: '#000000', light: '#ffffff' },
             });
 
+            const hostname = window.location.hostname;
+            const isLoopbackHost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1';
+            const loopbackWarning = isLoopbackHost
+                ? '<p class="text-xs text-center mt-2" style="color: #B45309; max-width: 280px; margin-left: auto; margin-right: auto;">This page is running on localhost. Phone camera scans cannot open localhost on another device. Use a LAN/public URL.</p>'
+                : '';
+
             const showCountdown = config.qrCode?.showCountdown !== false;
+            const expiryDuration = config.qrCode?.expiryDuration || 5 * 60 * 1000;
+            const initialMinutes = Math.floor(expiryDuration / 60000);
+            const initialSeconds = Math.floor((expiryDuration % 60000) / 1000);
+            const initialCountdown = `${initialMinutes}:${initialSeconds.toString().padStart(2, '0')}`;
             const countdownHTML = showCountdown
-                ? '<p id="qr-countdown" class="text-sm text-inverse-tertiary mt-2">Expires in: <span class="font-semibold">5:00</span></p>'
+                ? `<p id="qr-countdown" class="desktop--qr-countdown">Expires in: <span class="font-semibold">${initialCountdown}</span></p>`
                 : '';
 
             // Determine app store link based on user's device
@@ -731,6 +754,7 @@ async function displayQRCode(uri: string): Promise<void> {
         <div class="text-center" style="min-height: 350px; display: flex; flex-direction: column; justify-content: center;">
           <img src="${qrCodeDataURL}" alt="QR Code for wallet connection" class="w-48 h-48 mx-auto mb-2" style="border-radius: 12.414px; border: 1px solid rgba(0, 0, 0, 0.10); background: #FFF;" />
           <p class="desktop--scan-text mt-2">Scan the QR code with your<br>Concordium ID compatible device</p>
+          ${loopbackWarning}
           ${countdownHTML}
           <img src="${sectionSeparator}" alt="" class="mx-auto mt-4" />
           <div class="flex items-center justify-center mt-4">
@@ -743,7 +767,6 @@ async function displayQRCode(uri: string): Promise<void> {
             setupQRCodeExpiry();
         }
     } catch (error) {
-        console.error('Failed to generate QR code:', error);
         showQRError('Failed to generate QR code. Please try again.');
     }
 }
@@ -848,7 +871,6 @@ async function refreshQRCode(): Promise<void> {
             },
         });
     } catch (error) {
-        console.error('Failed to refresh QR code:', error);
         showQRError('Failed to refresh QR code. Please try again.');
     }
 }
@@ -1016,8 +1038,7 @@ async function checkForActiveSession(): Promise<any | null> {
         }
 
         return null;
-    } catch (error) {
-        console.error('Failed to check for active sessions:', error);
+    } catch {
         return null;
     }
 }
@@ -1043,9 +1064,8 @@ function generateDeepLink(walletType: WalletTypeValues, uri: string): string | n
             deepLink = `cryptox-wc-${network}://wc?uri=${encodeURIComponent(uri)}&go_back=true`;
         }
     } else if (walletType === WALLET_TYPES.CONCORDIUM_ID) {
-        // Concordium ID - same for all devices, with redirect to origin
-        const redirectUrl = encodeURIComponent(window.location.href);
-        deepLink = `concordiumidapp://wc?uri=${encodeURIComponent(uri)}&redirect=${redirectUrl}`;
+        // Concordium ID deep link format expected by the app
+        deepLink = `concordiumidapp://wc?uri=${encodeURIComponent(uri)}`;
     }
 
     return deepLink;
@@ -1059,7 +1079,10 @@ function generateDeepLink(walletType: WalletTypeValues, uri: string): string | n
 async function displayQRCodeMobile(uri: string, container: HTMLElement): Promise<void> {
     try {
         const { default: QRCode } = await import('qrcode');
-        const { buildQrRedirectUrl } = await import('@/constants/wallet.registry');
+        const { getConfig } = await import('@/config.state');
+        const { buildQrRedirectUrl, getIdAppStoreUrl } = await import('@/constants/wallet.registry');
+
+        const config = getConfig();
 
         // Use redirect URL for better wallet compatibility
         const qrValue = buildQrRedirectUrl(uri);
@@ -1070,13 +1093,25 @@ async function displayQRCodeMobile(uri: string, container: HTMLElement): Promise
             color: { dark: '#000000', light: '#ffffff' },
         });
 
+        const showCountdown = config.qrCode?.showCountdown !== false;
+        const expiryDuration = config.qrCode?.expiryDuration || 5 * 60 * 1000;
+        const initialMinutes = Math.floor(expiryDuration / 60000);
+        const initialSeconds = Math.floor((expiryDuration % 60000) / 1000);
+        const initialCountdown = `${initialMinutes}:${initialSeconds.toString().padStart(2, '0')}`;
+        const countdownHTML = showCountdown
+            ? `<p id="qr-countdown" class="desktop--qr-countdown">Expires in: <span class="font-semibold">${initialCountdown}</span></p>`
+            : '';
+
+        const appStoreUrl = getIdAppStoreUrl();
+
         container.innerHTML = `
       <div class="text-center py-4">
         <img src="${qrCodeDataURL}" alt="QR Code for wallet connection" class="w-48 h-48 mx-auto mb-2" style="border-radius: 12.414px; border: 1px solid rgba(0, 0, 0, 0.10); background: #FFF;" />
         <p class="desktop--scan-text">Scan the QR code with your<br>Concordium ID compatible device</p>
+                ${countdownHTML}
         <img src="${sectionSeparator}" alt="" class="mx-auto mt-4" />
         <div class="flex items-center justify-center mt-4">
-          <p class="desktop--download-text">Download & Install the <a href="#">Concordium ID App</a> and come back here to verify.</p>
+                    <p class="desktop--download-text">Download & Install the <a href="${appStoreUrl}" target="_blank" rel="noopener noreferrer">Concordium ID App</a> and come back here to verify.</p>
         </div>
       </div>
     `;
@@ -1084,7 +1119,10 @@ async function displayQRCodeMobile(uri: string, container: HTMLElement): Promise
         // Show the container
         container.classList.remove(CSS_CLASSES.HIDDEN);
         container.style.display = 'flex';
-    } catch (error) {
-        console.error('[Mobile] Failed to generate QR code:', error);
+
+        // Keep countdown and expiry behavior consistent with desktop.
+        await setupQRCodeExpiry();
+    } catch {
+        // Mobile QR generation failed
     }
 }

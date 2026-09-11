@@ -63,8 +63,7 @@ export function getConcordiumIdDeepLink(wcUri: string): string {
  * Build QR redirect URL (for desktop wallet compatibility)
  */
 export function buildQrRedirectUrl(wcUri: string): string {
-    const base = window.location.origin + window.location.pathname;
-    return `${base}?wc_redirect=1&uri=${encodeURIComponent(wcUri)}`;
+    return getConcordiumIdDeepLink(wcUri);
 }
 
 /**
@@ -74,6 +73,16 @@ export function getQrRedirectUri(): string | null {
     const params = new URLSearchParams(window.location.search);
     if (params.get('wc_redirect') !== '1') return null;
     return params.get('uri');
+}
+
+/**
+ * Remove QR redirect parameters while preserving the rest of the current URL.
+ */
+export function getQrRedirectCleanUrl(): string {
+    const url = new URL(window.location.href);
+    url.searchParams.delete('wc_redirect');
+    url.searchParams.delete('uri');
+    return url.toString();
 }
 
 /**

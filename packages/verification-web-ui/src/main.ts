@@ -54,8 +54,7 @@ async function checkForActiveSession(): Promise<boolean> {
         }
 
         return false;
-    } catch (error) {
-        console.error('Dev mode: Failed to check for active sessions:', error);
+    } catch {
         return false;
     }
 }
@@ -98,7 +97,7 @@ function setDefaultFlags(): void {
         setIfAbsent(ModalConstants.LOCAL_STORAGE_FLAGS.ONLY_ONE_OPTION);
         setIfAbsent(ModalConstants.LOCAL_STORAGE_FLAGS.APP_NOT_INSTALLED);
         setIfAbsent(ModalConstants.LOCAL_STORAGE_FLAGS.CONCORDIUM_ID_NOT_INSTALLED);
-    } catch (e) {
-        console.error('Failed to update landing flags in localStorage:', e);
+    } catch {
+        // Ignore localStorage errors
     }
 }

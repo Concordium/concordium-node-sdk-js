@@ -7,13 +7,12 @@ import { TransactionSummaryType } from '../types.js';
 import { TransactionKindString } from '../types/blockItemSummary.js';
 import { SequenceNumber } from '../types/index.js';
 import { LockCreatedEvent, TransactionEventTag } from '../types/transactionEvent.js';
+import * as LockConfig from './LockConfig.js';
 import * as Token from './Token.js';
 import {
     Cbor,
     CborAccountAddress,
     LockCancel,
-    LockConfig,
-    LockController,
     LockFund,
     LockId,
     LockInfo,
@@ -70,7 +69,7 @@ export class MissingCapabilityError extends LockError {
      */
     constructor(
         public readonly sender: AccountAddress.Type,
-        public readonly capability: LockController.SimpleV0Capability,
+        public readonly capability: LockConfig.SimpleV0Capability,
         public readonly lockId: LockId.Type
     ) {
         super(`Account ${sender.address} does not have the '${capability}' capability for lock ${lockId}.`);
@@ -234,7 +233,7 @@ class LockCreateProposal {
     public constructor(
         private readonly grpc: ConcordiumGRPCClient,
         private readonly sender: AccountAddress.Type,
-        private readonly config: LockConfig,
+        private readonly config: LockConfig.Type,
         private readonly creationOrder: bigint | number = 0n
     ) {}
 
@@ -482,7 +481,11 @@ export async function sendOperations(
  * @param config The lock configuration to encode into the initial `lockCreate` operation.
  * @returns A proposal builder for the lock-creation transaction.
  */
-export function create(grpc: ConcordiumGRPCClient, sender: AccountAddress.Type, config: LockConfig): CreateProposal {
+export function create(
+    grpc: ConcordiumGRPCClient,
+    sender: AccountAddress.Type,
+    config: LockConfig.Type
+): CreateProposal {
     return new LockCreateProposal(grpc, sender, config);
 }
 
@@ -490,20 +493,17 @@ function isLockCreatedEvent(event: { tag: TransactionEventTag }): event is LockC
     return event.tag === TransactionEventTag.LockCreated;
 }
 
+function simpleV0Config(lock: Lock): LockConfig.SimpleV0 | undefined {
+    return lock.info.config[LockConfig.Variant.SimpleV0];
+}
+
 function isExpired(lock: Lock): boolean {
-    return lock.info.expiry.expiry.expiryEpochSeconds * 1000n <= BigInt(Date.now());
+    const config = simpleV0Config(lock);
+    return config !== undefined && config.expiry.expiry.expiryEpochSeconds * 1000n <= BigInt(Date.now());
 }
 
-function simpleV0Controller(lock: Lock): LockController.Type[LockController.Variant.SimpleV0] | undefined {
-    return lock.info.controller[LockController.Variant.SimpleV0];
-}
-
-function hasCapability(
-    lock: Lock,
-    sender: AccountAddress.Type,
-    capability: LockController.SimpleV0Capability
-): boolean {
-    const simpleV0 = simpleV0Controller(lock);
+function hasCapability(lock: Lock, sender: AccountAddress.Type, capability: LockConfig.SimpleV0Capability): boolean {
+    const simpleV0 = simpleV0Config(lock);
     if (simpleV0 === undefined) {
         return true;
     }
@@ -514,7 +514,7 @@ function hasCapability(
 }
 
 function allowsToken(lock: Lock, token: TokenId.Type): boolean {
-    const simpleV0 = simpleV0Controller(lock);
+    const simpleV0 = simpleV0Config(lock);
     if (simpleV0 === undefined) {
         return true;
     }
@@ -528,11 +528,7 @@ function lockedAmountOf(lock: Lock, source: AccountAddress.Type, token: TokenId.
         ?.amounts.find((amount) => amount.token.value === token.value)?.amount;
 }
 
-function validateCapability(
-    lock: Lock,
-    sender: AccountAddress.Type,
-    capability: LockController.SimpleV0Capability
-): true {
+function validateCapability(lock: Lock, sender: AccountAddress.Type, capability: LockConfig.SimpleV0Capability): true {
     if (isExpired(lock)) {
         throw new LockExpiredError(lock.info.lock);
     }
@@ -550,14 +546,14 @@ function validateCapability(
  * @returns `true` if the sender can cancel the lock.
  * @throws {MissingCapabilityError} If the sender does not have the `cancel` capability for a `simpleV0` lock controller.
  *
- * For unknown controller variants, the capability check is skipped.
+ * For unknown lock configuration variants, the capability check is skipped.
  */
 export function validateCancel(lock: Lock, sender: AccountAddress.Type): true {
     if (isExpired(lock)) {
         return true;
     }
-    if (!hasCapability(lock, sender, LockController.SimpleV0Capability.Cancel)) {
-        throw new MissingCapabilityError(sender, LockController.SimpleV0Capability.Cancel, lock.info.lock);
+    if (!hasCapability(lock, sender, LockConfig.SimpleV0Capability.Cancel)) {
+        throw new MissingCapabilityError(sender, LockConfig.SimpleV0Capability.Cancel, lock.info.lock);
     }
     return true;
 }
@@ -574,10 +570,10 @@ export function validateCancel(lock: Lock, sender: AccountAddress.Type): true {
  * @throws {TokenNotAllowedError} If the token is not configured on a `simpleV0` lock controller.
  * @throws {InsufficientFundsError} If the sender does not have enough available balance of the token.
  *
- * For unknown controller variants, the capability and configured-token checks are skipped.
+ * For unknown lock configuration variants, the capability and configured-token checks are skipped.
  */
 export async function validateFund(lock: Lock, sender: AccountAddress.Type, details: FundDetails): Promise<true> {
-    validateCapability(lock, sender, LockController.SimpleV0Capability.Fund);
+    validateCapability(lock, sender, LockConfig.SimpleV0Capability.Fund);
 
     if (!allowsToken(lock, details.token)) {
         throw new TokenNotAllowedError(details.token, lock.info.lock);
@@ -604,14 +600,16 @@ export async function validateFund(lock: Lock, sender: AccountAddress.Type, deta
  * @throws {RecipientNotAllowedError} If the recipient is not configured on the lock.
  * @throws {InsufficientFundsError} If the source account does not have enough of the token locked in the lock.
  *
- * For unknown controller variants, the capability check is skipped.
+ * For unknown lock configuration variants, the capability check is skipped.
  */
 export function validateSend(lock: Lock, sender: AccountAddress.Type, details: SendDetails): true {
-    validateCapability(lock, sender, LockController.SimpleV0Capability.Send);
+    validateCapability(lock, sender, LockConfig.SimpleV0Capability.Send);
 
+    const recipients = simpleV0Config(lock)?.recipients;
     const recipientAllowed =
-        lock.info.recipients === 'any' ||
-        lock.info.recipients.some((recipient) => recipient.address.address === details.recipient.address);
+        recipients === 'any' ||
+        (Array.isArray(recipients) &&
+            recipients.some((recipient) => recipient.address.address === details.recipient.address));
     if (!recipientAllowed) {
         throw new RecipientNotAllowedError(details.recipient, lock.info.lock);
     }
@@ -634,10 +632,10 @@ export function validateSend(lock: Lock, sender: AccountAddress.Type, details: S
  * @throws {MissingCapabilityError} If the sender does not have the `return` capability for a `simpleV0` lock controller.
  * @throws {InsufficientFundsError} If the source account does not have enough of the token locked in the lock.
  *
- * For unknown controller variants, the capability check is skipped.
+ * For unknown lock configuration variants, the capability check is skipped.
  */
 export function validateReturn(lock: Lock, sender: AccountAddress.Type, details: ReturnDetails): true {
-    validateCapability(lock, sender, LockController.SimpleV0Capability.Return);
+    validateCapability(lock, sender, LockConfig.SimpleV0Capability.Return);
 
     const lockedAmount = lockedAmountOf(lock, details.source, details.token);
     if (lockedAmount === undefined || TokenAmount.toDecimal(lockedAmount).lt(TokenAmount.toDecimal(details.amount))) {

@@ -1,8 +1,7 @@
 import { MAX_U8 } from '../constants.js';
 import * as Cbor from './Cbor.js';
 import type * as CborAccountAddress from './CborAccountAddress.js';
-import type * as CborEpoch from './CborEpoch.js';
-import type * as LockController from './LockController.js';
+import type * as LockConfig from './LockConfig.js';
 import type * as LockId from './LockId.js';
 import type * as TokenAmount from './TokenAmount.js';
 import type * as TokenId from './TokenId.js';
@@ -120,9 +119,11 @@ export type LockAccountFund = {
 /**
  * The data returned by the `getLockInfo` query.
  */
-export type LockInfo = LockConfig & {
+export type LockInfo = {
     /** The lock identifier. */
     lock: LockId.Type;
+    /** Tagged lock configuration. */
+    config: LockConfig.Type;
     /** Per-account funds controlled by the lock. */
     funds: LockAccountFund[];
 };
@@ -147,21 +148,6 @@ export type TokenInitializationParameters = {
     mintable?: boolean;
     /** Whether the token is burnable */
     burnable?: boolean;
-};
-
-/** Accounts that are permitted to receive funds controlled by a lock. */
-export type LockRecipients = 'any' | CborAccountAddress.Type[];
-
-/** Lock configuration used by `lockCreate` meta update operations. */
-export type LockConfig = {
-    /** Accounts that are permitted to receive funds controlled by the lock, or `'any'` for any eligible recipient. */
-    recipients: LockRecipients;
-    /** Lock expiry time. */
-    expiry: CborEpoch.Type;
-    /** Lock controller configuration. */
-    controller: LockController.Type;
-    /** Optional raw CBOR bytes encoding user-facing lock metadata. Use `LockMetadata.encode` and `LockMetadata.decode` for typed metadata. */
-    metadata?: Uint8Array;
 };
 
 /**

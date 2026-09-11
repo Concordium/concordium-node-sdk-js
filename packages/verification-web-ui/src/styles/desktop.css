@@ -163,6 +163,13 @@
     @apply font-inter rounded-full capitalize flex items-center gap-2 px-6 py-4 bg-primary text-white text-sm leading-4 tracking-normal font-medium;
 }
 
+.desktop--primary-button:disabled,
+.desktop--primary-button--busy {
+    opacity: 0.55;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
 @media (max-width: 767px) {
     .desktop--primary-button {
         @apply px-5 py-3 text-sm;

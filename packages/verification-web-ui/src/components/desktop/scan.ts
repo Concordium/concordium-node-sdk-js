@@ -261,8 +261,7 @@ export const createScanModal: ModalFunction = () => {
             });
 
             if (deepLink) {
-                const isIOS =
-                    /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
                 if (isIOS && appType === 'concordium-id') {
                     try {
                         const { handoffIosClipboard } = await import('@/services/bridge.service');
@@ -650,8 +649,7 @@ export async function autoSendPresentationRequestIfConfigured(topic: string): Pr
 
         // iOS: wake ID App so it drains the session_request while Safari may stay foregrounded briefly.
         try {
-            const isIOS =
-                /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
             if (isIOS) {
                 const { openIosCustomScheme } = await import('@/constants/wallet.registry');
                 openIosCustomScheme(`concordiumidapp://r?_t=${Date.now()}`);

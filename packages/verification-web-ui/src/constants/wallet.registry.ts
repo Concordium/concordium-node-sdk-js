@@ -86,8 +86,7 @@ export function getIdAppTestFlightUrl(): string {
 
     if (!joinCode) {
         const fromEnv = (import.meta as any).env?.VITE_TESTFLIGHT_JOIN_CODE;
-        joinCode =
-            typeof fromEnv === 'string' && fromEnv.length > 0 ? fromEnv : ID_APP_TESTFLIGHT_JOIN_CODE;
+        joinCode = typeof fromEnv === 'string' && fromEnv.length > 0 ? fromEnv : ID_APP_TESTFLIGHT_JOIN_CODE;
     }
 
     return joinCode ? `https://testflight.apple.com/join/${joinCode}` : ID_APP_STORE.iosTestFlight;
@@ -127,8 +126,9 @@ export function buildAndroidPlayStoreUrl(
     mode: 'intent' | 'market' | 'https' = 'intent'
 ): string {
     const baseQuery = `id=${ID_APP_PACKAGE}`;
-    const referrer =
-        walletConnectUri?.startsWith('wc:') ? `&referrer=${buildPlayInstallReferrer(walletConnectUri)}` : '';
+    const referrer = walletConnectUri?.startsWith('wc:')
+        ? `&referrer=${buildPlayInstallReferrer(walletConnectUri)}`
+        : '';
 
     if (mode === 'https') {
         return `https://play.google.com/store/apps/details?${baseQuery}${referrer}&hl=en`;
@@ -422,4 +422,3 @@ export function getAppStoreUrl(wallet: WalletInfo): string {
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
     return isIOS ? wallet.appStore.ios : wallet.appStore.android;
 }
-

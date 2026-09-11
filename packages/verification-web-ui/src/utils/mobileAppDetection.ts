@@ -278,9 +278,7 @@ export async function tryOpenConcordiumIDApp(walletConnectUri: string): Promise<
         } catch (error) {
             console.warn('[verification-web-ui] clipboard before tryOpen failed', error);
         }
-        const { getConcordiumIdWakeDeepLink, openIosCustomScheme } = await import(
-            '@/constants/wallet.registry'
-        );
+        const { getConcordiumIdWakeDeepLink, openIosCustomScheme } = await import('@/constants/wallet.registry');
         deepLink = getConcordiumIdWakeDeepLink(walletConnectUri);
         openIosCustomScheme(deepLink);
     } else {
@@ -383,9 +381,7 @@ export function openDeepLink(appType: 'concordium-wallet' | 'concordium-id', wal
 
     if (appType === 'concordium-wallet') {
         if (isIOS) {
-            openScheme(
-                `cryptox${network}://wc?uri=${encodeURIComponent(walletConnectUri)}&redirect=googlechrome://`
-            );
+            openScheme(`cryptox${network}://wc?uri=${encodeURIComponent(walletConnectUri)}&redirect=googlechrome://`);
         } else if (isAndroid) {
             openScheme(`cryptox-wc-${network}://wc?uri=${encodeURIComponent(walletConnectUri)}&go_back=true`);
         } else {
@@ -400,9 +396,7 @@ export function openDeepLink(appType: 'concordium-wallet' | 'concordium-id', wal
             } catch {
                 /* fail-open */
             }
-            const { getConcordiumIdWakeDeepLink, openIosCustomScheme } = await import(
-                '@/constants/wallet.registry'
-            );
+            const { getConcordiumIdWakeDeepLink, openIosCustomScheme } = await import('@/constants/wallet.registry');
             openIosCustomScheme(getConcordiumIdWakeDeepLink(walletConnectUri));
         })();
     } else {

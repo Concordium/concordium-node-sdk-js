@@ -14,8 +14,7 @@ const MAX_ENTRIES = 60;
 const PREFIX = '[BRIDGE-TRACE]';
 
 /** Loud style so Safari "Logs" filter still surfaces these. */
-const STYLE_BANNER =
-    'background:#0a7;color:#fff;padding:4px 8px;border-radius:4px;font-weight:bold;font-size:13px';
+const STYLE_BANNER = 'background:#0a7;color:#fff;padding:4px 8px;border-radius:4px;font-weight:bold;font-size:13px';
 const STYLE_STEP = 'color:#0a7;font-weight:bold';
 const STYLE_OK = 'color:#0a0;font-weight:bold';
 const STYLE_FAIL = 'color:#c00;font-weight:bold';
@@ -138,10 +137,7 @@ export function installBridgeTrace(): void {
 
     // Always dump a loud banner so testers know the SDK build is current.
     // eslint-disable-next-line no-console
-    console.info(
-        `%c${PREFIX} SDK LOADED — bridge debug active`,
-        STYLE_BANNER
-    );
+    console.info(`%c${PREFIX} SDK LOADED — bridge debug active`, STYLE_BANNER);
     // eslint-disable-next-line no-console
     console.info(
         `%c${PREFIX}%c Look for "register START / SUCCESS" after tapping Open with ID App.\n` +

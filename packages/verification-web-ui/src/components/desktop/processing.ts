@@ -34,10 +34,7 @@ function resolveLoadingCopy(copy?: ProcessingCopy): { title: string; message: st
     };
 }
 
-export const createProcessingModal = (
-    state: ProcessingState = 'loading',
-    copy?: ProcessingCopy
-): HTMLElement => {
+export const createProcessingModal = (state: ProcessingState = 'loading', copy?: ProcessingCopy): HTMLElement => {
     const loading = resolveLoadingCopy(copy);
 
     const processingHTML = `
@@ -155,7 +152,11 @@ export const createProcessingModal = (
     return processingContainer.firstElementChild as HTMLElement;
 };
 
-async function mountProcessingModal(state: ProcessingState, copy?: ProcessingCopy, eventMessage?: string): Promise<void> {
+async function mountProcessingModal(
+    state: ProcessingState,
+    copy?: ProcessingCopy,
+    eventMessage?: string
+): Promise<void> {
     const { getGlobalContainer } = await import('../../index');
     const targetContainer = getGlobalContainer();
 
@@ -173,8 +174,7 @@ async function mountProcessingModal(state: ProcessingState, copy?: ProcessingCop
     }
 
     const existingModal =
-        processingModalElement ||
-        (targetContainer.querySelector('.desktop--modal-overlay') as HTMLElement | null);
+        processingModalElement || (targetContainer.querySelector('.desktop--modal-overlay') as HTMLElement | null);
 
     const newModal = createProcessingModal(state, copy);
     newModal.id = 'processing-modal';
@@ -279,14 +279,11 @@ async function watchForSessionThenShowVerificationProgress(): Promise<void> {
     while (Date.now() - started < timeoutMs) {
         try {
             const { ServiceFactory } = await import('@/services');
-            const wcService =
-                ServiceFactory.getWalletConnectService() || ServiceFactory.createWalletConnectService();
+            const wcService = ServiceFactory.getWalletConnectService() || ServiceFactory.createWalletConnectService();
             await wcService.initialize();
             const sessions = wcService.getActiveSessions();
             if (sessions.length > 0) {
-                console.log(
-                    '[verification-web-ui] Active WC session detected — switching to Verification in Progress'
-                );
+                console.log('[verification-web-ui] Active WC session detected — switching to Verification in Progress');
                 await showProcessingModal();
                 return;
             }

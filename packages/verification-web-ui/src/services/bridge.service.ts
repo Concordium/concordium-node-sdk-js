@@ -2,7 +2,6 @@
  * Local helpers for ID App handoff (clipboard + QR URL).
  * No remote bridge API.
  */
-
 import { bridgeTrace } from '@/utils/bridgeTrace';
 
 const LOG_PREFIX = '[IDApp]';

@@ -7,6 +7,7 @@
 ### Changed
 
 - **Breaking:** Lock configurations now use the tagged `{ simpleV0: { recipients, expiry, grants, tokens, keepAlive?, memo?, metadata? } }` shape. Lock queries now return `{ lock, config, funds }`; use `LockConfig.simpleV0` and inspect `info.config.simpleV0`.
+- **Breaking:** Rename `LockReturn` to `LockRelease`.
 
 ### Added
 
@@ -21,7 +22,7 @@
 
 ## 13.0.0-alpha.0 (devnet-p11-2)
 
-- Added high-level `Lock` client for creating, funding, sending, releasing, and cancelling protocol-level locks.
+- Added high-level `Lock` client for creating, funding, sending, returning, and cancelling protocol-level locks.
 - Updated PLT token transfer validation to check the sender's available token balance when the token account state includes the `available` field, falling back to the token balance otherwise.
 - Added gRPC client queries for PLT locks: `getLockInfo` and `getLockList`.
 - Added PLT `LockInfo` and `LockInfoResponse` types, and extended `TokenModuleAccountState` with P11 lock fields (`locks`, `available`).
@@ -33,7 +34,7 @@
   - `MetaUpdateHandler` for serializing, deserializing, and computing energy costs of MetaUpdate payloads.
   - `Payload.metaUpdate` helper and full JSON round-trip support.
   - New PLT modules: `LockId`, `LockController`, `LockConfig`, and `MetaUpdateOperation` covering all lock and token-scoped meta operation types.
-  - `MetaUpdateOperationType` enum for the five lock operation variants (`LockCreate`, `LockCancel`, `LockFund`, `LockSend`, `LockRelease`).
+  - `MetaUpdateOperationType` enum for the five lock operation variants (`LockCreate`, `LockCancel`, `LockFund`, `LockSend`, `LockReturn`).
   - `createMetaUpdatePayload`, `encodeMetaUpdateOperations`, `createMetaTokenOperation` helpers for constructing MetaUpdate payloads.
   - `decodeMetaUpdateOperation`, `decodeMetaUpdateOperations` for decoding CBOR-encoded MetaUpdate operation arrays into typed SDK values.
   - `MetaUpdateSummary` added to `AccountTransactionSummary`, adding `LockCreatedEvent` and `LockDestroyedEvent` alongside token-scoped events.

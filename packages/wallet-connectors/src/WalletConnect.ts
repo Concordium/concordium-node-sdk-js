@@ -12,6 +12,7 @@ import {
     InitContractPayload,
     Parameter,
     Payload,
+    SchemaVersion,
     Transaction,
     UpdateContractInput,
     UpdateContractPayload,
@@ -233,12 +234,34 @@ function serializeUpdateContractMessage(
     }
 }
 
+/** Smart contract module schema format compatible with WalletConnect wallets. */
+export type WalletConnectSchemaModule = {
+    type: 'module';
+    /** Base64 string value. */
+    value: string;
+    version?: SchemaVersion;
+};
+
+/** Smart contract parameter schema format compatible with WalletConnect wallets. */
+export type WalletConnectSchemaParameter = {
+    type: 'parameter';
+    /** Base64 string value. */
+    value: string;
+};
+
+/** Smart contract schema format compatible with WalletConnect wallets. */
+export type WalletConnectSchemaFormat =
+    | WalletConnectSchemaModule
+    | WalletConnectSchemaParameter;
+
 /**
  * Convert schema into the object format expected by the Mobile crypto library (function 'parameter_to_json')
  * which decodes the parameter before presenting it to the user for approval.
  * @param schema The schema object.
  */
-function convertSchemaFormat(schema: Schema | undefined) {
+function convertSchemaFormat(
+    schema: Schema | undefined
+): WalletConnectSchemaFormat | null {
     if (!schema) {
         return null;
     }
@@ -273,12 +296,14 @@ function convertTransactionSchemaFormat(
     type: AccountTransactionType,
     payload: SendTransactionPayload,
     schema: Schema | undefined
-) {
+): WalletConnectSchemaFormat | null {
     if (!schema) {
         return null;
     }
 
     if (type === AccountTransactionType.InitContract && schema.type === 'ModuleSchema') {
+        // Currently, mobile wallets accepting transaction requests do not support module schemas
+        // for "init contract" transactions.
         const initContractPayload = payload as InitContractPayload;
 
         const parameterSchema = getInitContractParameterSchema(

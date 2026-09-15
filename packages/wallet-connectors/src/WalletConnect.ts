@@ -250,18 +250,14 @@ export type WalletConnectSchemaParameter = {
 };
 
 /** Smart contract schema format compatible with WalletConnect wallets. */
-export type WalletConnectSchemaFormat =
-    | WalletConnectSchemaModule
-    | WalletConnectSchemaParameter;
+export type WalletConnectSchemaFormat = WalletConnectSchemaModule | WalletConnectSchemaParameter;
 
 /**
  * Convert schema into the object format expected by the Mobile crypto library (function 'parameter_to_json')
  * which decodes the parameter before presenting it to the user for approval.
  * @param schema The schema object.
  */
-function convertSchemaFormat(
-    schema: Schema | undefined
-): WalletConnectSchemaFormat | null {
+function convertSchemaFormat(schema: Schema | undefined): WalletConnectSchemaFormat | null {
     if (!schema) {
         return null;
     }

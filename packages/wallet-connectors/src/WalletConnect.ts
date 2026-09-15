@@ -1,4 +1,3 @@
-import { Buffer } from 'buffer/';
 import {
     AccountAddress,
     AccountTransactionInput,
@@ -31,6 +30,7 @@ import { MobileWallet } from '@walletconnect/modal-core';
 // eslint-disable-next-line import/no-named-as-default
 import SignClient from '@walletconnect/sign-client';
 import { ISignClient, ProposalTypes, SessionTypes, SignClientTypes } from '@walletconnect/types';
+import { Buffer } from 'buffer/';
 
 import {
     Network,
@@ -278,10 +278,7 @@ function convertTransactionSchemaFormat(
         return null;
     }
 
-    if (
-        type === AccountTransactionType.InitContract &&
-        schema.type === 'ModuleSchema'
-    ) {
+    if (type === AccountTransactionType.InitContract && schema.type === 'ModuleSchema') {
         const initContractPayload = payload as InitContractPayload;
 
         const parameterSchema = getInitContractParameterSchema(
@@ -420,11 +417,7 @@ export class WalletConnectConnection implements WalletConnection {
             type: getTransactionKindString(type),
             sender: accountAddress,
             payload: accountTransactionPayloadToJson(serializePayloadParameters(type, payload, typedParams)),
-            schema: convertTransactionSchemaFormat(
-                type,
-                payload,
-                typedParams?.schema
-            ),
+            schema: convertTransactionSchemaFormat(type, payload, typedParams?.schema),
         };
         try {
             const { hash } = (await this.connector.client.request({

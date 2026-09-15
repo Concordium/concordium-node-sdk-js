@@ -4,12 +4,15 @@ import {
     ContractAddress,
     ContractName,
     Energy,
-    getInitContractParameterSchema,
     ModuleReference,
-    SchemaVersion,
     ReceiveName,
+    SchemaVersion,
+    getInitContractParameterSchema,
 } from '@concordium/web-sdk';
 import { Buffer } from 'buffer/';
+
+import { WalletConnectConnection } from '../src/WalletConnect';
+import { moduleSchemaFromBase64 } from '../src/WalletConnection';
 
 jest.mock('@walletconnect/modal', () => ({
     WalletConnectModal: jest.fn(),
@@ -38,11 +41,7 @@ jest.mock('../src/constants', () => ({
     WALLET_CONNECT_SESSION_NAMESPACE: 'ccd',
 }));
 
-import { WalletConnectConnection } from '../src/WalletConnect';
-import { moduleSchemaFromBase64 } from '../src/WalletConnection';
-
-const MODULE_SCHEMA_BASE64 =
-    '//8DAQAAAAQAAAB0ZXN0AQAFAQAAAAcAAAByZWNlaXZlAgUFAA==';
+const MODULE_SCHEMA_BASE64 = '//8DAQAAAAQAAAB0ZXN0AQAFAQAAAAcAAAByZWNlaXZlAgUFAA==';
 
 test('InitContract with ModuleSchema sends parameter schema to mobile wallet', async () => {
     const request = jest.fn().mockResolvedValue({
@@ -59,56 +58,39 @@ test('InitContract with ModuleSchema sends parameter schema to mobile wallet', a
         topic: 'test-topic',
     } as any;
 
-    const connection = new WalletConnectConnection(
-        connector,
-        'ccd:testnet',
-        session
-    );
+    const connection = new WalletConnectConnection(connector, 'ccd:testnet', session);
 
     const initName = ContractName.fromString('test');
 
-    const moduleSchema = moduleSchemaFromBase64(
-        MODULE_SCHEMA_BASE64,
-        SchemaVersion.V1
-    );
+    const moduleSchema = moduleSchemaFromBase64(MODULE_SCHEMA_BASE64, SchemaVersion.V1);
 
     const payload = {
         initName,
         amount: CcdAmount.fromCcd(0),
         maxContractExecutionEnergy: Energy.create(6000n),
-        moduleRef: ModuleReference.fromHexString(
-            '0000000000000000000000000000000000000000000000000000000000000000'
-        ),
+        moduleRef: ModuleReference.fromHexString('0000000000000000000000000000000000000000000000000000000000000000'),
     };
 
     const parameters = 42n;
 
-    await connection.signAndSendTransaction(
-        '4dummy-account',
-        AccountTransactionType.InitContract,
-        payload,
-        {
-            parameters,
-            schema: moduleSchema,
-        }
-    );
+    await connection.signAndSendTransaction('4dummy-account', AccountTransactionType.InitContract, payload, {
+        parameters,
+        schema: moduleSchema,
+    });
 
     expect(request).toHaveBeenCalledTimes(1);
 
     const walletConnectRequest = request.mock.calls[0][0];
 
-    const expectedParameterSchema =
-        getInitContractParameterSchema(
-            Uint8Array.from(moduleSchema.value).buffer,
-            initName,
-            moduleSchema.version
-        );
+    const expectedParameterSchema = getInitContractParameterSchema(
+        Uint8Array.from(moduleSchema.value).buffer,
+        initName,
+        moduleSchema.version
+    );
 
     expect(walletConnectRequest.request.params.schema).toEqual({
         type: 'parameter',
-        value: Buffer.from(
-            expectedParameterSchema
-        ).toString('base64'),
+        value: Buffer.from(expectedParameterSchema).toString('base64'),
     });
 });
 
@@ -127,25 +109,17 @@ test('InitContract with TypeSchema keeps parameter schema unchanged', async () =
         topic: 'test-topic',
     } as any;
 
-    const connection = new WalletConnectConnection(
-        connector,
-        'ccd:testnet',
-        session
-    );
+    const connection = new WalletConnectConnection(connector, 'ccd:testnet', session);
 
     const initName = ContractName.fromString('test');
 
-    const moduleSchema = moduleSchemaFromBase64(
-        MODULE_SCHEMA_BASE64,
-        SchemaVersion.V1
-    );
+    const moduleSchema = moduleSchemaFromBase64(MODULE_SCHEMA_BASE64, SchemaVersion.V1);
 
-    const parameterSchemaBytes =
-        getInitContractParameterSchema(
-            Uint8Array.from(moduleSchema.value).buffer,
-            initName,
-            moduleSchema.version
-        );
+    const parameterSchemaBytes = getInitContractParameterSchema(
+        Uint8Array.from(moduleSchema.value).buffer,
+        initName,
+        moduleSchema.version
+    );
 
     const parameterSchema = {
         type: 'TypeSchema' as const,
@@ -156,20 +130,13 @@ test('InitContract with TypeSchema keeps parameter schema unchanged', async () =
         initName,
         amount: CcdAmount.fromCcd(0),
         maxContractExecutionEnergy: Energy.create(6000n),
-        moduleRef: ModuleReference.fromHexString(
-            '0000000000000000000000000000000000000000000000000000000000000000'
-        ),
+        moduleRef: ModuleReference.fromHexString('0000000000000000000000000000000000000000000000000000000000000000'),
     };
 
-    await connection.signAndSendTransaction(
-        '4dummy-account',
-        AccountTransactionType.InitContract,
-        payload,
-        {
-            parameters: 42n,
-            schema: parameterSchema,
-        }
-    );
+    await connection.signAndSendTransaction('4dummy-account', AccountTransactionType.InitContract, payload, {
+        parameters: 42n,
+        schema: parameterSchema,
+    });
 
     const walletConnectRequest = request.mock.calls[0][0];
 
@@ -194,16 +161,9 @@ test('UpdateContract with ModuleSchema keeps module schema format', async () => 
         topic: 'test-topic',
     } as any;
 
-    const connection = new WalletConnectConnection(
-        connector,
-        'ccd:testnet',
-        session
-    );
+    const connection = new WalletConnectConnection(connector, 'ccd:testnet', session);
 
-    const moduleSchema = moduleSchemaFromBase64(
-        MODULE_SCHEMA_BASE64,
-        SchemaVersion.V1
-    );
+    const moduleSchema = moduleSchemaFromBase64(MODULE_SCHEMA_BASE64, SchemaVersion.V1);
 
     const payload = {
         address: ContractAddress.fromSchemaValue({
@@ -215,15 +175,10 @@ test('UpdateContract with ModuleSchema keeps module schema format', async () => 
         maxContractExecutionEnergy: Energy.create(6000n),
     };
 
-    await connection.signAndSendTransaction(
-        '4dummy-account',
-        AccountTransactionType.Update,
-        payload,
-        {
-            parameters: 42n,
-            schema: moduleSchema,
-        }
-    );
+    await connection.signAndSendTransaction('4dummy-account', AccountTransactionType.Update, payload, {
+        parameters: 42n,
+        schema: moduleSchema,
+    });
 
     const walletConnectRequest = request.mock.calls[0][0];
 

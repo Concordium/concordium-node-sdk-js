@@ -58,7 +58,7 @@ const client = new ConcordiumGRPCNodeClient(
         const lock = await Lock.fromId(client, lockId);
 
         try {
-            // Submit the cancel transaction — the lock is destroyed and any remaining funds are returned
+            // Submit the cancel transaction — the lock is destroyed and any remaining funds are released
             const txHash = await Lock.cancel(lock, sender, signer);
             console.log(`Transaction submitted with hash: ${txHash}`);
 

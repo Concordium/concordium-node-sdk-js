@@ -1,19 +1,16 @@
 import { cborDecode } from '../types/cbor.js';
+import * as LockConfig from './LockConfig.js';
 import { TokenAdminRole } from './TokenOperation.js';
 import type {
     AccountLockAmount,
     LockAccountFund,
     LockInfo,
-    LockRecipients,
     TokenAuthorizationsDetails,
     TokenRoleAuthorizations,
 } from './cbor-types.js';
 import {
     Cbor,
     CborAccountAddress,
-    CborEpoch,
-    LockConfig,
-    LockController,
     LockId,
     MetaUpdateOperation,
     TokenAmount,
@@ -181,11 +178,13 @@ function decodeLockInfo(value: Cbor.Type): LockInfo {
     if (!Array.isArray(map.funds)) {
         throw new Error("Invalid LockInfo: 'funds' must be an array");
     }
-    const config = convertLockConfig(map);
+    if (typeof map.config !== 'object' || map.config === null) {
+        throw new Error("Invalid LockInfo: missing or invalid 'config'");
+    }
 
     return {
         lock: map.lock,
-        ...config,
+        config: LockConfig.fromCBORValue(map.config),
         funds: map.funds.map(decodeLockAccountFund),
     };
 }
@@ -225,45 +224,6 @@ function decodeTokenInitializationParameters(value: Cbor.Type): TokenInitializat
     return { ...decoded, metadata } as TokenInitializationParameters;
 }
 
-function convertLockConfig(value: unknown): LockConfig {
-    if (typeof value !== 'object' || value === null) {
-        throw new Error('Invalid lock config: expected object');
-    }
-
-    const lockConfig = value as Record<string, unknown>;
-    let recipients: LockRecipients;
-    if (lockConfig.recipients === 'any') {
-        recipients = 'any';
-    } else if (Array.isArray(lockConfig.recipients) && lockConfig.recipients.every(CborAccountAddress.instanceOf)) {
-        recipients = lockConfig.recipients;
-    } else {
-        throw new Error('Invalid lock config: expected recipients to be "any" or an array of CBOR account addresses');
-    }
-    if (!CborEpoch.instanceOf(lockConfig.expiry)) {
-        throw new Error('Invalid lock config: expected expiry as CBOR epoch time');
-    }
-
-    let metadata: Uint8Array | undefined;
-    if ('metadata' in lockConfig) {
-        if (!(lockConfig.metadata instanceof Uint8Array)) {
-            throw new Error('Invalid lock config: expected metadata as CBOR bytes');
-        }
-        metadata = lockConfig.metadata;
-    }
-
-    return {
-        recipients,
-        expiry: lockConfig.expiry,
-        controller: LockController.fromCBORValue(lockConfig.controller),
-        metadata,
-    };
-}
-
-function decodeLockConfig(value: Cbor.Type): LockConfig {
-    const decoded = cborDecode(value.bytes);
-    return convertLockConfig(decoded);
-}
-
 type DecodeTypeMap = {
     TokenAuthorizationsDetails: TokenAuthorizationsDetails;
     TokenModuleState: TokenModuleState;
@@ -271,7 +231,7 @@ type DecodeTypeMap = {
     TokenInitializationParameters: TokenInitializationParameters;
     'TokenOperation[]': (TokenOperation | UnknownTokenOperation)[];
     'MetaUpdateOperation[]': (MetaUpdateOperation | UnknownMetaUpdateOperation)[];
-    LockConfig: LockConfig;
+    LockConfig: LockConfig.Type;
     LockInfo: LockInfo;
 };
 
@@ -310,7 +270,7 @@ export function decode<T extends keyof DecodeTypeMap | undefined>(cbor: Cbor.Typ
         case 'MetaUpdateOperation[]':
             return decodeMetaUpdateOperations(cbor);
         case 'LockConfig':
-            return decodeLockConfig(cbor);
+            return LockConfig.fromCBOR(cbor.bytes);
         case 'LockInfo':
             return decodeLockInfo(cbor);
         default:

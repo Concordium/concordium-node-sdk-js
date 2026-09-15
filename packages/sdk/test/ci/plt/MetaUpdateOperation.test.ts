@@ -1,11 +1,10 @@
-import { Buffer } from 'buffer/index.js';
 import JSONBig from 'json-bigint';
 
 import { Cursor } from '../../../src/deserializationHelpers.ts';
 import {
     CborAccountAddress,
     CborEpoch,
-    LockController,
+    LockConfig,
     LockId,
     LockMetadata,
     MetaUpdateOperationType,
@@ -18,7 +17,6 @@ import {
     createMetaUpdatePayload,
     encodeMetaUpdateOperations,
 } from '../../../src/pub/plt.ts';
-import type { LockConfig } from '../../../src/pub/plt.ts';
 import {
     AccountAddress,
     AccountTransactionType,
@@ -35,19 +33,17 @@ describe('PLT MetaUpdateOperation', () => {
     const amount = TokenAmount.create(500n, 2);
     const lock = LockId.create(1n, 2n, 3n);
     const account = CborAccountAddress.fromAccountAddress(AccountAddress.fromBuffer(new Uint8Array(32).fill(0x15)));
-    const lockConfig: LockConfig = {
-        recipients: [account],
-        expiry: CborEpoch.fromEpochSeconds(10n),
-        controller: LockController.simpleV0(
-            [
-                {
-                    account,
-                    roles: [LockController.SimpleV0Capability.Fund, LockController.SimpleV0Capability.Send],
-                },
-            ],
-            [token]
-        ),
-    };
+    const lockConfig = LockConfig.simpleV0(
+        [account],
+        CborEpoch.fromEpochSeconds(10n),
+        [
+            {
+                account,
+                roles: [LockConfig.SimpleV0Capability.Fund, LockConfig.SimpleV0Capability.Send],
+            },
+        ],
+        [token]
+    );
     const metadataChecksum = new Uint8Array(32).fill(1);
 
     it.each([
@@ -123,7 +119,7 @@ describe('PLT MetaUpdateOperation', () => {
         [
             'lockCreate',
             { [MetaUpdateOperationType.LockCreate]: lockConfig },
-            '81a16a6c6f636b437265617465a366657870697279c10a6a636f6e74726f6c6c6572a16873696d706c655630a2666772616e747381a265726f6c6573826466756e646473656e64676163636f756e74d99d73a201d99d71a101190397035820151515151515151515151515151515151515151515151515151515151515151566746f6b656e73816674546f6b656e6a726563697069656e747381d99d73a201d99d71a1011903970358201515151515151515151515151515151515151515151515151515151515151515',
+            '81a16a6c6f636b437265617465a16873696d706c655630a466657870697279c10a666772616e747381a265726f6c6573826466756e646473656e64676163636f756e74d99d73a201d99d71a101190397035820151515151515151515151515151515151515151515151515151515151515151566746f6b656e73816674546f6b656e6a726563697069656e747381d99d73a201d99d71a1011903970358201515151515151515151515151515151515151515151515151515151515151515',
         ],
         [
             'lockCancel',
@@ -141,9 +137,9 @@ describe('PLT MetaUpdateOperation', () => {
             '81a1686c6f636b53656e64a5646c6f636bd99fd88301020365746f6b656e6674546f6b656e66616d6f756e74c482211901f466736f75726365d99d73a201d99d71a101190397035820151515151515151515151515151515151515151515151515151515151515151569726563697069656e74d99d73a201d99d71a1011903970358201515151515151515151515151515151515151515151515151515151515151515',
         ],
         [
-            'lockReturn',
-            { [MetaUpdateOperationType.LockReturn]: { token, lock, source: account, amount } },
-            '81a16a6c6f636b52657475726ea4646c6f636bd99fd88301020365746f6b656e6674546f6b656e66616d6f756e74c482211901f466736f75726365d99d73a201d99d71a1011903970358201515151515151515151515151515151515151515151515151515151515151515',
+            'lockRelease',
+            { [MetaUpdateOperationType.LockRelease]: { token, lock, source: account, amount } },
+            '81a16b6c6f636b52656c65617365a4646c6f636bd99fd88301020365746f6b656e6674546f6b656e66616d6f756e74c482211901f466736f75726365d99d73a201d99d71a1011903970358201515151515151515151515151515151515151515151515151515151515151515',
         ],
     ])('encodes %s meta update operation', (_name, operation, expected) => {
         expect(encodeMetaUpdateOperations(operation).toString()).toBe(expected);
@@ -152,11 +148,12 @@ describe('PLT MetaUpdateOperation', () => {
     it('encodes lockCreate metadata as raw CBOR bytes', () => {
         const metadata = LockMetadata.encode({ name: 'Metadata lock', issuer: 'Concordium' });
         const operations = encodeMetaUpdateOperations({
-            [MetaUpdateOperationType.LockCreate]: { ...lockConfig, metadata },
+            [MetaUpdateOperationType.LockCreate]: { simpleV0: { ...lockConfig.simpleV0, metadata } },
         });
 
-        expect(operations.toString()).toContain('686d65746164617461');
-        expect(operations.toString()).toContain(Buffer.from(metadata).toString('hex'));
+        expect(operations.toString()).toBe(
+            '81a16a6c6f636b437265617465a16873696d706c655630a566657870697279c10a666772616e747381a265726f6c6573826466756e646473656e64676163636f756e74d99d73a201d99d71a101190397035820151515151515151515151515151515151515151515151515151515151515151566746f6b656e73816674546f6b656e686d657461646174615826a2646e616d656d4d65746164617461206c6f636b666973737565726a436f6e636f726469756d6a726563697069656e747381d99d73a201d99d71a1011903970358201515151515151515151515151515151515151515151515151515151515151515'
+        );
     });
 
     it('encodes lockCreate and lockCancel meta operations', () => {
@@ -174,11 +171,11 @@ describe('PLT MetaUpdateOperation', () => {
         const operations = encodeMetaUpdateOperations([
             { [MetaUpdateOperationType.LockFund]: { token, lock, amount, memo: new Uint8Array([9]) } },
             { [MetaUpdateOperationType.LockSend]: { token, lock, source: account, amount, recipient: account } },
-            { [MetaUpdateOperationType.LockReturn]: { token, lock, source: account, amount } },
+            { [MetaUpdateOperationType.LockRelease]: { token, lock, source: account, amount } },
         ]);
 
         expect(operations.toString()).toBe(
-            '83a1686c6f636b46756e64a4646c6f636bd99fd883010203646d656d6f410965746f6b656e6674546f6b656e66616d6f756e74c482211901f4a1686c6f636b53656e64a5646c6f636bd99fd88301020365746f6b656e6674546f6b656e66616d6f756e74c482211901f466736f75726365d99d73a201d99d71a101190397035820151515151515151515151515151515151515151515151515151515151515151569726563697069656e74d99d73a201d99d71a1011903970358201515151515151515151515151515151515151515151515151515151515151515a16a6c6f636b52657475726ea4646c6f636bd99fd88301020365746f6b656e6674546f6b656e66616d6f756e74c482211901f466736f75726365d99d73a201d99d71a1011903970358201515151515151515151515151515151515151515151515151515151515151515'
+            '83a1686c6f636b46756e64a4646c6f636bd99fd883010203646d656d6f410965746f6b656e6674546f6b656e66616d6f756e74c482211901f4a1686c6f636b53656e64a5646c6f636bd99fd88301020365746f6b656e6674546f6b656e66616d6f756e74c482211901f466736f75726365d99d73a201d99d71a101190397035820151515151515151515151515151515151515151515151515151515151515151569726563697069656e74d99d73a201d99d71a1011903970358201515151515151515151515151515151515151515151515151515151515151515a16b6c6f636b52656c65617365a4646c6f636bd99fd88301020365746f6b656e6674546f6b656e66616d6f756e74c482211901f466736f75726365d99d73a201d99d71a1011903970358201515151515151515151515151515151515151515151515151515151515151515'
         );
     });
 
@@ -232,7 +229,7 @@ describe('PLT MetaUpdateOperation', () => {
             { [MetaUpdateOperationType.LockCancel]: { lock } },
             { [MetaUpdateOperationType.LockFund]: { token, lock, amount } },
             { [MetaUpdateOperationType.LockSend]: { token, lock, source: account, amount, recipient: account } },
-            { [MetaUpdateOperationType.LockReturn]: { token, lock, source: account, amount } },
+            { [MetaUpdateOperationType.LockRelease]: { token, lock, source: account, amount } },
         ]);
 
         expect(new MetaUpdateHandler().getBaseEnergyCost(payload)).toBe(850n);

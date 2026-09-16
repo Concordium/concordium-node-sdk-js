@@ -12,10 +12,12 @@ import {
     InitContractPayload,
     Parameter,
     Payload,
+    SchemaVersion,
     Transaction,
     UpdateContractInput,
     UpdateContractPayload,
     VerifiablePresentation,
+    getInitContractParameterSchema,
     getTransactionKindString,
     jsonUnwrapStringify,
     serializeAccountTransactionSignature,
@@ -29,6 +31,7 @@ import { MobileWallet } from '@walletconnect/modal-core';
 // eslint-disable-next-line import/no-named-as-default
 import SignClient from '@walletconnect/sign-client';
 import { ISignClient, ProposalTypes, SessionTypes, SignClientTypes } from '@walletconnect/types';
+import { Buffer } from 'buffer/';
 
 import {
     Network,
@@ -231,12 +234,30 @@ function serializeUpdateContractMessage(
     }
 }
 
+/** Smart contract module schema format compatible with WalletConnect wallets. */
+export type WalletConnectSchemaModule = {
+    type: 'module';
+    /** Base64 string value. */
+    value: string;
+    version?: SchemaVersion;
+};
+
+/** Smart contract parameter schema format compatible with WalletConnect wallets. */
+export type WalletConnectSchemaParameter = {
+    type: 'parameter';
+    /** Base64 string value. */
+    value: string;
+};
+
+/** Smart contract schema format compatible with WalletConnect wallets. */
+export type WalletConnectSchemaFormat = WalletConnectSchemaModule | WalletConnectSchemaParameter;
+
 /**
  * Convert schema into the object format expected by the Mobile crypto library (function 'parameter_to_json')
  * which decodes the parameter before presenting it to the user for approval.
  * @param schema The schema object.
  */
-function convertSchemaFormat(schema: Schema | undefined) {
+function convertSchemaFormat(schema: Schema | undefined): WalletConnectSchemaFormat | null {
     if (!schema) {
         return null;
     }
@@ -255,6 +276,45 @@ function convertSchemaFormat(schema: Schema | undefined) {
         default:
             throw new UnreachableCaseError('schema', schema);
     }
+}
+
+/**
+ * Converts the transaction schema to the format expected by WalletConnect.
+ *
+ * For InitContract transactions using a ModuleSchema, extracts the parameter
+ * TypeSchema for the specific init function. This allows the mobile wallet to
+ * decode and display the serialized init parameters without requiring the full
+ * module schema.
+ *
+ * Other transaction and schema types use the standard schema conversion.
+ */
+function convertTransactionSchemaFormat(
+    type: AccountTransactionType,
+    payload: SendTransactionPayload,
+    schema: Schema | undefined
+): WalletConnectSchemaFormat | null {
+    if (!schema) {
+        return null;
+    }
+
+    if (type === AccountTransactionType.InitContract && schema.type === 'ModuleSchema') {
+        // Currently, mobile wallets accepting transaction requests do not support module schemas
+        // for "init contract" transactions.
+        const initContractPayload = payload as InitContractPayload;
+
+        const parameterSchema = getInitContractParameterSchema(
+            Uint8Array.from(schema.value).buffer,
+            initContractPayload.initName,
+            schema.version
+        );
+
+        return {
+            type: 'parameter',
+            value: Buffer.from(parameterSchema).toString('base64'),
+        };
+    }
+
+    return convertSchemaFormat(schema);
 }
 
 /**
@@ -378,7 +438,7 @@ export class WalletConnectConnection implements WalletConnection {
             type: getTransactionKindString(type),
             sender: accountAddress,
             payload: accountTransactionPayloadToJson(serializePayloadParameters(type, payload, typedParams)),
-            schema: convertSchemaFormat(typedParams?.schema),
+            schema: convertTransactionSchemaFormat(type, payload, typedParams?.schema),
         };
         try {
             const { hash } = (await this.connector.client.request({

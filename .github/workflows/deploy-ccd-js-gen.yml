@@ -95,6 +95,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      id-token: write
     environment: deploy
     steps:
       - name: Checkout sources
@@ -123,10 +124,8 @@ jobs:
 
       - name: Publish to NPM
         run: |
-          yarn config set npmAuthToken $NPM_AUTH_TOKEN
-          yarn workspace @concordium/ccd-js-gen npm publish
-        env:
-          NPM_AUTH_TOKEN: '${{secrets.NPM_PUBLISH_TOKEN}}'
+          yarn workspace @concordium/ccd-js-gen pack --out ../../ccd-js-gen.tgz
+          NPM_AUTH_TOKEN="" npm publish ./ccd-js-gen.tgz --access public --provenance
 
       - name: Create a GitHub release
         uses: ncipollo/release-action@v1

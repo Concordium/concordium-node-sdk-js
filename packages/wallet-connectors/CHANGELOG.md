@@ -5,9 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.9.0-alpha.0]
+## [0.9.0]
 
-- Amended signAndSendSponsoredTransaction to have an optional parameter for smartContract schema
+- Amended signAndSendSponsoredTransaction to have an optional parameter for smartContract schema.
+- Change `signAndSendTransaction` for init contract transactions to convert the schema to a compatible format.
 
 ## [0.8.0]
 

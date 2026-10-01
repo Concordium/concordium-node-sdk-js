@@ -66,6 +66,8 @@ export enum TransactionEventTag {
     TokenBurn = 'TokenBurn',
     LockCreated = 'LockCreated',
     LockDestroyed = 'LockDestroyed',
+    LockAmount = 'LockAmount',
+    UnlockAmount = 'UnlockAmount',
 }
 
 export type TransactionEvent =
@@ -404,10 +406,6 @@ export type TokenTransferEvent = {
     amount: PLT.TokenAmount.Type;
     /** An optional memo associated with the transfer. */
     memo?: PLT.CborMemo.Type;
-    /** The lock controlling the source funds, if the funds originate from a locked balance. */
-    fromLock?: PLT.LockId.Type;
-    /** The lock assuming control of the destination funds, if the funds are transferred into a lock. */
-    toLock?: PLT.LockId.Type;
 };
 
 /**
@@ -466,10 +464,24 @@ export type LockDestroyedEvent = {
     lockId: PLT.LockId.Type;
 };
 
-/** Token-related event emitted by token update or meta update execution. */
+/** Token-related event emitted by token update execution. */
 export type TokenEvent = EncodedTokenModuleEvent | TokenTransferEvent | TokenMintEvent | TokenBurnEvent;
-/** Event emitted by a meta update transaction. */
-export type MetaUpdateEvent = TokenEvent | LockCreatedEvent | LockDestroyedEvent;
+/** An amount moved between a holder's available and locked balances. */
+export type LockAmountEvent = {
+    tag: TransactionEventTag.LockAmount;
+    tokenId: PLT.TokenId.Type;
+    lockId: PLT.LockId.Type;
+    tokenHolder: Upward<PLT.TokenHolder.Type>;
+    amount: PLT.TokenAmount.Type;
+};
+
+/** An amount released from a lock, including the unlock effect of lock-send. */
+export type UnlockAmountEvent = Omit<LockAmountEvent, 'tag'> & { tag: TransactionEventTag.UnlockAmount };
+
+/** Lock-related event emitted by a Token Update. */
+export type LockEvent = LockCreatedEvent | LockDestroyedEvent | LockAmountEvent | UnlockAmountEvent;
+/** Flat tagged union, preserving token event JSON and the SDK's existing tag convention. */
+export type OperationEvent = TokenEvent | LockEvent;
 /** Event emitted as part of a smart contract execution trace. */
 export type ContractTraceEvent = ResumedEvent | InterruptedEvent | UpdatedEvent | UpgradedEvent | TransferredEvent;
 /** Event emitted by baker/validator configuration changes. */

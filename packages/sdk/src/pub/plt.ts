@@ -20,7 +20,7 @@ export * from '../plt/cbor-types.js';
 export * from '../plt/TokenModuleRejectReason.js';
 export * from '../plt/TokenModuleEvent.js';
 export * from '../plt/TokenOperation.js';
-export * from '../plt/MetaUpdateOperation.js';
+export * from '../plt/Operation.js';
 
 export {
     Token,

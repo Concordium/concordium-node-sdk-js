@@ -13,14 +13,8 @@ import {
     ReceiveName,
     TransactionKindString,
 } from '../../../src/index.js';
-import {
-    LockId,
-    MetaUpdateOperationType,
-    TokenAmount,
-    TokenId,
-    createMetaUpdatePayload,
-} from '../../../src/pub/plt.ts';
-import { AccountAddress } from '../../../src/pub/types.js';
+import { LockId, OperationType, TokenAmount, TokenId, createTokenUpdatePayload } from '../../../src/pub/plt.ts';
+import { AccountAddress, AccountTransactionType } from '../../../src/pub/types.js';
 import { Payload } from '../../../src/transactions/index.js';
 
 const jsonBig = JSONBig({ useNativeBigInt: true });
@@ -364,44 +358,78 @@ describe('Payload', () => {
         });
     });
 
-    describe('MetaUpdate', () => {
-        const metaUpdatePayload = Payload.metaUpdate(
-            createMetaUpdatePayload({
-                [MetaUpdateOperationType.LockFund]: {
-                    token: TokenId.fromString('tToken'),
-                    lock: LockId.create(1n, 2n, 3n),
-                    amount: TokenAmount.create(500n, 2),
+    describe('Scoped TokenUpdate', () => {
+        const direct = createTokenUpdatePayload({
+            tokenId: TokenId.fromString('TEST'),
+            operations: { pause: {} },
+        });
+        const payload = Payload.tokenUpdate(direct);
+        test('preserves variant boundaries and roundtrips', () => {
+            expect(direct.type).toBe('scoped');
+            expect(payload).toEqual({
+                type: AccountTransactionType.TokenUpdate,
+                scoped: { tokenId: direct.tokenId, operations: direct.operations },
+            });
+            const json = {
+                type: TransactionKindString.TokenUpdate,
+                scoped: { tokenId: 'TEST', operations: direct.operations.toJSON() },
+            };
+            expect(Payload.toJSON(payload)).toEqual(json);
+            expect(Payload.fromJSON(json)).toEqual(payload);
+            expect(Payload.deserialize(Payload.serialize(payload))).toEqual(payload);
+            for (const invalid of [
+                { type: TransactionKindString.TokenUpdate },
+                { ...json, unscoped: { operations: direct.operations.toJSON() } },
+                { ...json, scoped: { operations: direct.operations.toJSON() } },
+                { ...json, scoped: { tokenId: '', operations: direct.operations.toJSON() } },
+                { ...json, scoped: { tokenId: 'TEST' } },
+            ])
+                expect(() => Payload.fromJSON(invalid as Payload.JSON)).toThrow();
+        });
+    });
+
+    describe('Unscoped TokenUpdate', () => {
+        const unscopedTokenUpdatePayload = Payload.tokenUpdate(
+            createTokenUpdatePayload({
+                operations: {
+                    [OperationType.LockFund]: {
+                        token: TokenId.fromString('tToken'),
+                        lock: LockId.create(1n, 2n, 3n),
+                        amount: TokenAmount.create(500n, 2),
+                    },
                 },
             })
         );
 
         test('serialize/deserialize roundtrip', () => {
-            const serialized = Payload.serialize(metaUpdatePayload);
+            const serialized = Payload.serialize(unscopedTokenUpdatePayload);
             const deserialized = Payload.deserialize(serialized);
-            expect(deserialized).toEqual(metaUpdatePayload);
+            expect(deserialized).toEqual(unscopedTokenUpdatePayload);
         });
 
         test('toJSON/fromJSON roundtrip', () => {
-            const json = Payload.toJSON(metaUpdatePayload);
+            const json = Payload.toJSON(unscopedTokenUpdatePayload);
             const jsonString = jsonBig.stringify(json);
             const parsed = jsonBig.parse(jsonString);
             const deserialized = Payload.fromJSON(parsed);
-            expect(deserialized).toEqual(metaUpdatePayload);
+            expect(deserialized).toEqual(unscopedTokenUpdatePayload);
         });
 
         test('serialize produces fixed hex output', () => {
-            const serialized = Payload.serialize(metaUpdatePayload);
+            const serialized = Payload.serialize(unscopedTokenUpdatePayload);
             expect(Buffer.from(serialized).toString('hex')).toBe(
-                '1c0000003281a1686c6f636b46756e64a3646c6f636bd99fd88301020365746f6b656e6674546f6b656e66616d6f756e74c482211901f4'
+                '1b000000003281a1686c6f636b46756e64a3646c6f636bd99fd88301020365746f6b656e6674546f6b656e66616d6f756e74c482211901f4'
             );
         });
 
         test('toJSON produces fixed JSON output', () => {
-            const json = Payload.toJSON(metaUpdatePayload);
+            const json = Payload.toJSON(unscopedTokenUpdatePayload);
             expect(json).toEqual({
-                type: TransactionKindString.MetaUpdate,
-                operations:
-                    '81a1686c6f636b46756e64a3646c6f636bd99fd88301020365746f6b656e6674546f6b656e66616d6f756e74c482211901f4',
+                type: TransactionKindString.TokenUpdate,
+                unscoped: {
+                    operations:
+                        '81a1686c6f636b46756e64a3646c6f636bd99fd88301020365746f6b656e6674546f6b656e66616d6f756e74c482211901f4',
+                },
             });
         });
     });

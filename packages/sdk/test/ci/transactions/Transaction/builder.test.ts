@@ -228,6 +228,7 @@ describe('Transaction.Builder', () => {
 
     describe('tokenUpdate', () => {
         const tx = Transaction.tokenUpdate({
+            type: 'scoped',
             tokenId: TokenId.fromString('TEST'),
             operations: Cbor.encode([{ pause: {} }]),
         });

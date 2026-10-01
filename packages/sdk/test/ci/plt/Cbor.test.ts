@@ -324,9 +324,12 @@ describe('PLT Cbor', () => {
         });
     });
 
-    describe('TokenOperations', () => {
+    describe('TokenOperation[]', () => {
         test('empty operations encodes correctly', () => {
-            const encoded = createTokenUpdatePayload(TokenId.fromString('TEST'), []).operations;
+            const encoded = createTokenUpdatePayload({
+                tokenId: TokenId.fromString('TEST'),
+                operations: [],
+            }).operations;
             expect(encoded.toString()).toBe('80');
         });
         test('empty operations decodes correctly', () => {
@@ -338,8 +341,11 @@ describe('PLT Cbor', () => {
             expect(decoded).toEqual([]);
         });
         test('pause operation encodes correctly', () => {
-            const encoded = createTokenUpdatePayload(TokenId.fromString('TEST'), {
-                [TokenOperationType.Pause]: {},
+            const encoded = createTokenUpdatePayload({
+                tokenId: TokenId.fromString('TEST'),
+                operations: {
+                    [TokenOperationType.Pause]: {},
+                },
             }).operations;
             expect(encoded.toString()).toBe('81a1657061757365a0');
         });
@@ -378,8 +384,11 @@ describe('PLT Cbor', () => {
             expect(decoded).toEqual([{ [TokenOperationType.Pause]: { pause: {} } }]);
         });
         test('unpause operation encodes correctly', () => {
-            const encoded = createTokenUpdatePayload(TokenId.fromString('TEST'), {
-                [TokenOperationType.Unpause]: {},
+            const encoded = createTokenUpdatePayload({
+                tokenId: TokenId.fromString('TEST'),
+                operations: {
+                    [TokenOperationType.Unpause]: {},
+                },
             }).operations;
             expect(encoded.toString()).toBe('81a167756e7061757365a0');
         });
@@ -399,8 +408,11 @@ describe('PLT Cbor', () => {
         });
         const account = CborAccountAddress.fromBase58('4BH5qnFPDfaD3MxnDzfhnu1jAHoBWXnq2i57T6G1eZn1kC194e');
         test('addAllowList operation encodes correctly', () => {
-            const encoded = createTokenUpdatePayload(TokenId.fromString('TEST'), {
-                [TokenOperationType.AddAllowList]: { target: account },
+            const encoded = createTokenUpdatePayload({
+                tokenId: TokenId.fromString('TEST'),
+                operations: {
+                    [TokenOperationType.AddAllowList]: { target: account },
+                },
             }).operations;
             expect(encoded.toString()).toBe(
                 '81a16c616464416c6c6f774c697374a166746172676574d99d73a201d99d71a101190397035820a26c957377a2461b6d0b9f63e7c9504136181942145e16c926451bbce5502b15'
@@ -564,8 +576,11 @@ describe('PLT Cbor', () => {
         });
         const accountNoCoinInfo = CborAccountAddress.fromJSON({ address: account.address.toString() });
         test('removeAllowList operation encodes correctly', () => {
-            const encoded = createTokenUpdatePayload(TokenId.fromString('TEST'), {
-                [TokenOperationType.RemoveAllowList]: { target: accountNoCoinInfo },
+            const encoded = createTokenUpdatePayload({
+                tokenId: TokenId.fromString('TEST'),
+                operations: {
+                    [TokenOperationType.RemoveAllowList]: { target: accountNoCoinInfo },
+                },
             }).operations;
             expect(encoded.toString()).toBe(
                 '81a16f72656d6f7665416c6c6f774c697374a166746172676574d99d73a1035820a26c957377a2461b6d0b9f63e7c9504136181942145e16c926451bbce5502b15'
@@ -588,8 +603,11 @@ describe('PLT Cbor', () => {
             expect(decoded).toEqual([{ [TokenOperationType.RemoveAllowList]: { target: accountNoCoinInfo } }]);
         });
         test('addDenyList operation encodes correctly', () => {
-            const encoded = createTokenUpdatePayload(TokenId.fromString('TEST'), {
-                [TokenOperationType.AddDenyList]: { target: account },
+            const encoded = createTokenUpdatePayload({
+                tokenId: TokenId.fromString('TEST'),
+                operations: {
+                    [TokenOperationType.AddDenyList]: { target: account },
+                },
             }).operations;
             expect(encoded.toString()).toBe(
                 '81a16b61646444656e794c697374a166746172676574d99d73a201d99d71a101190397035820a26c957377a2461b6d0b9f63e7c9504136181942145e16c926451bbce5502b15'
@@ -625,8 +643,11 @@ describe('PLT Cbor', () => {
             ).toThrow(/coin info does not contain Concordium network identifier/);
         });
         test('removeDenyList operation encodes correctly', () => {
-            const encoded = createTokenUpdatePayload(TokenId.fromString('TEST'), {
-                [TokenOperationType.RemoveDenyList]: { target: account },
+            const encoded = createTokenUpdatePayload({
+                tokenId: TokenId.fromString('TEST'),
+                operations: {
+                    [TokenOperationType.RemoveDenyList]: { target: account },
+                },
             }).operations;
             expect(encoded.toString()).toBe(
                 '81a16e72656d6f766544656e794c697374a166746172676574d99d73a201d99d71a101190397035820a26c957377a2461b6d0b9f63e7c9504136181942145e16c926451bbce5502b15'
@@ -700,8 +721,11 @@ describe('PLT Cbor', () => {
             expect(decoded).toEqual([{ [TokenOperationType.RemoveDenyList]: { target: account } }]);
         });
         test('transfer operation encodes correctly', () => {
-            const encoded = createTokenUpdatePayload(TokenId.fromString('TEST'), {
-                [TokenOperationType.Transfer]: { recipient: account, amount: TokenAmount.fromDecimal('1.00', 2) },
+            const encoded = createTokenUpdatePayload({
+                tokenId: TokenId.fromString('TEST'),
+                operations: {
+                    [TokenOperationType.Transfer]: { recipient: account, amount: TokenAmount.fromDecimal('1.00', 2) },
+                },
             }).operations;
             expect(encoded.toString()).toBe(
                 '81a1687472616e73666572a266616d6f756e74c48221186469726563697069656e74d99d73a201d99d71a101190397035820a26c957377a2461b6d0b9f63e7c9504136181942145e16c926451bbce5502b15'
@@ -723,10 +747,13 @@ describe('PLT Cbor', () => {
             ]);
         });
         test('transfer operation (max amount) encodes correctly', () => {
-            const encoded = createTokenUpdatePayload(TokenId.fromString('TEST'), {
-                [TokenOperationType.Transfer]: {
-                    recipient: account,
-                    amount: TokenAmount.create(BigInt('18446744073709551615'), 0),
+            const encoded = createTokenUpdatePayload({
+                tokenId: TokenId.fromString('TEST'),
+                operations: {
+                    [TokenOperationType.Transfer]: {
+                        recipient: account,
+                        amount: TokenAmount.create(BigInt('18446744073709551615'), 0),
+                    },
                 },
             }).operations;
             expect(encoded.toString()).toBe(
@@ -749,10 +776,13 @@ describe('PLT Cbor', () => {
             ]);
         });
         test('transfer operation (max decimals) encodes correctly', () => {
-            const encoded = createTokenUpdatePayload(TokenId.fromString('TEST'), {
-                [TokenOperationType.Transfer]: {
-                    recipient: account,
-                    amount: TokenAmount.create(BigInt('18446744073709551615'), 255),
+            const encoded = createTokenUpdatePayload({
+                tokenId: TokenId.fromString('TEST'),
+                operations: {
+                    [TokenOperationType.Transfer]: {
+                        recipient: account,
+                        amount: TokenAmount.create(BigInt('18446744073709551615'), 255),
+                    },
                 },
             }).operations;
             expect(encoded.toString()).toBe(

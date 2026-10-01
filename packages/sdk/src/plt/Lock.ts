@@ -1,6 +1,6 @@
 import { ConcordiumGRPCClient } from '../grpc/GRPCClient.js';
 import { isKnown } from '../grpc/upward.js';
-import { AccountAddress, MetaUpdatePayload, TransactionExpiry, TransactionHash } from '../pub/types.js';
+import { AccountAddress, TokenUpdatePayload, TransactionExpiry, TransactionHash } from '../pub/types.js';
 import { AccountSigner } from '../signHelpers.js';
 import { Payload, Transaction } from '../transactions/index.js';
 import { TransactionSummaryType } from '../types.js';
@@ -9,6 +9,7 @@ import { SequenceNumber } from '../types/index.js';
 import { LockCreatedEvent, TransactionEventTag } from '../types/transactionEvent.js';
 import * as LockConfig from './LockConfig.js';
 import * as Token from './Token.js';
+import { createTokenUpdatePayload } from './TokenOperation.js';
 import {
     Cbor,
     CborAccountAddress,
@@ -18,11 +19,10 @@ import {
     LockInfo,
     LockRelease,
     LockSend,
-    MetaUpdateOperation,
-    MetaUpdateOperationType,
+    Operation,
+    OperationType,
     TokenAmount,
     TokenId,
-    createMetaUpdatePayload,
 } from './index.js';
 
 /** Enum representing the types of errors that can occur when interacting with PLT locks through the client. */
@@ -209,8 +209,8 @@ class LockCreateTransaction {
         if (outcome.summary.transactionType === TransactionKindString.Failed) {
             throw new CreateFailedError(this.transactionHash, 'transaction was rejected');
         }
-        if (outcome.summary.transactionType !== TransactionKindString.MetaUpdate) {
-            throw new CreateFailedError(this.transactionHash, 'transaction summary is not a meta update');
+        if (outcome.summary.transactionType !== TransactionKindString.TokenUpdate) {
+            throw new CreateFailedError(this.transactionHash, 'transaction summary is not a token update');
         }
 
         const event = outcome.summary.events.filter(isKnown).find(isLockCreatedEvent);
@@ -244,7 +244,7 @@ class LockCreateProposal {
      * @returns This proposal.
      */
     public fund(details: FundDetails): this {
-        this.subsequent.push({ [MetaUpdateOperationType.LockFund]: details });
+        this.subsequent.push({ [OperationType.LockFund]: details });
         return this;
     }
 
@@ -256,7 +256,7 @@ class LockCreateProposal {
      */
     public send(details: SendDetails): this {
         this.subsequent.push({
-            [MetaUpdateOperationType.LockSend]: {
+            [OperationType.LockSend]: {
                 ...details,
                 source: CborAccountAddress.fromAccountAddress(details.source),
                 recipient: CborAccountAddress.fromAccountAddress(details.recipient),
@@ -273,7 +273,7 @@ class LockCreateProposal {
      */
     public releaseFunds(details: ReleaseDetails): this {
         this.subsequent.push({
-            [MetaUpdateOperationType.LockRelease]: {
+            [OperationType.LockRelease]: {
                 ...details,
                 source: CborAccountAddress.fromAccountAddress(details.source),
             },
@@ -287,29 +287,28 @@ class LockCreateProposal {
      * @returns This proposal.
      */
     public cancel(): this {
-        this.subsequent.push({ [MetaUpdateOperationType.LockCancel]: {} });
+        this.subsequent.push({ [OperationType.LockCancel]: {} });
         return this;
     }
 
     /**
-     * Build the MetaUpdate payload for this lock-creation proposal.
+     * Build the TokenUpdate payload for this lock-creation proposal.
      *
      * The lock id used by subsequent operations is derived from the creator account's index and the
      * nonce that will be used for the submitted transaction.
      *
      * @param nonce Optional explicit nonce to use when deriving the predicted lock id. When omitted, the next account nonce is queried from chain.
-     * @returns The MetaUpdate payload containing the `lockCreate` operation and any subsequent lock operations.
+     * @returns The TokenUpdate payload containing the `lockCreate` operation and any subsequent lock operations.
      */
-    public async payload(nonce?: SequenceNumber.Type): Promise<Payload.MetaUpdate> {
+    public async payload(nonce?: SequenceNumber.Type): Promise<Payload.TokenUpdate> {
         const { accountIndex, accountNonce } = await this.grpc.getAccountInfo(this.sender);
         const { value: nextNonce } = nonce ?? accountNonce;
         const lockId = LockId.create(accountIndex, nextNonce, BigInt(this.creationOrder));
-        const payload = createMetaUpdatePayload([
-            { [MetaUpdateOperationType.LockCreate]: this.config },
-            ...bindLockId(lockId, this.subsequent),
-        ]);
+        const payload = createTokenUpdatePayload({
+            operations: [{ [OperationType.LockCreate]: this.config }, ...bindLockId(lockId, this.subsequent)],
+        });
 
-        return Payload.metaUpdate(payload);
+        return Payload.tokenUpdate(payload);
     }
 
     /**
@@ -336,7 +335,7 @@ export type CreateProposal = LockCreateProposal;
 /** Public submitted lock-create transaction handle type. */
 export type CreateTransaction = LockCreateTransaction;
 
-/** Transaction metadata for lock MetaUpdate transactions. */
+/** Transaction metadata for lock TokenUpdate transactions. */
 export type LockUpdateMetadata = {
     /** Optional transaction expiry. Defaults to five minutes in the future when omitted. */
     expiry?: TransactionExpiry.Type;
@@ -369,10 +368,10 @@ export type ReleaseDetails = Omit<LockRelease, 'lock' | 'source'> & {
 
 /** Lock operations that can be composed after a lockCreate operation before the lock id is known on chain. */
 export type SubsequentOperation =
-    | { [MetaUpdateOperationType.LockCancel]: Omit<LockCancel, 'lock'> }
-    | { [MetaUpdateOperationType.LockFund]: Omit<LockFund, 'lock'> }
-    | { [MetaUpdateOperationType.LockSend]: Omit<LockSend, 'lock'> }
-    | { [MetaUpdateOperationType.LockRelease]: Omit<LockRelease, 'lock'> };
+    | { [OperationType.LockCancel]: Omit<LockCancel, 'lock'> }
+    | { [OperationType.LockFund]: Omit<LockFund, 'lock'> }
+    | { [OperationType.LockSend]: Omit<LockSend, 'lock'> }
+    | { [OperationType.LockRelease]: Omit<LockRelease, 'lock'> };
 
 /**
  * Create a Lock instance from a lock id by querying the node.
@@ -408,10 +407,7 @@ export function fromCbor(grpc: ConcordiumGRPCClient, lockInfo: Cbor.Type): Lock 
     return new Lock(grpc, Cbor.decode(lockInfo, 'LockInfo'));
 }
 
-function bindLockId(
-    lockId: LockId.Type,
-    operations: SubsequentOperation | SubsequentOperation[]
-): MetaUpdateOperation[] {
+function bindLockId(lockId: LockId.Type, operations: SubsequentOperation | SubsequentOperation[]): Operation[] {
     return [operations].flat().map((operation) => {
         const [type] = Object.keys(operation) as [keyof SubsequentOperation];
         const details = operation[type] as object;
@@ -420,7 +416,7 @@ function bindLockId(
                 ...details,
                 lock: lockId,
             },
-        } as MetaUpdateOperation;
+        } as Operation;
     });
 }
 
@@ -440,10 +436,10 @@ async function resolveTransactionHeader(
 async function submitPayload(
     grpc: ConcordiumGRPCClient,
     header: Transaction.Metadata,
-    payload: MetaUpdatePayload,
+    payload: TokenUpdatePayload | Payload.TokenUpdate,
     signer: AccountSigner
 ): Promise<TransactionHash.Type> {
-    const transaction = Transaction.metaUpdate(payload)
+    const transaction = Transaction.tokenUpdate(payload)
         .addMetadata(header)
         .addMultiSig(signer.getSignatureCount())
         .build();
@@ -452,11 +448,11 @@ async function submitPayload(
 }
 
 /**
- * Submit one or more MetaUpdate operations for a lock.
+ * Submit one or more TokenUpdate operations for a lock.
  *
  * @param lock The lock client whose gRPC client is used for submission.
  * @param sender The sender account that submits the transaction.
- * @param operations The operation or operations to encode into the MetaUpdate payload.
+ * @param operations The operation or operations to encode into the TokenUpdate payload.
  * @param signer The signer used to sign the transaction.
  * @param metadata Optional transaction metadata such as expiry and nonce.
  * @returns The hash of the submitted transaction.
@@ -464,12 +460,12 @@ async function submitPayload(
 export async function sendOperations(
     lock: Lock,
     sender: AccountAddress.Type,
-    operations: MetaUpdateOperation | MetaUpdateOperation[],
+    operations: Operation | Operation[],
     signer: AccountSigner,
     metadata: LockUpdateMetadata = {}
 ): Promise<TransactionHash.Type> {
     const header = await resolveTransactionHeader(lock.grpc, sender, metadata);
-    const payload = createMetaUpdatePayload(operations);
+    const payload = createTokenUpdatePayload({ operations: operations });
     return submitPayload(lock.grpc, header, payload, signer);
 }
 
@@ -667,13 +663,7 @@ export async function cancel(
         validateCancel(lock, sender);
     }
 
-    return sendOperations(
-        lock,
-        sender,
-        { [MetaUpdateOperationType.LockCancel]: { lock: lock.info.lock } },
-        signer,
-        metadata
-    );
+    return sendOperations(lock, sender, { [OperationType.LockCancel]: { lock: lock.info.lock } }, signer, metadata);
 }
 
 /**
@@ -706,7 +696,7 @@ export async function fund(
     return sendOperations(
         lock,
         sender,
-        { [MetaUpdateOperationType.LockFund]: { ...details, lock: lock.info.lock } },
+        { [OperationType.LockFund]: { ...details, lock: lock.info.lock } },
         signer,
         metadata
     );
@@ -744,7 +734,7 @@ export async function send(
         lock,
         sender,
         {
-            [MetaUpdateOperationType.LockSend]: {
+            [OperationType.LockSend]: {
                 ...common,
                 lock: lock.info.lock,
                 source: CborAccountAddress.fromAccountAddress(source),
@@ -788,7 +778,7 @@ export async function releaseFunds(
         lock,
         sender,
         {
-            [MetaUpdateOperationType.LockRelease]: {
+            [OperationType.LockRelease]: {
                 ...common,
                 lock: lock.info.lock,
                 source: CborAccountAddress.fromAccountAddress(source),

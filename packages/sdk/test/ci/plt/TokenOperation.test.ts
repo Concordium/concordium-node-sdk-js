@@ -9,7 +9,6 @@ import {
     TokenAssignAdminRolesOperation,
     TokenBurnOperation,
     TokenId,
-    TokenMetadataUrl,
     TokenMintOperation,
     TokenOperationType,
     TokenPauseOperation,
@@ -61,7 +60,7 @@ describe('PLT TokenOperation', () => {
             },
         };
 
-        const payload = createTokenUpdatePayload(token, transfer);
+        const payload = createTokenUpdatePayload({ tokenId: token, operations: transfer });
 
         // This is a CBOR encoded byte sequence.
         // It represents a nested structure with the following breakdown:
@@ -109,7 +108,7 @@ describe('PLT TokenOperation', () => {
             },
         };
 
-        const payload = createTokenUpdatePayload(token, mint);
+        const payload = createTokenUpdatePayload({ tokenId: token, operations: mint });
 
         // This is a CBOR encoded byte sequence representing the mint operation:
         // - 81: An array of 1 item
@@ -151,7 +150,7 @@ describe('PLT TokenOperation', () => {
             },
         };
 
-        const payload = createTokenUpdatePayload(token, burn);
+        const payload = createTokenUpdatePayload({ tokenId: token, operations: burn });
 
         // This is a CBOR encoded byte sequence representing the burn operation:
         // - 81: An array of 1 item
@@ -193,7 +192,7 @@ describe('PLT TokenOperation', () => {
             },
         };
 
-        const payload = createTokenUpdatePayload(token, addAllowList);
+        const payload = createTokenUpdatePayload({ tokenId: token, operations: addAllowList });
 
         // This is a CBOR encoded byte sequence representing the addAllowList operation:
         // - 81: An array of 1 item
@@ -229,7 +228,7 @@ describe('PLT TokenOperation', () => {
             },
         };
 
-        const payload = createTokenUpdatePayload(token, removeAllowList);
+        const payload = createTokenUpdatePayload({ tokenId: token, operations: removeAllowList });
 
         // This is a CBOR encoded byte sequence representing the removeAllowList operation:
         // - 81: An array of 1 item
@@ -265,7 +264,7 @@ describe('PLT TokenOperation', () => {
             },
         };
 
-        const payload = createTokenUpdatePayload(token, addDenyList);
+        const payload = createTokenUpdatePayload({ tokenId: token, operations: addDenyList });
 
         // This is a CBOR encoded byte sequence representing the addDenyList operation:
         // - 81: An array of 1 item
@@ -301,7 +300,7 @@ describe('PLT TokenOperation', () => {
             },
         };
 
-        const payload = createTokenUpdatePayload(token, removeDenyList);
+        const payload = createTokenUpdatePayload({ tokenId: token, operations: removeDenyList });
 
         // This is a CBOR encoded byte sequence representing the removeDenyList operation:
         // - 81: An array of 1 item
@@ -335,7 +334,7 @@ describe('PLT TokenOperation', () => {
             [TokenOperationType.Unpause]: {},
         };
 
-        const payload = createTokenUpdatePayload(token, uppause);
+        const payload = createTokenUpdatePayload({ tokenId: token, operations: uppause });
 
         // This is a CBOR encoded byte sequence representing the unpause operation:
         // - 81: An array of 1 item
@@ -365,7 +364,7 @@ describe('PLT TokenOperation', () => {
             [TokenOperationType.Pause]: {},
         };
 
-        const payload = createTokenUpdatePayload(token, pause);
+        const payload = createTokenUpdatePayload({ tokenId: token, operations: pause });
 
         // This is a CBOR encoded byte sequence representing the pause operation:
         // - 81: An array of 1 item
@@ -394,13 +393,13 @@ describe('PLT TokenOperation', () => {
         const checksum = new Uint8Array(32);
         checksum.fill(1);
         const updateMetadata: TokenUpdateMetadataOperation = {
-            [TokenOperationType.UpdateMetadata]: TokenMetadataUrl.create(
-                'https://example.com/token-metadata.json',
-                checksum
-            ),
+            [TokenOperationType.UpdateMetadata]: {
+                url: 'https://example.com/token-metadata.json',
+                checksumSha256: checksum,
+            },
         };
 
-        const payload = createTokenUpdatePayload(token, updateMetadata);
+        const payload = createTokenUpdatePayload({ tokenId: token, operations: updateMetadata });
 
         // This is a CBOR encoded byte sequence representing the update metadata operation:
         // - 81: An array of 1 item
@@ -453,7 +452,7 @@ describe('PLT TokenOperation', () => {
             },
         };
 
-        const payload = createTokenUpdatePayload(token, assignAdminRoles);
+        const payload = createTokenUpdatePayload({ tokenId: token, operations: assignAdminRoles });
 
         // This is a CBOR encoded byte sequence representing the assign admin roles operation:
         // - 81: An array of 1 item
@@ -516,7 +515,7 @@ describe('PLT TokenOperation', () => {
             },
         };
 
-        const payload = createTokenUpdatePayload(token, revokeAdminRoles);
+        const payload = createTokenUpdatePayload({ tokenId: token, operations: revokeAdminRoles });
 
         // This is a CBOR encoded byte sequence representing the revoke admin roles operation:
         // - 81: An array of 1 item
@@ -576,7 +575,7 @@ describe('PLT TokenOperation', () => {
             unknownOperation: { test: 'something', test2: 123 },
         };
 
-        const payload: TokenUpdatePayload = { tokenId: token, operations: Cbor.encode([unknown]) };
+        const payload: TokenUpdatePayload = { type: 'scoped', tokenId: token, operations: Cbor.encode([unknown]) };
 
         // This is a CBOR encoded byte sequence representing the pause operation:
         // - 81: An array of 1 item
@@ -620,7 +619,7 @@ describe('PLT TokenOperation', () => {
 
         const operations = [mint, addDenyList];
 
-        const payload = createTokenUpdatePayload(token, operations);
+        const payload = createTokenUpdatePayload({ tokenId: token, operations: operations });
 
         // This is a CBOR encoded byte sequence representing two operations:
         // - 82: An array of 2 items

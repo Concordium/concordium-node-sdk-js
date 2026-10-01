@@ -3,7 +3,6 @@ import {
     ConfigureDelegationHandler,
     DeployModuleHandler,
     InitContractHandler,
-    MetaUpdateHandler,
     RegisterDataHandler,
     SimpleTransferHandler,
     SimpleTransferWithMemoHandler,
@@ -23,7 +22,6 @@ import type {
     InitContractPayload,
     MakeOptional,
     MakeRequired,
-    MetaUpdatePayload,
     RegisterDataPayload,
     SimpleTransferPayload,
     SimpleTransferWithMemoPayload,
@@ -428,6 +426,15 @@ export function toLegacyAccountTransaction(transaction: Transaction): AccountTra
                 AccountTransactionType.Update | AccountTransactionType.InitContract,
                 InitContractInput | UpdateContractInput
             >;
+        case AccountTransactionType.TokenUpdate: {
+            const value = transaction.payload as Payload.TokenUpdate;
+            return {
+                header,
+                type,
+                payload:
+                    'scoped' in value ? { type: 'scoped', ...value.scoped } : { type: 'unscoped', ...value.unscoped },
+            } as AccountTransaction<AccountTransactionType.TokenUpdate, TokenUpdatePayload>;
+        }
         default:
             return { header, type, payload } as AccountTransaction<
                 Exclude<AccountTransactionType, AccountTransactionType.Update | AccountTransactionType.InitContract>,
@@ -437,7 +444,7 @@ export function toLegacyAccountTransaction(transaction: Transaction): AccountTra
 }
 
 const isPayloadWithType = <P extends Payload.Type>(payload: P | Omit<P, 'type'>): payload is P =>
-    (payload as P).type !== undefined;
+    typeof (payload as P).type === 'number';
 
 const isWithMemo = (
     payload: SimpleTransferPayload | SimpleTransferWithMemoPayload
@@ -548,22 +555,21 @@ export function configureDelegation(
  * @returns a token update transaction
  */
 export function tokenUpdate(payload: TokenUpdatePayload | Payload.TokenUpdate): Initial<Payload.TokenUpdate> {
-    if (!isPayloadWithType(payload)) return tokenUpdate(Payload.tokenUpdate(payload));
+    if (payload.type === 'scoped' || payload.type === 'unscoped') return tokenUpdate(Payload.tokenUpdate(payload));
 
     const handler = new TokenUpdateHandler();
-    return new Builder({ executionEnergyAmount: Energy.create(handler.getBaseEnergyCost(payload)) }, payload);
-}
-
-/**
- * Creates a meta update transaction for executing token/lock operations.
- * @param payload the meta update payload
- * @returns a meta update transaction
- */
-export function metaUpdate(payload: MetaUpdatePayload | Payload.MetaUpdate): Initial<Payload.MetaUpdate> {
-    if (!isPayloadWithType<Payload.MetaUpdate>(payload)) return metaUpdate(Payload.metaUpdate(payload));
-
-    const handler = new MetaUpdateHandler();
-    return new Builder({ executionEnergyAmount: Energy.create(handler.getBaseEnergyCost(payload)) }, payload);
+    return new Builder(
+        {
+            executionEnergyAmount: Energy.create(
+                handler.getBaseEnergyCost(
+                    'scoped' in payload
+                        ? { type: 'scoped', ...payload.scoped }
+                        : { type: 'unscoped', ...payload.unscoped }
+                )
+            ),
+        },
+        payload
+    );
 }
 
 /**

@@ -8,7 +8,7 @@ import {
     LockInfo,
     TokenAmount,
     TokenId,
-    createMetaUpdatePayload,
+    createTokenUpdatePayload,
 } from '../../../src/pub/plt.js';
 import { AccountAddress, SequenceNumber } from '../../../src/pub/types.js';
 import { Payload } from '../../../src/transactions/index.js';
@@ -74,7 +74,7 @@ function createLockInfo(
 }
 
 describe('PLT Lock.create', () => {
-    it('submits a single meta update transaction with lockCreate followed by lock-bound operations', async () => {
+    it('submits a single unscoped token update transaction with lockCreate followed by lock-bound operations', async () => {
         const grpc = {
             getAccountInfo: jest.fn().mockResolvedValue({
                 accountIndex: 9n,
@@ -89,17 +89,19 @@ describe('PLT Lock.create', () => {
             .fund({ token: TOKEN_ID, amount: TokenAmount.create(10n, 0) })
             .payload();
 
-        const expected = Payload.metaUpdate(
-            createMetaUpdatePayload([
-                { lockCreate: info.config },
-                {
-                    lockFund: {
-                        token: TOKEN_ID,
-                        lock: LockId.create(9n, 12n, 0n),
-                        amount: TokenAmount.create(10n, 0),
+        const expected = Payload.tokenUpdate(
+            createTokenUpdatePayload({
+                operations: [
+                    { lockCreate: info.config },
+                    {
+                        lockFund: {
+                            token: TOKEN_ID,
+                            lock: LockId.create(9n, 12n, 0n),
+                            amount: TokenAmount.create(10n, 0),
+                        },
                     },
-                },
-            ])
+                ],
+            })
         );
         expect(payload).toEqual(expected);
     });

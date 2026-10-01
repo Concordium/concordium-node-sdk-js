@@ -79,7 +79,12 @@ function deserializeAccountTransactionBase(transaction: AccountTransaction) {
     expect(deserialized.transaction.header).toEqual(expectedHeader);
     expect(deserialized.transaction.payload.type).toEqual(transaction.type);
 
-    expect(payload).toEqual(expectedPayload);
+    if (transaction.type === AccountTransactionType.TokenUpdate) {
+        const { type: variant, ...body } = expectedPayload;
+        expect(payload).toEqual({ [variant]: body });
+    } else {
+        expect(payload).toEqual(expectedPayload);
+    }
 }
 
 const header: AccountTransactionHeader = {
@@ -186,6 +191,7 @@ test('test deserialize TokenUpdate ', () => {
     const pauseOperation = { pause } as TokenOperation;
 
     const payload: TokenUpdatePayload = {
+        type: 'scoped',
         tokenId: TokenId.fromString('123ABCToken'),
         operations: Cbor.encode([pauseOperation]),
     };

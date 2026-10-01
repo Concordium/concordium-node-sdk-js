@@ -1381,7 +1381,6 @@ export enum AccountTransactionType {
     ConfigureBaker = 25,
     ConfigureDelegation = 26,
     TokenUpdate = 27,
-    MetaUpdate = 28,
 }
 
 export function isAccountTransactionType(candidate: number): candidate is AccountTransactionType {
@@ -1559,11 +1558,13 @@ export interface ConfigureDelegationPayload {
  *
  * @example
  * const payload = {
+ *     type: 'scoped',
  *     tokenId: TokenId.fromString('PLT'),
  *     operations: Cbor.encode([{mint: { amount } }]),
  * };
  */
-export type TokenUpdatePayload = {
+export type ScopedTokenUpdatePayload = {
+    type: 'scoped';
     /** The token id identifying the token to perform the list of operations on */
     tokenId: TokenId.Type;
     /**
@@ -1575,14 +1576,16 @@ export type TokenUpdatePayload = {
     operations: Cbor.Type;
 };
 
-/**
- * The payload for a meta update transaction.
- * The contents of the `operations` byte array is a CBOR encoding of the meta operation sequence.
- */
-export type MetaUpdatePayload = {
-    /** The CBOR encoded meta operations. */
+/** Unscoped Token Update: operation-level token IDs and token-independent locks (P11+). */
+export type UnscopedTokenUpdatePayload = {
+    /** No transaction-level token ID. Encoded as an empty ID on the wire. */
+    type: 'unscoped';
+    /** CBOR encoded Operation[]. */
     operations: Cbor.Type;
 };
+
+/** Scoped or Unscoped Token Update under transaction tag 27. */
+export type TokenUpdatePayload = ScopedTokenUpdatePayload | UnscopedTokenUpdatePayload;
 
 /**
  * The payload for UpdateCredentialKeys transaction
@@ -1616,7 +1619,6 @@ export type AccountTransactionPayload =
     | ConfigureBakerPayload
     | ConfigureDelegationPayload
     | TokenUpdatePayload
-    | MetaUpdatePayload
     | UpdateCredentialKeysPayload;
 
 export type AccountTransactionInput =

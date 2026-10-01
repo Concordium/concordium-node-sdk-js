@@ -7,6 +7,7 @@ Nodejs and Web SDK's.
 <!--toc:start-->
 - [Constructing transactions](#constructing-transactions)
   - [Create a simple transfer with or without memo](#create-a-simple-transfer-with-or-without-memo)
+  - [Create a Token Update transaction](#create-a-token-update-transaction)
   - [Create a Register data transaction](#create-a-register-data-transaction)
   - [Create a configure delegation transaction](#create-a-configure-delegation-transaction)
   - [Create a configure baker transaction](#create-a-configure-baker-transaction)
@@ -28,6 +29,21 @@ Nodejs and Web SDK's.
 The following example demonstrates how a simple transfer can be created.
 
 {@codeblock ~~:nodejs/common/simpleTransfer.ts#documentation-snippet}
+
+### Create a Token Update transaction
+
+Token updates exist in two forms:
+
+- scoped to a particular token
+- unscoped
+
+The following example demonstrates how a scoped token update is created:
+
+{@codeblock ~~:nodejs/plt/transfer.ts#documentation-snippet}
+
+The following example demonstrates how an unscoped token update is created:
+
+{@codeblock ~~:nodejs/plt/lock-fund.ts#documentation-snippet}
 
 ### Create a Register data transaction
 
@@ -446,7 +462,7 @@ const transfer: TokenTransferOperation = {
         memo,
     },
 };
-const payload = createTokenUpdatePayload(tokenId, transfer);
+const payload = createTokenUpdatePayload({ tokenId, operations: transfer });
 const transaction = Transaction.tokenUpdate(payload);
 
 // Fill in the metadata required for the transaction header to prepare for signing.

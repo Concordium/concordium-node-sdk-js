@@ -1,23 +1,35 @@
-import type { MetaUpdatePayload } from '../types.js';
+import type { UnscopedTokenUpdatePayload } from '../types.js';
 import * as Cbor from './Cbor.js';
 import * as CborAccountAddress from './CborAccountAddress.js';
 import * as CborMemo from './CborMemo.js';
-import type * as LockConfig from './LockConfig.js';
+import * as LockConfig from './LockConfig.js';
 import * as LockId from './LockId.js';
 import * as TokenAmount from './TokenAmount.js';
 import * as TokenId from './TokenId.js';
-import type * as TokenMetadataUrl from './TokenMetadataUrl.js';
 import {
     Memo,
+    TokenMetadataUrlDetails,
     TokenOperation,
     TokenOperationType,
     TokenTransfer,
     TokenUpdateAdminRolesDetails,
 } from './TokenOperation.js';
-import { parseEmpty, parseListUpdate, parseSupplyUpdate, parseTransfer } from './cbor-parse.js';
+import { parseMetadataUpdate, parseTokenOperation } from './cbor-parse.js';
 
-/** Enum representing the types of meta update operations. */
-export enum MetaUpdateOperationType {
+/** Enum representing the types of unscoped token update operations. */
+export enum OperationType {
+    TokenTransfer = 'tokenTransfer',
+    TokenMint = 'tokenMint',
+    TokenBurn = 'tokenBurn',
+    TokenAddAllowList = 'tokenAddAllowList',
+    TokenRemoveAllowList = 'tokenRemoveAllowList',
+    TokenAddDenyList = 'tokenAddDenyList',
+    TokenRemoveDenyList = 'tokenRemoveDenyList',
+    TokenPause = 'tokenPause',
+    TokenUnpause = 'tokenUnpause',
+    TokenUpdateMetadata = 'tokenUpdateMetadata',
+    TokenAssignAdminRoles = 'tokenAssignAdminRoles',
+    TokenRevokeAdminRoles = 'tokenRevokeAdminRoles',
     /** Creates a new protocol-level lock. */
     LockCreate = 'lockCreate',
     /** Cancels an existing lock before expiry. Requires the `cancel` capability on the lock controller. */
@@ -30,12 +42,12 @@ export enum MetaUpdateOperationType {
     LockRelease = 'lockRelease',
 }
 
-type MetaUpdateOperationGen<Type extends MetaUpdateOperationType | TokenOperationType, T extends object> = {
+type OperationGen<Type extends OperationType, T extends object> = {
     [K in Type]: T;
 };
 
-/** Meta operation that creates a lock. */
-export type LockCreateOperation = MetaUpdateOperationGen<MetaUpdateOperationType.LockCreate, LockConfig.Type>;
+/** Unscoped operation that creates a lock. */
+export type LockCreateOperation = OperationGen<OperationType.LockCreate, LockConfig.Type>;
 
 /** Details for cancelling a lock. */
 export type LockCancel = {
@@ -45,8 +57,8 @@ export type LockCancel = {
     memo?: Memo;
 };
 
-/** Meta operation that cancels an existing lock. */
-export type LockCancelOperation = MetaUpdateOperationGen<MetaUpdateOperationType.LockCancel, LockCancel>;
+/** Unscoped operation that cancels an existing lock. */
+export type LockCancelOperation = OperationGen<OperationType.LockCancel, LockCancel>;
 
 /** Details for funding a lock with tokens from the sender account. */
 export type LockFund = {
@@ -60,8 +72,8 @@ export type LockFund = {
     memo?: Memo;
 };
 
-/** Meta operation that funds a lock with tokens from the sender account. */
-export type LockFundOperation = MetaUpdateOperationGen<MetaUpdateOperationType.LockFund, LockFund>;
+/** Unscoped operation that funds a lock with tokens from the sender account. */
+export type LockFundOperation = OperationGen<OperationType.LockFund, LockFund>;
 
 /** Details for sending locked funds to a recipient. */
 export type LockSend = {
@@ -79,8 +91,8 @@ export type LockSend = {
     memo?: Memo;
 };
 
-/** Meta operation that sends locked tokens to a recipient. */
-export type LockSendOperation = MetaUpdateOperationGen<MetaUpdateOperationType.LockSend, LockSend>;
+/** Unscoped operation that sends locked tokens to a recipient. */
+export type LockSendOperation = OperationGen<OperationType.LockSend, LockSend>;
 
 /** Details for releasing locked funds to their owner account. */
 export type LockRelease = {
@@ -96,10 +108,10 @@ export type LockRelease = {
     memo?: Memo;
 };
 
-/** Meta operation that releases locked tokens to the account that owns the lock. */
-export type LockReleaseOperation = MetaUpdateOperationGen<MetaUpdateOperationType.LockRelease, LockRelease>;
+/** Unscoped operation that releases locked tokens to the account that owns the lock. */
+export type LockReleaseOperation = OperationGen<OperationType.LockRelease, LockRelease>;
 
-type FromTokenOperation<Type extends TokenOperationType, T extends object> = MetaUpdateOperationGen<
+type FromTokenOperation<Type extends OperationType, T extends object> = OperationGen<
     Type,
     T & {
         /** Token id the operation applies to. */
@@ -107,24 +119,24 @@ type FromTokenOperation<Type extends TokenOperationType, T extends object> = Met
     }
 >;
 
-/** Token operation extended with an explicit token id for MetaUpdate context. */
-export type MetaTokenOperation =
-    | FromTokenOperation<TokenOperationType.Transfer, TokenTransfer>
-    | FromTokenOperation<TokenOperationType.Mint, { amount: TokenAmount.Type }>
-    | FromTokenOperation<TokenOperationType.Burn, { amount: TokenAmount.Type }>
-    | FromTokenOperation<TokenOperationType.AddAllowList, { target: CborAccountAddress.Type }>
-    | FromTokenOperation<TokenOperationType.RemoveAllowList, { target: CborAccountAddress.Type }>
-    | FromTokenOperation<TokenOperationType.AddDenyList, { target: CborAccountAddress.Type }>
-    | FromTokenOperation<TokenOperationType.RemoveDenyList, { target: CborAccountAddress.Type }>
-    | FromTokenOperation<TokenOperationType.Pause, object>
-    | FromTokenOperation<TokenOperationType.Unpause, object>
-    | FromTokenOperation<TokenOperationType.UpdateMetadata, TokenMetadataUrl.Type>
-    | FromTokenOperation<TokenOperationType.AssignAdminRoles, TokenUpdateAdminRolesDetails>
-    | FromTokenOperation<TokenOperationType.RevokeAdminRoles, TokenUpdateAdminRolesDetails>;
+/** Token operation extended with an explicit token id for Unscoped Token Update context. */
+export type TokenOperationWithId =
+    | FromTokenOperation<OperationType.TokenTransfer, TokenTransfer>
+    | FromTokenOperation<OperationType.TokenMint, { amount: TokenAmount.Type }>
+    | FromTokenOperation<OperationType.TokenBurn, { amount: TokenAmount.Type }>
+    | FromTokenOperation<OperationType.TokenAddAllowList, { target: CborAccountAddress.Type }>
+    | FromTokenOperation<OperationType.TokenRemoveAllowList, { target: CborAccountAddress.Type }>
+    | FromTokenOperation<OperationType.TokenAddDenyList, { target: CborAccountAddress.Type }>
+    | FromTokenOperation<OperationType.TokenRemoveDenyList, { target: CborAccountAddress.Type }>
+    | FromTokenOperation<OperationType.TokenPause, object>
+    | FromTokenOperation<OperationType.TokenUnpause, object>
+    | FromTokenOperation<OperationType.TokenUpdateMetadata, TokenMetadataUrlDetails>
+    | FromTokenOperation<OperationType.TokenAssignAdminRoles, TokenUpdateAdminRolesDetails>
+    | FromTokenOperation<OperationType.TokenRevokeAdminRoles, TokenUpdateAdminRolesDetails>;
 
-/** Operation supported by a MetaUpdate transaction. */
-export type MetaUpdateOperation =
-    | MetaTokenOperation
+/** Operation supported by an Unscoped Token Update transaction. */
+export type Operation =
+    | TokenOperationWithId
     | LockCreateOperation
     | LockCancelOperation
     | LockFundOperation
@@ -132,55 +144,53 @@ export type MetaUpdateOperation =
     | LockReleaseOperation;
 
 /**
- * Convert an existing token operation into a MetaUpdate token operation by adding an explicit token id.
+ * Convert an existing token operation into an Unscoped Token Update token operation by adding an explicit token id.
  *
  * @param token token id the operation applies to.
  * @param operation token operation to wrap.
- * @returns token operation in MetaUpdate context.
+ * @returns token operation in Unscoped Token Update context.
  */
-export function createMetaTokenOperation(token: TokenId.Type, operation: TokenOperation): MetaTokenOperation {
+export function createTokenOperationWithId(token: TokenId.Type, operation: TokenOperation): TokenOperationWithId {
     const [type] = Object.keys(operation) as [TokenOperationType];
     const details = (operation as Record<TokenOperationType, object>)[type];
-    return { [type]: { token, ...details } } as MetaTokenOperation;
+    const key = `token${type[0].toUpperCase()}${type.slice(1)}`;
+    const body = type === TokenOperationType.UpdateMetadata ? parseMetadataUpdate(details) : details;
+    return { [key]: { token, ...body } } as TokenOperationWithId;
 }
 
 /**
- * CBOR encode one or more MetaUpdate operations.
+ * CBOR encode one or more Unscoped Token Update operations.
  *
  * @param operations operation or operations to encode.
  * @returns CBOR encoded operation sequence.
  */
-export function encodeMetaUpdateOperations(operations: MetaUpdateOperation | MetaUpdateOperation[]): Cbor.Type {
-    return Cbor.encode([operations].flat());
+export function encodeOperations(operations: Operation | Operation[]): Cbor.Type {
+    return Cbor.encode(
+        [operations].flat().map((op) => {
+            if (OperationType.TokenUpdateMetadata in op) {
+                const { token, ...details } = op.tokenUpdateMetadata;
+                return { tokenUpdateMetadata: { token, ...parseMetadataUpdate(details) } };
+            }
+            return op;
+        })
+    );
 }
 
 /**
- * Create a MetaUpdate transaction payload from one or more typed operations.
- *
- * @param operations operation or operations to include in the payload.
- * @returns MetaUpdate payload with CBOR encoded operations.
- */
-export function createMetaUpdatePayload(operations: MetaUpdateOperation | MetaUpdateOperation[]): MetaUpdatePayload {
-    return {
-        operations: encodeMetaUpdateOperations(operations),
-    };
-}
-
-/**
- * A meta update operation decoded from CBOR whose type key is not recognised by this SDK version.
+ * An unscoped token update operation decoded from CBOR whose type key is not recognised by this SDK version.
  * Preserves the raw decoded value so callers can inspect it forward-compatibly.
  */
-export type UnknownMetaUpdateOperation = { [key: string]: unknown };
+export type UnknownOperation = { [key: string]: unknown };
 
 /**
- * Extract and validate the required `token` field from a token-scoped meta operation's detail
+ * Extract and validate the required `token` field from a token-specific unscoped operation's detail
  * object, returning the token id and the remaining fields as separate values.
  *
  * @param details raw decoded CBOR details object.
  * @param opType operation type name used in error messages.
  * @returns tuple of `[tokenId, restOfDetails]`.
  */
-function extractMetaToken(details: unknown, opType: string): [TokenId.Type, Record<string, unknown>] {
+function extractToken(details: unknown, opType: string): [TokenId.Type, Record<string, unknown>] {
     if (typeof details !== 'object' || details === null)
         throw new Error(`Invalid ${opType} details: expected an object`);
     const d = details as Record<string, unknown>;
@@ -211,7 +221,7 @@ function parseLockCancel(details: unknown): LockCancel {
 }
 
 function parseLockFund(details: unknown): LockFund {
-    const [token, d] = extractMetaToken(details, 'lockFund');
+    const [token, d] = extractToken(details, 'lockFund');
     if (!TokenAmount.instanceOf(d.amount))
         throw new Error('Invalid lockFund details: expected amount to be a TokenAmount');
     return {
@@ -223,7 +233,7 @@ function parseLockFund(details: unknown): LockFund {
 }
 
 function parseLockSend(details: unknown): LockSend {
-    const [token, d] = extractMetaToken(details, 'lockSend');
+    const [token, d] = extractToken(details, 'lockSend');
     if (!TokenAmount.instanceOf(d.amount))
         throw new Error('Invalid lockSend details: expected amount to be a TokenAmount');
     if (!CborAccountAddress.instanceOf(d.source))
@@ -241,7 +251,7 @@ function parseLockSend(details: unknown): LockSend {
 }
 
 function parseLockRelease(details: unknown): LockRelease {
-    const [token, d] = extractMetaToken(details, 'lockRelease');
+    const [token, d] = extractToken(details, 'lockRelease');
     if (!TokenAmount.instanceOf(d.amount))
         throw new Error('Invalid lockRelease details: expected amount to be a TokenAmount');
     if (!CborAccountAddress.instanceOf(d.source))
@@ -256,9 +266,9 @@ function parseLockRelease(details: unknown): LockRelease {
 }
 
 /**
- * Decode a single raw CBOR value as a MetaUpdate operation.
+ * Decode a single raw CBOR value as an Unscoped Token Update operation.
  * Known operation types are fully validated and returned as typed operations.
- * Unrecognised type keys are returned as {@linkcode UnknownMetaUpdateOperation}.
+ * Unrecognised type keys are returned as {@linkcode UnknownOperation}.
  *
  * Token-scoped operation parsers are reused from the TokenOperation module:
  * - Transfer details: reuses `parseTransfer`
@@ -269,125 +279,127 @@ function parseLockRelease(details: unknown): LockRelease {
  * @param decoded raw decoded CBOR value.
  * @returns the decoded operation.
  */
-function parseMetaUpdateOperation(decoded: unknown): MetaUpdateOperation | UnknownMetaUpdateOperation {
+function parseOperation(decoded: unknown): Operation | UnknownOperation {
     if (typeof decoded !== 'object' || decoded === null)
-        throw new Error(`Invalid meta update operation: expected an object, got ${JSON.stringify(decoded)}`);
+        throw new Error(`Invalid unscoped token update operation: expected an object, got ${JSON.stringify(decoded)}`);
 
     const keys = Object.keys(decoded);
     if (keys.length !== 1)
-        throw new Error(`Invalid meta update operation: expected a single-key object, got keys [${keys.join(', ')}]`);
+        throw new Error(
+            `Invalid unscoped token update operation: expected a single-key object, got keys [${keys.join(', ')}]`
+        );
 
     const type = keys[0];
     const details = (decoded as Record<string, unknown>)[type];
 
     switch (type) {
-        case TokenOperationType.Transfer: {
-            const [token, rest] = extractMetaToken(details, type);
-            return { [type]: { token, ...parseTransfer(rest) } };
+        case OperationType.TokenTransfer:
+        case OperationType.TokenMint:
+        case OperationType.TokenBurn:
+        case OperationType.TokenAddAllowList:
+        case OperationType.TokenRemoveAllowList:
+        case OperationType.TokenAddDenyList:
+        case OperationType.TokenRemoveDenyList:
+        case OperationType.TokenPause:
+        case OperationType.TokenUnpause:
+        case OperationType.TokenUpdateMetadata:
+        case OperationType.TokenAssignAdminRoles:
+        case OperationType.TokenRevokeAdminRoles: {
+            const [token, rest] = extractToken(details, type);
+            const key = type[5].toLowerCase() + type.slice(6);
+            const parsed = parseTokenOperation({ [key]: rest });
+            return { [type]: { token, ...(parsed as Record<string, object>)[key] } } as TokenOperationWithId;
         }
-        case TokenOperationType.Mint:
-        case TokenOperationType.Burn: {
-            const [token, rest] = extractMetaToken(details, type);
-            return { [type]: { token, ...parseSupplyUpdate(rest) } };
-        }
-        case TokenOperationType.AddAllowList:
-        case TokenOperationType.RemoveAllowList:
-        case TokenOperationType.AddDenyList:
-        case TokenOperationType.RemoveDenyList: {
-            const [token, rest] = extractMetaToken(details, type);
-            return { [type]: { token, ...parseListUpdate(rest) } };
-        }
-        case TokenOperationType.Pause:
-        case TokenOperationType.Unpause: {
-            const [token, rest] = extractMetaToken(details, type);
-            parseEmpty(rest);
-            return { [type]: { token } };
-        }
-        case MetaUpdateOperationType.LockCreate:
-            return { [type]: details as LockConfig.Type };
-        case MetaUpdateOperationType.LockCancel:
+        case OperationType.LockCreate:
+            return { [type]: LockConfig.fromCBORValue(details) };
+        case OperationType.LockCancel:
             return { [type]: parseLockCancel(details) };
-        case MetaUpdateOperationType.LockFund:
+        case OperationType.LockFund:
             return { [type]: parseLockFund(details) };
-        case MetaUpdateOperationType.LockSend:
+        case OperationType.LockSend:
             return { [type]: parseLockSend(details) };
-        case MetaUpdateOperationType.LockRelease:
+        case OperationType.LockRelease:
             return { [type]: parseLockRelease(details) };
         default:
-            return decoded as UnknownMetaUpdateOperation;
+            return decoded as UnknownOperation;
     }
 }
 
 /**
- * Decode a single MetaUpdate operation from CBOR.
+ * Decode a single Unscoped Token Update operation from CBOR.
  *
- * @param cbor CBOR encoding of a single MetaUpdate operation.
- * @returns the decoded operation, or {@linkcode UnknownMetaUpdateOperation} for unrecognised types.
+ * @param cbor CBOR encoding of a single Unscoped Token Update operation.
+ * @returns the decoded operation, or {@linkcode UnknownOperation} for unrecognised types.
  *
  * @example
- * const op = decodeMetaUpdateOperation(cbor);
+ * const op = decodeOperation(cbor);
  * switch (true) {
- *   case MetaUpdateOperationType.Transfer in op: {
- *     const details = op[MetaUpdateOperationType.Transfer];
+ *   case OperationType.TokenTransfer in op: {
+ *     const details = op[OperationType.TokenTransfer];
  *     console.log(details.token, details.amount);
  *     break;
  *   }
- *   case MetaUpdateOperationType.LockCreate in op:
- *     console.log(op[MetaUpdateOperationType.LockCreate]);
+ *   case OperationType.LockCreate in op:
+ *     console.log(op[OperationType.LockCreate]);
  *     break;
  *   default:
  *     console.warn('Unknown operation', op);
  * }
  */
-export function decodeMetaUpdateOperation(cbor: Cbor.Type): MetaUpdateOperation | UnknownMetaUpdateOperation {
-    return parseMetaUpdateOperation(Cbor.decode(cbor));
+export function decodeOperation(cbor: Cbor.Type): Operation | UnknownOperation {
+    return parseOperation(Cbor.decode(cbor));
 }
 
 /**
- * Decode a list of MetaUpdate operations from CBOR.
+ * Decode a list of Unscoped Token Update operations from CBOR.
  *
- * @param cbor CBOR encoding of a MetaUpdate operation array.
+ * @param cbor CBOR encoding of an Unscoped Token Update operation array.
  * @returns the decoded operations.
  *
  * @example
- * const ops = decodeMetaUpdateOperations(cbor);
+ * const ops = decodeOperations(cbor);
  * ops.forEach(op => {
  *   switch (true) {
- *     case MetaUpdateOperationType.LockFund in op:
- *       console.log(op[MetaUpdateOperationType.LockFund].lock);
+ *     case OperationType.LockFund in op:
+ *       console.log(op[OperationType.LockFund].lock);
  *       break;
  *     default:
  *       console.warn('Unknown operation', op);
  *   }
  * });
  */
-export function decodeMetaUpdateOperations(cbor: Cbor.Type): (MetaUpdateOperation | UnknownMetaUpdateOperation)[] {
+export function decodeOperations(cbor: Cbor.Type): (Operation | UnknownOperation)[] {
     const decoded = Cbor.decode(cbor);
     if (!Array.isArray(decoded))
-        throw new Error(`Invalid meta update operations: ${JSON.stringify(decoded)}. Expected a list of operations.`);
-    return decoded.map(parseMetaUpdateOperation);
+        throw new Error(
+            `Invalid unscoped token update operations: ${JSON.stringify(decoded)}. Expected a list of operations.`
+        );
+    return decoded.map(parseOperation);
 }
 
 /**
- * Decode the operations in a {@linkcode MetaUpdatePayload} from CBOR into typed operations.
+ * Decode the operations in a {@linkcode UnscopedTokenUpdatePayload} from CBOR into typed operations.
  *
- * @param payload the MetaUpdate payload to parse.
+ * @param payload the Unscoped Token Update payload to parse.
  * @returns the payload with decoded operations.
  *
  * @example
- * const parsed = parseMetaUpdatePayload(encodedPayload);
+ * const parsed = parseUnscopedTokenUpdatePayload(encodedPayload);
  * parsed.operations.forEach(op => {
  *   switch (true) {
- *     case MetaUpdateOperationType.Transfer in op:
- *       console.log(op[MetaUpdateOperationType.Transfer].amount);
+ *     case OperationType.TokenTransfer in op:
+ *       console.log(op[OperationType.TokenTransfer].amount);
  *       break;
  *     default:
  *       console.warn('Unknown operation', op);
  *   }
  * });
  */
-export function parseMetaUpdatePayload(payload: MetaUpdatePayload): Omit<MetaUpdatePayload, 'operations'> & {
-    operations: (MetaUpdateOperation | UnknownMetaUpdateOperation)[];
+export function parseUnscopedTokenUpdatePayload(payload: UnscopedTokenUpdatePayload): Omit<
+    UnscopedTokenUpdatePayload,
+    'operations'
+> & {
+    operations: (Operation | UnknownOperation)[];
 } {
-    return { ...payload, operations: decodeMetaUpdateOperations(payload.operations) };
+    return { ...payload, operations: decodeOperations(payload.operations) };
 }

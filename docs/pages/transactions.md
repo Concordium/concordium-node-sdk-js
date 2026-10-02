@@ -32,18 +32,59 @@ The following example demonstrates how a simple transfer can be created.
 
 ### Create a Token Update transaction
 
-Token updates exist in two forms:
+A **scoped** update applies every operation to one transaction-level token ID.
+Supply `tokenId` to `createTokenUpdatePayload`:
 
-- scoped to a particular token
-- unscoped
+```ts
+import { AccountAddress, Transaction } from '@concordium/web-sdk';
+import * as PLT from '@concordium/web-sdk/plt';
 
-The following example demonstrates how a scoped token update is created:
+const recipient = PLT.CborAccountAddress.fromAccountAddress(
+    AccountAddress.fromBase58('3tWfFAfNsyYtPRgDTpGJuqhQy92rAfLZum7HRyPkezE7PcT3KB')
+);
+const payload = PLT.createTokenUpdatePayload({
+    tokenId: PLT.TokenId.fromString('PLTA'),
+    operations: {
+        transfer: {
+            recipient,
+            amount: PLT.TokenAmount.fromDecimal('10', 2),
+        },
+    },
+});
+const transaction = Transaction.tokenUpdate(payload);
+```
 
-{@codeblock ~~:nodejs/plt/transfer.ts#documentation-snippet}
+An **unscoped** update carries token IDs on individual token operations and can
+also include lock operations.
+Omit the transaction-level `tokenId`; use `tokenTransfer` rather than `transfer`:
 
-The following example demonstrates how an unscoped token update is created:
+```ts
+import { AccountAddress, Transaction } from '@concordium/web-sdk';
+import * as PLT from '@concordium/web-sdk/plt';
 
-{@codeblock ~~:nodejs/plt/lock-fund.ts#documentation-snippet}
+const recipient = PLT.CborAccountAddress.fromAccountAddress(
+    AccountAddress.fromBase58('3tWfFAfNsyYtPRgDTpGJuqhQy92rAfLZum7HRyPkezE7PcT3KB')
+);
+const payload = PLT.createTokenUpdatePayload({
+    operations: [
+        {
+            tokenTransfer: {
+                token: PLT.TokenId.fromString('PLTA'),
+                recipient,
+                amount: PLT.TokenAmount.fromDecimal('10', 2),
+            },
+        },
+        {
+            tokenTransfer: {
+                token: PLT.TokenId.fromString('PLTB'),
+                recipient,
+                amount: PLT.TokenAmount.fromDecimal('5', 0),
+            },
+        },
+    ],
+});
+const transaction = Transaction.tokenUpdate(payload);
+```
 
 ### Create a Register data transaction
 

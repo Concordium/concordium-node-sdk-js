@@ -431,8 +431,7 @@ export function toLegacyAccountTransaction(transaction: Transaction): AccountTra
             return {
                 header,
                 type,
-                payload:
-                    'scoped' in value ? { type: 'scoped', ...value.scoped } : { type: 'unscoped', ...value.unscoped },
+                payload: value,
             } as AccountTransaction<AccountTransactionType.TokenUpdate, TokenUpdatePayload>;
         }
         default:
@@ -555,20 +554,10 @@ export function configureDelegation(
  * @returns a token update transaction
  */
 export function tokenUpdate(payload: TokenUpdatePayload | Payload.TokenUpdate): Initial<Payload.TokenUpdate> {
-    if (payload.type === 'scoped' || payload.type === 'unscoped') return tokenUpdate(Payload.tokenUpdate(payload));
-
-    const handler = new TokenUpdateHandler();
+    const value = Payload.tokenUpdate(payload);
     return new Builder(
-        {
-            executionEnergyAmount: Energy.create(
-                handler.getBaseEnergyCost(
-                    'scoped' in payload
-                        ? { type: 'scoped', ...payload.scoped }
-                        : { type: 'unscoped', ...payload.unscoped }
-                )
-            ),
-        },
-        payload
+        { executionEnergyAmount: Energy.create(new TokenUpdateHandler().getBaseEnergyCost(value)) },
+        value
     );
 }
 

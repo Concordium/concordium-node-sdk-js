@@ -35,12 +35,10 @@ import {
     type DeployModulePayload,
     type InitContractPayload,
     type RegisterDataPayload,
-    type ScopedTokenUpdatePayload,
     type SimpleTransferPayload,
     type SimpleTransferWithMemoPayload,
     type TokenUpdatePayload,
     TransactionKindString,
-    type UnscopedTokenUpdatePayload,
     type UpdateContractPayload,
     type UpdateCredentialKeysPayload,
     type UpdateCredentialsPayload,
@@ -349,36 +347,21 @@ function configureValidatorFromJSON({
 /**
  * A token update transaction payload.
  */
-export type TokenUpdate = { readonly type: AccountTransactionType.TokenUpdate } & (
-    | { scoped: Omit<ScopedTokenUpdatePayload, 'type'> }
-    | { unscoped: Omit<UnscopedTokenUpdatePayload, 'type'> }
-);
+export type TokenUpdate = { readonly type: AccountTransactionType.TokenUpdate } & TokenUpdatePayload;
 
 /**
- * Creates a token update payload.
- * @param payload the token update payload
- * @returns a token update payload
+ * Creates a self-contained token update payload by adding its transaction type.
+ * @param payload scoped or unscoped token update fields
+ * @returns the token update fields with the outer transaction type
  */
 export function tokenUpdate(payload: TokenUpdatePayload): TokenUpdate {
-    return payload.type === 'scoped'
-        ? {
-              type: AccountTransactionType.TokenUpdate,
-              scoped: { tokenId: payload.tokenId, operations: payload.operations },
-          }
-        : { type: AccountTransactionType.TokenUpdate, unscoped: { operations: payload.operations } };
+    return { ...payload, type: AccountTransactionType.TokenUpdate };
 }
 
-function tokenUpdateToJSON({
-    type,
-    ...value
-}: TokenUpdate): PayloadJSON<TransactionKindString.TokenUpdate, TokenUpdatePayloadJSON> {
-    const handler = new TokenUpdateHandler();
-    return {
-        type: TransactionKindString.TokenUpdate,
-        ...handler.toJSON(
-            'scoped' in value ? { type: 'scoped', ...value.scoped } : { type: 'unscoped', ...value.unscoped }
-        ),
-    };
+function tokenUpdateToJSON(
+    payload: TokenUpdate
+): PayloadJSON<TransactionKindString.TokenUpdate, TokenUpdatePayloadJSON> {
+    return { type: TransactionKindString.TokenUpdate, ...new TokenUpdateHandler().toJSON(payload) };
 }
 
 function tokenUpdateFromJSON({ type, ...json }: ReturnType<typeof tokenUpdateToJSON>): TokenUpdate {
@@ -575,13 +558,7 @@ export function serialize(payload: Payload): Uint8Array {
     const serializedType = serializeAccountTransactionType(payload.type);
 
     const accountTransactionHandler = getAccountTransactionHandler(payload.type);
-    const serializedPayload = accountTransactionHandler.serialize(
-        payload.type === AccountTransactionType.TokenUpdate
-            ? 'scoped' in payload
-                ? { type: 'scoped', ...payload.scoped }
-                : { type: 'unscoped', ...payload.unscoped }
-            : payload
-    );
+    const serializedPayload = accountTransactionHandler.serialize(payload);
 
     return Uint8Array.from(Buffer.concat([serializedType, serializedPayload]));
 }

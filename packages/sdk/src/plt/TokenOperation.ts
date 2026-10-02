@@ -197,12 +197,12 @@ export function createTokenUpdatePayload(
         | { tokenId: TokenId.Type; operations: TokenOperation | TokenOperation[] }
         | { operations: Operation | Operation[] }
 ): TokenUpdatePayload {
-    if (!('tokenId' in input)) return { type: 'unscoped', operations: encodeOperations(input.operations) };
+    if (!('tokenId' in input)) return { variant: 'unscoped', operations: encodeOperations(input.operations) };
     const ops = [input.operations].flat().map((op) => {
         if (TokenOperationType.UpdateMetadata in op) return { updateMetadata: parseMetadataUpdate(op.updateMetadata) };
         return op;
     });
-    return { type: 'scoped', tokenId: input.tokenId, operations: Cbor.encode(ops) };
+    return { variant: 'scoped', tokenId: input.tokenId, operations: Cbor.encode(ops) };
 }
 
 /**
@@ -291,6 +291,8 @@ export function parseTokenUpdatePayload(
     payload: TokenUpdatePayload
 ): Omit<TokenUpdatePayload, 'operations'> & { operations: (TokenOperation | Operation | UnknownOperation)[] } {
     const operations =
-        payload.type === 'unscoped' ? decodeOperations(payload.operations) : decodeTokenOperations(payload.operations);
+        payload.variant === 'unscoped'
+            ? decodeOperations(payload.operations)
+            : decodeTokenOperations(payload.operations);
     return { ...payload, operations };
 }

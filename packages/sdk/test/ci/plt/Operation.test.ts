@@ -218,7 +218,8 @@ describe('PLT Operation', () => {
         const json = Payload.toJSON(payload);
         expect(json).toEqual({
             type: TransactionKindString.TokenUpdate,
-            unscoped: { operations: '81a16a6c6f636b43616e63656ca1646c6f636bd99fd883010203' },
+            variant: 'unscoped',
+            operations: '81a16a6c6f636b43616e63656ca1646c6f636bd99fd883010203',
         });
 
         const jsonString = jsonBig.stringify(json);
@@ -255,7 +256,7 @@ describe('PLT Operation', () => {
             { lockCancel: { lock } },
         ];
         const payload = createTokenUpdatePayload({ operations: operations });
-        expect(payload.type).toBe('unscoped');
+        expect(payload.variant).toBe('unscoped');
         expect(parseTokenUpdatePayload(payload).operations).toEqual(operations);
         expect(Payload.deserialize(Payload.serialize(Payload.tokenUpdate(payload)))).toEqual(
             Payload.tokenUpdate(payload)
@@ -266,7 +267,10 @@ describe('PLT Operation', () => {
         const future = { futureOperation: { flag: true } };
         expect(decodeOperation(Cbor.encode(future))).toEqual(future);
         expect(
-            new TokenUpdateHandler().getBaseEnergyCost({ type: 'unscoped', operations: Cbor.encode([{ token: {} }]) })
+            new TokenUpdateHandler().getBaseEnergyCost({
+                variant: 'unscoped',
+                operations: Cbor.encode([{ token: {} }]),
+            })
         ).toBe(300n);
         expect(() => decodeOperations(Cbor.encode({ tokenMint: {} }))).toThrow();
         expect(() => decodeOperation(Cbor.encode({ tokenMint: { amount } }))).toThrow(/token/);

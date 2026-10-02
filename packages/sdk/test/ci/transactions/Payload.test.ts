@@ -1,6 +1,7 @@
 import { Buffer } from 'buffer/index.js';
 import JSONBig from 'json-bigint';
 
+import { TokenUpdateHandler } from '../../../src/accountTransactions.js';
 import {
     CcdAmount,
     ContractAddress,
@@ -365,24 +366,36 @@ describe('Payload', () => {
         });
         const payload = Payload.tokenUpdate(direct);
         test('preserves variant boundaries and roundtrips', () => {
-            expect(direct.type).toBe('scoped');
+            expect(direct.variant).toBe('scoped');
             expect(payload).toEqual({
                 type: AccountTransactionType.TokenUpdate,
-                scoped: { tokenId: direct.tokenId, operations: direct.operations },
+                variant: 'scoped',
+                tokenId: direct.tokenId,
+                operations: direct.operations,
             });
             const json = {
                 type: TransactionKindString.TokenUpdate,
-                scoped: { tokenId: 'TEST', operations: direct.operations.toJSON() },
+                variant: 'scoped' as const,
+                tokenId: 'TEST',
+                operations: direct.operations.toJSON(),
             };
             expect(Payload.toJSON(payload)).toEqual(json);
             expect(Payload.fromJSON(json)).toEqual(payload);
+            const legacy = { type: json.type, tokenId: json.tokenId, operations: json.operations };
+            const handler = new TokenUpdateHandler();
+            const legacyDirect = { tokenId: legacy.tokenId, operations: legacy.operations };
+            expect(handler.fromJSON(legacyDirect)).toEqual(direct);
+            expect(handler.toJSON(handler.fromJSON(legacyDirect))).toEqual({ variant: 'scoped', ...legacyDirect });
+            expect(() => handler.fromJSON({ ...legacyDirect, variant: 'unknown' } as any)).toThrow();
+            expect(() => handler.fromJSON({ operations: legacy.operations } as any)).toThrow();
+            expect(Payload.toJSON(Payload.fromJSON(legacy))).toEqual(json);
             expect(Payload.deserialize(Payload.serialize(payload))).toEqual(payload);
             for (const invalid of [
                 { type: TransactionKindString.TokenUpdate },
-                { ...json, unscoped: { operations: direct.operations.toJSON() } },
-                { ...json, scoped: { operations: direct.operations.toJSON() } },
-                { ...json, scoped: { tokenId: '', operations: direct.operations.toJSON() } },
-                { ...json, scoped: { tokenId: 'TEST' } },
+                { ...json, variant: 'unknown' },
+                { ...json, tokenId: undefined },
+                { ...json, tokenId: '' },
+                { ...json, operations: undefined },
             ])
                 expect(() => Payload.fromJSON(invalid as Payload.JSON)).toThrow();
         });
@@ -426,10 +439,9 @@ describe('Payload', () => {
             const json = Payload.toJSON(unscopedTokenUpdatePayload);
             expect(json).toEqual({
                 type: TransactionKindString.TokenUpdate,
-                unscoped: {
-                    operations:
-                        '81a1686c6f636b46756e64a3646c6f636bd99fd88301020365746f6b656e6674546f6b656e66616d6f756e74c482211901f4',
-                },
+                variant: 'unscoped',
+                operations:
+                    '81a1686c6f636b46756e64a3646c6f636bd99fd88301020365746f6b656e6674546f6b656e66616d6f756e74c482211901f4',
             });
         });
     });

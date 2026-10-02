@@ -575,7 +575,7 @@ describe('PLT TokenOperation', () => {
             unknownOperation: { test: 'something', test2: 123 },
         };
 
-        const payload: TokenUpdatePayload = { type: 'scoped', tokenId: token, operations: Cbor.encode([unknown]) };
+        const payload: TokenUpdatePayload = { variant: 'scoped', tokenId: token, operations: Cbor.encode([unknown]) };
 
         // This is a CBOR encoded byte sequence representing the pause operation:
         // - 81: An array of 1 item

@@ -1558,13 +1558,13 @@ export interface ConfigureDelegationPayload {
  *
  * @example
  * const payload = {
- *     type: 'scoped',
+ *     variant: 'scoped',
  *     tokenId: TokenId.fromString('PLT'),
  *     operations: Cbor.encode([{mint: { amount } }]),
  * };
  */
 export type ScopedTokenUpdatePayload = {
-    type: 'scoped';
+    variant: 'scoped';
     /** The token id identifying the token to perform the list of operations on */
     tokenId: TokenId.Type;
     /**
@@ -1579,7 +1579,7 @@ export type ScopedTokenUpdatePayload = {
 /** Unscoped Token Update: operation-level token IDs and token-independent locks (P11+). */
 export type UnscopedTokenUpdatePayload = {
     /** No transaction-level token ID. Encoded as an empty ID on the wire. */
-    type: 'unscoped';
+    variant: 'unscoped';
     /** CBOR encoded Operation[]. */
     operations: Cbor.Type;
 };

@@ -4,6 +4,7 @@
 
 ### Changed
 
+- TokenUpdate payloads and JSON use flat `variant: 'scoped' | 'unscoped'` fields; wrappers add only `type`. Legacy scoped JSON without `variant` remains accepted with a valid non-empty `tokenId`; scoped P9/P10 bytes are unchanged.
 - **Breaking** TokenUpdate supports Scoped (`ScopedTokenUpdatePayload`, non-empty `tokenId`, CBOR-encoded `TokenOperation[]`) and Unscoped (`UnscopedTokenUpdatePayload`, omitted `tokenId`, CBOR-encoded `Operation[]`) payloads. `createTokenUpdatePayload({ tokenId, operations })` creates scoped payloads; omitting `tokenId` creates unscoped payloads. Single-token clients remain scoped; lock clients emit unscoped payloads without protocol negotiation. Unscoped updates require P11.
 - **Breaking:** TokenUpdate summaries expose one flat `OperationEvent` list of token and lock events. Unified protobuf events are preferred, with fallback to legacy token events for P9/P10. Added `LockAmount` and `UnlockAmount` events; removed transfer `fromLock`/`toLock` fields. Existing token event JSON remains unchanged.
 

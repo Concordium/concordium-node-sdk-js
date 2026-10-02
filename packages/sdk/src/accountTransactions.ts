@@ -890,8 +890,11 @@ export class ConfigureDelegationHandler
 }
 
 export type TokenUpdatePayloadJSON =
-    | { scoped: { tokenId: TokenId.JSON; operations: Cbor.JSON } }
-    | { unscoped: { operations: Cbor.JSON } };
+    | { variant: 'scoped'; tokenId: TokenId.JSON; operations: Cbor.JSON }
+    | { variant: 'unscoped'; operations: Cbor.JSON };
+
+/** Legacy P9/P10 JSON accepted only for deserialization. */
+export type LegacyTokenUpdatePayloadJSON = { tokenId: TokenId.JSON; operations: Cbor.JSON; variant?: never };
 
 function getTokenOperationEnergyCost(operation: unknown): bigint {
     if (typeof operation !== 'object' || operation === null) {
@@ -969,7 +972,7 @@ export class TokenUpdateHandler
 {
     serialize(payload: TokenUpdatePayload): Buffer {
         const tokenId = packBufferWithWord8Length(
-            payload.type === 'unscoped' ? new Uint8Array() : TokenId.toBytes(payload.tokenId)
+            payload.variant === 'unscoped' ? new Uint8Array() : TokenId.toBytes(payload.tokenId)
         );
         const ops = packBufferWithWord32Length(payload.operations.bytes);
         return Buffer.concat([tokenId, ops]);
@@ -981,19 +984,19 @@ export class TokenUpdateHandler
 
         len = serializedPayload.read(4).readUInt32BE(0);
         const operations = Cbor.fromBuffer(serializedPayload.read(len));
-        return tokenId === undefined ? { type: 'unscoped', operations } : { type: 'scoped', tokenId, operations };
+        return tokenId === undefined ? { variant: 'unscoped', operations } : { variant: 'scoped', tokenId, operations };
     }
 
     getBaseEnergyCost(payload: TokenUpdatePayload): bigint {
         const BASE_COST = 300n;
         const operations: unknown[] =
-            payload.type === 'unscoped'
+            payload.variant === 'unscoped'
                 ? Cbor.decode(payload.operations, 'Operation[]')
                 : Cbor.decode(payload.operations, 'TokenOperation[]');
         return operations.reduce<bigint>(
             (energyCost, operation) =>
                 energyCost +
-                (payload.type === 'unscoped'
+                (payload.variant === 'unscoped'
                     ? getOperationEnergyCost(operation)
                     : getTokenOperationEnergyCost(operation)),
             BASE_COST
@@ -1002,21 +1005,21 @@ export class TokenUpdateHandler
 
     toJSON(payload: TokenUpdatePayload): TokenUpdatePayloadJSON {
         const operations = payload.operations.toJSON();
-        return payload.type === 'scoped'
-            ? { scoped: { tokenId: payload.tokenId.toJSON(), operations } }
-            : { unscoped: { operations } };
+        return payload.variant === 'scoped'
+            ? { variant: 'scoped', tokenId: payload.tokenId.toJSON(), operations }
+            : { variant: 'unscoped', operations };
     }
 
-    fromJSON(json: TokenUpdatePayloadJSON): TokenUpdatePayload {
-        if (typeof json !== 'object' || json === null || 'scoped' in json === 'unscoped' in json)
-            throw new Error('Expected exactly one Token Update variant');
-        if ('scoped' in json)
+    fromJSON(json: TokenUpdatePayloadJSON | LegacyTokenUpdatePayloadJSON): TokenUpdatePayload {
+        if (typeof json !== 'object' || json === null) throw new Error('Expected Token Update object');
+        if (json.variant === 'scoped' || (!('variant' in json) && 'tokenId' in json))
             return {
-                type: 'scoped',
-                tokenId: TokenId.fromJSON(json.scoped.tokenId),
-                operations: Cbor.fromJSON(json.scoped.operations),
+                variant: 'scoped',
+                tokenId: TokenId.fromJSON(json.tokenId),
+                operations: Cbor.fromJSON(json.operations),
             };
-        return { type: 'unscoped', operations: Cbor.fromJSON(json.unscoped.operations) };
+        if (json.variant === 'unscoped') return { variant: 'unscoped', operations: Cbor.fromJSON(json.operations) };
+        throw new Error('Expected Token Update variant');
     }
 }
 

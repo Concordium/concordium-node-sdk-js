@@ -12,7 +12,7 @@ import {
     Cbor,
     CborAccountAddress,
     LockId,
-    MetaUpdateOperation,
+    Operation,
     TokenAmount,
     TokenId,
     TokenInitializationParameters,
@@ -20,9 +20,9 @@ import {
     TokenModuleAccountState,
     TokenModuleState,
     TokenOperation,
-    UnknownMetaUpdateOperation,
+    UnknownOperation,
     UnknownTokenOperation,
-    decodeMetaUpdateOperations,
+    decodeOperations,
     decodeTokenOperations,
 } from './index.js';
 
@@ -230,7 +230,7 @@ type DecodeTypeMap = {
     TokenModuleAccountState: TokenModuleAccountState;
     TokenInitializationParameters: TokenInitializationParameters;
     'TokenOperation[]': (TokenOperation | UnknownTokenOperation)[];
-    'MetaUpdateOperation[]': (MetaUpdateOperation | UnknownMetaUpdateOperation)[];
+    'Operation[]': (Operation | UnknownOperation)[];
     LockConfig: LockConfig.Type;
     LockInfo: LockInfo;
 };
@@ -267,8 +267,8 @@ export function decode<T extends keyof DecodeTypeMap | undefined>(cbor: Cbor.Typ
             return decodeTokenInitializationParameters(cbor);
         case 'TokenOperation[]':
             return decodeTokenOperations(cbor);
-        case 'MetaUpdateOperation[]':
-            return decodeMetaUpdateOperations(cbor);
+        case 'Operation[]':
+            return decodeOperations(cbor);
         case 'LockConfig':
             return LockConfig.fromCBOR(cbor.bytes);
         case 'LockInfo':

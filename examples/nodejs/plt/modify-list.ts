@@ -179,7 +179,7 @@ const client = new ConcordiumGRPCNodeClient(
         } as TokenOperation; // Normally the cast is not necessary unless done in the same dynamic way as here.
         console.log('Specified list action:', JSON.stringify(listOperation, null, 2));
 
-        const payload = createTokenUpdatePayload(tokenId, listOperation);
+        const payload = createTokenUpdatePayload({ tokenId: tokenId, operations: listOperation });
         console.log('Created payload:', payload);
 
         // Serialize payload for signing/submission

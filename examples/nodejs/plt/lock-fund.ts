@@ -9,11 +9,11 @@ import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import {
     Lock,
     LockId,
-    MetaUpdateOperationType,
+    OperationType,
     Token,
     TokenAmount,
     TokenId,
-    createMetaUpdatePayload,
+    createTokenUpdatePayload,
 } from '@concordium/web-sdk/plt';
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
@@ -86,7 +86,7 @@ const client = new ConcordiumGRPCNodeClient(
                 throw new Error('Unexpected transaction type: ' + result.summary.type);
 
             switch (result.summary.transactionType) {
-                case TransactionKindString.MetaUpdate:
+                case TransactionKindString.TokenUpdate:
                     result.summary.events.filter(isKnown).forEach((e) => console.log('Event:', e));
                     break;
                 case TransactionKindString.Failed:
@@ -102,15 +102,17 @@ const client = new ConcordiumGRPCNodeClient(
         // Or from a wallet perspective:
         // Build the lockFund operation payload without submitting.
         // The sender's tokens are transferred into the lock when the transaction is executed.
-        const payload = createMetaUpdatePayload({
-            [MetaUpdateOperationType.LockFund]: { token: tokenId, lock: lockId, amount },
+        const payload = createTokenUpdatePayload({
+            operations: {
+                [OperationType.LockFund]: { token: tokenId, lock: lockId, amount },
+            },
         });
         console.log('Created payload:', payload);
 
         // Serialize the payload for signing and submission
         const serialized = serializeAccountTransactionPayload({
             payload,
-            type: AccountTransactionType.MetaUpdate,
+            type: AccountTransactionType.TokenUpdate,
         });
         console.log('Serialized payload for sign & send:', serialized.toString('hex'));
     }

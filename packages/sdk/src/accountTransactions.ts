@@ -7,7 +7,7 @@ import {
 } from './deserialization.js';
 import { Cursor } from './deserializationHelpers.js';
 import { DelegationTargetTypeNumeric, Upward, isKnown } from './index.js';
-import { Cbor, MetaUpdateOperationType, TokenId, TokenOperationType } from './plt/index.js';
+import { Cbor, OperationType, TokenId, TokenOperationType } from './plt/index.js';
 import {
     AccountTransactionInput,
     ContractAddress,
@@ -50,7 +50,6 @@ import {
     DeployModulePayload,
     HexString,
     InitContractPayload,
-    MetaUpdatePayload,
     OpenStatus,
     RegisterDataPayload,
     SimpleTransferPayload,
@@ -890,10 +889,12 @@ export class ConfigureDelegationHandler
     }
 }
 
-export type TokenUpdatePayloadJSON = {
-    tokenId: TokenId.JSON;
-    operations: Cbor.JSON;
-};
+export type TokenUpdatePayloadJSON =
+    | { variant: 'scoped'; tokenId: TokenId.JSON; operations: Cbor.JSON }
+    | { variant: 'unscoped'; operations: Cbor.JSON };
+
+/** Legacy P9/P10 JSON accepted only for deserialization. */
+export type LegacyTokenUpdatePayloadJSON = { tokenId: TokenId.JSON; operations: Cbor.JSON; variant?: never };
 
 function getTokenOperationEnergyCost(operation: unknown): bigint {
     if (typeof operation !== 'object' || operation === null) {
@@ -935,7 +936,7 @@ function getTokenOperationEnergyCost(operation: unknown): bigint {
     }
 }
 
-function getMetaUpdateOperationEnergyCost(operation: unknown): bigint {
+function getOperationEnergyCost(operation: unknown): bigint {
     if (typeof operation !== 'object' || operation === null) {
         return 0n;
     }
@@ -947,22 +948,21 @@ function getMetaUpdateOperationEnergyCost(operation: unknown): bigint {
     const PLT_LOCK_CANCEL_COST = 50n;
 
     switch (true) {
-        case MetaUpdateOperationType.LockFund in op:
-        case MetaUpdateOperationType.LockSend in op:
-        case MetaUpdateOperationType.LockRelease in op:
+        case OperationType.LockFund in op:
+        case OperationType.LockSend in op:
+        case OperationType.LockRelease in op:
             return LOCK_TRANSFER_COST;
-        case MetaUpdateOperationType.LockCreate in op:
+        case OperationType.LockCreate in op:
             return PLT_LOCK_CREATE_COST;
-        case MetaUpdateOperationType.LockCancel in op:
+        case OperationType.LockCancel in op:
             return PLT_LOCK_CANCEL_COST;
         default:
-            return getTokenOperationEnergyCost(operation);
+            const [key] = Object.keys(op);
+            return key?.startsWith('token') && key.length > 5
+                ? getTokenOperationEnergyCost({ [key[5].toLowerCase() + key.slice(6)]: op[key] })
+                : 0n;
     }
 }
-
-export type MetaUpdatePayloadJSON = {
-    operations: Cbor.JSON;
-};
 
 /**
  * @deprecated use `Transaction.tokenUpdate` and `Payload.tokenUpdate` APIs instead.
@@ -971,76 +971,55 @@ export class TokenUpdateHandler
     implements AccountTransactionHandler<TokenUpdatePayload, TokenUpdatePayloadJSON, TokenUpdatePayload>
 {
     serialize(payload: TokenUpdatePayload): Buffer {
-        const tokenId = packBufferWithWord8Length(TokenId.toBytes(payload.tokenId));
+        const tokenId = packBufferWithWord8Length(
+            payload.variant === 'unscoped' ? new Uint8Array() : TokenId.toBytes(payload.tokenId)
+        );
         const ops = packBufferWithWord32Length(payload.operations.bytes);
         return Buffer.concat([tokenId, ops]);
     }
 
     deserialize(serializedPayload: Cursor): TokenUpdatePayload {
         let len = serializedPayload.read(1).readUInt8(0);
-        const tokenId = TokenId.fromBytes(serializedPayload.read(len));
+        const tokenId = len === 0 ? undefined : TokenId.fromBytes(serializedPayload.read(len));
 
         len = serializedPayload.read(4).readUInt32BE(0);
         const operations = Cbor.fromBuffer(serializedPayload.read(len));
-        return { tokenId, operations };
+        return tokenId === undefined ? { variant: 'unscoped', operations } : { variant: 'scoped', tokenId, operations };
     }
 
     getBaseEnergyCost(payload: TokenUpdatePayload): bigint {
         const BASE_COST = 300n;
-        const operations = Cbor.decode(payload.operations, 'TokenOperation[]');
-        return operations.reduce(
-            (energyCost, operation) => energyCost + getTokenOperationEnergyCost(operation),
+        const operations: unknown[] =
+            payload.variant === 'unscoped'
+                ? Cbor.decode(payload.operations, 'Operation[]')
+                : Cbor.decode(payload.operations, 'TokenOperation[]');
+        return operations.reduce<bigint>(
+            (energyCost, operation) =>
+                energyCost +
+                (payload.variant === 'unscoped'
+                    ? getOperationEnergyCost(operation)
+                    : getTokenOperationEnergyCost(operation)),
             BASE_COST
         );
     }
 
     toJSON(payload: TokenUpdatePayload): TokenUpdatePayloadJSON {
-        return {
-            tokenId: payload.tokenId.toJSON(),
-            operations: payload.operations.toJSON(),
-        };
+        const operations = payload.operations.toJSON();
+        return payload.variant === 'scoped'
+            ? { variant: 'scoped', tokenId: payload.tokenId.toJSON(), operations }
+            : { variant: 'unscoped', operations };
     }
 
-    fromJSON(json: TokenUpdatePayloadJSON): TokenUpdatePayload {
-        return {
-            tokenId: TokenId.fromJSON(json.tokenId),
-            operations: Cbor.fromJSON(json.operations),
-        };
-    }
-}
-
-export class MetaUpdateHandler
-    implements AccountTransactionHandler<MetaUpdatePayload, MetaUpdatePayloadJSON, MetaUpdatePayload>
-{
-    serialize(payload: MetaUpdatePayload): Buffer {
-        return packBufferWithWord32Length(payload.operations.bytes);
-    }
-
-    deserialize(serializedPayload: Cursor): MetaUpdatePayload {
-        const len = serializedPayload.read(4).readUInt32BE(0);
-        const operations = Cbor.fromBuffer(serializedPayload.read(len));
-        return { operations };
-    }
-
-    getBaseEnergyCost(payload: MetaUpdatePayload): bigint {
-        const BASE_COST = 300n;
-        const operations = Cbor.decode(payload.operations, 'MetaUpdateOperation[]');
-        return operations.reduce(
-            (energyCost, operation) => energyCost + getMetaUpdateOperationEnergyCost(operation),
-            BASE_COST
-        );
-    }
-
-    toJSON(payload: MetaUpdatePayload): MetaUpdatePayloadJSON {
-        return {
-            operations: payload.operations.toJSON(),
-        };
-    }
-
-    fromJSON(json: MetaUpdatePayloadJSON): MetaUpdatePayload {
-        return {
-            operations: Cbor.fromJSON(json.operations),
-        };
+    fromJSON(json: TokenUpdatePayloadJSON | LegacyTokenUpdatePayloadJSON): TokenUpdatePayload {
+        if (typeof json !== 'object' || json === null) throw new Error('Expected Token Update object');
+        if (json.variant === 'scoped' || (!('variant' in json) && 'tokenId' in json))
+            return {
+                variant: 'scoped',
+                tokenId: TokenId.fromJSON(json.tokenId),
+                operations: Cbor.fromJSON(json.operations),
+            };
+        if (json.variant === 'unscoped') return { variant: 'unscoped', operations: Cbor.fromJSON(json.operations) };
+        throw new Error('Expected Token Update variant');
     }
 }
 
@@ -1181,7 +1160,6 @@ export type AccountTransactionPayloadJSON =
     | ConfigureDelegationPayloadJSON
     | ConfigureBakerPayloadJSON
     | TokenUpdatePayloadJSON
-    | MetaUpdatePayloadJSON
     | UpdateCredentialKeysPayloadJSON;
 
 /**
@@ -1201,7 +1179,6 @@ export function getAccountTransactionHandler(
 ): ConfigureDelegationHandler;
 export function getAccountTransactionHandler(type: AccountTransactionType.ConfigureBaker): ConfigureBakerHandler;
 export function getAccountTransactionHandler(type: AccountTransactionType.TokenUpdate): TokenUpdateHandler;
-export function getAccountTransactionHandler(type: AccountTransactionType.MetaUpdate): MetaUpdateHandler;
 export function getAccountTransactionHandler(
     type: AccountTransactionType.UpdateCredentialKeys
 ): UpdateCredentialKeysHandler;
@@ -1233,8 +1210,6 @@ export function getAccountTransactionHandler(
             return new ConfigureBakerHandler();
         case AccountTransactionType.TokenUpdate:
             return new TokenUpdateHandler();
-        case AccountTransactionType.MetaUpdate:
-            return new MetaUpdateHandler();
         case AccountTransactionType.UpdateCredentialKeys:
             return new UpdateCredentialKeysHandler();
         default:

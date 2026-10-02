@@ -7,6 +7,7 @@ Nodejs and Web SDK's.
 <!--toc:start-->
 - [Constructing transactions](#constructing-transactions)
   - [Create a simple transfer with or without memo](#create-a-simple-transfer-with-or-without-memo)
+  - [Create a Token Update transaction](#create-a-token-update-transaction)
   - [Create a Register data transaction](#create-a-register-data-transaction)
   - [Create a configure delegation transaction](#create-a-configure-delegation-transaction)
   - [Create a configure baker transaction](#create-a-configure-baker-transaction)
@@ -28,6 +29,62 @@ Nodejs and Web SDK's.
 The following example demonstrates how a simple transfer can be created.
 
 {@codeblock ~~:nodejs/common/simpleTransfer.ts#documentation-snippet}
+
+### Create a Token Update transaction
+
+A **scoped** update applies every operation to one transaction-level token ID.
+Supply `tokenId` to `createTokenUpdatePayload`:
+
+```ts
+import { AccountAddress, Transaction } from '@concordium/web-sdk';
+import * as PLT from '@concordium/web-sdk/plt';
+
+const recipient = PLT.CborAccountAddress.fromAccountAddress(
+    AccountAddress.fromBase58('3tWfFAfNsyYtPRgDTpGJuqhQy92rAfLZum7HRyPkezE7PcT3KB')
+);
+const payload = PLT.createTokenUpdatePayload({
+    tokenId: PLT.TokenId.fromString('PLTA'),
+    operations: {
+        transfer: {
+            recipient,
+            amount: PLT.TokenAmount.fromDecimal('10', 2),
+        },
+    },
+});
+const transaction = Transaction.tokenUpdate(payload);
+```
+
+An **unscoped** update carries token IDs on individual token operations and can
+also include lock operations.
+Omit the transaction-level `tokenId`; use `tokenTransfer` rather than `transfer`:
+
+```ts
+import { AccountAddress, Transaction } from '@concordium/web-sdk';
+import * as PLT from '@concordium/web-sdk/plt';
+
+const recipient = PLT.CborAccountAddress.fromAccountAddress(
+    AccountAddress.fromBase58('3tWfFAfNsyYtPRgDTpGJuqhQy92rAfLZum7HRyPkezE7PcT3KB')
+);
+const payload = PLT.createTokenUpdatePayload({
+    operations: [
+        {
+            tokenTransfer: {
+                token: PLT.TokenId.fromString('PLTA'),
+                recipient,
+                amount: PLT.TokenAmount.fromDecimal('10', 2),
+            },
+        },
+        {
+            tokenTransfer: {
+                token: PLT.TokenId.fromString('PLTB'),
+                recipient,
+                amount: PLT.TokenAmount.fromDecimal('5', 0),
+            },
+        },
+    ],
+});
+const transaction = Transaction.tokenUpdate(payload);
+```
 
 ### Create a Register data transaction
 
@@ -446,7 +503,7 @@ const transfer: TokenTransferOperation = {
         memo,
     },
 };
-const payload = createTokenUpdatePayload(tokenId, transfer);
+const payload = createTokenUpdatePayload({ tokenId, operations: transfer });
 const transaction = Transaction.tokenUpdate(payload);
 
 // Fill in the metadata required for the transaction header to prepare for signing.

@@ -1,11 +1,20 @@
 /**
- * Internal CBOR detail parsers shared between TokenOperation and MetaUpdateOperation decoders.
+ * Internal CBOR detail parsers shared between TokenOperation and Operation decoders.
  * Not part of the public SDK surface — import directly from this module, not through the barrel.
  */
 import * as CborAccountAddress from './CborAccountAddress.js';
 import * as CborMemo from './CborMemo.js';
 import * as TokenAmount from './TokenAmount.js';
-import type { TokenListUpdate, TokenSupplyUpdate, TokenTransfer } from './TokenOperation.js';
+import { TokenOperationType } from './TokenOperation.js';
+import type {
+    TokenListUpdate,
+    TokenMetadataUrlDetails,
+    TokenOperation,
+    TokenSupplyUpdate,
+    TokenTransfer,
+    TokenUpdateAdminRolesDetails,
+    UnknownTokenOperation,
+} from './TokenOperation.js';
 
 export function parseTransfer(details: unknown): TokenTransfer {
     if (typeof details !== 'object' || details === null)
@@ -65,4 +74,73 @@ export function parseEmpty(details: unknown): {} {
     if (typeof details !== 'object' || details === null || Object.keys(details as object).length !== 0)
         throw new Error(`Invalid operation details: ${JSON.stringify(details)}. Expected empty object {}`);
     return details;
+}
+
+/** Validate known metadata update fields, ignoring extras used by initialization/events. */
+export function parseMetadataUpdate(details: unknown): TokenMetadataUrlDetails {
+    if (typeof details !== 'object' || details === null) throw new Error('Invalid metadata update details');
+    const value = details as Record<string, unknown>;
+    if (typeof value.url !== 'string') throw new Error('Invalid metadata update URL');
+    if (
+        value.checksumSha256 !== undefined &&
+        (!(value.checksumSha256 instanceof Uint8Array) || value.checksumSha256.length !== 32)
+    )
+        throw new Error('Invalid metadata update checksum');
+    return { url: value.url, ...(value.checksumSha256 === undefined ? {} : { checksumSha256: value.checksumSha256 }) };
+}
+
+export function parseAdminRoles(details: unknown): TokenUpdateAdminRolesDetails {
+    if (typeof details !== 'object' || details === null) throw new Error('Invalid admin roles details');
+    const value = details as Record<string, unknown>;
+    if (
+        !CborAccountAddress.instanceOf(value.account) ||
+        !Array.isArray(value.roles) ||
+        !value.roles.every((role) => typeof role === 'string')
+    )
+        throw new Error('Invalid admin roles details');
+    return value as TokenUpdateAdminRolesDetails;
+}
+
+/**
+ * Decode a single token operation from CBOR. Throws on invalid shapes, only returns Unknown variant when the key is unrecognized.
+ */
+export function parseTokenOperation(decoded: unknown): TokenOperation | UnknownTokenOperation {
+    if (typeof decoded !== 'object' || decoded === null)
+        throw new Error(`Invalid token operation: ${JSON.stringify(decoded)}. Expected an object.`);
+
+    const keys = Object.keys(decoded);
+    if (keys.length !== 1)
+        throw new Error(
+            `Invalid token operation: ${JSON.stringify(decoded)}. Expected an object with a single key identifying the operation type.`
+        );
+
+    const type = keys[0];
+    const details = (decoded as Record<string, unknown>)[type];
+    switch (type) {
+        case TokenOperationType.Transfer:
+            return { [type]: parseTransfer(details) };
+        case TokenOperationType.Mint:
+            return { [type]: parseSupplyUpdate(details) };
+        case TokenOperationType.Burn:
+            return { [type]: parseSupplyUpdate(details) };
+        case TokenOperationType.AddAllowList:
+            return { [type]: parseListUpdate(details) };
+        case TokenOperationType.RemoveAllowList:
+            return { [type]: parseListUpdate(details) };
+        case TokenOperationType.AddDenyList:
+            return { [type]: parseListUpdate(details) };
+        case TokenOperationType.RemoveDenyList:
+            return { [type]: parseListUpdate(details) };
+        case TokenOperationType.Pause:
+            return { [type]: parseEmpty(details) };
+        case TokenOperationType.Unpause:
+            return { [type]: parseEmpty(details) };
+        case TokenOperationType.UpdateMetadata:
+            return { [type]: parseMetadataUpdate(details) };
+        case TokenOperationType.AssignAdminRoles:
+        case TokenOperationType.RevokeAdminRoles:
+            return { [type]: parseAdminRoles(details) };
+        default:
+            return decoded as UnknownTokenOperation;
+    }
 }

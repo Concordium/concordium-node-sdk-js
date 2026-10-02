@@ -3,7 +3,7 @@ export * from './cbor-types.js';
 export * from './TokenModuleRejectReason.js';
 export * from './TokenModuleEvent.js';
 export * from './TokenOperation.js';
-export * from './MetaUpdateOperation.js';
+export * from './Operation.js';
 
 export * as CborEpoch from './CborEpoch.js';
 export * as LockConfig from './LockConfig.js';

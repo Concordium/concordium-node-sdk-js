@@ -143,7 +143,7 @@ const client = new ConcordiumGRPCNodeClient(addr, Number(port), credentials.crea
         } as TokenOperation;
         console.log(`Specified ${action} action:`, JSON.stringify(operation, null, 2));
 
-        const payload = createTokenUpdatePayload(tokenId, operation);
+        const payload = createTokenUpdatePayload({ tokenId: tokenId, operations: operation });
         console.log('Created payload:', payload);
 
         // Serialize payload for signing/submission

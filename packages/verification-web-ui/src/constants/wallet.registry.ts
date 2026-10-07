@@ -269,22 +269,119 @@ export function openIosCustomScheme(deepLink: string): void {
     }
 }
 
+export const APP_ABSENT_REDIRECT_STORAGE_KEY = 'concordiumAppAbsentRedirectUrl';
+export const APP_CLIP_SID_STORAGE_KEY = 'concordiumAppClipSid';
+export const PRESENT_APP_OPEN_STORAGE_KEY = 'concordiumPresentAppOpenUrl';
+
+/** Production Concordium ID App Clip. Query `sid` + `wc` are allowed on this default link. */
+export const APP_CLIP_BUNDLE_ID = 'com.idwallet.app.Clip';
+export const APP_CLIP_DEFAULT_LINK = `https://appclip.apple.com/id?p=${APP_CLIP_BUNDLE_ID}`;
+/** Demo links cannot carry sid/wc. Do not use for WalletConnect pairing. */
+export const APP_CLIP_DEMO_URL =
+    'https://apps.apple.com/demo/id6746754485?app-clip-bundle-id=com.idwallet.app.Clip';
+
+export type QrRedirectUrlOptions = {
+    redirectBaseUrl?: string;
+    extraSearchParams?: Record<string, string>;
+};
+
+/**
+ * App-absent destination (App Clip). sessionStorage, then SDK config, then Apple's default link.
+ */
+export function getAppAbsentRedirectBase(): string | null {
+    try {
+        const stored = sessionStorage.getItem(APP_ABSENT_REDIRECT_STORAGE_KEY);
+        if (stored) return stored;
+    } catch {
+        /* ignore */
+    }
+    return null;
+}
+
+export function resolveAppAbsentClipBase(configured?: string | null): string {
+    return getAppAbsentRedirectBase() || configured || APP_CLIP_DEFAULT_LINK;
+}
+
+export function getPresentAppOpenUrl(): string | null {
+    try {
+        const stored = sessionStorage.getItem(PRESENT_APP_OPEN_STORAGE_KEY);
+        if (stored) return stored;
+    } catch {
+        /* ignore */
+    }
+    return null;
+}
+
+export function buildPresentAppOpenUrl(base: string, wcUri: string, sid?: string | null): string {
+    const url = new URL(base);
+    const resolvedSid =
+        sid ||
+        (() => {
+            try {
+                return sessionStorage.getItem(APP_CLIP_SID_STORAGE_KEY);
+            } catch {
+                return null;
+            }
+        })();
+    if (resolvedSid) url.searchParams.set('sid', resolvedSid);
+    url.searchParams.set('wc', wcUri);
+    url.searchParams.set('uri', wcUri);
+    return url.toString();
+}
+
+export function buildAppAbsentInvocationUrl(
+    base: string,
+    wcUri: string,
+    sid?: string | null
+): string {
+    const url = new URL(base);
+    const resolvedSid =
+        sid ||
+        (() => {
+            try {
+                return sessionStorage.getItem(APP_CLIP_SID_STORAGE_KEY);
+            } catch {
+                return null;
+            }
+        })();
+    if (resolvedSid) url.searchParams.set('sid', resolvedSid);
+    url.searchParams.set('wc', wcUri);
+    url.searchParams.set('uri', wcUri);
+    url.searchParams.set('source', 'qr');
+    return url.toString();
+}
+
 /**
  * Build HTTPS QR redirect URL for phone camera scans.
  *
  * Camera apps open https reliably; custom schemes (`concordiumidapp://`) often fail.
- * Phone lands on this page → deep link / store with embedded wc: URI (no bridge).
+ * Default: phone lands on this page → deep link / store with embedded wc: URI.
+ * `redirectBaseUrl`: encode that origin instead (App Clip host).
  */
-export function buildQrRedirectUrl(wcUri: string): string {
+export function buildQrRedirectUrl(wcUri: string, options?: QrRedirectUrlOptions): string {
+    if (options?.redirectBaseUrl) {
+        return buildAppAbsentInvocationUrl(
+            options.redirectBaseUrl,
+            wcUri,
+            options.extraSearchParams?.sid
+        );
+    }
+
     const url = new URL(window.location.href);
     url.searchParams.delete('wc_redirect');
     url.searchParams.delete('uri');
     url.searchParams.delete('install_id');
     url.searchParams.delete('source');
+    url.searchParams.delete('sid');
 
     url.searchParams.set('wc_redirect', '1');
     url.searchParams.set('uri', wcUri);
     url.searchParams.set('source', 'qr');
+    if (options?.extraSearchParams) {
+        for (const [key, value] of Object.entries(options.extraSearchParams)) {
+            if (value) url.searchParams.set(key, value);
+        }
+    }
     return url.toString();
 }
 

@@ -9,6 +9,7 @@ import concordiumModalLogo from '@/assets/concordium-modal-logo.svg';
 import { isMobileScreen } from '@/config.state';
 import { ModalConstants } from '@/constants/modal.constants';
 import {
+    APP_CLIP_SID_STORAGE_KEY,
     WALLET_REGISTRY,
     type WalletInfo,
     buildWalletDeepLink,
@@ -20,6 +21,7 @@ import {
 import { WalletConnectConstants } from '@/constants/walletconnect.constants';
 import { ServiceFactory } from '@/services';
 import type { HideModalFunction, ModalFunction, ShowModalFunction } from '@/types';
+import { isIosDefaultAppClipSupported, isIosDevice } from '@/utils/platform';
 
 // Store detected wallets
 let detectedWallets: WalletInfo[] = [];
@@ -328,7 +330,23 @@ async function hasActiveWalletConnectSession(): Promise<boolean> {
  * Try Concordium ID deep link after QR camera open.
  */
 async function tryOpenConcordiumIdFromQr(wcUri: string): Promise<boolean> {
-    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+    const isIOSDevice = isIosDevice();
+
+    const { getPresentAppOpenUrl, buildPresentAppOpenUrl } = await import('@/constants/wallet.registry');
+    let presentBase = getPresentAppOpenUrl();
+    if (!presentBase) {
+        try {
+            const { getConfig } = await import('@/config.state');
+            presentBase = getConfig().qrCode?.presentAppOpenUrl || null;
+        } catch {
+            /* ignore */
+        }
+    }
+    if (presentBase) {
+        const openUrl = buildPresentAppOpenUrl(presentBase, wcUri);
+        console.info('[IDApp] present app open (not Concordium ID)', openUrl);
+        return tryOpenDeepLink(openUrl, isIOSDevice ? 2500 : 1500);
+    }
 
     // iOS only: clipboard for Create Account after short wake (Android = deep link / referrer).
     if (isIOSDevice) {
@@ -349,12 +367,24 @@ async function tryOpenConcordiumIdFromQr(wcUri: string): Promise<boolean> {
 }
 
 /**
- * Handle QR redirect on page load (phone camera scanned HTTPS QR).
- * Opens Concordium ID with embedded wc: in the custom-scheme pair link.
+ * Camera scanned https merchant QR (`wc_redirect=1`, `uri`, `sid`).
+ * This page reads the phone user-agent, then:
+ * - iOS, app there → concordiumidapp://
+ * - iOS, app missing → clip URL if configured, else App Store
+ * - Android, app missing → Play Store (no clip)
  */
 export async function handleQrRedirectOnLoad(): Promise<void> {
     const uri = getQrRedirectUri();
     if (!uri) return;
+
+    const landingSid = new URLSearchParams(window.location.search).get('sid');
+    if (landingSid) {
+        try {
+            sessionStorage.setItem(APP_CLIP_SID_STORAGE_KEY, landingSid);
+        } catch {
+            /* ignore */
+        }
+    }
 
     // Clean up URL without redirect params while preserving route/search/hash context.
     const cleanUrl = getQrRedirectCleanUrl();
@@ -392,6 +422,31 @@ export async function handleQrRedirectOnLoad(): Promise<void> {
         } catch {
             /* ignore */
         }
+        return;
+    }
+
+    // App Clip is iOS 16.4+ only. Android and older iOS fall through to the store.
+    let appAbsentBase: string | null = null;
+    if (isIosDevice() && isIosDefaultAppClipSupported()) {
+        const { getAppAbsentRedirectBase, resolveAppAbsentClipBase } = await import(
+            '@/constants/wallet.registry'
+        );
+        appAbsentBase = getAppAbsentRedirectBase();
+        if (!appAbsentBase) {
+            try {
+                const { getConfig } = await import('@/config.state');
+                appAbsentBase = getConfig().qrCode?.appAbsentRedirectUrl || null;
+            } catch {
+                /* ignore */
+            }
+        }
+        appAbsentBase = resolveAppAbsentClipBase(appAbsentBase);
+    }
+    if (appAbsentBase) {
+        const { buildAppAbsentInvocationUrl } = await import('@/constants/wallet.registry');
+        const clipUrl = buildAppAbsentInvocationUrl(appAbsentBase, uri, landingSid);
+        console.info('[IDApp] app absent → App Clip', clipUrl);
+        window.location.replace(clipUrl);
         return;
     }
 

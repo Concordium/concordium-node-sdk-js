@@ -15,8 +15,13 @@ export interface QrHandoffPayload {
  */
 export async function prepareQrHandoffPayload(walletConnectUri: string): Promise<QrHandoffPayload> {
     const { buildQrRedirectUrl } = await import('@/constants/wallet.registry');
-    const qrUrl = buildQrRedirectUrl(walletConnectUri);
-    console.log(`${LOG_PREFIX} QR handoff ready`, { qrUrlLength: qrUrl.length });
+    const { getConfig } = await import('@/config.state');
+    const qrCode = getConfig().qrCode;
+    const qrUrl = buildQrRedirectUrl(walletConnectUri, {
+        redirectBaseUrl: qrCode?.redirectBaseUrl,
+        extraSearchParams: qrCode?.extraSearchParams,
+    });
+    console.log(`${LOG_PREFIX} QR handoff ready`, { qrUrlLength: qrUrl.length, qrUrl });
     bridgeTrace('QR handoff ready', { qrUrlLength: qrUrl.length });
     return { qrUrl };
 }

@@ -3,6 +3,7 @@
  * Handles intelligent app detection and routing for mobile devices
  */
 import { ModalConstants } from '@/constants/modal.constants';
+import { isAndroidDevice, isIosDefaultAppClipSupported, isIosDevice } from '@/utils/platform';
 
 export interface AppDetectionResult {
     concordiumWalletInstalled: boolean;
@@ -175,9 +176,36 @@ export function openAppStore(appType: 'concordium-wallet' | 'concordium-id' = 'c
  * iOS: clipboard should already hold wc: (written on Open tap). No bridge register.
  */
 export async function redirectToIdAppStore(walletConnectUri?: string | null): Promise<void> {
-    const { getIdAppNativeStoreUrl } = await import('@/constants/wallet.registry');
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
-    const isAndroid = /android/i.test(navigator.userAgent);
+    const {
+        getIdAppNativeStoreUrl,
+        getAppAbsentRedirectBase,
+        resolveAppAbsentClipBase,
+        buildAppAbsentInvocationUrl,
+    } = await import('@/constants/wallet.registry');
+
+    const isIOS = isIosDevice();
+    const isAndroid = isAndroidDevice();
+
+    // App Clip is iOS 16.4+ only. Older iOS and Android go to the store.
+    if (walletConnectUri && isIOS && isIosDefaultAppClipSupported()) {
+        let appAbsentBase = getAppAbsentRedirectBase();
+        if (!appAbsentBase) {
+            try {
+                const { getConfig } = await import('@/config.state');
+                appAbsentBase = getConfig().qrCode?.appAbsentRedirectUrl || null;
+            } catch {
+                /* ignore */
+            }
+        }
+        const clipUrl = buildAppAbsentInvocationUrl(
+            resolveAppAbsentClipBase(appAbsentBase),
+            walletConnectUri
+        );
+        console.info('[IDApp] app absent → App Clip (store path)', clipUrl);
+        window.location.replace(clipUrl);
+        return;
+    }
+
     const platform = isIOS ? 'ios' : isAndroid ? 'android' : 'other';
 
     console.log('[IDApp] store redirect START', {
@@ -267,6 +295,44 @@ export async function openAppStoreForConcordiumIDAsync(walletConnectUri?: string
  */
 export async function tryOpenConcordiumIDApp(walletConnectUri: string): Promise<boolean> {
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+
+    const { getPresentAppOpenUrl, buildPresentAppOpenUrl, openIosCustomScheme } = await import(
+        '@/constants/wallet.registry'
+    );
+    let presentBase = getPresentAppOpenUrl();
+    if (!presentBase) {
+        try {
+            const { getConfig } = await import('@/config.state');
+            presentBase = getConfig().qrCode?.presentAppOpenUrl || null;
+        } catch {
+            /* ignore */
+        }
+    }
+    if (presentBase) {
+        const openUrl = buildPresentAppOpenUrl(presentBase, walletConnectUri);
+        console.info('[IDApp] present app open (not Concordium ID)', openUrl);
+        if (isIOS) {
+            openIosCustomScheme(openUrl);
+        } else {
+            window.location.href = openUrl;
+        }
+        return new Promise((resolve) => {
+            let opened = false;
+            const done = (value: boolean) => {
+                if (opened) return;
+                opened = true;
+                document.removeEventListener('visibilitychange', onHidden);
+                window.removeEventListener('pagehide', onHidden);
+                resolve(value);
+            };
+            const onHidden = () => {
+                if (document.hidden) done(true);
+            };
+            document.addEventListener('visibilitychange', onHidden);
+            window.addEventListener('pagehide', onHidden, { once: true });
+            window.setTimeout(() => done(document.hidden), isIOS ? 2500 : 1500);
+        });
+    }
 
     // iOS: clipboard wc: + short wake (full wc: URI → Safari "address is invalid").
     // Android: full deep link only (Play referrer on store fallback — no clipboard toast).

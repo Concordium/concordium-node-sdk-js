@@ -11,8 +11,8 @@ export const PopupConstants = {
 
     // App Store Links
     APP_STORE_LINKS: {
-        ios: 'https://apps.apple.com/ca/app/concordium-id/id6746754485',
-        android: 'https://play.google.com/store/apps/details?id=com.idwallet.app&hl=en_CA',
+        ios: 'https://apps.apple.com/in/app/concordium-id-app/id6746754485',
+        android: 'https://play.google.com/store/apps/details?id=com.idwallet.app&hl=en',
     },
 
     // Popup element IDs

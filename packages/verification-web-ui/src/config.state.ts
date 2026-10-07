@@ -62,6 +62,14 @@ export interface ConcordiumConfig {
         autoRefresh?: boolean;
         // Show countdown timer on QR code, default true
         showCountdown?: boolean;
+        // Encode this origin/path in the QR instead of the current page
+        redirectBaseUrl?: string;
+        // Extra query params on the QR URL (e.g. sid)
+        extraSearchParams?: Record<string, string>;
+        // App-absent fallback: navigate here instead of the App Store
+        appAbsentRedirectUrl?: string;
+        // If set, open this app (e.g. App Clip parent) instead of Concordium ID
+        presentAppOpenUrl?: string;
     };
     // Event handling
     onEvent?: ConcordiumEventCallback;
@@ -133,7 +141,10 @@ export function dispatchConcordiumEvent(eventData: Omit<ConcordiumEventData, 'ti
 
 // Configuration functions
 export function setConfig(config: Partial<ConcordiumConfig>): void {
-    globalConfig = { ...globalConfig, ...config };
+    const nextQrCode = config.qrCode
+        ? { ...globalConfig.qrCode, ...config.qrCode }
+        : globalConfig.qrCode;
+    globalConfig = { ...globalConfig, ...config, qrCode: nextQrCode };
     // Update global variables if needed
     if (typeof window !== 'undefined') {
         (window as any).__CONCORDIUM_SDK_NETWORK__ = globalConfig.network;

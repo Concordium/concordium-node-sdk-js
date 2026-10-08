@@ -1,6 +1,7 @@
-import { TokenUpdatePayload } from '../types.js';
-import { parseEmpty, parseListUpdate, parseSupplyUpdate, parseTransfer } from './cbor-parse.js';
-import { Cbor, CborAccountAddress, CborMemo, TokenAmount, TokenId, TokenMetadataUrl } from './index.js';
+import { ScopedTokenUpdatePayload, TokenUpdatePayload, UnscopedTokenUpdatePayload } from '../types.js';
+import { Operation, UnknownOperation, decodeOperations, encodeOperations } from './Operation.js';
+import { parseMetadataUpdate, parseTokenOperation } from './cbor-parse.js';
+import { Cbor, CborAccountAddress, CborMemo, TokenAmount, TokenId } from './index.js';
 
 /**
  * Enum representing the types of token operations.
@@ -129,10 +130,17 @@ export type TokenPauseOperation = TokenOperationGen<TokenOperationType.Pause, {}
  */
 export type TokenUnpauseOperation = TokenOperationGen<TokenOperationType.Unpause, {}>;
 
-/**
- * Represents an operation to update the metadata url of a token.
- */
-export type TokenUpdateMetadataOperation = TokenOperationGen<TokenOperationType.UpdateMetadata, TokenMetadataUrl.Type>;
+/** Restricted metadata-update body. Initialization and event metadata remain extensible. */
+export type TokenMetadataUrlDetails = {
+    url: string;
+    checksumSha256?: Uint8Array;
+};
+
+/** Represents an operation to update the metadata URL of a token. */
+export type TokenUpdateMetadataOperation = TokenOperationGen<
+    TokenOperationType.UpdateMetadata,
+    TokenMetadataUrlDetails
+>;
 
 /**
  * Represents an operation to assign an admin role to an account.
@@ -172,68 +180,35 @@ export type TokenOperation =
     | TokenUpdateAdminRoleOperation;
 
 /**
- * Creates a payload for token operations.
+ * Creates a scoped or unscoped Token Update payload.
  * This function encodes the provided token operation(s) into a CBOR format.
  *
- * @param tokenId - The unique identifier of the token for which the operation(s) is being performed.
- * @param operations - A single token operation or an array of token operations.
+ * @param input - Token operations with a token ID for a scoped payload, or unscoped operations without a token ID.
  *
  * @returns The encoded token governance payload.
  */
+export function createTokenUpdatePayload(input: {
+    tokenId: TokenId.Type;
+    operations: TokenOperation | TokenOperation[];
+}): ScopedTokenUpdatePayload;
+export function createTokenUpdatePayload(input: { operations: Operation | Operation[] }): UnscopedTokenUpdatePayload;
 export function createTokenUpdatePayload(
-    tokenId: TokenId.Type,
-    operations: TokenOperation | TokenOperation[]
+    input:
+        | { tokenId: TokenId.Type; operations: TokenOperation | TokenOperation[] }
+        | { operations: Operation | Operation[] }
 ): TokenUpdatePayload {
-    const ops = [operations].flat();
-    return {
-        tokenId: tokenId,
-        operations: Cbor.encode(ops),
-    };
+    if (!('tokenId' in input)) return { variant: 'unscoped', operations: encodeOperations(input.operations) };
+    const ops = [input.operations].flat().map((op) => {
+        if (TokenOperationType.UpdateMetadata in op) return { updateMetadata: parseMetadataUpdate(op.updateMetadata) };
+        return op;
+    });
+    return { variant: 'scoped', tokenId: input.tokenId, operations: Cbor.encode(ops) };
 }
 
 /**
  * Represents a token operation (found when decoding) unknown to the SDK.
  */
 export type UnknownTokenOperation = { [key: string]: unknown };
-
-/**
- * Decode a single token operation from CBOR. Throws on invalid shapes, only returns Unknown variant when the key is unrecognized.
- */
-function parseTokenOperation(decoded: unknown): TokenOperation | UnknownTokenOperation {
-    if (typeof decoded !== 'object' || decoded === null)
-        throw new Error(`Invalid token operation: ${JSON.stringify(decoded)}. Expected an object.`);
-
-    const keys = Object.keys(decoded);
-    if (keys.length !== 1)
-        throw new Error(
-            `Invalid token operation: ${JSON.stringify(decoded)}. Expected an object with a single key identifying the operation type.`
-        );
-
-    const type = keys[0];
-    const details = (decoded as Record<string, unknown>)[type];
-    switch (type) {
-        case TokenOperationType.Transfer:
-            return { [type]: parseTransfer(details) };
-        case TokenOperationType.Mint:
-            return { [type]: parseSupplyUpdate(details) };
-        case TokenOperationType.Burn:
-            return { [type]: parseSupplyUpdate(details) };
-        case TokenOperationType.AddAllowList:
-            return { [type]: parseListUpdate(details) };
-        case TokenOperationType.RemoveAllowList:
-            return { [type]: parseListUpdate(details) };
-        case TokenOperationType.AddDenyList:
-            return { [type]: parseListUpdate(details) };
-        case TokenOperationType.RemoveDenyList:
-            return { [type]: parseListUpdate(details) };
-        case TokenOperationType.Pause:
-            return { [type]: parseEmpty(details) };
-        case TokenOperationType.Unpause:
-            return { [type]: parseEmpty(details) };
-        default:
-            return decoded as UnknownTokenOperation;
-    }
-}
 
 /**
  * Decodes a token operation.
@@ -304,8 +279,20 @@ export function decodeTokenOperations(cbor: Cbor.Type): (TokenOperation | Unknow
  * });
  */
 export function parseTokenUpdatePayload(
+    payload: ScopedTokenUpdatePayload
+): Omit<ScopedTokenUpdatePayload, 'operations'> & { operations: (TokenOperation | UnknownTokenOperation)[] };
+export function parseTokenUpdatePayload(
+    payload: UnscopedTokenUpdatePayload
+): Omit<UnscopedTokenUpdatePayload, 'operations'> & { operations: (Operation | UnknownOperation)[] };
+export function parseTokenUpdatePayload(
     payload: TokenUpdatePayload
-): Omit<TokenUpdatePayload, 'operations'> & { operations: (TokenOperation | UnknownTokenOperation)[] } {
-    const operations = decodeTokenOperations(payload.operations);
+): Omit<TokenUpdatePayload, 'operations'> & { operations: (TokenOperation | Operation | UnknownOperation)[] };
+export function parseTokenUpdatePayload(
+    payload: TokenUpdatePayload
+): Omit<TokenUpdatePayload, 'operations'> & { operations: (TokenOperation | Operation | UnknownOperation)[] } {
+    const operations =
+        payload.variant === 'unscoped'
+            ? decodeOperations(payload.operations)
+            : decodeTokenOperations(payload.operations);
     return { ...payload, operations };
 }

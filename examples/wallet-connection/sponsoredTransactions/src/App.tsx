@@ -7,7 +7,6 @@ import {
 } from '@concordium/react-components';
 import {
     AccountAddress,
-    Cbor,
     CborAccountAddress,
     CborMemo,
     CcdAmount,
@@ -18,6 +17,7 @@ import {
     Transaction,
     TransactionExpiry,
     buildBasicAccountSigner,
+    createTokenUpdatePayload,
 } from '@concordium/web-sdk';
 import { useCallback, useState } from 'react';
 import { Alert, Button, Col, Container, Row, Spinner } from 'react-bootstrap';
@@ -84,10 +84,10 @@ function Main(props: WalletConnectionProps) {
 
             console.log(JSON.stringify(ops));
 
-            const payload = {
+            const payload = createTokenUpdatePayload({
                 tokenId: TokenId.fromString('PLTLEVEL'),
-                operations: Cbor.encode(ops),
-            };
+                operations: ops,
+            });
 
             const transaction = Transaction.tokenUpdate(payload);
 

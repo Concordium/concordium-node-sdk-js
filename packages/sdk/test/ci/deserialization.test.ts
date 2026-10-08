@@ -186,6 +186,7 @@ test('test deserialize TokenUpdate ', () => {
     const pauseOperation = { pause } as TokenOperation;
 
     const payload: TokenUpdatePayload = {
+        variant: 'scoped',
         tokenId: TokenId.fromString('123ABCToken'),
         operations: Cbor.encode([pauseOperation]),
     };

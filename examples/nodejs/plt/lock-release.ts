@@ -11,11 +11,11 @@ import {
     CborAccountAddress,
     Lock,
     LockId,
-    MetaUpdateOperationType,
+    OperationType,
     Token,
     TokenAmount,
     TokenId,
-    createMetaUpdatePayload,
+    createTokenUpdatePayload,
 } from '@concordium/web-sdk/plt';
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
@@ -91,7 +91,7 @@ const client = new ConcordiumGRPCNodeClient(
                 throw new Error('Unexpected transaction type: ' + result.summary.type);
 
             switch (result.summary.transactionType) {
-                case TransactionKindString.MetaUpdate:
+                case TransactionKindString.TokenUpdate:
                     result.summary.events.filter(isKnown).forEach((e) => console.log('Event:', e));
                     break;
                 case TransactionKindString.Failed:
@@ -107,12 +107,14 @@ const client = new ConcordiumGRPCNodeClient(
         // Or from a wallet perspective:
         // Build the lockRelease operation payload without submitting.
         // The source account must be provided as a CborAccountAddress value.
-        const payload = createMetaUpdatePayload({
-            [MetaUpdateOperationType.LockRelease]: {
-                token: tokenId,
-                lock: lockId,
-                source: CborAccountAddress.fromAccountAddress(source),
-                amount,
+        const payload = createTokenUpdatePayload({
+            operations: {
+                [OperationType.LockRelease]: {
+                    token: tokenId,
+                    lock: lockId,
+                    source: CborAccountAddress.fromAccountAddress(source),
+                    amount,
+                },
             },
         });
         console.log('Created payload:', payload);
@@ -120,7 +122,7 @@ const client = new ConcordiumGRPCNodeClient(
         // Serialize the payload for signing and submission
         const serialized = serializeAccountTransactionPayload({
             payload,
-            type: AccountTransactionType.MetaUpdate,
+            type: AccountTransactionType.TokenUpdate,
         });
         console.log('Serialized payload for sign & send:', serialized.toString('hex'));
     }

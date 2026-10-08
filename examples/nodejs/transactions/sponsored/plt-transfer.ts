@@ -124,7 +124,7 @@ const transfer: TokenTransferOperation = {
         memo,
     },
 };
-const payload = createTokenUpdatePayload(tokenId, transfer);
+const payload = createTokenUpdatePayload({ tokenId: tokenId, operations: transfer });
 const transaction = Transaction.tokenUpdate(payload);
 
 // 3.

@@ -5,9 +5,9 @@ import {
     CborEpoch,
     Lock,
     LockConfig,
-    MetaUpdateOperationType,
+    OperationType,
     TokenId,
-    createMetaUpdatePayload,
+    createTokenUpdatePayload,
 } from '@concordium/web-sdk/plt';
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
@@ -105,13 +105,15 @@ const client = new ConcordiumGRPCNodeClient(
         // The controller grants and token list should be configured to match the intended access model.
         const config = LockConfig.simpleV0(recipients, expiry, [], tokenIds);
 
-        const payload = createMetaUpdatePayload({ [MetaUpdateOperationType.LockCreate]: config });
+        const payload = createTokenUpdatePayload({
+            operations: { [OperationType.LockCreate]: config },
+        });
         console.log('Created payload:', payload);
 
         // Serialize the payload for signing and submission
         const serialized = serializeAccountTransactionPayload({
             payload,
-            type: AccountTransactionType.MetaUpdate,
+            type: AccountTransactionType.TokenUpdate,
         });
         console.log('Serialized payload for sign & send:', serialized.toString('hex'));
     }

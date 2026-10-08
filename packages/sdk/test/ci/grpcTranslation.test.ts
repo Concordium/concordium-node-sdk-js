@@ -1,3 +1,4 @@
+import * as GRPC_PLT from '../../src/grpc-api/v2/concordium/protocol-level-tokens.js';
 import * as GRPC from '../../src/grpc-api/v2/concordium/types.js';
 import {
     blockItemSummary,
@@ -8,7 +9,21 @@ import {
     trRejectReason,
     trUpdatePayload,
 } from '../../src/grpc/translation.js';
-import { Duration, LockId, RejectReasonTag, Timestamp, TransactionSummaryType, UpdateType } from '../../src/index.js';
+import {
+    AccountAddress,
+    Cbor,
+    Duration,
+    LockId,
+    RejectReasonTag,
+    Timestamp,
+    TokenAmount,
+    TokenId,
+    TransactionEventTag,
+    TransactionKindString,
+    TransactionSummaryType,
+    UpdateType,
+    affectedAccounts,
+} from '../../src/index.js';
 
 const accessStructure: GRPC.AccessStructure = {
     accessPublicKeys: [{ value: 2 }],
@@ -204,4 +219,163 @@ test('converts lock duration too long rejections with the lock identifier', () =
         tag: RejectReasonTag.LockDurationTooLong,
         contents: LockId.create(lockId.accountIndex, lockId.sequenceNumber, lockId.creationOrder),
     });
+});
+
+function tokenUpdateSummary(effect: GRPC_PLT.TokenEffect) {
+    return blockItemSummary({
+        index: { value: 1n },
+        energyCost: { value: 2n },
+        hash: { value: new Uint8Array(32) },
+        details: {
+            oneofKind: 'accountTransaction',
+            accountTransaction: {
+                cost: { value: 0n },
+                sender: { value: new Uint8Array(32) },
+                effects: { effect: { oneofKind: 'tokenUpdateEffect', tokenUpdateEffect: effect } },
+            },
+        },
+    });
+}
+
+const tokenId = { value: 'TEST' };
+const holder: GRPC_PLT.TokenHolder = {
+    address: { oneofKind: 'account', account: { value: new Uint8Array(32).fill(1) } },
+};
+const amount = { value: 7n, decimals: 2 };
+const lockId = { accountIndex: 1n, sequenceNumber: 2n, creationOrder: 0n };
+const transfer: GRPC_PLT.TokenEvent = {
+    tokenId,
+    event: { oneofKind: 'transferEvent', transferEvent: { from: holder, to: holder, amount } },
+};
+
+it('reads legacy field-1 token events when the unified list is empty, preserving token JSON', () => {
+    const effect = GRPC_PLT.TokenEffect.create({ tokenEvents: [transfer] });
+    const bytes = GRPC_PLT.TokenEffect.toBinary(effect);
+    expect(bytes[0]).toBe(10); // length-delimited field 1, as used by P9/P10
+    const summary = tokenUpdateSummary(GRPC_PLT.TokenEffect.fromBinary(bytes));
+    expect(summary).toMatchObject({
+        transactionType: TransactionKindString.TokenUpdate,
+        events: [
+            {
+                tag: TransactionEventTag.TokenTransfer,
+                tokenId: TokenId.fromString('TEST'),
+                amount: TokenAmount.create(7n, 2),
+            },
+        ],
+    });
+    if (
+        summary?.type !== TransactionSummaryType.AccountTransaction ||
+        summary.transactionType !== TransactionKindString.TokenUpdate
+    )
+        throw new Error('Wrong summary');
+    expect(JSON.parse(JSON.stringify(summary.events[0]))).toMatchObject({ tag: 'TokenTransfer', tokenId: 'TEST' });
+    expect(summary.events[0]).not.toHaveProperty('fromLock');
+    expect(summary.events[0]).not.toHaveProperty('toLock');
+});
+
+it('uses unified events once, preserving lock-send unlock and ordinary transfer effects', () => {
+    const effect: GRPC_PLT.TokenEffect = {
+        tokenEvents: [transfer],
+        events: [
+            {
+                event: {
+                    oneofKind: 'lockEvent',
+                    lockEvent: {
+                        event: {
+                            oneofKind: 'unlockAmountEvent',
+                            unlockAmountEvent: { tokenId, lockId, tokenHolder: holder, amount },
+                        },
+                    },
+                },
+            },
+            { event: { oneofKind: 'tokenEvent', tokenEvent: transfer } },
+            {
+                event: {
+                    oneofKind: 'lockEvent',
+                    lockEvent: {
+                        event: {
+                            oneofKind: 'lockAmountEvent',
+                            lockAmountEvent: { tokenId, lockId, tokenHolder: holder, amount },
+                        },
+                    },
+                },
+            },
+            {
+                event: {
+                    oneofKind: 'lockEvent',
+                    lockEvent: {
+                        event: {
+                            oneofKind: 'lockCreateEvent',
+                            lockCreateEvent: { lockId, lockConfig: { value: new Uint8Array([0xa0]) } },
+                        },
+                    },
+                },
+            },
+            {
+                event: {
+                    oneofKind: 'lockEvent',
+                    lockEvent: { event: { oneofKind: 'lockDestroyEvent', lockDestroyEvent: { lockId } } },
+                },
+            },
+        ],
+    };
+    const summary = tokenUpdateSummary(GRPC_PLT.TokenEffect.fromBinary(GRPC_PLT.TokenEffect.toBinary(effect)));
+    expect(summary).toMatchObject({
+        events: [
+            {
+                tag: TransactionEventTag.UnlockAmount,
+                tokenId: TokenId.fromString('TEST'),
+                lockId: LockId.create(1n, 2n, 0n),
+                tokenHolder: { address: AccountAddress.fromBuffer(new Uint8Array(32).fill(1)) },
+                amount: TokenAmount.create(7n, 2),
+            },
+            { tag: TransactionEventTag.TokenTransfer },
+            { tag: TransactionEventTag.LockAmount, amount: TokenAmount.create(7n, 2) },
+            { tag: TransactionEventTag.LockCreated, lockConfig: Cbor.fromHexString('a0') },
+            { tag: TransactionEventTag.LockDestroyed },
+        ],
+    });
+    if (summary === null) throw new Error('Unknown summary');
+    expect(affectedAccounts(summary)).toEqual([
+        AccountAddress.fromBuffer(new Uint8Array(32)),
+        AccountAddress.fromBuffer(new Uint8Array(32).fill(1)),
+    ]);
+    expect(summary).not.toHaveProperty('tokenEvents');
+});
+
+it('preserves module event details and unknown event variants without falling back', () => {
+    const summary = tokenUpdateSummary({
+        tokenEvents: [transfer],
+        events: [
+            {
+                event: {
+                    oneofKind: 'tokenEvent',
+                    tokenEvent: {
+                        tokenId,
+                        event: {
+                            oneofKind: 'moduleEvent',
+                            moduleEvent: { type: 'pause', details: { value: new Uint8Array([0xa0]) } },
+                        },
+                    },
+                },
+            },
+            { event: { oneofKind: undefined } },
+            { event: { oneofKind: 'tokenEvent', tokenEvent: { tokenId, event: { oneofKind: undefined } } } },
+            { event: { oneofKind: 'lockEvent', lockEvent: { event: { oneofKind: undefined } } } },
+        ],
+    });
+    expect(summary).toMatchObject({
+        events: [
+            { tag: TransactionEventTag.TokenModuleEvent, type: 'pause', details: Cbor.fromHexString('a0') },
+            null,
+            null,
+            null,
+        ],
+    });
+    expect(() =>
+        tokenUpdateSummary({
+            tokenEvents: [],
+            events: [{ event: { oneofKind: 'tokenEvent', tokenEvent: { event: transfer.event } } }],
+        })
+    ).toThrow(/token id/);
 });

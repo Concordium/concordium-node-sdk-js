@@ -29,9 +29,9 @@ import {
     EncryptedAmountsRemovedEvent,
     EncryptedSelfAmountAddedEvent,
     MemoEvent,
-    MetaUpdateEvent,
     ModuleDeployedEvent,
     NewEncryptedAmountEvent,
+    OperationEvent,
     TokenEvent,
     TransactionEventTag,
     TransferredWithScheduleEvent,
@@ -105,7 +105,6 @@ export enum TransactionKindString {
     StakingReward = 'paydayAccountReward',
     Failed = 'failed',
     TokenUpdate = 'tokenUpdate',
-    MetaUpdate = 'metaUpdate',
 }
 
 /**
@@ -266,21 +265,7 @@ export type TokenUpdateSummary = {
      * **Please note**, these can possibly be unknown if the SDK is not fully compatible with the Concordium
      * node queried, in which case `null` is returned.
      */
-    events: Upward<TokenEvent>[];
-};
-
-/**
- * The summary of a meta update transaction.
- */
-export type MetaUpdateSummary = {
-    transactionType: TransactionKindString.MetaUpdate;
-    /**
-     * The meta update details
-     *
-     * **Please note**, these can possibly be unknown if the SDK is not fully compatible with the Concordium
-     * node queried, in which case `null` is returned.
-     */
-    events: Upward<MetaUpdateEvent>[];
+    events: Upward<OperationEvent>[];
 };
 
 /**
@@ -311,7 +296,6 @@ export type AccountTransactionSummary = BaseAccountTransactionSummary &
         | UpdateCredentialKeysSummary
         | UpdateCredentialsSummary
         | TokenUpdateSummary
-        | MetaUpdateSummary
     );
 
 export interface AccountCreationSummary extends BaseBlockItemSummary {
@@ -567,7 +551,7 @@ export function affectedContracts(summary: BlockItemSummary): Upward<ContractAdd
 }
 
 function tokenEventsAffectedAccounts(
-    events: Upward<TokenEvent>[],
+    events: Upward<OperationEvent>[],
     sender?: AccountAddress.Type
 ): Upward<AccountAddress.Type>[] {
     return events.reduce(
@@ -586,6 +570,11 @@ function tokenEventsAffectedAccounts(
                 case TransactionEventTag.TokenBurn:
                 case TransactionEventTag.TokenMint:
                     return addUnique(addresses, [event.target?.address].filter(isDefined), AccountAddress.equals);
+                case TransactionEventTag.LockAmount:
+                case TransactionEventTag.UnlockAmount:
+                    return addUnique(addresses, [event.tokenHolder?.address].filter(isDefined), AccountAddress.equals);
+                case TransactionEventTag.LockCreated:
+                case TransactionEventTag.LockDestroyed:
                 case TransactionEventTag.TokenModuleEvent:
                     // This only includes the encoded events pertaining to list updates and token pausation,
                     // thus not affecting any account's balance

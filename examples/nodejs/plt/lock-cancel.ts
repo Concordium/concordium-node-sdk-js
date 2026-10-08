@@ -6,7 +6,7 @@ import {
     serializeAccountTransactionPayload,
 } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
-import { Lock, LockId, MetaUpdateOperationType, createMetaUpdatePayload } from '@concordium/web-sdk/plt';
+import { Lock, LockId, OperationType, createTokenUpdatePayload } from '@concordium/web-sdk/plt';
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
 
@@ -71,7 +71,7 @@ const client = new ConcordiumGRPCNodeClient(
                 throw new Error('Unexpected transaction type: ' + result.summary.type);
 
             switch (result.summary.transactionType) {
-                case TransactionKindString.MetaUpdate:
+                case TransactionKindString.TokenUpdate:
                     // A LockDestroyed event should be present on success
                     result.summary.events.filter(isKnown).forEach((e) => console.log('Event:', e));
                     break;
@@ -87,15 +87,17 @@ const client = new ConcordiumGRPCNodeClient(
     } else {
         // Or from a wallet perspective:
         // Build the lockCancel operation payload without submitting.
-        const payload = createMetaUpdatePayload({
-            [MetaUpdateOperationType.LockCancel]: { lock: lockId },
+        const payload = createTokenUpdatePayload({
+            operations: {
+                [OperationType.LockCancel]: { lock: lockId },
+            },
         });
         console.log('Created payload:', payload);
 
         // Serialize the payload for signing and submission
         const serialized = serializeAccountTransactionPayload({
             payload,
-            type: AccountTransactionType.MetaUpdate,
+            type: AccountTransactionType.TokenUpdate,
         });
         console.log('Serialized payload for sign & send:', serialized.toString('hex'));
     }

@@ -10,6 +10,8 @@
 
 ## Unreleased (devnet-p11-x)
 
+## 13.0.0-alpha.2 (devnet-p11-3)
+
 ### Changed
 
 - **Breaking:** Lock configurations now use the tagged `{ simpleV0: { recipients, expiry, grants, tokens, keepAlive?, memo?, metadata? } }` shape. Lock queries now return `{ lock, config, funds }`; use `LockConfig.simpleV0` and inspect `info.config.simpleV0`.

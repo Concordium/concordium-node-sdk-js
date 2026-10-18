@@ -109,6 +109,12 @@ export class ConcordiumVerificationWebUI {
                 // Merchant-provided mode
                 this._mode = 'merchant-provided';
                 this._wcUri = walletConnectURI;
+                this.storeWalletConnectUri(walletConnectURI);
+                localStorage.setItem(ModalConstants.LOCAL_STORAGE_FLAGS.CONNECTION_MODE, 'merchant-provided');
+                localStorage.setItem(
+                    ModalConstants.LOCAL_STORAGE_FLAGS.SDK_NETWORK,
+                    (config as any).network || 'testnet'
+                );
             } else if (projectId) {
                 // SDK-managed mode
                 this._mode = 'sdk-managed';
@@ -164,27 +170,8 @@ export class ConcordiumVerificationWebUI {
 
         // Check if we have configuration for NEW connections
         if (mode === 'merchant-provided' && wcUri) {
-            // Merchant-provided URI mode - merchant will provide URI for new connection
-            // Also check for SDK-managed active sessions
-            try {
-                const wcService = ServiceFactory.getWalletConnectService();
-                if (wcService) {
-                    await wcService.initialize();
-                    const activeSessions = wcService.getActiveSessions();
-
-                    if (activeSessions.length > 0) {
-                        await ConcordiumVerificationWebUI.showReturningUserModal();
-
-                        if (onClose) {
-                            this.setupCloseCallback(onClose);
-                        }
-                        return;
-                    }
-                }
-            } catch (error) {
-                // No SDK-managed session, continue with merchant-provided flow
-            }
-
+            // Merchant-provided: render QR / deep link with merchant URI only.
+            // Do NOT init SignClient — no projectId in this mode; merchant owns the WC session.
             await this.showWalletConnectPopup(wcUri, onClose);
         } else if (mode === 'sdk-managed' && wcConfig?.projectId) {
             // SDK-managed mode with projectId - check for active sessions first
@@ -247,11 +234,20 @@ export class ConcordiumVerificationWebUI {
         }
 
         try {
+            const globalConfig = getConfig();
+            const network = globalConfig.network || 'testnet';
+
             // Store the URI for use in modals
             this.storeWalletConnectUri(walletConnectUri);
 
-            // Mark as merchant-provided mode
+            // Mark as merchant-provided mode (no SignClient / projectId)
             localStorage.setItem(ModalConstants.LOCAL_STORAGE_FLAGS.CONNECTION_MODE, 'merchant-provided');
+            localStorage.setItem(ModalConstants.LOCAL_STORAGE_FLAGS.SDK_NETWORK, network);
+
+            console.info('[verification-web-ui] merchant-provided WalletConnect URI', {
+                walletConnectUri,
+                network,
+            });
 
             // Show the landing modal
             await ConcordiumVerificationWebUI.showLandingModal();
@@ -464,9 +460,13 @@ export class ConcordiumVerificationWebUI {
         this._mode = 'merchant-provided';
         this._wcUri = walletConnectUri;
 
+        const globalConfig = getConfig();
+        const network = globalConfig.network || 'testnet';
+
         // Store for use in modals
         this.storeWalletConnectUri(walletConnectUri);
         localStorage.setItem(ModalConstants.LOCAL_STORAGE_FLAGS.CONNECTION_MODE, 'merchant-provided');
+        localStorage.setItem(ModalConstants.LOCAL_STORAGE_FLAGS.SDK_NETWORK, network);
     }
 
     /**

@@ -1,23 +1,36 @@
 /**
  * iOS clipboard handoff for WalletConnect URI (no bridge API).
  *
- * Format: ccd-idapp-bridge:v1:<walletConnectUri>
+ * Format: https://concordiumid.app/wc?uri=<encoded walletConnectUri>
  * Written on Open with ID App / store redirect (user gesture).
- * ID app reads on Create Account (Allow Paste).
+ * ID app reads on Create Account (Allow Paste). It is an https link so ID app
+ * can ask iOS whether the clipboard holds a web link (no prompt) and only read
+ * then, instead of prompting on every fresh install.
+ *
+ * Legacy format, still parsed: ccd-idapp-bridge:v1:<walletConnectUri>
  *
  * Android: do NOT write clipboard (avoids Chrome/OEM "copied" toasts).
  * Android uses full wc: deep link + Play Install Referrer instead.
  */
 
+export const IOS_BRIDGE_CLIPBOARD_URL = 'https://concordiumid.app/wc';
 export const IOS_BRIDGE_CLIPBOARD_PREFIX = 'ccd-idapp-bridge:v1:';
 
 export function buildIosBridgeClipboardPayload(walletConnectUri: string): string {
-    return `${IOS_BRIDGE_CLIPBOARD_PREFIX}${walletConnectUri}`;
+    return `${IOS_BRIDGE_CLIPBOARD_URL}?uri=${encodeURIComponent(walletConnectUri)}`;
 }
 
 export function parseIosBridgeClipboardPayload(raw: string | null | undefined): string | null {
     if (!raw || typeof raw !== 'string') return null;
     const text = raw.trim();
+    if (text.startsWith(`${IOS_BRIDGE_CLIPBOARD_URL}?`)) {
+        try {
+            const uri = new URL(text).searchParams.get('uri');
+            return uri?.startsWith('wc:') ? uri : null;
+        } catch {
+            return null;
+        }
+    }
     if (!text.startsWith(IOS_BRIDGE_CLIPBOARD_PREFIX)) return null;
     const uri = text.slice(IOS_BRIDGE_CLIPBOARD_PREFIX.length).trim();
     return uri.startsWith('wc:') ? uri : null;

@@ -501,13 +501,13 @@ export function transfer(
 /**
  * Creates a transaction to update account credentials.
  * @param payload the credentials update payload
+ * @param currentNumberOfCredentials the number of credentials currently attached to the account
  * @returns an update credentials transaction
  */
 export function updateCredentials(
     payload: UpdateCredentialsPayload | Payload.UpdateCredentials,
     currentNumberOfCredentials: bigint
 ): Initial<Payload.UpdateCredentials> {
-    //TODO: double check with Soren here, isn't current number of credentials actually a total that we get from chain?
     if (!isPayloadWithType(payload))
         return updateCredentials(Payload.updateCredentials(payload), currentNumberOfCredentials);
 
@@ -520,7 +520,6 @@ export function updateCredentials(
 
 /**
  * Creates a transaction to configure a validator (baker).
- * @param metadata transaction metadata including sender, nonce, and optional expiry (defaults to 5 minutes)
  * @param payload the validator configuration payload
  * @returns a configure baker transaction
  */
@@ -535,7 +534,6 @@ export function configureValidator(
 
 /**
  * Creates a transaction to configure account delegation.
- * @param metadata transaction metadata including sender, nonce, and optional expiry (defaults to 5 minutes)
  * @param payload the delegation configuration payload
  * @returns a configure delegation transaction
  */
@@ -563,7 +561,6 @@ export function tokenUpdate(payload: TokenUpdatePayload | Payload.TokenUpdate): 
 
 /**
  * Creates a transaction to deploy a smart contract module.
- * @param metadata transaction metadata including sender, nonce, and optional expiry (defaults to 5 minutes)
  * @param payload the module deployment payload containing the wasm module
  * @returns a deploy module transaction
  */

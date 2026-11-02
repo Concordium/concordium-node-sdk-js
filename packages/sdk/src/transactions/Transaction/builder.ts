@@ -25,7 +25,7 @@ import type {
     RegisterDataPayload,
     SimpleTransferPayload,
     SimpleTransferWithMemoPayload,
-    TokenUpdatePayload,
+    TokenUpdateInput,
     UpdateContractInput,
     UpdateContractPayload,
     UpdateCredentialsInput,
@@ -387,7 +387,7 @@ export function create(type: AccountTransactionType, payload: AccountTransaction
         case AccountTransactionType.ConfigureBaker:
             return configureValidator(payload as ConfigureBakerPayload);
         case AccountTransactionType.TokenUpdate:
-            return tokenUpdate(payload as TokenUpdatePayload);
+            return tokenUpdate(payload as TokenUpdateInput);
         default:
             throw new Error('The provided type is not supported: ' + type);
     }
@@ -399,7 +399,11 @@ export function create(type: AccountTransactionType, payload: AccountTransaction
  * @param transaction - The {@linkcode AccountTransaction} to convert.
  * @returns a corresonding transaction builder object.
  */
-export function fromLegacyAccountTransaction({ type, header, payload }: AccountTransaction): Configured {
+export function fromLegacyAccountTransaction({
+    type,
+    header,
+    payload,
+}: AccountTransaction): Configured<Payload.Type, Initial> {
     return create(type, payload).addMetadata(header);
 }
 
@@ -428,11 +432,18 @@ export function toLegacyAccountTransaction(transaction: Transaction): AccountTra
             >;
         case AccountTransactionType.TokenUpdate: {
             const value = transaction.payload as Payload.TokenUpdate;
+            if (value.variant === 'scoped')
+                return { header, type, payload: value } as AccountTransaction<
+                    AccountTransactionType.TokenUpdate,
+                    TokenUpdateInput
+                >;
+            const payloadEnergy = new TokenUpdateHandler().getPayloadEnergyCost(value);
+            const additionalEnergy = Energy.create(executionEnergyAmount.value - payloadEnergy);
             return {
                 header,
                 type,
-                payload: value,
-            } as AccountTransaction<AccountTransactionType.TokenUpdate, TokenUpdatePayload>;
+                payload: { ...value, additionalEnergy },
+            } as AccountTransaction<AccountTransactionType.TokenUpdate, TokenUpdateInput>;
         }
         default:
             return { header, type, payload } as AccountTransaction<
@@ -551,10 +562,10 @@ export function configureDelegation(
  * @param payload the token update payload
  * @returns a token update transaction
  */
-export function tokenUpdate(payload: TokenUpdatePayload | Payload.TokenUpdate): Initial<Payload.TokenUpdate> {
+export function tokenUpdate(payload: TokenUpdateInput): Initial<Payload.TokenUpdate> {
     const value = Payload.tokenUpdate(payload);
     return new Builder(
-        { executionEnergyAmount: Energy.create(new TokenUpdateHandler().getBaseEnergyCost(value)) },
+        { executionEnergyAmount: Energy.create(new TokenUpdateHandler().getBaseEnergyCost(payload)) },
         value
     );
 }

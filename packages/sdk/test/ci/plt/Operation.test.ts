@@ -8,12 +8,14 @@ import {
     LockConfig,
     LockId,
     LockMetadata,
+    OperationInput,
     OperationType,
     TokenAdminRole,
     TokenAmount,
     TokenId,
     TokenOperationType,
     createTokenOperationWithId,
+    createTokenUpdateInput,
     createTokenUpdatePayload,
     decodeOperation,
     decodeOperations,
@@ -23,6 +25,7 @@ import {
 import {
     AccountAddress,
     AccountTransactionType,
+    Energy,
     TokenUpdateHandler,
     TransactionKindString,
     serializeAccountTransactionPayload,
@@ -49,7 +52,7 @@ describe('PLT Operation', () => {
     );
     const metadataChecksum = new Uint8Array(32).fill(1);
 
-    it.each([
+    const encodingFixtures = [
         [
             'transfer',
             createTokenOperationWithId(token, { [TokenOperationType.Transfer]: { amount, recipient: account } }),
@@ -144,10 +147,24 @@ describe('PLT Operation', () => {
             { [OperationType.LockRelease]: { token, lock, source: account, amount } },
             '81a16b6c6f636b52656c65617365a4646c6f636bd99fd88301020365746f6b656e6674546f6b656e66616d6f756e74c482211901f466736f75726365d99d73a201d99d71a1011903970358201515151515151515151515151515151515151515151515151515151515151515',
         ],
-    ])('encodes %s unscoped token update operation', (_name, operation, expected) => {
+    ] as const;
+
+    it.each(encodingFixtures)('encodes %s unscoped token update operation', (_name, operation, expected) => {
         expect(encodeOperations(operation).toString()).toBe(expected);
         expect(decodeOperations(Cbor.fromHexString(expected))).toEqual([operation]);
     });
+
+    it.each(encodingFixtures)(
+        'strips construction-only fields from %s in both encoders',
+        (_name, operation, expected) => {
+            const [key] = Object.keys(operation);
+            const enriched = {
+                [key]: { ...Object.values(operation)[0], balanceReferences: 2n, extra: true },
+            } as OperationInput;
+            expect(encodeOperations(enriched).toString()).toBe(expected);
+            expect(createTokenUpdateInput({ operations: enriched }).operations.toString()).toBe(expected);
+        }
+    );
 
     it('encodes lockCreate metadata as raw CBOR bytes', () => {
         const metadata = LockMetadata.encode({ name: 'Metadata lock', issuer: 'Concordium' });
@@ -227,7 +244,7 @@ describe('PLT Operation', () => {
     });
 
     it('adds operation costs for Unscoped TokenUpdate operations', () => {
-        const payload = createTokenUpdatePayload({
+        const payload = createTokenUpdateInput({
             operations: [
                 createTokenOperationWithId(token, {
                     [TokenOperationType.Transfer]: {
@@ -236,14 +253,61 @@ describe('PLT Operation', () => {
                     },
                 }),
                 { [OperationType.LockCreate]: lockConfig },
-                { [OperationType.LockCancel]: { lock } },
+                { [OperationType.LockCancel]: { lock, balanceReferences: 3n } },
                 { [OperationType.LockFund]: { token, lock, amount } },
                 { [OperationType.LockSend]: { token, lock, source: account, amount, recipient: account } },
                 { [OperationType.LockRelease]: { token, lock, source: account, amount } },
             ],
         });
 
-        expect(new TokenUpdateHandler().getBaseEnergyCost(payload)).toBe(850n);
+        expect(new TokenUpdateHandler().getBaseEnergyCost(payload)).toBe(3260n);
+    });
+
+    it('calculates independent cancellation supplements and keeps their wire bytes unchanged', () => {
+        const operations = [0n, 2n, 3n].map((balanceReferences) => ({ lockCancel: { lock, balanceReferences } }));
+        const input = createTokenUpdateInput({ operations });
+        expect(input.additionalEnergy.value).toBe(2500n);
+        expect(Object.keys(input).sort()).toEqual(['additionalEnergy', 'operations', 'variant']);
+        expect(new TokenUpdateHandler().getBaseEnergyCost(input)).toBe(2800n);
+        for (const operation of operations) {
+            expect(createTokenUpdateInput({ operations: operation }).operations).toEqual(
+                encodeOperations({ lockCancel: { lock } })
+            );
+        }
+        expect(() => createTokenUpdateInput({ operations: { lockCancel: { lock, balanceReferences: -1n } } })).toThrow(
+            /balanceReferences/
+        );
+    });
+
+    it('counts canonical grants, Fund unions, empty grants and case-insensitive tokens', () => {
+        const alias = CborAccountAddress.fromAccountAddress(AccountAddress.getAlias(account.address, 1));
+        const other = CborAccountAddress.fromAccountAddress(AccountAddress.fromBuffer(new Uint8Array(32).fill(0x16)));
+        const grants = [
+            { account, roles: [LockConfig.SimpleV0Capability.Send] },
+            { account: alias, roles: [LockConfig.SimpleV0Capability.Fund] },
+            { account: other, roles: [] },
+        ];
+        const tokens = ['ABC', 'abc', 'XYZ'].map(TokenId.fromString);
+        for (const entries of [grants, [...grants].reverse(), [...grants, grants[0]]]) {
+            const input = createTokenUpdateInput({
+                operations: {
+                    lockCreate: LockConfig.simpleV0('any', CborEpoch.fromEpochSeconds(10n), entries, tokens),
+                },
+            });
+            expect(new TokenUpdateHandler().getBaseEnergyCost(input)).toBe(1420n);
+        }
+        for (const [entries, ids, cost] of [
+            [[], [], 100n],
+            [grants, [], 120n],
+            [[], tokens, 100n],
+        ] as const) {
+            const input = createTokenUpdateInput({
+                operations: {
+                    lockCreate: LockConfig.simpleV0('any', CborEpoch.fromEpochSeconds(10n), [...entries], [...ids]),
+                },
+            });
+            expect(new TokenUpdateHandler().getBaseEnergyCost(input)).toBe(300n + cost);
+        }
     });
 
     it('does not change TokenUpdate transaction type value', () => {
@@ -269,6 +333,7 @@ describe('PLT Operation', () => {
         expect(
             new TokenUpdateHandler().getBaseEnergyCost({
                 variant: 'unscoped',
+                additionalEnergy: Energy.create(0n),
                 operations: Cbor.encode([{ token: {} }]),
             })
         ).toBe(300n);
@@ -302,7 +367,7 @@ describe('PLT Operation', () => {
     });
 
     it('supports empty operations with the empty-ID envelope and base energy cost', () => {
-        const payload = createTokenUpdatePayload({ operations: [] });
+        const payload = createTokenUpdateInput({ operations: [] });
         expect(Payload.serialize(Payload.tokenUpdate(payload))).toEqual(
             Uint8Array.from(Buffer.from('1b000000000180', 'hex'))
         );

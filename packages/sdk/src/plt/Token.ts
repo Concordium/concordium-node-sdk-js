@@ -1,5 +1,5 @@
 import { ConcordiumGRPCClient } from '../grpc/GRPCClient.js';
-import { AccountAddress, AccountInfo, TokenUpdatePayload, TransactionExpiry, TransactionHash } from '../pub/types.js';
+import { AccountAddress, AccountInfo, TokenUpdateInput, TransactionExpiry, TransactionHash } from '../pub/types.js';
 import { AccountSigner } from '../signHelpers.js';
 import { Transaction } from '../transactions/index.js';
 import { SequenceNumber } from '../types/index.js';
@@ -370,7 +370,7 @@ export function scaleAmount(token: Token, amount: TokenAmount.Type): TokenAmount
  *
  * @param {Token} token - The token for which the transaction is being performed.
  * @param {AccountAddress.Type} sender - The account address initiating the transaction.
- * @param {TokenUpdatePayload} payload - The transaction payload.
+ * @param {TokenUpdateInput} payload - The transaction payload.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @param {TokenUpdateMetadata} [metadata={ expiry: TransactionExpiry.futureMinutes(5) }] - The metadata for the token update.
  *
@@ -379,7 +379,7 @@ export function scaleAmount(token: Token, amount: TokenAmount.Type): TokenAmount
 export async function sendRaw(
     token: Token,
     sender: AccountAddress.Type,
-    payload: TokenUpdatePayload,
+    payload: TokenUpdateInput,
     signer: AccountSigner,
     { expiry = TransactionExpiry.futureMinutes(5), nonce }: TokenUpdateMetadata = {}
 ): Promise<TransactionHash.Type> {

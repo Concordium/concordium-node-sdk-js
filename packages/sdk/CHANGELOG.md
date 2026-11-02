@@ -7,8 +7,13 @@
 - TokenUpdate payloads and JSON use flat `variant: 'scoped' | 'unscoped'` fields; wrappers add only `type`. Legacy scoped JSON without `variant` remains accepted with a valid non-empty `tokenId`; scoped P9/P10 bytes are unchanged.
 - **Breaking** TokenUpdate supports Scoped (`ScopedTokenUpdatePayload`, non-empty `tokenId`, CBOR-encoded `TokenOperation[]`) and Unscoped (`UnscopedTokenUpdatePayload`, omitted `tokenId`, CBOR-encoded `Operation[]`) payloads. `createTokenUpdatePayload({ tokenId, operations })` creates scoped payloads; omitting `tokenId` creates unscoped payloads. Single-token clients remain scoped; lock clients emit unscoped payloads without protocol negotiation. Unscoped updates require P11.
 - **Breaking:** TokenUpdate summaries expose one flat `OperationEvent` list of token and lock events. Unified protobuf events are preferred, with fallback to legacy token events for P9/P10. Added `LockAmount` and `UnlockAmount` events; removed transfer `fromLock`/`toLock` fields. Existing token event JSON remains unchanged.
+- `TokenUpdateInput` type has been added, which extends `TokenUpdatePayload` with additional energy required for
+  executing certain operations. This can be constructed with `createTokenUpdateInput`.
 
 ## Unreleased (devnet-p11-x)
+
+- **Breaking:** Unscoped transaction construction now requires `additionalEnergy`, including explicit zero for operations with fully payload-derived costs. Use `createTokenUpdateInput` with `OperationInput`; each cancellation requires non-negative `balanceReferences` (including zero). `Lock.sendOperations` and proposal `.cancel(count)` require explicit counts.
+- Lock execution aligned with node implementation.
 
 ## 13.0.0-alpha.2 (devnet-p11-3)
 

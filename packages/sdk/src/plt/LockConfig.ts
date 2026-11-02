@@ -1,9 +1,39 @@
+import { Buffer } from 'buffer/index.js';
+
+import * as AccountAddress from '../types/AccountAddress.js';
 import { cborDecode } from '../types/cbor.js';
 import * as CborAccountAddress from './CborAccountAddress.js';
 import * as CborEpoch from './CborEpoch.js';
 import * as CborMemo from './CborMemo.js';
 import * as TokenId from './TokenId.js';
 import type { Memo } from './TokenOperation.js';
+
+/** Canonical counts used to price lock creation. */
+type CreationComplexity = {
+    /** Distinct Fund-authorized accounts, merging aliases and grants. */
+    holders: number;
+    /** Distinct case-insensitive configured token IDs. */
+    tokens: number;
+    /** Distinct account grants, merging aliases and retaining empty grants. */
+    grants: number;
+};
+
+/** Count canonical holders, tokens, and grants used to price lock creation. */
+export function getCreationComplexity(config: Type): CreationComplexity {
+    const grants = new Map<string, boolean>();
+    for (const grant of config.simpleV0.grants) {
+        const identity = Buffer.from(AccountAddress.toBuffer(grant.account.address).subarray(0, 29)).toString('hex');
+        grants.set(identity, grants.get(identity) === true || grant.roles.includes(SimpleV0Capability.Fund));
+    }
+
+    const holders = [...grants.values()].filter(Boolean);
+    const uniqueTokens = new Set(config.simpleV0.tokens.map((token) => token.value.toLowerCase()));
+    return {
+        holders: holders.length,
+        tokens: uniqueTokens.size,
+        grants: grants.size,
+    };
+}
 
 /** Supported lock configuration variants. */
 export enum Variant {

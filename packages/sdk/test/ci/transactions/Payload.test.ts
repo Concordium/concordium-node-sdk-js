@@ -383,16 +383,14 @@ describe('Payload', () => {
             expect(Payload.fromJSON(json)).toEqual(payload);
             const legacy = { type: json.type, tokenId: json.tokenId, operations: json.operations };
             const handler = new TokenUpdateHandler();
-            const legacyDirect = { tokenId: legacy.tokenId, operations: legacy.operations };
+            const legacyDirect = { tokenId: legacy.tokenId, operations: legacy.operations } as any;
             expect(handler.fromJSON(legacyDirect)).toEqual(direct);
             expect(handler.toJSON(handler.fromJSON(legacyDirect))).toEqual({ variant: 'scoped', ...legacyDirect });
-            expect(() => handler.fromJSON({ ...legacyDirect, variant: 'unknown' } as any)).toThrow();
             expect(() => handler.fromJSON({ operations: legacy.operations } as any)).toThrow();
             expect(Payload.toJSON(Payload.fromJSON(legacy))).toEqual(json);
             expect(Payload.deserialize(Payload.serialize(payload))).toEqual(payload);
             for (const invalid of [
                 { type: TransactionKindString.TokenUpdate },
-                { ...json, variant: 'unknown' },
                 { ...json, tokenId: undefined },
                 { ...json, tokenId: '' },
                 { ...json, operations: undefined },

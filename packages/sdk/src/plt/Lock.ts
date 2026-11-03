@@ -1,6 +1,12 @@
 import { ConcordiumGRPCClient } from '../grpc/GRPCClient.js';
 import { isKnown } from '../grpc/upward.js';
-import { AccountAddress, TokenUpdatePayload, TransactionExpiry, TransactionHash } from '../pub/types.js';
+import {
+    AccountAddress,
+    TokenUpdateInput,
+    TransactionExpiry,
+    TransactionHash,
+    UnscopedTokenUpdateInput,
+} from '../pub/types.js';
 import { AccountSigner } from '../signHelpers.js';
 import { Payload, Transaction } from '../transactions/index.js';
 import { TransactionSummaryType } from '../types.js';
@@ -9,17 +15,17 @@ import { SequenceNumber } from '../types/index.js';
 import { LockCreatedEvent, TransactionEventTag } from '../types/transactionEvent.js';
 import * as LockConfig from './LockConfig.js';
 import * as Token from './Token.js';
-import { createTokenUpdatePayload } from './TokenOperation.js';
+import { createTokenUpdateInput } from './TokenOperation.js';
 import {
     Cbor,
     CborAccountAddress,
-    LockCancel,
+    LockCancelInput,
     LockFund,
     LockId,
     LockInfo,
     LockRelease,
     LockSend,
-    Operation,
+    OperationInput,
     OperationType,
     TokenAmount,
     TokenId,
@@ -282,12 +288,13 @@ class LockCreateProposal {
     }
 
     /**
-     * Add a lockCancel operation to the proposal.
+     * Add cancellation with an explicit non-negative token-amount reference count, including zero.
+     * Counts must reflect earlier operations and possible state changes before execution.
      *
      * @returns This proposal.
      */
-    public cancel(): this {
-        this.subsequent.push({ [OperationType.LockCancel]: {} });
+    public cancel(balanceReferences: bigint): this {
+        this.subsequent.push({ [OperationType.LockCancel]: { balanceReferences } });
         return this;
     }
 
@@ -298,17 +305,16 @@ class LockCreateProposal {
      * nonce that will be used for the submitted transaction.
      *
      * @param nonce Optional explicit nonce to use when deriving the predicted lock id. When omitted, the next account nonce is queried from chain.
-     * @returns The TokenUpdate payload containing the `lockCreate` operation and any subsequent lock operations.
+     * @returns Encoded operations and required supplemental energy for transaction construction.
      */
-    public async payload(nonce?: SequenceNumber.Type): Promise<Payload.TokenUpdate> {
+    public async payload(nonce?: SequenceNumber.Type): Promise<Payload.TokenUpdate & UnscopedTokenUpdateInput> {
         const { accountIndex, accountNonce } = await this.grpc.getAccountInfo(this.sender);
         const { value: nextNonce } = nonce ?? accountNonce;
         const lockId = LockId.create(accountIndex, nextNonce, BigInt(this.creationOrder));
-        const payload = createTokenUpdatePayload({
+        const input = createTokenUpdateInput({
             operations: [{ [OperationType.LockCreate]: this.config }, ...bindLockId(lockId, this.subsequent)],
         });
-
-        return Payload.tokenUpdate(payload);
+        return { ...Payload.tokenUpdate(input), ...input };
     }
 
     /**
@@ -368,7 +374,7 @@ export type ReleaseDetails = Omit<LockRelease, 'lock' | 'source'> & {
 
 /** Lock operations that can be composed after a lockCreate operation before the lock id is known on chain. */
 export type SubsequentOperation =
-    | { [OperationType.LockCancel]: Omit<LockCancel, 'lock'> }
+    | { [OperationType.LockCancel]: Omit<LockCancelInput, 'lock'> }
     | { [OperationType.LockFund]: Omit<LockFund, 'lock'> }
     | { [OperationType.LockSend]: Omit<LockSend, 'lock'> }
     | { [OperationType.LockRelease]: Omit<LockRelease, 'lock'> };
@@ -407,7 +413,7 @@ export function fromCbor(grpc: ConcordiumGRPCClient, lockInfo: Cbor.Type): Lock 
     return new Lock(grpc, Cbor.decode(lockInfo, 'LockInfo'));
 }
 
-function bindLockId(lockId: LockId.Type, operations: SubsequentOperation | SubsequentOperation[]): Operation[] {
+function bindLockId(lockId: LockId.Type, operations: SubsequentOperation | SubsequentOperation[]): OperationInput[] {
     return [operations].flat().map((operation) => {
         const [type] = Object.keys(operation) as [keyof SubsequentOperation];
         const details = operation[type] as object;
@@ -416,7 +422,7 @@ function bindLockId(lockId: LockId.Type, operations: SubsequentOperation | Subse
                 ...details,
                 lock: lockId,
             },
-        } as Operation;
+        } as OperationInput;
     });
 }
 
@@ -436,7 +442,7 @@ async function resolveTransactionHeader(
 async function submitPayload(
     grpc: ConcordiumGRPCClient,
     header: Transaction.Metadata,
-    payload: TokenUpdatePayload | Payload.TokenUpdate,
+    payload: TokenUpdateInput,
     signer: AccountSigner
 ): Promise<TransactionHash.Type> {
     const transaction = Transaction.tokenUpdate(payload)
@@ -452,7 +458,7 @@ async function submitPayload(
  *
  * @param lock The lock client whose gRPC client is used for submission.
  * @param sender The sender account that submits the transaction.
- * @param operations The operation or operations to encode into the TokenUpdate payload.
+ * @param operations The operation inputs to send.
  * @param signer The signer used to sign the transaction.
  * @param metadata Optional transaction metadata such as expiry and nonce.
  * @returns The hash of the submitted transaction.
@@ -460,12 +466,12 @@ async function submitPayload(
 export async function sendOperations(
     lock: Lock,
     sender: AccountAddress.Type,
-    operations: Operation | Operation[],
+    operations: OperationInput | OperationInput[],
     signer: AccountSigner,
     metadata: LockUpdateMetadata = {}
 ): Promise<TransactionHash.Type> {
     const header = await resolveTransactionHeader(lock.grpc, sender, metadata);
-    const payload = createTokenUpdatePayload({ operations: operations });
+    const payload = createTokenUpdateInput({ operations: operations });
     return submitPayload(lock.grpc, header, payload, signer);
 }
 
@@ -641,6 +647,11 @@ export function validateRelease(lock: Lock, sender: AccountAddress.Type, details
     return true;
 }
 
+/** Count token-amount entries in the supplied snapshot, without refreshing or counting accounts or quantities. */
+export function getBalanceReferences(lock: Type): bigint {
+    return lock.info.funds.reduce((count, fund) => count + BigInt(fund.amounts.length), 0n);
+}
+
 /**
  * Cancel a lock.
  *
@@ -659,11 +670,18 @@ export async function cancel(
     metadata?: LockUpdateMetadata,
     { validate = false }: LockOperationOptions = {}
 ): Promise<TransactionHash.Type> {
+    await lock.refresh();
     if (validate) {
         validateCancel(lock, sender);
     }
-
-    return sendOperations(lock, sender, { [OperationType.LockCancel]: { lock: lock.info.lock } }, signer, metadata);
+    const balanceReferences = getBalanceReferences(lock);
+    return sendOperations(
+        lock,
+        sender,
+        { [OperationType.LockCancel]: { lock: lock.info.lock, balanceReferences } },
+        signer,
+        metadata
+    );
 }
 
 /**

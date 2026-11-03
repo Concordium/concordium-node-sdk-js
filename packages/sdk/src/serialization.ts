@@ -17,6 +17,7 @@ import {
 import {
     AccountTransaction,
     AccountTransactionHeader,
+    AccountTransactionPayload,
     AccountTransactionSignature,
     AccountTransactionType,
     AttributesKeys,
@@ -123,7 +124,10 @@ export function serializeAccountTransaction(
  * @param accountTransaction the transaction which payload is to be serialized
  * @returns the account transaction payload serialized as a buffer.
  */
-export function serializeAccountTransactionPayload(accountTransaction: Omit<AccountTransaction, 'header'>): Buffer {
+export function serializeAccountTransactionPayload(accountTransaction: {
+    type: AccountTransactionType;
+    payload: AccountTransactionPayload;
+}): Buffer {
     const serializedType = serializeAccountTransactionType(accountTransaction.type);
 
     const accountTransactionHandler = getAccountTransactionHandler(accountTransaction.type);

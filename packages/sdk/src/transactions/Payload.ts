@@ -355,7 +355,10 @@ export type TokenUpdate = { readonly type: AccountTransactionType.TokenUpdate } 
  * @returns the token update fields with the outer transaction type
  */
 export function tokenUpdate(payload: TokenUpdatePayload): TokenUpdate {
-    return { ...payload, type: AccountTransactionType.TokenUpdate };
+    const { variant, operations } = payload;
+    return variant === 'scoped'
+        ? { type: AccountTransactionType.TokenUpdate, variant, operations, tokenId: payload.tokenId }
+        : { type: AccountTransactionType.TokenUpdate, variant, operations };
 }
 
 function tokenUpdateToJSON(

@@ -1587,6 +1587,14 @@ export type UnscopedTokenUpdatePayload = {
 /** Scoped or Unscoped Token Update under transaction tag 27. */
 export type TokenUpdatePayload = ScopedTokenUpdatePayload | UnscopedTokenUpdatePayload;
 
+/** Unscoped construction input; supplemental execution energy is required, including explicit zero. */
+export interface UnscopedTokenUpdateInput extends UnscopedTokenUpdatePayload {
+    additionalEnergy: Energy.Type;
+}
+
+/** Token update construction input, distinct from the wire-only payload. */
+export type TokenUpdateInput = ScopedTokenUpdatePayload | UnscopedTokenUpdateInput;
+
 /**
  * The payload for UpdateCredentialKeys transaction
  * new set of credential keys to be replaced with the existing ones including updating the threshold
@@ -1624,8 +1632,13 @@ export type AccountTransactionPayload =
 export type AccountTransactionInput =
     | Exclude<
           AccountTransactionPayload,
-          InitContractPayload | UpdateContractPayload | UpdateCredentialsPayload | UpdateCredentialKeysPayload
+          | InitContractPayload
+          | UpdateContractPayload
+          | UpdateCredentialsPayload
+          | UpdateCredentialKeysPayload
+          | TokenUpdatePayload
       >
+    | TokenUpdateInput
     | InitContractInput
     | UpdateContractInput
     | UpdateCredentialsInput

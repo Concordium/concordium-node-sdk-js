@@ -7,7 +7,8 @@ import {
 } from './deserialization.js';
 import { Cursor } from './deserializationHelpers.js';
 import { DelegationTargetTypeNumeric, Upward, isKnown } from './index.js';
-import { Cbor, OperationType, TokenId, TokenOperationType } from './plt/index.js';
+import { PLT_LOCK_BALANCE_REFERENCE_COST, PLT_LOCK_CREATE_BASE_COST, PLT_LOCK_GRANT_COST } from './plt/energyCost.js';
+import { Cbor, LockConfig, OperationType, TokenId, TokenOperationType } from './plt/index.js';
 import {
     AccountTransactionInput,
     ContractAddress,
@@ -54,6 +55,7 @@ import {
     RegisterDataPayload,
     SimpleTransferPayload,
     SimpleTransferWithMemoPayload,
+    TokenUpdateInput,
     TokenUpdatePayload,
     UpdateContractPayload,
     UpdateCredentialsPayload,
@@ -891,10 +893,7 @@ export class ConfigureDelegationHandler
 
 export type TokenUpdatePayloadJSON =
     | { variant: 'scoped'; tokenId: TokenId.JSON; operations: Cbor.JSON }
-    | { variant: 'unscoped'; operations: Cbor.JSON };
-
-/** Legacy P9/P10 JSON accepted only for deserialization. */
-export type LegacyTokenUpdatePayloadJSON = { tokenId: TokenId.JSON; operations: Cbor.JSON; variant?: never };
+    | { variant: 'unscoped'; operations: Cbor.JSON; additionalEnergy?: Energy.Serializable };
 
 function getTokenOperationEnergyCost(operation: unknown): bigint {
     if (typeof operation !== 'object' || operation === null) {
@@ -943,19 +942,23 @@ function getOperationEnergyCost(operation: unknown): bigint {
 
     const op = operation as Record<string, unknown>;
 
-    const LOCK_TRANSFER_COST = 100n;
-    const PLT_LOCK_CREATE_COST = 100n;
-    const PLT_LOCK_CANCEL_COST = 50n;
+    const LOCK_TRANSFER_COST = 250n;
 
     switch (true) {
         case OperationType.LockFund in op:
         case OperationType.LockSend in op:
         case OperationType.LockRelease in op:
             return LOCK_TRANSFER_COST;
-        case OperationType.LockCreate in op:
-            return PLT_LOCK_CREATE_COST;
+        case OperationType.LockCreate in op: {
+            const { holders, tokens, grants } = LockConfig.getCreationComplexity(op.lockCreate as LockConfig.Type);
+            return (
+                PLT_LOCK_CREATE_BASE_COST +
+                PLT_LOCK_BALANCE_REFERENCE_COST * BigInt(holders) * BigInt(tokens) +
+                PLT_LOCK_GRANT_COST * BigInt(grants)
+            );
+        }
         case OperationType.LockCancel in op:
-            return PLT_LOCK_CANCEL_COST;
+            return 0n;
         default:
             const [key] = Object.keys(op);
             return key?.startsWith('token') && key.length > 5
@@ -968,7 +971,7 @@ function getOperationEnergyCost(operation: unknown): bigint {
  * @deprecated use `Transaction.tokenUpdate` and `Payload.tokenUpdate` APIs instead.
  */
 export class TokenUpdateHandler
-    implements AccountTransactionHandler<TokenUpdatePayload, TokenUpdatePayloadJSON, TokenUpdatePayload>
+    implements AccountTransactionHandler<TokenUpdatePayload, TokenUpdatePayloadJSON, TokenUpdateInput>
 {
     serialize(payload: TokenUpdatePayload): Buffer {
         const tokenId = packBufferWithWord8Length(
@@ -987,7 +990,16 @@ export class TokenUpdateHandler
         return tokenId === undefined ? { variant: 'unscoped', operations } : { variant: 'scoped', tokenId, operations };
     }
 
-    getBaseEnergyCost(payload: TokenUpdatePayload): bigint {
+    getBaseEnergyCost(input: TokenUpdateInput): bigint {
+        const cost = this.getPayloadEnergyCost(input);
+        if (input.variant === 'scoped') return cost;
+        if (!Energy.instanceOf(input.additionalEnergy))
+            throw new Error('Unscoped Token Update requires additionalEnergy');
+        return cost + input.additionalEnergy.value;
+    }
+
+    /** Payload-derived execution cost, excluding state-dependent supplemental energy. */
+    getPayloadEnergyCost(payload: TokenUpdatePayload): bigint {
         const BASE_COST = 300n;
         const operations: unknown[] =
             payload.variant === 'unscoped'
@@ -1003,23 +1015,33 @@ export class TokenUpdateHandler
         );
     }
 
-    toJSON(payload: TokenUpdatePayload): TokenUpdatePayloadJSON {
+    toJSON(payload: TokenUpdatePayload | TokenUpdateInput): TokenUpdatePayloadJSON {
         const operations = payload.operations.toJSON();
-        return payload.variant === 'scoped'
-            ? { variant: 'scoped', tokenId: payload.tokenId.toJSON(), operations }
-            : { variant: 'unscoped', operations };
+        if (payload.variant === 'scoped') return { variant: 'scoped', tokenId: payload.tokenId.toJSON(), operations };
+        const json: Extract<TokenUpdatePayloadJSON, { variant: 'unscoped' }> = { variant: 'unscoped', operations };
+        if ('additionalEnergy' in payload) json.additionalEnergy = Energy.toSerializable(payload.additionalEnergy);
+        return json;
     }
 
-    fromJSON(json: TokenUpdatePayloadJSON | LegacyTokenUpdatePayloadJSON): TokenUpdatePayload {
+    fromJSON(json: TokenUpdatePayloadJSON): TokenUpdatePayload | TokenUpdateInput {
         if (typeof json !== 'object' || json === null) throw new Error('Expected Token Update object');
-        if (json.variant === 'scoped' || (!('variant' in json) && 'tokenId' in json))
-            return {
-                variant: 'scoped',
-                tokenId: TokenId.fromJSON(json.tokenId),
+
+        // check unscoped variant and fall back to 'scoped', preserving compatibility with the legacy format.
+        if (json.variant === 'unscoped') {
+            const payload: Extract<TokenUpdatePayload, { variant: 'unscoped' }> & { additionalEnergy?: Energy.Type } = {
+                variant: 'unscoped',
                 operations: Cbor.fromJSON(json.operations),
             };
-        if (json.variant === 'unscoped') return { variant: 'unscoped', operations: Cbor.fromJSON(json.operations) };
-        throw new Error('Expected Token Update variant');
+            if (json.additionalEnergy !== undefined)
+                payload.additionalEnergy = Energy.fromSerializable(json.additionalEnergy);
+            return payload;
+        }
+
+        return {
+            variant: 'scoped',
+            tokenId: TokenId.fromJSON(json.tokenId),
+            operations: Cbor.fromJSON(json.operations),
+        };
     }
 }
 

@@ -103,7 +103,7 @@ describe('PLT Lock.create', () => {
                 ],
             })
         );
-        expect(payload).toEqual(expected);
+        expect(Payload.tokenUpdate(payload)).toEqual(expected);
     });
 });
 

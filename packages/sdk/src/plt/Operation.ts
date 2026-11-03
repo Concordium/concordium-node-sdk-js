@@ -14,6 +14,7 @@ import {
     TokenTransfer,
     TokenUpdateAdminRolesDetails,
 } from './TokenOperation.js';
+import { operationValue } from './cbor-encode.js';
 import { parseMetadataUpdate, parseTokenOperation } from './cbor-parse.js';
 
 /** Enum representing the types of unscoped token update operations. */
@@ -144,6 +145,21 @@ export type Operation =
     | LockReleaseOperation;
 
 /**
+ * Cancellation construction details. Details that are not also included in {@link LockCancel} are not included
+ * when encoded.
+ */
+export type LockCancelInput = LockCancel & {
+    /** Non-negative balance references of a lock. */
+    balanceReferences: bigint;
+};
+
+/** Cancellation operation with explicit state-dependent estimation context, including zero. */
+export type LockCancelOperationInput = OperationGen<OperationType.LockCancel, LockCancelInput>;
+
+/** Operations accepted by construction helpers, requiring context for cancellation. */
+export type OperationInput = Exclude<Operation, LockCancelOperation> | LockCancelOperationInput;
+
+/**
  * Convert an existing token operation into an Unscoped Token Update token operation by adding an explicit token id.
  *
  * @param token token id the operation applies to.
@@ -165,15 +181,7 @@ export function createTokenOperationWithId(token: TokenId.Type, operation: Token
  * @returns CBOR encoded operation sequence.
  */
 export function encodeOperations(operations: Operation | Operation[]): Cbor.Type {
-    return Cbor.encode(
-        [operations].flat().map((op) => {
-            if (OperationType.TokenUpdateMetadata in op) {
-                const { token, ...details } = op.tokenUpdateMetadata;
-                return { tokenUpdateMetadata: { token, ...parseMetadataUpdate(details) } };
-            }
-            return op;
-        })
-    );
+    return Cbor.encode([operations].flat().map(operationValue));
 }
 
 /**

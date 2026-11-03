@@ -1,6 +1,14 @@
-import { ScopedTokenUpdatePayload, TokenUpdatePayload, UnscopedTokenUpdatePayload } from '../types.js';
-import { Operation, UnknownOperation, decodeOperations, encodeOperations } from './Operation.js';
-import { parseMetadataUpdate, parseTokenOperation } from './cbor-parse.js';
+import {
+    ScopedTokenUpdatePayload,
+    TokenUpdatePayload,
+    UnscopedTokenUpdateInput,
+    UnscopedTokenUpdatePayload,
+} from '../types.js';
+import * as Energy from '../types/Energy.js';
+import { Operation, OperationInput, UnknownOperation, decodeOperations, encodeOperations } from './Operation.js';
+import { tokenOperationValue } from './cbor-encode.js';
+import { parseTokenOperation } from './cbor-parse.js';
+import { PLT_LOCK_BALANCE_REFERENCE_COST } from './energyCost.js';
 import { Cbor, CborAccountAddress, CborMemo, TokenAmount, TokenId } from './index.js';
 
 /**
@@ -198,11 +206,36 @@ export function createTokenUpdatePayload(
         | { operations: Operation | Operation[] }
 ): TokenUpdatePayload {
     if (!('tokenId' in input)) return { variant: 'unscoped', operations: encodeOperations(input.operations) };
-    const ops = [input.operations].flat().map((op) => {
-        if (TokenOperationType.UpdateMetadata in op) return { updateMetadata: parseMetadataUpdate(op.updateMetadata) };
-        return op;
-    });
+    const ops = [input.operations].flat().map(tokenOperationValue);
     return { variant: 'scoped', tokenId: input.tokenId, operations: Cbor.encode(ops) };
+}
+
+/** Construct encoded operations with the supplemental energy required for automatic estimation.
+ * Cancellation counts must be non-negative and reflect execution order; no state is queried.
+ */
+export function createTokenUpdateInput(input: {
+    tokenId: TokenId.Type;
+    operations: TokenOperation | TokenOperation[];
+}): ScopedTokenUpdatePayload;
+export function createTokenUpdateInput(input: {
+    operations: OperationInput | OperationInput[];
+}): UnscopedTokenUpdateInput;
+export function createTokenUpdateInput(
+    input:
+        | { tokenId: TokenId.Type; operations: TokenOperation | TokenOperation[] }
+        | { operations: OperationInput | OperationInput[] }
+): ScopedTokenUpdatePayload | UnscopedTokenUpdateInput {
+    if ('tokenId' in input) return createTokenUpdatePayload(input);
+    let supplement = 0n;
+    for (const operation of [input.operations].flat()) {
+        if ('lockCancel' in operation) {
+            const count = operation.lockCancel.balanceReferences;
+            if (typeof count !== 'bigint' || count < 0n)
+                throw new Error('Cancellation requires non-negative balanceReferences');
+            supplement += PLT_LOCK_BALANCE_REFERENCE_COST * count;
+        }
+    }
+    return { ...createTokenUpdatePayload(input), additionalEnergy: Energy.create(supplement) };
 }
 
 /**

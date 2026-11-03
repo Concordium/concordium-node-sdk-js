@@ -6,7 +6,7 @@ import {
     serializeAccountTransactionPayload,
 } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
-import { Lock, LockId, OperationType, createTokenUpdatePayload } from '@concordium/web-sdk/plt';
+import { Lock, LockId, OperationType, createTokenUpdateInput } from '@concordium/web-sdk/plt';
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
 
@@ -86,10 +86,13 @@ const client = new ConcordiumGRPCNodeClient(
         }
     } else {
         // Or from a wallet perspective:
-        // Build the lockCancel operation payload without submitting.
-        const payload = createTokenUpdatePayload({
+        // Count token-amount entries in a finalized snapshot, not accounts or token quantities.
+        // State can change before execution; batch callers must also account for earlier operations.
+        const lock = await Lock.fromId(client, lockId);
+        const balanceReferences = Lock.getBalanceReferences(lock);
+        const payload = createTokenUpdateInput({
             operations: {
-                [OperationType.LockCancel]: { lock: lockId },
+                [OperationType.LockCancel]: { lock: lockId, balanceReferences },
             },
         });
         console.log('Created payload:', payload);

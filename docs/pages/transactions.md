@@ -56,7 +56,8 @@ const transaction = Transaction.tokenUpdate(payload);
 
 An **unscoped** update carries token IDs on individual token operations and can
 also include lock operations.
-Omit the transaction-level `tokenId`; use `tokenTransfer` rather than `transfer`:
+Omit the transaction-level `tokenId`; use `tokenTransfer` rather than `transfer`.
+Use `createTokenUpdateInput` to ensure estimates are calculated correctly.
 
 ```ts
 import { AccountAddress, Transaction } from '@concordium/web-sdk';
@@ -65,7 +66,7 @@ import * as PLT from '@concordium/web-sdk/plt';
 const recipient = PLT.CborAccountAddress.fromAccountAddress(
     AccountAddress.fromBase58('3tWfFAfNsyYtPRgDTpGJuqhQy92rAfLZum7HRyPkezE7PcT3KB')
 );
-const payload = PLT.createTokenUpdatePayload({
+const payload = PLT.createTokenUpdateInput({
     operations: [
         {
             tokenTransfer: {

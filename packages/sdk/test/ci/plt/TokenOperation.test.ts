@@ -10,6 +10,7 @@ import {
     TokenBurnOperation,
     TokenId,
     TokenMintOperation,
+    TokenOperation,
     TokenOperationType,
     TokenPauseOperation,
     TokenRemoveAllowListOperation,
@@ -19,6 +20,7 @@ import {
     TokenUnpauseOperation,
     TokenUpdateMetadataOperation,
     UnknownTokenOperation,
+    createTokenUpdateInput,
     createTokenUpdatePayload,
     parseTokenUpdatePayload,
 } from '../../../src/pub/plt.ts';
@@ -35,6 +37,33 @@ describe('PLT TokenOperation', () => {
     const testAccountAddress = CborAccountAddress.fromAccountAddress(
         AccountAddress.fromBuffer(new Uint8Array(32).fill(0x15))
     );
+    it('constructs scoped single/array inputs and discards extra fields for every operation', () => {
+        const amount = TokenAmount.create(1n, 0);
+        const operations: TokenOperation[] = [
+            { transfer: { amount, recipient: testAccountAddress, memo: new Uint8Array([1]) } },
+            { mint: { amount } },
+            { burn: { amount } },
+            { addAllowList: { target: testAccountAddress } },
+            { removeAllowList: { target: testAccountAddress } },
+            { addDenyList: { target: testAccountAddress } },
+            { removeDenyList: { target: testAccountAddress } },
+            { pause: {} },
+            { unpause: {} },
+            { updateMetadata: { url: 'https://example.com', checksumSha256: new Uint8Array(32) } },
+            { assignAdminRoles: { account: testAccountAddress, roles: [TokenAdminRole.Mint] } },
+            { revokeAdminRoles: { account: testAccountAddress, roles: [TokenAdminRole.Mint] } },
+        ];
+        for (const operation of operations) {
+            const [key] = Object.keys(operation);
+            const enriched = { [key]: { ...Object.values(operation)[0], extra: true } } as unknown as TokenOperation;
+            const expected = createTokenUpdatePayload({ tokenId: token, operations: operation });
+            expect(createTokenUpdatePayload({ tokenId: token, operations: enriched })).toEqual(expected);
+            expect(createTokenUpdateInput({ tokenId: token, operations: enriched })).toEqual(expected);
+            expect(createTokenUpdateInput({ tokenId: token, operations: [enriched] })).toEqual(expected);
+            expect(expected).not.toHaveProperty('additionalEnergy');
+        }
+    });
+
     // - d99d73: A tagged (40307) item with a map (a2) containing:
     // - a2: A map with 2 key-value pairs
     //   - 01: Key 1.

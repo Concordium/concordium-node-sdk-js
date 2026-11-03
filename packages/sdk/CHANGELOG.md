@@ -12,6 +12,12 @@
 
 ## Unreleased (devnet-p11-x)
 
+### Added
+
+- `getLocksByGrantAccount` grpc query, which returns pairs of lock IDs and their CBOR encoded lock configurations.
+
+### Changed
+
 - **Breaking:** Unscoped transaction construction now requires `additionalEnergy`, including explicit zero for operations with fully payload-derived costs. Use `createTokenUpdateInput` with `OperationInput`; each cancellation requires non-negative `balanceReferences` (including zero). `Lock.sendOperations` and proposal `.cancel(count)` require explicit counts.
 - Lock execution aligned with node implementation.
 

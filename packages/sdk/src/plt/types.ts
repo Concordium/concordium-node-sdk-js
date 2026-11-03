@@ -1,4 +1,4 @@
-import type { Cbor, TokenAmount, TokenId, TokenModuleReference } from './index.js';
+import type { Cbor, LockId, TokenAmount, TokenId, TokenModuleReference } from './index.js';
 
 /**
  * Represents a protocol level token state for an account.
@@ -43,6 +43,19 @@ export type TokenInfo = {
 export type LockInfoResponse = {
     /** The CBOR-encoded lock information. */
     lockInfo: Cbor.Type;
+};
+
+/**
+ * A lock's identifier and complete CBOR-encoded configuration.
+ */
+export type LockConfiguration = {
+    /** The ID of the lock. */
+    lockId: LockId.Type;
+    /**
+     * The complete CBOR-encoded lock configuration.
+     * Use {@link Cbor.decode} with type `'LockConfig'` to decode it.
+     */
+    lockConfig: Cbor.Type;
 };
 
 /**

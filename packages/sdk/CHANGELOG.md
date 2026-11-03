@@ -10,6 +10,10 @@
 
 ## Unreleased (devnet-p11-x)
 
+### Added
+
+- `getLocksByGrantAccount` grpc query, which returns pairs of lock IDs and their CBOR encoded lock configurations.
+
 ## 13.0.0-alpha.2 (devnet-p11-3)
 
 ### Changed

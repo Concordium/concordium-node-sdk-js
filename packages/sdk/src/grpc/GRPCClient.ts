@@ -1640,6 +1640,28 @@ export class ConcordiumGRPCClient {
     }
 
     /**
+     * Get locks whose grants include the account at a block, including grants with empty capabilities.
+     * Grant membership does not imply permission to perform an operation.
+     *
+     * @param accountIdentifier account address, credential registration ID, or account index to query grants for.
+     * @param blockHash optional block hash, otherwise retrieves from last finalized block.
+     * @param abortSignal an optional AbortSignal to close the stream.
+     * @returns Lock IDs and complete CBOR-encoded configurations in node response order.
+     */
+    getLocksByGrantAccount(
+        accountIdentifier: SDK.AccountIdentifierInput,
+        blockHash?: BlockHash.Type,
+        abortSignal?: AbortSignal
+    ): AsyncIterable<PLT.LockConfiguration> {
+        const req: GRPC.GetLocksByGrantAccountRequest = {
+            accountIdentifier: getAccountIdentifierInput(accountIdentifier),
+            blockHash: getBlockHashInput(blockHash),
+        };
+        const locks = this.client.getLocksByGrantAccount(req, { abort: abortSignal }).responses;
+        return mapStream(locks, translate.trLockConfiguration);
+    }
+
+    /**
      * Get the authorizations of a given token in the given block
      * @param tokenId the ID of the token to query information about
      * @param blockHash an optional block hash to get the info from, otherwise retrieves from last finalized block.

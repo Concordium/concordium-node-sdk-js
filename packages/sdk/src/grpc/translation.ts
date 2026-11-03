@@ -2892,6 +2892,13 @@ export function trLockInfoResponse(lockInfo: GRPC.LockInfo): PLT.LockInfoRespons
     };
 }
 
+export function trLockConfiguration(lockConfiguration: GRPC.LockConfiguration): PLT.LockConfiguration {
+    return {
+        lockId: PLT.LockId.fromProto(unwrap(lockConfiguration.lockId)),
+        lockConfig: PLT.Cbor.fromProto(unwrap(lockConfiguration.lockConfig)),
+    };
+}
+
 // ---------------------------- //
 // --- V1 => V2 translation --- //
 // ---------------------------- //

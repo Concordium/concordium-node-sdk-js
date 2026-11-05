@@ -2741,6 +2741,21 @@ export function blockSpecialEvent(specialEvent: GRPC.BlockSpecialEvent): Upward<
                 ...(poolOwner !== undefined && { poolOwner }),
             };
         }
+        case 'unlockAmount': {
+            return {
+                tag: 'unlockAmount',
+                tokenHolder: PLT.TokenHolder.fromProto(unwrap(event.unlockAmount.tokenHolder)),
+                lockId: PLT.LockId.fromProto(unwrap(event.unlockAmount.lockId)),
+                tokenId: PLT.TokenId.fromProto(unwrap(event.unlockAmount.tokenId)),
+                amount: PLT.TokenAmount.fromProto(unwrap(event.unlockAmount.amount)),
+            };
+        }
+        case 'lockDestroyed': {
+            return {
+                tag: 'lockDestroyed',
+                lockId: PLT.LockId.fromProto(unwrap(event.lockDestroyed.lockId)),
+            };
+        }
         case 'validatorSuspended': {
             return {
                 tag: 'validatorSuspended',

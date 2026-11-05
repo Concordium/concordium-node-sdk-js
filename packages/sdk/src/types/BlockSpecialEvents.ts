@@ -1,3 +1,5 @@
+import type { Upward } from '../grpc/index.js';
+import type * as PLT from '../plt/index.js';
 import type { BakerId } from '../types.js';
 import * as AccountAddress from './AccountAddress.js';
 import * as CcdAmount from './CcdAmount.js';
@@ -15,7 +17,31 @@ export type BlockSpecialEvent =
     | BlockSpecialEventBlockAccrueReward
     | BlockSpecialEventPaydayPoolReward
     | BlockSpecialEventValidatorSuspended
-    | BlockSpecialEventValidatorPrimedForSuspension;
+    | BlockSpecialEventValidatorPrimedForSuspension
+    | BlockSpecialEventUnlockAmount
+    | BlockSpecialEventLockDestroyed;
+
+/** An amount of tokens released from a locked balance to an available balance. */
+export interface BlockSpecialEventUnlockAmount {
+    /** The type of the special event. */
+    tag: 'unlockAmount';
+    /** The holder whose balance was unlocked, or null for an unsupported holder type. */
+    tokenHolder: Upward<PLT.TokenHolder.Type>;
+    /** The lock that controlled the unlocked amount. */
+    lockId: PLT.LockId.Type;
+    /** The token being unlocked. */
+    tokenId: PLT.TokenId.Type;
+    /** The amount moved from the locked balance to the available balance. */
+    amount: PLT.TokenAmount.Type;
+}
+
+/** A lock destroyed during block processing. */
+export interface BlockSpecialEventLockDestroyed {
+    /** The type of the special event. */
+    tag: 'lockDestroyed';
+    /** The ID of the destroyed lock. */
+    lockId: PLT.LockId.Type;
+}
 
 export interface BlockSpecialEventBakingRewards {
     tag: 'bakingRewards';
@@ -151,10 +177,13 @@ export interface BlockSpecialEventValidatorPrimedForSuspension {
  * @returns {AccountAddress.Type[]} List of account addresses affected by the event.
  */
 export function specialEventAffectedAccounts(
-    event: Exclude<BlockSpecialEvent, BlockSpecialEventBlockAccrueReward | BlockSpecialEventPaydayPoolReward>
+    event: Exclude<
+        BlockSpecialEvent,
+        BlockSpecialEventBlockAccrueReward | BlockSpecialEventPaydayPoolReward | BlockSpecialEventLockDestroyed
+    >
 ): AccountAddress.Type[];
 export function specialEventAffectedAccounts(
-    event: BlockSpecialEventBlockAccrueReward | BlockSpecialEventPaydayPoolReward
+    event: BlockSpecialEventBlockAccrueReward | BlockSpecialEventPaydayPoolReward | BlockSpecialEventLockDestroyed
 ): never[];
 export function specialEventAffectedAccounts(event: BlockSpecialEvent): AccountAddress.Type[];
 export function specialEventAffectedAccounts(event: BlockSpecialEvent): AccountAddress.Type[] {
@@ -177,6 +206,8 @@ export function specialEventAffectedAccounts(event: BlockSpecialEvent): AccountA
         case 'validatorSuspended':
         case 'validatorPrimedForSuspension':
             return [event.account];
+        case 'unlockAmount':
+            return event.tokenHolder?.type === 'account' ? [event.tokenHolder.address] : [];
         default:
             return [];
     }

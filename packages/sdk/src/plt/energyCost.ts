@@ -1,5 +1,7 @@
 /** Fixed lock-creation charge in NRG. */
 export const PLT_LOCK_CREATE_BASE_COST = 100n;
+/** Fixed lock-cancellation charge in NRG. */
+export const PLT_LOCK_CANCEL_BASE_COST = 100n;
 /** Per-balance-reference charge in NRG for lock creation and cancellation. */
 export const PLT_LOCK_BALANCE_REFERENCE_COST = 500n;
 /** Per-canonical-grant charge in NRG for lock creation. */

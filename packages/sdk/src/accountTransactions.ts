@@ -7,7 +7,12 @@ import {
 } from './deserialization.js';
 import { Cursor } from './deserializationHelpers.js';
 import { DelegationTargetTypeNumeric, Upward, isKnown } from './index.js';
-import { PLT_LOCK_BALANCE_REFERENCE_COST, PLT_LOCK_CREATE_BASE_COST, PLT_LOCK_GRANT_COST } from './plt/energyCost.js';
+import {
+    PLT_LOCK_BALANCE_REFERENCE_COST,
+    PLT_LOCK_CANCEL_BASE_COST,
+    PLT_LOCK_CREATE_BASE_COST,
+    PLT_LOCK_GRANT_COST,
+} from './plt/energyCost.js';
 import { Cbor, LockConfig, OperationType, TokenId, TokenOperationType } from './plt/index.js';
 import {
     AccountTransactionInput,
@@ -958,7 +963,7 @@ function getOperationEnergyCost(operation: unknown): bigint {
             );
         }
         case OperationType.LockCancel in op:
-            return 0n;
+            return PLT_LOCK_CANCEL_BASE_COST;
         default:
             const [key] = Object.keys(op);
             return key?.startsWith('token') && key.length > 5

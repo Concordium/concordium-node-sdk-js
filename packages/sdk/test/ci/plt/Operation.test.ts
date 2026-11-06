@@ -260,7 +260,7 @@ describe('PLT Operation', () => {
             ],
         });
 
-        expect(new TokenUpdateHandler().getBaseEnergyCost(payload)).toBe(3260n);
+        expect(new TokenUpdateHandler().getBaseEnergyCost(payload)).toBe(3360n);
     });
 
     it('calculates independent cancellation supplements and keeps their wire bytes unchanged', () => {
@@ -268,8 +268,12 @@ describe('PLT Operation', () => {
         const input = createTokenUpdateInput({ operations });
         expect(input.additionalEnergy.value).toBe(2500n);
         expect(Object.keys(input).sort()).toEqual(['additionalEnergy', 'operations', 'variant']);
-        expect(new TokenUpdateHandler().getBaseEnergyCost(input)).toBe(2800n);
+        expect(new TokenUpdateHandler().getBaseEnergyCost(input)).toBe(3100n);
         for (const operation of operations) {
+            const cancellation = createTokenUpdateInput({ operations: operation });
+            expect(new TokenUpdateHandler().getBaseEnergyCost(cancellation)).toBe(
+                400n + 500n * operation.lockCancel.balanceReferences
+            );
             expect(createTokenUpdateInput({ operations: operation }).operations).toEqual(
                 encodeOperations({ lockCancel: { lock } })
             );

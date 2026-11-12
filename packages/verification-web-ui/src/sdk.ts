@@ -3,6 +3,7 @@ import { getConfig, setConfig } from '@/config.state';
 import { ModalConstants } from '@/constants/modal.constants';
 import { ServiceFactory } from '@/services';
 import type { PresentationRequest, PresentationResponse, SDKWalletConnectConfig, SessionApprovedEvent } from '@/types';
+import { resolveNetwork, serializeNetworkConfig, validateNetworkConfig } from '@/utils/network';
 
 /**
  * Main SDK class for Concordium Verification WebUI
@@ -87,6 +88,16 @@ export class ConcordiumVerificationWebUI {
      * const sdk = new ConcordiumVerificationWebUI({
      *   network: 'testnet',
      *   walletConnectUri: 'wc:...',
+     * });
+     *
+     * // Custom network: identified by its chain ID (`ccd:` + first 32 hex characters of the genesis hash).
+     * // Deep links into a wallet are only used if `walletDeepLinks` is given; otherwise the QR code is shown.
+     * const sdk = new ConcordiumVerificationWebUI({
+     *   network: {
+     *     chainId: 'ccd:0123456789abcdef0123456789abcdef',
+     *     walletDeepLinks: { ios: 'mywallet', android: 'mywallet-wc' },
+     *   },
+     *   projectId: 'YOUR_PROJECT_ID',
      * });
      *
      * // Then call renderUIModals to show the connection flow
@@ -292,11 +303,7 @@ export class ConcordiumVerificationWebUI {
 
         // Get network from global config (set in constructor)
         const globalConfig = getConfig();
-        const network = globalConfig.network || 'testnet';
-
-        if (!network) {
-            throw new Error('Network (mainnet or testnet) must be set in ConcordiumVerificationWebUI constructor');
-        }
+        const network = validateNetworkConfig(globalConfig.network || 'testnet');
 
         try {
             // Reset any existing WalletConnect service to ensure clean state
@@ -305,7 +312,7 @@ export class ConcordiumVerificationWebUI {
 
             // Store configuration for use in modals
             localStorage.setItem(ModalConstants.LOCAL_STORAGE_FLAGS.SDK_PROJECT_ID, config.projectId);
-            localStorage.setItem(ModalConstants.LOCAL_STORAGE_FLAGS.SDK_NETWORK, network);
+            localStorage.setItem(ModalConstants.LOCAL_STORAGE_FLAGS.SDK_NETWORK, serializeNetworkConfig(network));
             localStorage.setItem(ModalConstants.LOCAL_STORAGE_FLAGS.CONNECTION_MODE, 'sdk-managed');
 
             // Store metadata if provided
@@ -586,9 +593,7 @@ export class ConcordiumVerificationWebUI {
 
             // Get the network configuration
             const globalConfig = getConfig();
-            const network = globalConfig.network || 'testnet';
-            const chainId =
-                network === 'mainnet' ? import.meta.env.VITE_CHAIN_ID_MAINNET : import.meta.env.VITE_CHAIN_ID_TESTNET;
+            const { chainId } = resolveNetwork();
 
             // Get metadata from constructor config or use defaults
             const wcConfig = this._wcConfig;

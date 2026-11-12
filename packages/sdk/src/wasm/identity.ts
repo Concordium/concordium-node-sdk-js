@@ -1,6 +1,7 @@
 import * as wasm from '@concordium/rust-bindings/wallet';
 
 import type { IdProofInput, IdProofOutput } from '../id/index.js';
+import { getKeyDerivationNetwork } from '../networkHelpers.js';
 import type {
     ArInfo,
     CryptographicParameters,
@@ -144,7 +145,7 @@ export function createIdentityRecoveryRequestWithKeys(
  * Given a statement about an identity and the inputs necessary to prove the statement, produces a proof that the associated identity fulfills the statement.
  */
 export function getIdProof(input: IdProofInput): IdProofOutput {
-    const rawRequest = wasm.createIdProof(JSON.stringify(input));
+    const rawRequest = wasm.createIdProof(JSON.stringify({ ...input, net: getKeyDerivationNetwork(input.net) }));
     let out: IdProofOutput;
     try {
         out = JSON.parse(rawRequest);

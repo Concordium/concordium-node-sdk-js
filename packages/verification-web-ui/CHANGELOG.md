@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+### Added
+
+- The `network` option accepts a custom network, identified by its chain ID (`ccd:` followed by the first 32 hex
+  characters of the genesis block hash), with optional wallet deep-link schemes:
+  `{ chainId: 'ccd:<prefix>', walletDeepLinks: { ios: 'mywallet', android: 'mywallet-wc' } }`. Without
+  `walletDeepLinks`, the UI doesn't deep link into a wallet and falls back to the QR code / WalletConnect URI.
+  `'mainnet'` and `'testnet'` keep their chain IDs (apart from the deep-link fixes below).
+- Exported the `NetworkConfig`, `CustomNetworkConfig`, `NamedNetwork` and `WalletDeepLinks` types.
+
+### Fixed
+
+- All components now read the network from one place. Before, some used the `VITE_NETWORK` env var while others used
+  the configured network, and the chain ID sent from the session-approval path could be `undefined` when the
+  `VITE_CHAIN_ID_*` env vars were not set.
+- Mobile app detection and deep links used schemes the CryptoX apps don't register: `cryptoxmainnet://` /
+  `cryptox-wc-mainnet://` on mainnet instead of `cryptox://` / `cryptox-wc://`, and `cryptox-wc-testnet://` on
+  Android testnet instead of `cryptox-wc://`.
+
 ### 0.2.1
 
 **Mobile deep link and session handling improvements:**

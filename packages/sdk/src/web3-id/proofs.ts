@@ -13,6 +13,7 @@ import {
     IdentityProvider,
     Network,
 } from '../types.js';
+import * as AccountAddress from '../types/AccountAddress.js';
 import type * as ContractAddress from '../types/ContractAddress.js';
 import { ConcordiumHdWallet } from '../wasm/HdWallet.js';
 import {
@@ -26,6 +27,7 @@ import {
     AccountCredentialStatement,
     AtomicStatementV2,
     AttributeType,
+    ConcordiumDID,
     CredentialSchemaProperty,
     CredentialSchemaSubject,
     CredentialStatement,
@@ -531,47 +533,66 @@ export class Web3StatementBuilder {
  * Creates a DID string for a Web3 ID credential.
  * Used to build a request for a verifiable credential issued by a smart contract.
  *
- * @param network - The Concordium network
+ * @param network - The Concordium network: `'Testnet'`, `'Mainnet'` or a {@linkcode GenesisHashPrefix}
  * @param publicKey - The public key of the credential holder
  * @param index - The contract index
  * @param subindex - The contract subindex
  * @returns DID string in format: did:ccd:{network}:sci:{index}:{subindex}/credentialEntry/{publicKey}
  */
 export function createWeb3IdDID(network: Network, publicKey: string, index: bigint, subindex: bigint): DIDString {
-    return (
-        'did:ccd:' +
-        network.toLowerCase() +
-        ':sci:' +
-        index.toString() +
-        ':' +
-        subindex.toString() +
-        '/credentialEntry/' +
-        publicKey
-    );
+    return new ConcordiumDID(network, {
+        type: 'sci',
+        index,
+        subindex,
+        entrypoint: 'credentialEntry',
+        parameter: publicKey,
+    }).toJSON();
 }
 
 /**
  * Creates a DID string for an account credential.
  * Used to build a request for a verifiable credential based on an account credential.
  *
- * @param network - The Concordium network
+ * @param network - The Concordium network: `'Testnet'`, `'Mainnet'` or a {@linkcode GenesisHashPrefix}
  * @param credId - The credential ID (registration ID)
  * @returns DID string in format: did:ccd:{network}:cred:{credId}
  */
 export function createAccountDID(network: Network, credId: string): DIDString {
-    return 'did:ccd:' + network.toLowerCase() + ':cred:' + credId;
+    return new ConcordiumDID(network, { type: 'cred', credId }).toJSON();
 }
 
 /**
  * Creates a DID string for an identity credential statement.
  * Used to build a request for a verifiable credential based on an identity object.
  *
- * @param network - The Concordium network
+ * @param network - The Concordium network: `'Testnet'`, `'Mainnet'` or a {@linkcode GenesisHashPrefix}
  * @param idpIndex - The index of the identity provider as registered on chain
- * @returns DID string in format: did:ccd:{network}:id
+ * @returns DID string in format: did:ccd:{network}:idp:{idpIndex}
  */
 export function createIdentityStatementDID(network: Network, idpIndex: number): DIDString {
-    return 'did:ccd:' + network.toLowerCase() + ':idp:' + idpIndex;
+    return new ConcordiumDID(network, { type: 'idp', index: idpIndex }).toJSON();
+}
+
+/**
+ * Creates a DID string for an account, by its address.
+ *
+ * @param network - The Concordium network: `'Testnet'`, `'Mainnet'` or a {@linkcode GenesisHashPrefix}
+ * @param address - The account address
+ * @returns DID string in format: did:ccd:{network}:acc:{address}
+ */
+export function createAccountAddressDID(network: Network, address: AccountAddress.Type): DIDString {
+    return new ConcordiumDID(network, { type: 'acc', address: AccountAddress.toBase58(address) }).toJSON();
+}
+
+/**
+ * Creates a DID string for an Ed25519 public key.
+ *
+ * @param network - The Concordium network: `'Testnet'`, `'Mainnet'` or a {@linkcode GenesisHashPrefix}
+ * @param publicKey - The public key as hex
+ * @returns DID string in format: did:ccd:{network}:pkc:{publicKey}
+ */
+export function createPublicKeyDID(network: Network, publicKey: HexString): DIDString {
+    return new ConcordiumDID(network, { type: 'pkc', key: publicKey }).toJSON();
 }
 
 /**

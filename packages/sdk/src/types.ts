@@ -14,6 +14,7 @@ import type * as CredentialRegistrationId from './types/CredentialRegistrationId
 import type { DataBlob } from './types/DataBlob.js';
 import type * as Duration from './types/Duration.js';
 import type * as Energy from './types/Energy.js';
+import type * as GenesisHashPrefix from './types/GenesisHashPrefix.js';
 import type * as InitName from './types/InitName.js';
 import type * as ModuleReference from './types/ModuleReference.js';
 import type * as Parameter from './types/Parameter.js';
@@ -1855,7 +1856,14 @@ export type IdentityObjectV1 = {
     signature: string;
 };
 
-export type Network = 'Testnet' | 'Mainnet';
+/**
+ * A Concordium network: one of the named networks `'Testnet'` and `'Mainnet'`, or any network identified by the
+ * prefix of its genesis block hash ({@linkcode GenesisHashPrefix.Type}). A named network and its genesis hash prefix
+ * refer to the same chain; use {@linkcode isSameNetwork} to compare networks.
+ *
+ * Key derivation only distinguishes mainnet from every other network; see {@linkcode getKeyDerivationNetwork}.
+ */
+export type Network = 'Testnet' | 'Mainnet' | GenesisHashPrefix.Type;
 
 export type SmartContractTypeValues =
     | { [key: string]: SmartContractTypeValues }

@@ -102,10 +102,8 @@ export const createLandingModal: ModalFunction = () => {
                 // Clear existing sessions to ensure fresh pairing
                 await wcService.clearAllSessionsForNewPairing();
 
-                const network =
-                    (localStorage.getItem(ModalConstants.LOCAL_STORAGE_FLAGS.SDK_NETWORK) as 'mainnet' | 'testnet') ||
-                    'testnet';
-                const chainIds = WalletConnectConstants.CHAIN_IDS[network];
+                const { resolveNetwork } = await import('@/utils/network');
+                const chainIds = [resolveNetwork().chainId];
 
                 // Generate WalletConnect URI by calling connect()
                 const { uri, approval } = await wcService.connect({

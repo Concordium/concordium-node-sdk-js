@@ -2,7 +2,7 @@
  * Mobile App Detection and Routing Utilities
  * Handles intelligent app detection and routing for mobile devices
  */
-import { ModalConstants } from '@/constants/modal.constants';
+import { resolveNetwork, walletDeepLink } from '@/utils/network';
 
 export interface AppDetectionResult {
     concordiumWalletInstalled: boolean;
@@ -16,8 +16,11 @@ export interface AppDetectionResult {
  * Uses timeout-based detection by attempting to open app schemes
  */
 export async function detectInstalledApps(): Promise<AppDetectionResult> {
-    const network = localStorage.getItem(ModalConstants.LOCAL_STORAGE_FLAGS.SDK_NETWORK) || 'testnet';
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+    const { walletDeepLinks } = resolveNetwork();
+    // No scheme means no wallet is known for this network on this platform (e.g. a custom network without
+    // `walletDeepLinks`), so don't probe for one.
+    const walletScheme = isIOS ? walletDeepLinks.ios : walletDeepLinks.android;
 
     const result: AppDetectionResult = {
         concordiumWalletInstalled: false,
@@ -40,10 +43,7 @@ export async function detectInstalledApps(): Promise<AppDetectionResult> {
         // Perform fresh detection
         try {
             // Try to detect Concordium Wallet
-            result.concordiumWalletInstalled = await tryOpenApp(
-                isIOS ? `cryptox${network}://` : `cryptox-wc-${network}://`,
-                500
-            );
+            result.concordiumWalletInstalled = walletScheme ? await tryOpenApp(`${walletScheme}://`, 500) : false;
 
             // Try to detect Concordium ID
             result.concordiumIDInstalled = await tryOpenApp('concordiumidapp://', 500);
@@ -284,20 +284,14 @@ export async function tryOpenConcordiumIDApp(walletConnectUri: string): Promise<
  * Opens the deep link for the specified app with the WalletConnect URI
  */
 export function openDeepLink(appType: 'concordium-wallet' | 'concordium-id', walletConnectUri: string): void {
-    const network = localStorage.getItem(ModalConstants.LOCAL_STORAGE_FLAGS.SDK_NETWORK) || 'testnet';
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
-    const isAndroid = /android/i.test(navigator.userAgent);
-
     let deepLink: string;
 
     if (appType === 'concordium-wallet') {
-        if (isIOS) {
-            deepLink = `cryptox${network}://wc?uri=${encodeURIComponent(walletConnectUri)}&redirect=googlechrome://`;
-        } else if (isAndroid) {
-            deepLink = `cryptox-wc-${network}://wc?uri=${encodeURIComponent(walletConnectUri)}&go_back=true`;
-        } else {
-            return;
-        }
+        if ((window as any).MSStream) return;
+        // null when not on a mobile platform, or the network has no wallet scheme for it.
+        const link = walletDeepLink(resolveNetwork(), walletConnectUri, navigator.userAgent);
+        if (link === null) return;
+        deepLink = link;
     } else {
         // Concordium ID - with redirect to origin
         const redirectUrl = encodeURIComponent(window.location.origin);

@@ -90,7 +90,8 @@ export type WalletConnectModalMobileWallet = MobileWallet & {
  *
  * @param network The {@linkcode Network} to connect to.
  * @param [mobileWallets] The list of mobile wallets to use for deep linking. Defaults to the concordium and cryptoX wallets for mobile for the specified `network`.
- * If `network` is anything but {@linkcode MAINNET} or {@linkcode TESTNET}, the default value is an empty list.
+ * The default is looked up by `network.name`, so if `network` is anything but {@linkcode MAINNET} or {@linkcode TESTNET}
+ * (by name), the default value is an empty list. For other networks, pass the wallets that support it.
  * @param [enableExplorer] Whether to enable the wallet connect explorer in the wallet connect modal. Defaults to `false`.
  *
  * @returns the corresponding {@linkcode WalletConnectModalConfig}
@@ -557,8 +558,36 @@ export class WalletConnectConnection implements WalletConnection {
     }
 }
 
-function getChainId({ name }: Network): string {
+/**
+ * The CAIP-2 chain ID used with WalletConnect for `network`: `ccd:<name>` by default, or
+ * `ccd:<genesis hash prefix>` when {@linkcode Network.chainIdFormat} is `'genesis'`.
+ *
+ * @param network The network to get the chain ID of.
+ * @returns The chain ID.
+ */
+export function getChainId({ name, genesisHash, chainIdFormat }: Network): string {
+    if (chainIdFormat === 'genesis') {
+        const prefix = genesisHash.toLowerCase().slice(0, GENESIS_HASH_PREFIX_HEX_LEN);
+        if (!/^[0-9a-f]{32}$/.test(prefix)) {
+            throw new Error(`Invalid genesis hash for network '${name}': ${genesisHash}`);
+        }
+        return `${WALLET_CONNECT_SESSION_NAMESPACE}:${prefix}`;
+    }
     return `${WALLET_CONNECT_SESSION_NAMESPACE}:${name}`;
+}
+
+/** The number of hex characters of a genesis hash used in genesis-based chain IDs. */
+const GENESIS_HASH_PREFIX_HEX_LEN = 32;
+
+/**
+ * Returns a copy of `network` whose WalletConnect chain ID is based on its genesis hash
+ * (`ccd:<genesis hash prefix>`) rather than its name. See {@linkcode Network.chainIdFormat}.
+ *
+ * @param network The network to use genesis-based chain IDs for.
+ * @returns The updated network.
+ */
+export function withGenesisChainId(network: Network): Network {
+    return { ...network, chainIdFormat: 'genesis' };
 }
 
 /**

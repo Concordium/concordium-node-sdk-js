@@ -1,3 +1,5 @@
+import type { NetworkConfig } from './utils/network';
+
 // Configuration state management
 // Moved from index.ts to avoid circular dependencies
 
@@ -32,7 +34,11 @@ export type ConcordiumEventCallback = (event: ConcordiumEventData) => void;
 
 // Configuration interface
 export interface ConcordiumConfig {
-    network?: 'mainnet' | 'testnet';
+    /**
+     * The network to verify on: `'mainnet'`, `'testnet'` (default), or a custom network given by its chain ID,
+     * e.g. `{ chainId: 'ccd:<first 32 hex characters of the genesis hash>', walletDeepLinks: { ios: 'mywallet', android: 'mywallet-wc' } }`.
+     */
+    network?: NetworkConfig;
     mobileBreakpoint?: number;
     autoDetectMobile?: boolean;
     defaultContainer?: string | HTMLElement;

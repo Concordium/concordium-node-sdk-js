@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Added
+
+- Concordium DIDs in v1 verifiable presentations (requests, presentations and audit records) can identify the network
+  by the first 32 hex characters of its genesis block hash, e.g. `did:ccd:4221332d34e1694168c2a0c0b3fd0f27:idp:0`,
+  alongside `testnet`/`mainnet`. A named network and its genesis hash prefix are treated as the same chain when
+  verifying. Existing DIDs and serialized data are unchanged.
+
 ## 4.0.1
 
 ### Fixed

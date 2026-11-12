@@ -3,7 +3,7 @@
  * Contains information about supported wallets for WalletConnect integration
  *
  */
-import { ModalConstants } from '@/constants/modal.constants';
+import { resolveNetwork, walletDeepLink } from '@/utils/network';
 
 export interface WalletInfo {
     id: string;
@@ -36,18 +36,10 @@ export const ID_APP_STORE = {
  */
 export function getConcordiumWalletDeepLink(wcUri: string): string | null {
     const ua = navigator.userAgent || '';
-    const network = localStorage.getItem(ModalConstants.LOCAL_STORAGE_FLAGS.SDK_NETWORK) || 'testnet';
-    const isTestnet = network === 'testnet';
-
-    if (/iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream) {
-        const scheme = isTestnet ? 'cryptoxtestnet' : 'cryptox';
-        return `${scheme}://wc?uri=${encodeURIComponent(wcUri)}&redirect=googlechrome://`;
-    }
-    if (/android/i.test(ua)) {
-        const scheme = isTestnet ? 'cryptox-wc-testnet' : 'cryptox-wc';
-        return `${scheme}://wc?uri=${encodeURIComponent(wcUri)}&go_back=true`;
-    }
-    return null;
+    if ((window as any).MSStream) return null;
+    // Returns null when the network has no wallet scheme for this platform (e.g. a custom network without
+    // `walletDeepLinks`), so callers fall back to the QR code / WalletConnect URI.
+    return walletDeepLink(resolveNetwork(), wcUri, ua);
 }
 
 /**

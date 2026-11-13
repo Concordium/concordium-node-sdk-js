@@ -216,7 +216,6 @@ describe('PLT Cbor', () => {
                 [],
                 [token],
                 undefined,
-                undefined,
                 metadata
             );
             const decoded = Cbor.decode(Cbor.encode({ lock, config, funds: [] }), 'LockInfo');

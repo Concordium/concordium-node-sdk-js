@@ -74,8 +74,6 @@ export type SimpleV0 = {
     grants: SimpleV0Grant[];
     /** Tokens that may be funded into the lock. */
     tokens: TokenId.Type[];
-    /** Whether to retain the lock after all funds are released. */
-    keepAlive?: boolean;
     /** Optional memo attached to the lock. */
     memo?: Memo;
     /** Raw CBOR bytes. Use `LockMetadata.encode` and `LockMetadata.decode` for typed metadata. */
@@ -92,7 +90,6 @@ export type Type = { [Variant.SimpleV0]: SimpleV0 };
  * @param expiry Time at which the lock expires.
  * @param grants Capability grants authorizing accounts to operate the lock.
  * @param tokens Tokens that may be funded into the lock.
- * @param keepAlive Whether to retain the lock after all funds are released.
  * @param memo Optional memo attached to the lock.
  * @param metadata Optional raw CBOR metadata.
  * @returns Tagged simple v0 lock configuration.
@@ -107,11 +104,10 @@ export function simpleV0(
     expiry: CborEpoch.Type,
     grants: SimpleV0Grant[],
     tokens: TokenId.Type[],
-    keepAlive?: boolean,
     memo?: Memo,
     metadata?: Uint8Array
 ): Type {
-    return { [Variant.SimpleV0]: { recipients, expiry, grants, tokens, keepAlive, memo, metadata } };
+    return { [Variant.SimpleV0]: { recipients, expiry, grants, tokens, memo, metadata } };
 }
 
 /** Decode a lock configuration from its CBOR-compatible value. */
@@ -160,8 +156,6 @@ export function fromCBORValue(decoded: unknown): Type {
         if (typeof token !== 'string') throw new Error('Invalid simpleV0 lock config: expected token ids as strings');
         return TokenId.fromString(token);
     });
-    if (config.keepAlive !== undefined && typeof config.keepAlive !== 'boolean')
-        throw new Error('Invalid simpleV0 lock config: keepAlive must be a boolean');
     if (config.metadata !== undefined && !(config.metadata instanceof Uint8Array))
         throw new Error('Invalid simpleV0 lock config: expected metadata as CBOR bytes');
     if (config.memo !== undefined && !(config.memo instanceof Uint8Array) && !CborMemo.instanceOf(config.memo))
@@ -172,7 +166,6 @@ export function fromCBORValue(decoded: unknown): Type {
         config.expiry,
         grants,
         tokens,
-        config.keepAlive,
         config.memo as SimpleV0['memo'],
         config.metadata as Uint8Array | undefined
     );

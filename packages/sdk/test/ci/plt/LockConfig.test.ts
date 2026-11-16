@@ -72,14 +72,7 @@ describe('PLT LockConfig', () => {
         });
         const decoded = Cbor.decode(
             Cbor.encode(
-                LockConfig.simpleV0(
-                    [account],
-                    CborEpoch.fromEpochSeconds(10n),
-                    [],
-                    [token],
-                    undefined,
-                    metadata
-                )
+                LockConfig.simpleV0([account], CborEpoch.fromEpochSeconds(10n), [], [token], undefined, metadata)
             ),
             'LockConfig'
         );
@@ -92,14 +85,7 @@ describe('PLT LockConfig', () => {
         const invalid = new Uint8Array([0x01]);
         const invalidDecoded = Cbor.decode(
             Cbor.encode(
-                LockConfig.simpleV0(
-                    [account],
-                    CborEpoch.fromEpochSeconds(10n),
-                    [],
-                    [token],
-                    undefined,
-                    invalid
-                )
+                LockConfig.simpleV0([account], CborEpoch.fromEpochSeconds(10n), [], [token], undefined, invalid)
             ),
             'LockConfig'
         );

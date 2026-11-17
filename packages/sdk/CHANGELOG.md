@@ -20,6 +20,7 @@
 
 - **Breaking:** Unscoped transaction construction now requires `additionalEnergy`, including explicit zero for operations with fully payload-derived costs. Use `createTokenUpdateInput` with `OperationInput`; each cancellation requires non-negative `balanceReferences` (including zero). `Lock.sendOperations` and proposal `.cancel(count)` require explicit counts.
 - Lock execution aligned with node implementation.
+- **Breaking:** Lock configurations no longer include the field `keepAlive`.
 
 ## 13.0.0-alpha.2 (devnet-p11-3)
 

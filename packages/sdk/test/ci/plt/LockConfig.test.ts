@@ -39,7 +39,7 @@ describe('PLT LockConfig', () => {
 
     it('decodes and re-encodes the fixed complete simpleV0 fixture', () => {
         const fixture =
-            'a16873696d706c655630a7646d656d6f42010266657870697279c10a666772616e74738066746f6b656e73816674546f6b656e686d657461646174615825a2646e616d656c56657374696e67206c6f636b666973737565726a436f6e636f726469756d696b656570416c697665f56a726563697069656e747381d99d73a201d99d71a1011903970358201515151515151515151515151515151515151515151515151515151515151515';
+            'a16873696d706c655630a6646d656d6f42010266657870697279c10a666772616e74738066746f6b656e73816674546f6b656e686d657461646174615825a2646e616d656c56657374696e67206c6f636b666973737565726a436f6e636f726469756d6a726563697069656e747381d99d73a201d99d71a1011903970358201515151515151515151515151515151515151515151515151515151515151515';
         const decoded = Cbor.decode(Cbor.fromHexString(fixture), 'LockConfig');
 
         expect(decoded).toEqual(
@@ -48,7 +48,6 @@ describe('PLT LockConfig', () => {
                 CborEpoch.fromEpochSeconds(10n),
                 [],
                 [token],
-                true,
                 new Uint8Array([1, 2]),
                 LockMetadata.encode({ name: 'Vesting lock', issuer: 'Concordium' })
             )
@@ -73,15 +72,7 @@ describe('PLT LockConfig', () => {
         });
         const decoded = Cbor.decode(
             Cbor.encode(
-                LockConfig.simpleV0(
-                    [account],
-                    CborEpoch.fromEpochSeconds(10n),
-                    [],
-                    [token],
-                    undefined,
-                    undefined,
-                    metadata
-                )
+                LockConfig.simpleV0([account], CborEpoch.fromEpochSeconds(10n), [], [token], undefined, metadata)
             ),
             'LockConfig'
         );
@@ -94,15 +85,7 @@ describe('PLT LockConfig', () => {
         const invalid = new Uint8Array([0x01]);
         const invalidDecoded = Cbor.decode(
             Cbor.encode(
-                LockConfig.simpleV0(
-                    [account],
-                    CborEpoch.fromEpochSeconds(10n),
-                    [],
-                    [token],
-                    undefined,
-                    undefined,
-                    invalid
-                )
+                LockConfig.simpleV0([account], CborEpoch.fromEpochSeconds(10n), [], [token], undefined, invalid)
             ),
             'LockConfig'
         );
@@ -117,7 +100,6 @@ describe('PLT LockConfig', () => {
                 expiry: CborEpoch.fromEpochSeconds(10n),
                 grants: [],
                 tokens: [token],
-                keepAlive: undefined,
                 memo: undefined,
                 metadata: undefined,
             },
@@ -128,7 +110,6 @@ describe('PLT LockConfig', () => {
                 CborEpoch.fromEpochSeconds(10n),
                 [],
                 [token],
-                true,
                 new Uint8Array([1, 2]),
                 new Uint8Array([3])
             )
@@ -138,7 +119,6 @@ describe('PLT LockConfig', () => {
                 expiry: CborEpoch.fromEpochSeconds(10n),
                 grants: [],
                 tokens: [token],
-                keepAlive: true,
                 memo: new Uint8Array([1, 2]),
                 metadata: new Uint8Array([3]),
             },
@@ -175,7 +155,6 @@ describe('PLT LockConfig', () => {
             { ...valid, tokens: 'no' },
             { ...valid, tokens: [1] },
             { ...valid, metadata: {} },
-            { ...valid, keepAlive: 'true' },
             { ...valid, memo: 'memo' },
         ];
         for (const invalid of invalidValues) {

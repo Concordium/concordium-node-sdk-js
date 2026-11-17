@@ -39,6 +39,12 @@ describe('getChainId', () => {
         expect(() => getChainId({ ...custom, genesisHash: 'nothex', chainIdFormat: 'genesis' })).toThrow();
     });
 
+    test('rejects an invalid genesis hash', () => {
+        expect(() => getChainId(withGenesisChainId(network('broken', 'not-a-hash')))).toThrow(
+            'Invalid genesis hash: not-a-hash'
+        );
+    });
+
     test('withGenesisChainId does not mutate its input', () => {
         withGenesisChainId(TESTNET);
         expect(TESTNET.chainIdFormat).toBeUndefined();

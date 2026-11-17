@@ -1,14 +1,21 @@
 import {
     AccountAddress,
+    AccountAddressDID,
+    AccountCredentialDID,
     BlockHash,
     ConcordiumDID,
     ConcordiumHdWallet,
     ContractAddress,
+    ContractDataDID,
     ContractInstanceDID,
-    DIDIdentifier,
+    CredentialRegistrationId,
+    EncryptedIdentityCredentialDID,
+    EntrypointName,
     GenesisHashPrefix,
     IdentityProviderDID,
     Network,
+    Parameter,
+    PublicKeyDID,
     createAccountAddressDID,
     createAccountDID,
     createIdentityStatementDID,
@@ -20,6 +27,7 @@ import {
     networkFromString,
     networkToChainId,
     networkToString,
+    parseDID,
 } from '../../src/index.js';
 
 const TESTNET_GENESIS_HASH = '4221332d34e1694168c2a0c0b3fd0f273809612cb13d000d5c2e00e85f50f796';
@@ -35,18 +43,23 @@ const PUBLIC_KEY = '9cb20e36766a8c1fee1cae8e09eca75785f3bfda220f83b2f0d865cc8a44
 const ENC_ID_CRED =
     '02000300000001ac5f20234d022490c77c18f9a9ec845811a9faa539361b166ee752ddd1cc71ba2a2c37d9b0b1d43b8dd04994d9b8da04b7b14843f9c078c28c20341d435358cd150ecdebdbab7d880a1397cd68346e8dd4c347d4efaaad32979237a71969c41e0000000281da2c786ecca7be2bb2c44f2ccce6ec658497d3481d1c761b728b718258341261331a25d257df8108ef8354af3ca5fa95ec67e89275e82f068d5406e1457b6f54c79992739161437f84fc269bc62c7d26b85befab6111825a4e96e47f4f3e4f00000003af3d3fa6bdd3be106fc225ce6dcaade80c8d1d74f1f6a76d5f6492aa668e6baad87ac13af2af2822ca37b4ef8c6ad63990a190cf220735cca125fb9843eb2dd9a155fda9f8fe112885ded270de3e16814d763ea3d0ee74c9970107d2286918ce';
 
-const IDENTIFIERS: [string, DIDIdentifier][] = [
-    [`acc:${ADDRESS}`, { type: 'acc', address: ADDRESS }],
-    [`cred:${CRED_ID}`, { type: 'cred', credId: CRED_ID }],
+const sci = (index: bigint, subindex: bigint) => ContractAddress.create(index, subindex);
+const ep = (name: string) => EntrypointName.fromString(name);
+
+// Each identifier string with the class it parses to.
+const IDENTIFIERS: [string, (network: Network) => ConcordiumDID][] = [
+    [`acc:${ADDRESS}`, (n) => new AccountAddressDID(n, AccountAddress.fromBase58(ADDRESS))],
+    [`cred:${CRED_ID}`, (n) => new AccountCredentialDID(n, CredentialRegistrationId.fromHexString(CRED_ID))],
     [
         'sci:37:123/viewStuff/7b0b00000d',
-        { type: 'sci', index: 37n, subindex: 123n, entrypoint: 'viewStuff', parameter: '7b0b00000d' },
+        (n) => new ContractDataDID(n, sci(37n, 123n), ep('viewStuff'), Parameter.fromHexString('7b0b00000d')),
     ],
-    ['sci:37:0/issuer', { type: 'sci', index: 37n, subindex: 0n, entrypoint: 'issuer' }],
-    ['sci:37:0', { type: 'sci', index: 37n, subindex: 0n }],
-    [`pkc:${PUBLIC_KEY}`, { type: 'pkc', key: PUBLIC_KEY }],
-    ['idp:37', { type: 'idp', index: 37 }],
-    [`encidcred:${ENC_ID_CRED}`, { type: 'encidcred', credId: ENC_ID_CRED }],
+    ['sci:37:0/issuer', (n) => new ContractDataDID(n, sci(37n, 0n), ep('issuer'))],
+    ['sci:37:0/issuer/', (n) => new ContractDataDID(n, sci(37n, 0n), ep('issuer'), Parameter.empty())],
+    ['sci:37:0', (n) => new ContractInstanceDID(n, sci(37n, 0n))],
+    [`pkc:${PUBLIC_KEY}`, (n) => new PublicKeyDID(n, PUBLIC_KEY)],
+    ['idp:37', (n) => new IdentityProviderDID(n, 37)],
+    [`encidcred:${ENC_ID_CRED}`, (n) => new EncryptedIdentityCredentialDID(n, ENC_ID_CRED)],
 ];
 
 const NETWORKS: [string, Network][] = [
@@ -132,28 +145,40 @@ describe('GenesisHashPrefix', () => {
     });
 });
 
-describe('ConcordiumDID', () => {
+describe('parseDID and the DID classes', () => {
     for (const [segment, network] of NETWORKS) {
-        test.each(IDENTIFIERS)(`round trips did:ccd:${segment}:%s`, (identifierString, identifier) => {
+        test.each(IDENTIFIERS)(`round trips did:ccd:${segment}:%s`, (identifierString, create) => {
             const did = `did:ccd:${segment}:${identifierString}`;
-            const parsed = ConcordiumDID.fromJSON(did);
-            expect(parsed).toEqual({ network, identifier });
+            const expected = create(network);
+            const parsed = parseDID(did);
+            expect(parsed).toEqual(expected);
+            expect(parsed).toBeInstanceOf(expected.constructor);
+            expect((expected.constructor as unknown as { fromJSON(did: string): ConcordiumDID }).fromJSON(did)).toEqual(
+                expected
+            );
             expect(parsed.toJSON()).toBe(did);
             expect(JSON.stringify({ did: parsed })).toBe(JSON.stringify({ did }));
         });
     }
 
-    test.each(IDENTIFIERS)('a missing network means mainnet: did:ccd:%s', (identifierString, identifier) => {
-        expect(ConcordiumDID.fromJSON(`did:ccd:${identifierString}`)).toEqual({ network: 'Mainnet', identifier });
+    test.each(IDENTIFIERS)('a missing network means mainnet: did:ccd:%s', (identifierString, create) => {
+        expect(parseDID(`did:ccd:${identifierString}`)).toEqual(create('Mainnet'));
     });
 
     test('an omitted subindex means 0', () => {
-        expect(ConcordiumDID.fromJSON('did:ccd:testnet:sci:37/viewStuff').identifier).toEqual({
-            type: 'sci',
-            index: 37n,
-            subindex: 0n,
-            entrypoint: 'viewStuff',
-        });
+        expect(parseDID('did:ccd:testnet:sci:37/viewStuff')).toEqual(
+            new ContractDataDID('Testnet', sci(37n, 0n), ep('viewStuff'))
+        );
+        expect(parseDID('did:ccd:testnet:sci:37')).toEqual(new ContractInstanceDID('Testnet', sci(37n, 0n)));
+    });
+
+    test('fromJSON of a class rejects other DID types', () => {
+        expect(() => IdentityProviderDID.fromJSON(`did:ccd:testnet:pkc:${PUBLIC_KEY}`)).toThrow(
+            'Invalid IdentityProviderDID format'
+        );
+        expect(() => PublicKeyDID.fromJSON('did:ccd:testnet:idp:3')).toThrow('Invalid PublicKeyDID format');
+        expect(() => ContractDataDID.fromJSON('did:ccd:testnet:sci:5:1')).toThrow('Invalid ContractDataDID format');
+        expect(() => AccountCredentialDID.fromJSON(`did:ccd:testnet:acc:${ADDRESS}`)).toThrow();
     });
 
     test.each([
@@ -162,18 +187,24 @@ describe('ConcordiumDID', () => {
         'did:ccd:testnet:idp:abc',
         'did:ccd:testnet:idp:4294967296',
         `did:ccd:testnet:cred:${CRED_ID}ff`,
+        // First bit not set: not a compressed BLS12-381 point.
+        `did:ccd:testnet:cred:0${CRED_ID.slice(1)}`,
+        `did:ccd:testnet:acc:${ADDRESS.slice(0, -1)}x`,
         `did:ccd:testnet:pkc:${PUBLIC_KEY.slice(2)}`,
+        'did:ccd:testnet:sci:5:1/issuer/abc',
+        'did:ccd:testnet:sci:5:1x',
+        `did:ccd:testnet:sci:5:1/${'a'.repeat(100)}`,
+        'did:ccd:testnet:encidcred:abc',
         `did:ccd:${TESTNET_PREFIX.slice(1)}:idp:0`,
         `did:ccd:${TESTNET_PREFIX.toUpperCase()}:idp:0`,
         `did:ccd:${TESTNET_GENESIS_HASH}:idp:0`,
     ])('rejects %s', (did) => {
-        expect(() => ConcordiumDID.fromJSON(did)).toThrow();
+        expect(() => parseDID(did)).toThrow();
     });
 
-    test('identifierOf checks the identifier type', () => {
-        const did = ConcordiumDID.fromJSON('did:ccd:testnet:idp:3');
-        expect(did.identifierOf('idp').index).toBe(3);
-        expect(() => did.identifierOf('sci')).toThrow();
+    test('constructors validate hex values', () => {
+        expect(() => new PublicKeyDID('Testnet', PUBLIC_KEY.slice(2))).toThrow();
+        expect(() => new EncryptedIdentityCredentialDID('Testnet', 'abc')).toThrow();
     });
 });
 
@@ -223,6 +254,14 @@ describe('DID helpers with genesis hash prefixes', () => {
         expect(IdentityProviderDID.fromChainId(`ccd:${CUSTOM_PREFIX}`, 2).toJSON()).toBe(
             `did:ccd:${CUSTOM_PREFIX}:idp:2`
         );
+    });
+
+    test('helpers reject malformed input', () => {
+        expect(() => createAccountDID('Testnet', 'abc')).toThrow();
+        expect(() => createWeb3IdDID('Testnet', 'abc', 5n, 1n)).toThrow();
+        expect(() => createPublicKeyDID('Testnet', 'abc')).toThrow();
+        expect(() => createIdentityStatementDID('Testnet', -1)).toThrow();
+        expect(() => createIdentityStatementDID('Testnet', 1.5)).toThrow();
     });
 
     test('fromJSON rejects other DID types', () => {

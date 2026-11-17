@@ -11,7 +11,7 @@ import { getConfig } from '../config.state';
 export type NamedNetwork = 'mainnet' | 'testnet';
 
 /**
- * URL schemes used to deep link into a mobile wallet, without `://`, e.g. `cryptox`.
+ * URL schemes used to deep link into a mobile wallet, without `://`, e.g. `mywallet`.
  * The UI opens `<scheme>://wc?uri=<WalletConnect URI>...`.
  */
 export interface WalletDeepLinks {
@@ -63,8 +63,8 @@ const DEFAULT_CHAIN_IDS: Record<NamedNetwork, string> = {
     mainnet: 'ccd:9dd9ca4d19e9393877d2c44b70f89acb',
 };
 
-// The schemes the CryptoX apps register: on iOS one per network build; on Android the stable (mainnet) and preview
-// (testnet) builds both register `cryptox-wc`.
+// The schemes the Concordium Wallet apps register: on iOS one per network build; on Android the stable (mainnet) and
+// preview (testnet) builds both register `cryptox-wc`.
 const DEFAULT_WALLET_DEEP_LINKS: Record<NamedNetwork, WalletDeepLinks> = {
     testnet: { ios: 'cryptoxtestnet', android: 'cryptox-wc' },
     mainnet: { ios: 'cryptox', android: 'cryptox-wc' },

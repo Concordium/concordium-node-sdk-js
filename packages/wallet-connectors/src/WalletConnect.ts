@@ -8,6 +8,7 @@ import {
     ContractName,
     CredentialStatements,
     EntrypointName,
+    GenesisHashPrefix,
     InitContractInput,
     InitContractPayload,
     Parameter,
@@ -20,6 +21,7 @@ import {
     getInitContractParameterSchema,
     getTransactionKindString,
     jsonUnwrapStringify,
+    networkToChainId,
     serializeAccountTransactionSignature,
     serializeInitContractParameters,
     serializeTypeValue,
@@ -567,17 +569,16 @@ export class WalletConnectConnection implements WalletConnection {
  */
 export function getChainId({ name, genesisHash, chainIdFormat }: Network): string {
     if (chainIdFormat === 'genesis') {
-        const prefix = genesisHash.toLowerCase().slice(0, GENESIS_HASH_PREFIX_HEX_LEN);
-        if (!/^[0-9a-f]{32}$/.test(prefix)) {
-            throw new Error(`Invalid genesis hash for network '${name}': ${genesisHash}`);
+        let prefix: GenesisHashPrefix.Type;
+        try {
+            prefix = GenesisHashPrefix.fromGenesisHash(genesisHash);
+        } catch {
+            throw new Error(`Invalid genesis hash: ${genesisHash}`);
         }
-        return `${WALLET_CONNECT_SESSION_NAMESPACE}:${prefix}`;
+        return networkToChainId(prefix);
     }
     return `${WALLET_CONNECT_SESSION_NAMESPACE}:${name}`;
 }
-
-/** The number of hex characters of a genesis hash used in genesis-based chain IDs. */
-const GENESIS_HASH_PREFIX_HEX_LEN = 32;
 
 /**
  * Returns a copy of `network` whose WalletConnect chain ID is based on its genesis hash

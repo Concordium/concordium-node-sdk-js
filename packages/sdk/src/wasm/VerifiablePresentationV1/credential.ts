@@ -4,10 +4,12 @@ import { ArInfo, AttributeKey, HexString, IpInfo, Network } from '../../types.js
 import { BlockHash, CredentialRegistrationId } from '../../types/index.js';
 import { bail } from '../../util.js';
 import {
-    ConcordiumDID,
+    AccountCredentialDID,
     CredentialStatus,
     CredentialsInputsIdentity,
     DIDString,
+    IdentityProviderDID,
+    parseDID,
     parseYearMonth,
 } from '../../web3-id/index.js';
 import { VerifiableCredentialV1 } from './index.js';
@@ -134,10 +136,8 @@ function parseAccountProofMetadata(cred: AccountCredential): {
     issuer: number;
 } {
     try {
-        const credId = CredentialRegistrationId.fromHexString(
-            ConcordiumDID.fromJSON(cred.credentialSubject.id).identifierOf('cred').credId
-        );
-        const issuer = ConcordiumDID.fromJSON(cred.issuer).identifierOf('idp').index;
+        const credId = AccountCredentialDID.fromJSON(cred.credentialSubject.id).credId;
+        const issuer = IdentityProviderDID.fromJSON(cred.issuer).index;
         return { credId, issuer };
     } catch {
         return bail('Failed to parse metedata from account credential proof');
@@ -146,7 +146,7 @@ function parseAccountProofMetadata(cred: AccountCredential): {
 
 function parseIdentityProofMetadata(cred: IdentityCredential): number {
     try {
-        return ConcordiumDID.fromJSON(cred.issuer).identifierOf('idp').index;
+        return IdentityProviderDID.fromJSON(cred.issuer).index;
     } catch {
         return bail('Failed to parse metedata from identity credential proof');
     }
@@ -249,7 +249,7 @@ export async function verifyMetadata(
 ): Promise<MetadataVerificationResult> {
     let parsedNetwork: Network | undefined;
     try {
-        parsedNetwork = ConcordiumDID.fromJSON(credential.credentialSubject.id).network;
+        parsedNetwork = parseDID(credential.credentialSubject.id).network;
     } catch {
         // handled below
     }

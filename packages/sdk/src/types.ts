@@ -1860,8 +1860,6 @@ export type IdentityObjectV1 = {
  * A Concordium network: one of the named networks `'Testnet'` and `'Mainnet'`, or any network identified by the
  * prefix of its genesis block hash ({@linkcode GenesisHashPrefix.Type}). A named network and its genesis hash prefix
  * refer to the same chain; use {@linkcode isSameNetwork} to compare networks.
- *
- * Key derivation only distinguishes mainnet from every other network; see {@linkcode getKeyDerivationNetwork}.
  */
 export type Network = 'Testnet' | 'Mainnet' | GenesisHashPrefix.Type;
 

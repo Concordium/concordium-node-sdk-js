@@ -17,7 +17,7 @@ import {
     VerifiablePresentationV1,
     VerificationRequestV1,
 } from '../../../src/pub/wasm.ts';
-import { ConcordiumDID, createIdentityCommitmentInputWithHdWallet } from '../../../src/pub/web3-id.ts';
+import { createIdentityCommitmentInputWithHdWallet, parseDID } from '../../../src/pub/web3-id.ts';
 import { BlockHash } from '../../../src/types/index.ts';
 import { ID_0_0_0, PUBLIC_0_0_0, TESTNET_GLOBAL_CONTEXT, TESTNET_IP_0, TEST_SEED } from './constants.ts';
 
@@ -220,7 +220,7 @@ describe('VerifiablePresentationV1', () => {
         const roundtrip = VerifiablePresentationV1.fromJSON(JSON.parse(JSON.stringify(presentation)));
         expect(roundtrip).toEqual(presentation);
         for (const credential of presentation.verifiableCredential) {
-            expect(ConcordiumDID.fromJSON(credential.credentialSubject.id).network).toBe(network);
+            expect(parseDID(credential.credentialSubject.id).network).toBe(network);
         }
 
         const result = VerifiablePresentationV1.verify(presentation, TESTNET_GLOBAL_CONTEXT, [

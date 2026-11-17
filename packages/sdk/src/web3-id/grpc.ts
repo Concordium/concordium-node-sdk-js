@@ -2,7 +2,15 @@ import { CIS4Contract } from '../cis4/CIS4Contract.js';
 import { CIS4 } from '../cis4/util.js';
 import { ConcordiumGRPCClient } from '../grpc/GRPCClient.js';
 import { isSameNetwork, networkToString } from '../networkHelpers.js';
-import { BlockHash, ContractAddress, CredentialRegistrationId, Network, VerifiablePresentation } from '../pub/types.js';
+import {
+    BlockHash,
+    ContractAddress,
+    CredentialRegistrationId,
+    EntrypointName,
+    Network,
+    Parameter,
+    VerifiablePresentation,
+} from '../pub/types.js';
 import {
     VerifiableCredentialProof,
     VerifiableCredentialProofAccount,
@@ -11,17 +19,24 @@ import {
 } from '../types/VerifiablePresentation.js';
 import { bail } from '../util.js';
 import { parseYearMonth } from './helpers.js';
-import { ConcordiumDID, CredentialsInputs, CredentialsInputsAccount, CredentialsInputsWeb3 } from './types.js';
+import {
+    AccountCredentialDID,
+    ContractDataDID,
+    CredentialsInputs,
+    CredentialsInputsAccount,
+    CredentialsInputsWeb3,
+    IdentityProviderDID,
+    PublicKeyDID,
+    parseDID,
+} from './types.js';
 
 function parseAccountProofMetadata(cred: VerifiableCredentialProofAccount): {
     credId: CredentialRegistrationId.Type;
     issuer: number;
 } {
     try {
-        const credId = CredentialRegistrationId.fromHexString(
-            ConcordiumDID.fromJSON(cred.credentialSubject.id).identifierOf('cred').credId
-        );
-        const issuer = ConcordiumDID.fromJSON(cred.issuer).identifierOf('idp').index;
+        const credId = AccountCredentialDID.fromJSON(cred.credentialSubject.id).credId;
+        const issuer = IdentityProviderDID.fromJSON(cred.issuer).index;
         return { credId, issuer };
     } catch {
         return bail('Failed to parse metedata from credential proof');
@@ -33,11 +48,12 @@ function parseWeb3IdProofMetadata(cred: VerifiableCredentialProofWeb3Id): {
     holder: string;
 } {
     try {
-        const issuer = ConcordiumDID.fromJSON(cred.issuer).identifierOf('sci');
-        if (issuer.entrypoint !== 'issuer' || (issuer.parameter ?? '') !== '') throw new Error('Not an issuer DID');
-        const contract = ContractAddress.create(issuer.index, issuer.subindex);
-        const holder = ConcordiumDID.fromJSON(cred.credentialSubject.id).identifierOf('pkc').key;
-        return { contract, holder };
+        const issuer = ContractDataDID.fromJSON(cred.issuer);
+        const hasParameter = issuer.parameter !== undefined && Parameter.toBuffer(issuer.parameter).length > 0;
+        if (EntrypointName.toString(issuer.entrypoint) !== 'issuer' || hasParameter)
+            throw new Error('Not an issuer DID');
+        const holder = PublicKeyDID.fromJSON(cred.credentialSubject.id).key;
+        return { contract: issuer.address, holder };
     } catch {
         return bail('Failed to parse metedata from credential proof');
     }
@@ -70,7 +86,7 @@ export async function verifyCredentialMetadata(
 ): Promise<CredentialWithMetadata> {
     let parsedNetwork: Network | undefined;
     try {
-        parsedNetwork = ConcordiumDID.fromJSON(credential.credentialSubject.id).network;
+        parsedNetwork = parseDID(credential.credentialSubject.id).network;
     } catch {
         // handled below
     }

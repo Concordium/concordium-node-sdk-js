@@ -13,10 +13,11 @@
 
 ### Fixed
 
-- All components now read the network from one place. Before, some used the `VITE_NETWORK` env var while others used
-  the configured network, and the chain ID sent from the session-approval path could be `undefined` when the
-  `VITE_CHAIN_ID_*` env vars were not set.
-- Mobile app detection and deep links used schemes the CryptoX apps don't register: `cryptoxmainnet://` /
+- The configured `network` option now applies everywhere. `VITE_NETWORK` is only its default, used when the option is
+  not set; before, some components read `VITE_NETWORK` directly and ignored the option. `VITE_CHAIN_ID_TESTNET` and
+  `VITE_CHAIN_ID_MAINNET` are optional overrides for the named networks' chain IDs, which default to the testnet and
+  mainnet genesis-hash chain IDs; before, leaving them unset could send an `undefined` chain ID to the wallet.
+- Mobile app detection and deep links used schemes the Concordium Wallet apps don't register: `cryptoxmainnet://` /
   `cryptox-wc-mainnet://` on mainnet instead of `cryptox://` / `cryptox-wc://`, and `cryptox-wc-testnet://` on
   Android testnet instead of `cryptox-wc://`.
 

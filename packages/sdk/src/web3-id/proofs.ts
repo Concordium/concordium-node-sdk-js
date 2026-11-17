@@ -14,7 +14,10 @@ import {
     Network,
 } from '../types.js';
 import * as AccountAddress from '../types/AccountAddress.js';
-import type * as ContractAddress from '../types/ContractAddress.js';
+import * as ContractAddress from '../types/ContractAddress.js';
+import * as CredentialRegistrationId from '../types/CredentialRegistrationId.js';
+import * as EntrypointName from '../types/EntrypointName.js';
+import * as Parameter from '../types/Parameter.js';
 import { ConcordiumHdWallet } from '../wasm/HdWallet.js';
 import {
     compareStringAttributes,
@@ -23,11 +26,13 @@ import {
     timestampToDate,
 } from './helpers.js';
 import {
+    AccountAddressDID,
     AccountCommitmentInput,
+    AccountCredentialDID,
     AccountCredentialStatement,
     AtomicStatementV2,
     AttributeType,
-    ConcordiumDID,
+    ContractDataDID,
     CredentialSchemaProperty,
     CredentialSchemaSubject,
     CredentialStatement,
@@ -37,9 +42,11 @@ import {
     IDENTITY_SUBJECT_SCHEMA,
     IdObjectUseData,
     IdentityCommitmentInput,
+    IdentityProviderDID,
     IdentityQualifier,
     MembershipStatementV2,
     NonMembershipStatementV2,
+    PublicKeyDID,
     RangeStatementV2,
     StatementAttributeType,
     VerifiableCredentialQualifier,
@@ -534,19 +541,20 @@ export class Web3StatementBuilder {
  * Used to build a request for a verifiable credential issued by a smart contract.
  *
  * @param network - The Concordium network: `'Testnet'`, `'Mainnet'` or a {@linkcode GenesisHashPrefix}
- * @param publicKey - The public key of the credential holder
+ * @param publicKey - The Ed25519 public key of the credential holder, as 64 hex characters
  * @param index - The contract index
  * @param subindex - The contract subindex
+ * @throws Error if `publicKey` is not 64 hex characters
  * @returns DID string in format: did:ccd:{network}:sci:{index}:{subindex}/credentialEntry/{publicKey}
  */
 export function createWeb3IdDID(network: Network, publicKey: string, index: bigint, subindex: bigint): DIDString {
-    return new ConcordiumDID(network, {
-        type: 'sci',
-        index,
-        subindex,
-        entrypoint: 'credentialEntry',
-        parameter: publicKey,
-    }).toJSON();
+    const holder = new PublicKeyDID(network, publicKey);
+    return new ContractDataDID(
+        network,
+        ContractAddress.create(index, subindex),
+        EntrypointName.fromString('credentialEntry'),
+        Parameter.fromHexString(holder.key)
+    ).toJSON();
 }
 
 /**
@@ -555,10 +563,11 @@ export function createWeb3IdDID(network: Network, publicKey: string, index: bigi
  *
  * @param network - The Concordium network: `'Testnet'`, `'Mainnet'` or a {@linkcode GenesisHashPrefix}
  * @param credId - The credential ID (registration ID)
+ * @throws Error if `credId` is not a valid credential registration ID
  * @returns DID string in format: did:ccd:{network}:cred:{credId}
  */
 export function createAccountDID(network: Network, credId: string): DIDString {
-    return new ConcordiumDID(network, { type: 'cred', credId }).toJSON();
+    return new AccountCredentialDID(network, CredentialRegistrationId.fromHexString(credId)).toJSON();
 }
 
 /**
@@ -567,10 +576,14 @@ export function createAccountDID(network: Network, credId: string): DIDString {
  *
  * @param network - The Concordium network: `'Testnet'`, `'Mainnet'` or a {@linkcode GenesisHashPrefix}
  * @param idpIndex - The index of the identity provider as registered on chain
+ * @throws Error if `idpIndex` is not an integer in the u32 range
  * @returns DID string in format: did:ccd:{network}:idp:{idpIndex}
  */
 export function createIdentityStatementDID(network: Network, idpIndex: number): DIDString {
-    return new ConcordiumDID(network, { type: 'idp', index: idpIndex }).toJSON();
+    if (!Number.isInteger(idpIndex) || idpIndex < 0 || idpIndex > 0xffffffff) {
+        throw new Error(`Invalid identity provider index: ${idpIndex}`);
+    }
+    return new IdentityProviderDID(network, idpIndex).toJSON();
 }
 
 /**
@@ -581,18 +594,19 @@ export function createIdentityStatementDID(network: Network, idpIndex: number): 
  * @returns DID string in format: did:ccd:{network}:acc:{address}
  */
 export function createAccountAddressDID(network: Network, address: AccountAddress.Type): DIDString {
-    return new ConcordiumDID(network, { type: 'acc', address: AccountAddress.toBase58(address) }).toJSON();
+    return new AccountAddressDID(network, address).toJSON();
 }
 
 /**
  * Creates a DID string for an Ed25519 public key.
  *
  * @param network - The Concordium network: `'Testnet'`, `'Mainnet'` or a {@linkcode GenesisHashPrefix}
- * @param publicKey - The public key as hex
+ * @param publicKey - The Ed25519 public key, as 64 hex characters
+ * @throws Error if `publicKey` is not 64 hex characters
  * @returns DID string in format: did:ccd:{network}:pkc:{publicKey}
  */
 export function createPublicKeyDID(network: Network, publicKey: HexString): DIDString {
-    return new ConcordiumDID(network, { type: 'pkc', key: publicKey }).toJSON();
+    return new PublicKeyDID(network, publicKey).toJSON();
 }
 
 /**

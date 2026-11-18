@@ -140,7 +140,10 @@ export async function createAndSendInitTransaction(
         sender: metadata.senderAddress,
     };
 
-    const transaction = Transaction.initContract(payload, metadata.energy).addMetadata(header).build();
+    const transaction = Transaction.initContract(payload, metadata.energy)
+        .addMetadata(header)
+        .addMultiSig(signer.getSignatureCount())
+        .build();
     const signed = await Transaction.signAndFinalize(transaction, signer);
     return moduleClient.grpcClient.sendTransaction(signed);
 }

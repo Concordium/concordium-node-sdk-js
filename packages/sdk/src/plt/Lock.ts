@@ -568,14 +568,14 @@ export function validateCancel(lock: Lock, sender: AccountAddress.Type): true {
  * @param details The fund operation details, used to validate the sender's available balance.
  * @returns `true` if the sender can fund the lock.
  * @throws {LockExpiredError} If the lock has expired.
- * @throws {MissingCapabilityError} If the sender does not have the `fund` capability for a `simpleV0` lock controller.
+ * @throws {MissingCapabilityError} If the sender does not have the `hold` capability for a `simpleV0` lock controller.
  * @throws {TokenNotAllowedError} If the token is not configured on a `simpleV0` lock controller.
  * @throws {InsufficientFundsError} If the sender does not have enough available balance of the token.
  *
  * For unknown lock configuration variants, the capability and configured-token checks are skipped.
  */
 export async function validateFund(lock: Lock, sender: AccountAddress.Type, details: FundDetails): Promise<true> {
-    validateCapability(lock, sender, LockConfig.SimpleV0Capability.Fund);
+    validateCapability(lock, sender, LockConfig.SimpleV0Capability.Hold);
 
     if (!allowsToken(lock, details.token)) {
         throw new TokenNotAllowedError(details.token, lock.info.lock);
@@ -695,7 +695,7 @@ export async function cancel(
  * @param options Optional validation behavior.
  * @returns The hash of the submitted transaction.
  * @throws {LockExpiredError} If `options.validate` is `true` and the lock has expired.
- * @throws {MissingCapabilityError} If `options.validate` is `true` and the sender does not have the `fund` capability.
+ * @throws {MissingCapabilityError} If `options.validate` is `true` and the sender does not have the `hold` capability.
  * @throws {TokenNotAllowedError} If `options.validate` is `true` and the token is not configured on the lock.
  * @throws {InsufficientFundsError} If `options.validate` is `true` and the sender does not have enough available balance of the token.
  */

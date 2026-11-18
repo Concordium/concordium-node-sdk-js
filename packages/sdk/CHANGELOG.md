@@ -19,6 +19,7 @@
 ### Changed
 
 - **Breaking:** Unscoped transaction construction now requires `additionalEnergy`, including explicit zero for operations with fully payload-derived costs. Use `createTokenUpdateInput` with `OperationInput`; each cancellation requires non-negative `balanceReferences` (including zero). `Lock.sendOperations` and proposal `.cancel(count)` require explicit counts.
+- **Breaking:** Rename `LockConfig.SimpleV0Capability.Fund` (`'fund'`) to `Hold` (`'hold'`). The `lockFund` operation and `validateFund` API are unchanged.
 - Lock execution aligned with node implementation.
 - **Breaking:** Lock configurations no longer include the field `keepAlive`.
 

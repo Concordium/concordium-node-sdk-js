@@ -83,7 +83,7 @@ describe('PLT Lock.create', () => {
             getNextAccountNonce: jest.fn().mockResolvedValue({ nonce: SequenceNumber.create(12) }),
             sendTransaction: jest.fn().mockResolvedValue('tx-hash'),
         };
-        const info = createLockInfo([LockConfig.SimpleV0Capability.Fund]);
+        const info = createLockInfo([LockConfig.SimpleV0Capability.Hold]);
 
         const payload = await Lock.create(grpc as never, ACCOUNT_1, info.config)
             .fund({ token: TOKEN_ID, amount: TokenAmount.create(10n, 0) })
@@ -129,7 +129,7 @@ describe('PLT Lock validation', () => {
                                 )
                             ),
                     }),
-                    createLockInfo([LockConfig.SimpleV0Capability.Fund])
+                    createLockInfo([LockConfig.SimpleV0Capability.Hold])
                 ),
                 ACCOUNT_1,
                 { token: TOKEN_ID, amount: TokenAmount.create(10n, 0) }
@@ -176,7 +176,7 @@ describe('PLT Lock validation', () => {
         ).rejects.toMatchObject({
             code: Lock.LockErrorCode.MISSING_CAPABILITY,
             sender: ACCOUNT_1,
-            capability: LockConfig.SimpleV0Capability.Fund,
+            capability: LockConfig.SimpleV0Capability.Hold,
             lockId: LOCK_ID,
         });
     });
@@ -184,7 +184,7 @@ describe('PLT Lock validation', () => {
     it('allows cancelling an expired lock without the cancel capability', () => {
         const lock = Lock.fromInfo(
             mockGrpc(),
-            createLockInfo([LockConfig.SimpleV0Capability.Fund], pastEpoch(), ACCOUNT_1)
+            createLockInfo([LockConfig.SimpleV0Capability.Hold], pastEpoch(), ACCOUNT_1)
         );
 
         expect(Lock.validateCancel(lock, ACCOUNT_2)).toBe(true);
@@ -199,7 +199,7 @@ describe('PLT Lock validation', () => {
                         createSenderAccountInfo(TOKEN_ID, TokenAmount.create(100n, 0), TokenAmount.create(100n, 0))
                     ),
             }),
-            createLockInfo([LockConfig.SimpleV0Capability.Fund], pastEpoch())
+            createLockInfo([LockConfig.SimpleV0Capability.Hold], pastEpoch())
         );
 
         await expect(
@@ -223,7 +223,7 @@ describe('PLT Lock validation', () => {
                         createSenderAccountInfo(otherToken, TokenAmount.create(100n, 0), TokenAmount.create(100n, 0))
                     ),
             }),
-            createLockInfo([LockConfig.SimpleV0Capability.Fund])
+            createLockInfo([LockConfig.SimpleV0Capability.Hold])
         );
 
         await expect(
@@ -247,7 +247,7 @@ describe('PLT Lock validation', () => {
                         createSenderAccountInfo(TOKEN_ID, TokenAmount.create(100n, 0), TokenAmount.create(5n, 0))
                     ),
             }),
-            createLockInfo([LockConfig.SimpleV0Capability.Fund])
+            createLockInfo([LockConfig.SimpleV0Capability.Hold])
         );
 
         await expect(
@@ -367,7 +367,7 @@ describe('PLT Lock validation', () => {
 
 describe('PLT Lock.fromCbor', () => {
     it('decodes CBOR-encoded LockInfo', () => {
-        const info = createLockInfo([LockConfig.SimpleV0Capability.Fund]);
+        const info = createLockInfo([LockConfig.SimpleV0Capability.Hold]);
         const lock = Lock.fromCbor(mockGrpc(), Cbor.encode(info));
 
         expect(lock.info.lock).toEqual(LOCK_ID);

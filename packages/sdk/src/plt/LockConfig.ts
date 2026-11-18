@@ -10,7 +10,7 @@ import type { Memo } from './TokenOperation.js';
 
 /** Canonical counts used to price lock creation. */
 type CreationComplexity = {
-    /** Distinct Fund-authorized accounts, merging aliases and grants. */
+    /** Distinct Hold-authorized accounts, merging aliases and grants. */
     holders: number;
     /** Distinct case-insensitive configured token IDs. */
     tokens: number;
@@ -23,7 +23,7 @@ export function getCreationComplexity(config: Type): CreationComplexity {
     const grants = new Map<string, boolean>();
     for (const grant of config.simpleV0.grants) {
         const identity = Buffer.from(AccountAddress.toBuffer(grant.account.address).subarray(0, 29)).toString('hex');
-        grants.set(identity, grants.get(identity) === true || grant.roles.includes(SimpleV0Capability.Fund));
+        grants.set(identity, grants.get(identity) === true || grant.roles.includes(SimpleV0Capability.Hold));
     }
 
     const holders = [...grants.values()].filter(Boolean);
@@ -44,7 +44,7 @@ export enum Variant {
 /** Capabilities that can be granted for a simple v0 lock. */
 export enum SimpleV0Capability {
     /** Authorizes funding the lock with a permitted token. */
-    Fund = 'fund',
+    Hold = 'hold',
     /** Authorizes releasing funds from the lock. */
     Release = 'release',
     /** Authorizes sending funds from the lock to an eligible recipient. */

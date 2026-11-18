@@ -9,7 +9,7 @@ describe('PLT LockConfig', () => {
     const config = LockConfig.simpleV0(
         [account],
         CborEpoch.fromEpochSeconds(10n),
-        [{ account, roles: [LockConfig.SimpleV0Capability.Fund, LockConfig.SimpleV0Capability.Send] }],
+        [{ account, roles: [LockConfig.SimpleV0Capability.Hold, LockConfig.SimpleV0Capability.Send] }],
         [token]
     );
 
@@ -28,7 +28,7 @@ describe('PLT LockConfig', () => {
 
     it('decodes CBOR bytes directly and through generic dispatch', () => {
         const fixture =
-            'a16873696d706c655630a466657870697279c10a666772616e747381a265726f6c6573826466756e646473656e64676163636f756e74d99d73a201d99d71a101190397035820151515151515151515151515151515151515151515151515151515151515151566746f6b656e73816674546f6b656e6a726563697069656e747381d99d73a201d99d71a1011903970358201515151515151515151515151515151515151515151515151515151515151515';
+            'a16873696d706c655630a466657870697279c10a666772616e747381a265726f6c65738264686f6c646473656e64676163636f756e74d99d73a201d99d71a101190397035820151515151515151515151515151515151515151515151515151515151515151566746f6b656e73816674546f6b656e6a726563697069656e747381d99d73a201d99d71a1011903970358201515151515151515151515151515151515151515151515151515151515151515';
         const bytes = Cbor.fromHexString(fixture).bytes;
 
         expect(LockConfig.fromCBOR(bytes)).toEqual(config);
@@ -150,7 +150,7 @@ describe('PLT LockConfig', () => {
             { ...valid, grants: 'no' },
             { ...valid, grants: [{}] },
             { ...valid, grants: [{ account: 'not-an-account', roles: [] }] },
-            { ...valid, grants: [{ account, roles: 'fund' }] },
+            { ...valid, grants: [{ account, roles: 'hold' }] },
             { ...valid, grants: [{ account, roles: ['unknown'] }] },
             { ...valid, tokens: 'no' },
             { ...valid, tokens: [1] },

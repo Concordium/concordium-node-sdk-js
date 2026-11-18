@@ -77,7 +77,7 @@ const client = new ConcordiumGRPCNodeClient(
                 {
                     account: CborAccountAddress.fromAccountAddress(sender),
                     roles: [
-                        LockConfig.SimpleV0Capability.Fund,
+                        LockConfig.SimpleV0Capability.Hold,
                         LockConfig.SimpleV0Capability.Send,
                         LockConfig.SimpleV0Capability.Release,
                         LockConfig.SimpleV0Capability.Cancel,

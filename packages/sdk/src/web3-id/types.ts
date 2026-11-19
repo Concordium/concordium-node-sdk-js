@@ -5,6 +5,8 @@ import {
     GenericRangeStatement,
     GenericRevealStatement,
 } from '../commonProofTypes.js';
+import { MAX_U64 } from '../constants.js';
+import { networkFromChainId, networkFromString, networkToString } from '../networkHelpers.js';
 import type {
     ArInfo,
     AttributeKey,
@@ -15,12 +17,82 @@ import type {
     IpInfo,
     Network,
 } from '../types.js';
+import * as AccountAddress from '../types/AccountAddress.js';
 import * as ContractAddress from '../types/ContractAddress.js';
+import * as CredentialRegistrationId from '../types/CredentialRegistrationId.js';
+import * as EntrypointName from '../types/EntrypointName.js';
+import * as GenesisHashPrefix from '../types/GenesisHashPrefix.js';
+import * as Parameter from '../types/Parameter.js';
 
 /**
  * The "Distributed Identifier" string.
  */
 export type DIDString = string;
+
+const DID_PREFIX = 'did:ccd:';
+const ED25519_KEY_REGEX = /^[0-9a-fA-F]{64}$/;
+const HEX_REGEX = /^([0-9a-fA-F]{2})*$/;
+const U32_MAX = 0xffffffff;
+
+function parseNetworkSegment(input: string): [Network, string] {
+    for (const name of ['testnet', 'mainnet']) {
+        if (input.startsWith(`${name}:`)) return [networkFromString(name), input.slice(name.length + 1)];
+    }
+    // A run of hex digits followed by `:` is a genesis hash prefix. Identifier type tags are short (the only
+    // all-hex one is `acc`), so a longer run that is not a valid prefix is reported as a bad network.
+    const hexRun = input.match(/^([0-9a-fA-F]+):/);
+    if (hexRun !== null && hexRun[1].length > 3) {
+        return [GenesisHashPrefix.fromHexString(hexRun[1]), input.slice(hexRun[1].length + 1)];
+    }
+    // No network means mainnet.
+    return ['Mainnet', input];
+}
+
+/** Splits a DID into its network, identifier type tag and the rest of the identifier. */
+function splitDID(did: DIDString): { network: Network; type: string; value: string } {
+    if (!did.startsWith(DID_PREFIX)) throw new Error(`Invalid DID: ${did}`);
+    const [network, rest] = parseNetworkSegment(did.slice(DID_PREFIX.length));
+    const separator = rest.indexOf(':');
+    if (separator < 0) throw new Error(`Invalid DID: ${did}`);
+    return { network, type: rest.slice(0, separator), value: rest.slice(separator + 1) };
+}
+
+/** Parses a DID of a single identifier type, throwing `Invalid <name> format` on any failure. */
+function parseDIDOfType<T>(
+    did: DIDString,
+    type: string,
+    name: string,
+    parse: (network: Network, value: string) => T
+): T {
+    try {
+        const parsed = splitDID(did);
+        if (parsed.type !== type) throw new Error();
+        return parse(parsed.network, parsed.value);
+    } catch {
+        throw new Error(`Invalid ${name} format: ${did}`);
+    }
+}
+
+function formatDID(network: Network, type: string, value: string): DIDString {
+    return `${DID_PREFIX}${networkToString(network)}:${type}:${value}`;
+}
+
+/**
+ * Parses the identifier of an `sci` DID: `<index>[:<subindex>]` followed by the rest (`/<entrypoint>...` or
+ * nothing). An omitted subindex means 0, matching concordium-base.
+ */
+function parseContractIdentifier(value: string): [ContractAddress.Type, string] {
+    const m = value.match(/^(\d+)(?::(\d+))?(.*)$/);
+    if (m === null) throw new Error(`Invalid contract identifier: ${value}`);
+    const [, index, subindex, rest] = m;
+    const address = ContractAddress.create(BigInt(index), BigInt(subindex ?? 0));
+    if (address.index > MAX_U64 || address.subindex > MAX_U64) throw new Error(`Invalid contract identifier: ${value}`);
+    return [address, rest];
+}
+
+function formatContractAddress(address: ContractAddress.Type): string {
+    return `${address.index}:${address.subindex}`;
+}
 
 /** Represents a timestamp attribute with type information. */
 export type TimestampAttribute = {
@@ -481,7 +553,7 @@ export class IdentityProviderDID {
     /**
      * Creates a new identity provider DID.
      *
-     * @param network - The Concordium network (Mainnet, Testnet)
+     * @param network - The Concordium network: `'Testnet'`, `'Mainnet'` or a {@linkcode GenesisHashPrefix}
      * @param index - The identity provider index on the network
      */
     constructor(
@@ -490,12 +562,22 @@ export class IdentityProviderDID {
     ) {}
 
     /**
+     * Creates an identity provider DID from a CAIP-2 chain ID.
+     *
+     * @param chainId - `ccd:testnet`, `ccd:mainnet` or `ccd:<genesis hash prefix>`
+     * @param index - The identity provider index on the network
+     */
+    public static fromChainId(chainId: string, index: number): IdentityProviderDID {
+        return new IdentityProviderDID(networkFromChainId(chainId), index);
+    }
+
+    /**
      * Serializes the identity provider DID to a string format.
      *
-     * @returns DID string in format: ccd:{network}:idp:{index}
+     * @returns DID string in format: did:ccd:{network}:idp:{index}
      */
     public toJSON(): DIDString {
-        return `did:ccd:${this.network.toLowerCase()}:idp:${this.index}`;
+        return formatDID(this.network, 'idp', this.index.toString());
     }
 
     /**
@@ -506,16 +588,10 @@ export class IdentityProviderDID {
      * @throws Error if the DID format is invalid
      */
     public static fromJSON(did: DIDString): IdentityProviderDID {
-        const parts = did.split(':');
-        if (parts.length !== 5 || parts[0] !== 'did' || parts[1] !== 'ccd' || parts[3] !== 'idp') {
-            throw new Error(`Invalid IdentityQualifierDID format: ${did}`);
-        }
-        const network = (parts[2].charAt(0).toUpperCase() + parts[2].slice(1)) as Network;
-        const index = parseInt(parts[4], 10);
-        if (isNaN(index)) {
-            throw new Error(`Invalid index in IdentityProviderDID: ${parts[3]}`);
-        }
-        return new IdentityProviderDID(network, index);
+        return parseDIDOfType(did, 'idp', 'IdentityProviderDID', (network, value) => {
+            if (!/^\d+$/.test(value) || Number(value) > U32_MAX) throw new Error();
+            return new IdentityProviderDID(network, Number(value));
+        });
     }
 }
 
@@ -527,7 +603,7 @@ export class ContractInstanceDID {
     /**
      * Creates a new contract instance DID.
      *
-     * @param network - The Concordium network (Mainnet, Testnet)
+     * @param network - The Concordium network: `'Testnet'`, `'Mainnet'` or a {@linkcode GenesisHashPrefix}
      * @param address - The contract address (index and subindex)
      */
     constructor(
@@ -538,10 +614,10 @@ export class ContractInstanceDID {
     /**
      * Serializes the contract instance DID to a string format.
      *
-     * @returns DID string in format: ccd:{network}:sci:{index}:{subindex}
+     * @returns DID string in format: did:ccd:{network}:sci:{index}:{subindex}
      */
     public toJSON(): DIDString {
-        return `did:ccd:${this.network.toLowerCase()}:sci:${this.address.index}:${this.address.subindex}`;
+        return formatDID(this.network, 'sci', formatContractAddress(this.address));
     }
 
     /**
@@ -549,17 +625,289 @@ export class ContractInstanceDID {
      *
      * @param did - The DID string to parse
      * @returns The parsed contract instance DID
-     * @throws Error if the DID format is invalid
+     * @throws Error if the DID format is invalid, including when it refers to contract data
+     * (`sci:<index>:<subindex>/<entrypoint>...`, see {@linkcode ContractDataDID})
      */
     public static fromJSON(did: DIDString): ContractInstanceDID {
-        const parts = did.split(':');
-        if (parts.length !== 6 || parts[0] !== 'did' || parts[1] !== 'ccd' || parts[3] !== 'sci') {
-            throw new Error(`Invalid ContractInstanceDID format: ${did}`);
-        }
-        const network = (parts[2].charAt(0).toUpperCase() + parts[2].slice(1)) as Network;
-        const index = BigInt(parts[4]);
-        const subindex = BigInt(parts[5]);
-        return new ContractInstanceDID(network, ContractAddress.create(index, subindex));
+        return parseDIDOfType(did, 'sci', 'ContractInstanceDID', (network, value) => {
+            const [address, rest] = parseContractIdentifier(value);
+            if (rest !== '') throw new Error();
+            return new ContractInstanceDID(network, address);
+        });
+    }
+}
+
+/**
+ * Decentralized Identifier (DID) for data in a smart contract: an entrypoint of a contract instance and a parameter
+ * to it, e.g. the issuer of a Web3 ID credential (`.../issuer`) or a credential entry
+ * (`.../credentialEntry/<holder public key>`). Mirrors `IdentifierType::ContractData` in concordium-base.
+ */
+export class ContractDataDID {
+    /**
+     * Creates a new contract data DID.
+     *
+     * @param network - The Concordium network: `'Testnet'`, `'Mainnet'` or a {@linkcode GenesisHashPrefix}
+     * @param address - The contract address (index and subindex)
+     * @param entrypoint - The entrypoint
+     * @param parameter - The parameter. When `undefined` it is left out of the DID string, which means an empty
+     * parameter.
+     */
+    /** The parameter, or `undefined` when it is left out of the DID string (meaning an empty parameter). */
+    public parameter: Parameter.Type | undefined;
+
+    constructor(
+        public network: Network,
+        public address: ContractAddress.Type,
+        public entrypoint: EntrypointName.Type,
+        parameter?: Parameter.Type
+    ) {
+        this.parameter = parameter;
+    }
+
+    /**
+     * Serializes the contract data DID to a string format.
+     *
+     * @returns DID string in format: did:ccd:{network}:sci:{index}:{subindex}/{entrypoint}[/{parameter}]
+     */
+    public toJSON(): DIDString {
+        let value = `${formatContractAddress(this.address)}/${EntrypointName.toString(this.entrypoint)}`;
+        if (this.parameter !== undefined) value += `/${Parameter.toHexString(this.parameter)}`;
+        return formatDID(this.network, 'sci', value);
+    }
+
+    /**
+     * Deserializes a contract data DID from its string representation.
+     *
+     * @param did - The DID string to parse
+     * @returns The parsed contract data DID
+     * @throws Error if the DID format is invalid, including when it has no entrypoint (see
+     * {@linkcode ContractInstanceDID})
+     */
+    public static fromJSON(did: DIDString): ContractDataDID {
+        return parseDIDOfType(did, 'sci', 'ContractDataDID', (network, value) => {
+            const [address, rest] = parseContractIdentifier(value);
+            const m = rest.match(/^\/([^/]*)(?:\/(.*))?$/);
+            if (m === null) throw new Error();
+            const [, entrypoint, parameter] = m;
+            if (parameter !== undefined && !HEX_REGEX.test(parameter)) throw new Error();
+            return new ContractDataDID(
+                network,
+                address,
+                EntrypointName.fromString(entrypoint),
+                parameter === undefined ? undefined : Parameter.fromHexString(parameter)
+            );
+        });
+    }
+}
+
+/**
+ * Decentralized Identifier (DID) for a Concordium account, by its address.
+ */
+export class AccountAddressDID {
+    /**
+     * Creates a new account address DID.
+     *
+     * @param network - The Concordium network: `'Testnet'`, `'Mainnet'` or a {@linkcode GenesisHashPrefix}
+     * @param address - The account address
+     */
+    constructor(
+        public network: Network,
+        public address: AccountAddress.Type
+    ) {}
+
+    /**
+     * Serializes the account address DID to a string format.
+     *
+     * @returns DID string in format: did:ccd:{network}:acc:{address}
+     */
+    public toJSON(): DIDString {
+        return formatDID(this.network, 'acc', AccountAddress.toBase58(this.address));
+    }
+
+    /**
+     * Deserializes an account address DID from its string representation.
+     *
+     * @param did - The DID string to parse
+     * @returns The parsed account address DID
+     * @throws Error if the DID format is invalid
+     */
+    public static fromJSON(did: DIDString): AccountAddressDID {
+        return parseDIDOfType(
+            did,
+            'acc',
+            'AccountAddressDID',
+            (network, value) => new AccountAddressDID(network, AccountAddress.fromBase58(value))
+        );
+    }
+}
+
+/**
+ * Decentralized Identifier (DID) for a Concordium account credential, by its credential registration ID.
+ */
+export class AccountCredentialDID {
+    /**
+     * Creates a new account credential DID.
+     *
+     * @param network - The Concordium network: `'Testnet'`, `'Mainnet'` or a {@linkcode GenesisHashPrefix}
+     * @param credId - The credential registration ID
+     */
+    constructor(
+        public network: Network,
+        public credId: CredentialRegistrationId.Type
+    ) {}
+
+    /**
+     * Serializes the account credential DID to a string format.
+     *
+     * @returns DID string in format: did:ccd:{network}:cred:{credId}
+     */
+    public toJSON(): DIDString {
+        return formatDID(this.network, 'cred', CredentialRegistrationId.toHexString(this.credId));
+    }
+
+    /**
+     * Deserializes an account credential DID from its string representation.
+     *
+     * @param did - The DID string to parse
+     * @returns The parsed account credential DID
+     * @throws Error if the DID format is invalid
+     */
+    public static fromJSON(did: DIDString): AccountCredentialDID {
+        return parseDIDOfType(
+            did,
+            'cred',
+            'AccountCredentialDID',
+            (network, value) => new AccountCredentialDID(network, CredentialRegistrationId.fromHexString(value))
+        );
+    }
+}
+
+/**
+ * Decentralized Identifier (DID) for an Ed25519 public key, e.g. the holder of a Web3 ID credential.
+ */
+export class PublicKeyDID {
+    /**
+     * Creates a new public key DID.
+     *
+     * @param network - The Concordium network: `'Testnet'`, `'Mainnet'` or a {@linkcode GenesisHashPrefix}
+     * @param key - The Ed25519 public key, as 64 hex characters
+     * @throws Error if `key` is not 64 hex characters
+     */
+    constructor(
+        public network: Network,
+        public key: HexString
+    ) {
+        if (!ED25519_KEY_REGEX.test(key)) throw new Error(`Invalid Ed25519 public key: ${key}`);
+    }
+
+    /**
+     * Serializes the public key DID to a string format.
+     *
+     * @returns DID string in format: did:ccd:{network}:pkc:{key}
+     */
+    public toJSON(): DIDString {
+        return formatDID(this.network, 'pkc', this.key);
+    }
+
+    /**
+     * Deserializes a public key DID from its string representation.
+     *
+     * @param did - The DID string to parse
+     * @returns The parsed public key DID
+     * @throws Error if the DID format is invalid
+     */
+    public static fromJSON(did: DIDString): PublicKeyDID {
+        return parseDIDOfType(did, 'pkc', 'PublicKeyDID', (network, value) => new PublicKeyDID(network, value));
+    }
+}
+
+/**
+ * Decentralized Identifier (DID) for an encrypted, ephemeral identity credential ID (the encryption of `IdCredPub`).
+ */
+export class EncryptedIdentityCredentialDID {
+    /**
+     * Creates a new encrypted identity credential DID.
+     *
+     * @param network - The Concordium network: `'Testnet'`, `'Mainnet'` or a {@linkcode GenesisHashPrefix}
+     * @param credId - The encrypted identity credential ID, as hex
+     * @throws Error if `credId` is not hex
+     */
+    constructor(
+        public network: Network,
+        public credId: HexString
+    ) {
+        if (!HEX_REGEX.test(credId)) throw new Error(`Invalid encrypted identity credential ID: ${credId}`);
+    }
+
+    /**
+     * Serializes the encrypted identity credential DID to a string format.
+     *
+     * @returns DID string in format: did:ccd:{network}:encidcred:{credId}
+     */
+    public toJSON(): DIDString {
+        return formatDID(this.network, 'encidcred', this.credId);
+    }
+
+    /**
+     * Deserializes an encrypted identity credential DID from its string representation.
+     *
+     * @param did - The DID string to parse
+     * @returns The parsed encrypted identity credential DID
+     * @throws Error if the DID format is invalid
+     */
+    public static fromJSON(did: DIDString): EncryptedIdentityCredentialDID {
+        return parseDIDOfType(
+            did,
+            'encidcred',
+            'EncryptedIdentityCredentialDID',
+            (network, value) => new EncryptedIdentityCredentialDID(network, value)
+        );
+    }
+}
+
+/**
+ * Any Concordium DID: `did:ccd:<network>:<identifier>`, mirroring `web3id::did::Method` in concordium-base.
+ * Use {@linkcode parseDID} to parse a DID of unknown type, and `instanceof` to tell the types apart.
+ */
+export type ConcordiumDID =
+    | AccountAddressDID
+    | AccountCredentialDID
+    | ContractInstanceDID
+    | ContractDataDID
+    | PublicKeyDID
+    | IdentityProviderDID
+    | EncryptedIdentityCredentialDID;
+
+/**
+ * Parses a Concordium DID of any type. The network may be `testnet`, `mainnet` or a genesis hash prefix, and may be
+ * omitted (meaning mainnet), matching concordium-base.
+ *
+ * @param did - The DID string to parse
+ * @returns The parsed DID, as the class for its identifier type
+ * @throws Error if `did` is not a valid Concordium DID
+ */
+export function parseDID(did: DIDString): ConcordiumDID {
+    let parsed: ReturnType<typeof splitDID>;
+    try {
+        parsed = splitDID(did);
+    } catch {
+        throw new Error(`Invalid DID: ${did}`);
+    }
+    switch (parsed.type) {
+        case 'acc':
+            return AccountAddressDID.fromJSON(did);
+        case 'cred':
+            return AccountCredentialDID.fromJSON(did);
+        case 'sci':
+            return parsed.value.includes('/') ? ContractDataDID.fromJSON(did) : ContractInstanceDID.fromJSON(did);
+        case 'pkc':
+            return PublicKeyDID.fromJSON(did);
+        case 'idp':
+            return IdentityProviderDID.fromJSON(did);
+        case 'encidcred':
+            return EncryptedIdentityCredentialDID.fromJSON(did);
+        default:
+            throw new Error(`Invalid DID: ${did}`);
     }
 }
 

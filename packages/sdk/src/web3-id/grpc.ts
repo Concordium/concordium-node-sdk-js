@@ -1,7 +1,16 @@
 import { CIS4Contract } from '../cis4/CIS4Contract.js';
 import { CIS4 } from '../cis4/util.js';
 import { ConcordiumGRPCClient } from '../grpc/GRPCClient.js';
-import { BlockHash, ContractAddress, CredentialRegistrationId, Network, VerifiablePresentation } from '../pub/types.js';
+import { isSameNetwork, networkToString } from '../networkHelpers.js';
+import {
+    BlockHash,
+    ContractAddress,
+    CredentialRegistrationId,
+    EntrypointName,
+    Network,
+    Parameter,
+    VerifiablePresentation,
+} from '../pub/types.js';
 import {
     VerifiableCredentialProof,
     VerifiableCredentialProofAccount,
@@ -10,34 +19,44 @@ import {
 } from '../types/VerifiablePresentation.js';
 import { bail } from '../util.js';
 import { parseYearMonth } from './helpers.js';
-import { CredentialsInputs, CredentialsInputsAccount, CredentialsInputsWeb3 } from './types.js';
+import {
+    AccountCredentialDID,
+    ContractDataDID,
+    CredentialsInputs,
+    CredentialsInputsAccount,
+    CredentialsInputsWeb3,
+    IdentityProviderDID,
+    PublicKeyDID,
+    parseDID,
+} from './types.js';
 
 function parseAccountProofMetadata(cred: VerifiableCredentialProofAccount): {
     credId: CredentialRegistrationId.Type;
     issuer: number;
 } {
-    const _bail = () => bail('Failed to parse metedata from credential proof');
-    const [, c] = cred.credentialSubject.id.match(/.*:cred:(.*)$/) ?? _bail();
-    const [, i] = cred.issuer.match(/.*:idp:(\d*)$/) ?? _bail();
-
-    const credId = CredentialRegistrationId.fromHexString(c);
-    const issuer = Number(i);
-
-    return { credId, issuer };
+    try {
+        const credId = AccountCredentialDID.fromJSON(cred.credentialSubject.id).credId;
+        const issuer = IdentityProviderDID.fromJSON(cred.issuer).index;
+        return { credId, issuer };
+    } catch {
+        return bail('Failed to parse metedata from credential proof');
+    }
 }
 
 function parseWeb3IdProofMetadata(cred: VerifiableCredentialProofWeb3Id): {
     contract: ContractAddress.Type;
     holder: string;
 } {
-    const _bail = () => bail('Failed to parse metedata from credential proof');
-    const [, index, subindex] = cred.issuer.match(/.*:sci:(\d*):(\d*)\/issuer$/) ?? _bail();
-    const [, h] = cred.credentialSubject.id.match(/.*:pkc:(.*)$/) ?? _bail();
-
-    const contract = ContractAddress.create(BigInt(index), BigInt(subindex));
-    const holder = h;
-
-    return { contract, holder };
+    try {
+        const issuer = ContractDataDID.fromJSON(cred.issuer);
+        const hasParameter = issuer.parameter !== undefined && Parameter.toBuffer(issuer.parameter).length > 0;
+        if (EntrypointName.toString(issuer.entrypoint) !== 'issuer' || hasParameter)
+            throw new Error('Not an issuer DID');
+        const holder = PublicKeyDID.fromJSON(cred.credentialSubject.id).key;
+        return { contract: issuer.address, holder };
+    } catch {
+        return bail('Failed to parse metedata from credential proof');
+    }
 }
 
 /** Contains the credential status and inputs required to verify a corresponding credential proof */
@@ -65,11 +84,16 @@ export async function verifyCredentialMetadata(
     credential: VerifiableCredentialProof,
     blockHash?: BlockHash.Type
 ): Promise<CredentialWithMetadata> {
-    const [, parsedNetwork] =
-        credential.credentialSubject.id.match(/did:ccd:(.*):.*:.*/) ?? bail('Failed to parse network from credential');
-    if (parsedNetwork.toLowerCase() !== network.toLowerCase()) {
+    let parsedNetwork: Network | undefined;
+    try {
+        parsedNetwork = parseDID(credential.credentialSubject.id).network;
+    } catch {
+        // handled below
+    }
+    if (parsedNetwork === undefined) return bail('Failed to parse network from credential');
+    if (!isSameNetwork(parsedNetwork, network)) {
         bail(
-            `Network found in credential (${parsedNetwork.toLowerCase()}) did not match expected network (${network.toLowerCase()})`
+            `Network found in credential (${networkToString(parsedNetwork)}) did not match expected network (${networkToString(network)})`
         );
     }
 

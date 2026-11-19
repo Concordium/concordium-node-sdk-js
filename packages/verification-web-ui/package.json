@@ -50,6 +50,7 @@
         "link": "./setup-link.sh",
         "preview": "vite preview",
         "typecheck": "tsc --noEmit",
+        "test": "tsx --test test/*.test.ts",
         "lint": "eslint . --cache --ext ts,tsx --max-warnings 0",
         "lint-fix": "yarn lint --fix",
         "fmt": "prettier --write .",
@@ -65,6 +66,7 @@
         "postcss": "^8.5.6",
         "prettier": "^3.8.1",
         "tailwindcss": "^4.1.17",
+        "tsx": "^4.20.6",
         "typescript": "^5.9.3",
         "vite": "^7.2.7",
         "vite-plugin-dts": "^4.5.4"

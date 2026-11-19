@@ -9,6 +9,7 @@ export { DataBlob } from './DataBlob.js';
 export * as Duration from './Duration.js';
 export * as Energy from './Energy.js';
 export * as EntrypointName from './EntrypointName.js';
+export * as GenesisHashPrefix from './GenesisHashPrefix.js';
 export * as InitName from './InitName.js';
 export * as ModuleClient from './ModuleClient.js';
 export * as ModuleReference from './ModuleReference.js';

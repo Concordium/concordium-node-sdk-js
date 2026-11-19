@@ -9,6 +9,7 @@ import { ID_APP_STORE } from '@/constants/wallet.registry';
 import { getGlobalContainer } from '@/index';
 import type { HideModalFunction, ModalFunction, ShowModalFunction } from '@/types';
 import { openAppStoreForConcordiumID } from '@/utils/mobileAppDetection';
+import { resolveNetwork } from '@/utils/network';
 
 export const createLandingModal: ModalFunction = () => {
     const landingHTML = `
@@ -102,10 +103,7 @@ export const createLandingModal: ModalFunction = () => {
                 // Clear existing sessions to ensure fresh pairing
                 await wcService.clearAllSessionsForNewPairing();
 
-                const network =
-                    (localStorage.getItem(ModalConstants.LOCAL_STORAGE_FLAGS.SDK_NETWORK) as 'mainnet' | 'testnet') ||
-                    'testnet';
-                const chainIds = WalletConnectConstants.CHAIN_IDS[network];
+                const chainIds = [resolveNetwork().chainId];
 
                 // Generate WalletConnect URI by calling connect()
                 const { uri, approval } = await wcService.connect({

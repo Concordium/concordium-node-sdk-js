@@ -2,6 +2,25 @@
 
 ## Unreleased
 
+### Added
+
+- The `network` option accepts a custom network, identified by its chain ID (`ccd:` followed by the first 32 hex
+  characters of the genesis block hash), with optional wallet deep-link schemes:
+  `{ chainId: 'ccd:<prefix>', walletDeepLinks: { ios: 'mywallet', android: 'mywallet-wc' } }`. Without
+  `walletDeepLinks`, the UI doesn't deep link into a wallet and falls back to the QR code / WalletConnect URI.
+  `'mainnet'` and `'testnet'` keep their chain IDs (apart from the deep-link fixes below).
+- Exported the `NetworkConfig`, `CustomNetworkConfig`, `NamedNetwork` and `WalletDeepLinks` types.
+
+### Fixed
+
+- The configured `network` option now applies everywhere. `VITE_NETWORK` is only its default, used when the option is
+  not set; before, some components read `VITE_NETWORK` directly and ignored the option. `VITE_CHAIN_ID_TESTNET` and
+  `VITE_CHAIN_ID_MAINNET` are optional overrides for the named networks' chain IDs, which default to the testnet and
+  mainnet genesis-hash chain IDs; before, leaving them unset could send an `undefined` chain ID to the wallet.
+- Mobile app detection and deep links used schemes the Concordium Wallet apps don't register: `cryptoxmainnet://` /
+  `cryptox-wc-mainnet://` on mainnet instead of `cryptox://` / `cryptox-wc://`, and `cryptox-wc-testnet://` on
+  Android testnet instead of `cryptox-wc://`.
+
 ### 0.2.1
 
 **Mobile deep link and session handling improvements:**

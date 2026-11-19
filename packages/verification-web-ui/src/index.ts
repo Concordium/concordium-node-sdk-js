@@ -16,6 +16,7 @@ export * from './types';
 // Event types for consumer callbacks
 // Export configuration and state
 export * from './config.state';
+export type { CustomNetworkConfig, NamedNetwork, NetworkConfig, WalletDeepLinks } from './utils/network';
 
 // Configuration functions
 

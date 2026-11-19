@@ -2,6 +2,40 @@
 
 ## Unreleased
 
+### Added
+
+- `Network` can now also be a `GenesisHashPrefix.Type`: the first 32 lowercase hex characters of a chain's genesis block
+  hash. This identifies any chain, including ones without a well-known name, and is written into DIDs as
+  `did:ccd:<prefix>:…` (e.g. `did:ccd:4221332d34e1694168c2a0c0b3fd0f27:idp:0`), matching `ccd:<prefix>` chain IDs.
+- Network helpers: `networkToString`, `networkFromString`, `isSameNetwork`, `getNetworkGenesisHashPrefix`,
+  `networkFromChainId`, `networkToChainId` and `getKeyDerivationNetwork`, and the `GenesisHashPrefix` module
+  (`Type`, `TESTNET`, `MAINNET`, `instanceOf`, `fromHexString`, `fromGenesisHash`, `toHexString`).
+- DID classes for the remaining Concordium DID types, alongside `IdentityProviderDID` and `ContractInstanceDID`, each
+  with `fromJSON`/`toJSON`: `AccountAddressDID` (`acc`), `AccountCredentialDID` (`cred`), `ContractDataDID`
+  (`sci:<index>:<subindex>/<entrypoint>[/<parameter>]`), `PublicKeyDID` (`pkc`) and `EncryptedIdentityCredentialDID`
+  (`encidcred`). `ConcordiumDID` is the union of all DID classes, and `parseDID` parses a DID of any type.
+- `IdentityProviderDID.fromChainId`, `createAccountAddressDID` and `createPublicKeyDID`.
+
+### Changed
+
+- `Network` is now `'Testnet' | 'Mainnet' | GenesisHashPrefix.Type`. Every function that takes a `Network` accepts a
+  genesis hash prefix, and existing calls compile and behave as before. Code that checks a `Network` exhaustively must
+  handle the genesis hash prefix case to compile.
+- Key derivation (`ConcordiumHdWallet`, identity requests and recovery, ID proofs, credential deployment) only
+  distinguishes mainnet from every other network: `'Mainnet'` and the mainnet genesis hash prefix derive as mainnet
+  (coin type 919), every other network derives as testnet (coin type 1).
+- Network checks when verifying credentials compare chains: a credential with a `did:ccd:testnet:…` subject verifies
+  against the testnet genesis hash prefix, and the other way round.
+- DIDs built for `'Testnet'`/`'Mainnet'` are unchanged, and parsing `did:ccd:testnet:…` still gives `'Testnet'`.
+  `IdentityProviderDID.fromJSON` and `ContractInstanceDID.fromJSON` now reject unknown network names instead of
+  returning them capitalised, and accept DIDs without a network segment (meaning mainnet).
+  `ContractInstanceDID.fromJSON` also accepts an omitted subindex (`sci:<index>`, meaning subindex 0).
+- `createAccountDID`, `createWeb3IdDID` and `createIdentityStatementDID` now validate their inputs and throw on a
+  malformed credential registration ID, public key or identity provider index, instead of returning an invalid DID.
+  `createWeb3IdDID` writes the public key as lowercase hex.
+- Verifying credential metadata (`verifyCredentialMetadata`, `getPublicData`, `VerifiableCredentialV1.verifyMetadata`)
+  parses the subject and issuer DIDs fully, and rejects malformed DIDs that were accepted before.
+
 ### Fixed
 
 - Deserializing a `configureDelegation` payload with a passive delegation target no longer fails with "Failed to read 8 bytes from the cursor." The deserializer was unconditionally reading an 8-byte baker ID even though passive delegation targets do not encode one.

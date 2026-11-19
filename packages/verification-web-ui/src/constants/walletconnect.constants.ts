@@ -39,9 +39,4 @@ export const WalletConnectConstants = {
     ] as const,
 
     EVENTS: ['session_ping', 'chain_changed', 'accounts_changed', 'account_disconnected', 'session_event'] as const,
-
-    CHAIN_IDS: {
-        mainnet: [import.meta.env.VITE_CHAIN_ID_MAINNET || 'ccd:9dd9ca4d19e9393877d2c44b70f89acb'],
-        testnet: [import.meta.env.VITE_CHAIN_ID_TESTNET || 'ccd:4221332d34e1694168c2a0c0b3fd0f27'],
-    },
 } as const;

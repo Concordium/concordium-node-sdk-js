@@ -2,6 +2,8 @@
 import { SignClient } from '@walletconnect/sign-client';
 import type { ISignClient, SessionTypes } from '@walletconnect/types';
 
+import { resolveNetwork } from './network';
+
 // WalletConnect configuration interface
 export interface WalletConnectConfig {
     projectId: string;
@@ -168,13 +170,7 @@ export async function generateConnectionUri(namespaces: Record<string, any>): Pr
 // Concordium-specific namespace configuration
 // Get the network-specific chain ID
 export function getChainId(): string[] {
-    const network = import.meta.env.VITE_NETWORK;
-
-    if (network === 'testnet') {
-        return [import.meta.env.VITE_CHAIN_ID_TESTNET || 'ccd:4221332d34e1694168c2a0c0b3fd0f27']; // Testnet chain
-    } else {
-        return [import.meta.env.VITE_CHAIN_ID_MAINNET || 'ccd:9dd9ca4d19e9393877d2c44b70f89acb']; // Mainnet chain
-    }
+    return [resolveNetwork().chainId];
 }
 
 export const NAMESPACE = {

@@ -267,6 +267,9 @@ export interface WalletConnection {
 export interface Network {
     /**
      * The name of the network (i.e. "testnet", "mainnet", etc.).
+     *
+     * Unless {@linkcode chainIdFormat} is `'genesis'`, the WalletConnect chain ID is `ccd:<name>`.
+     * Default mobile wallets are only known for "testnet" and "mainnet".
      */
     name: string;
 
@@ -274,6 +277,17 @@ export interface Network {
      * The hash of the genesis block.
      */
     genesisHash: string;
+
+    /**
+     * How the CAIP-2 chain ID used with WalletConnect identifies this network:
+     * - `'name'` (default): `ccd:<name>`, e.g. `ccd:testnet`.
+     * - `'genesis'`: `ccd:<first 32 hex characters of the genesis hash>`. This identifies any chain, including
+     *   ones without a well-known name, and matches the network segment of genesis-based Concordium DIDs.
+     *   Only use it with wallets that support genesis-based chain IDs.
+     *
+     * See {@linkcode withGenesisChainId}.
+     */
+    chainIdFormat?: 'name' | 'genesis';
 
     /**
      * The connection configuration for a gRPC Web endpoint for performing API (v2) queries against a

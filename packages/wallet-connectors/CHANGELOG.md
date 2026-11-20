@@ -5,9 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.9.0-alpha.0]
+## Unreleased
 
-- Amended signAndSendSponsoredTransaction to have an optional parameter for smartContract schema
+### Added
+
+- Optional `chainIdFormat` on `Network`. Set it to `'genesis'` (or use the new `withGenesisChainId` helper) to identify
+  the network to WalletConnect as `ccd:<genesis hash prefix>` instead of `ccd:<name>`. This works for any chain,
+  including ones without a well-known name. The default is unchanged.
+- Export `getChainId`.
+
+### Changed
+
+- Requires the `@concordium/web-sdk` release that adds `GenesisHashPrefix` and the network helpers, which are used to
+  compute genesis-based chain IDs.
+
+## [0.9.0]
+
+- Amended signAndSendSponsoredTransaction to have an optional parameter for smartContract schema.
+- Change `signAndSendTransaction` for init contract transactions to convert the schema to a compatible format.
 
 ## [0.8.0]
 

@@ -20,6 +20,7 @@ import {
 import { WalletConnectConstants } from '@/constants/walletconnect.constants';
 import { ServiceFactory } from '@/services';
 import type { HideModalFunction, ModalFunction, ShowModalFunction } from '@/types';
+import { resolveNetwork } from '@/utils/network';
 
 // Store detected wallets
 let detectedWallets: WalletInfo[] = [];
@@ -516,9 +517,7 @@ async function initializeWalletConnect(): Promise<void> {
     try {
         // Check for SDK-managed config in localStorage
         const projectId = localStorage.getItem(ModalConstants.LOCAL_STORAGE_FLAGS.SDK_PROJECT_ID);
-        const network =
-            (localStorage.getItem(ModalConstants.LOCAL_STORAGE_FLAGS.SDK_NETWORK) as 'mainnet' | 'testnet') ||
-            'testnet';
+        const network = localStorage.getItem(ModalConstants.LOCAL_STORAGE_FLAGS.SDK_NETWORK) || 'testnet';
         const metadataStr = localStorage.getItem('sdkWalletConnectMetadata');
         const metadata = metadataStr ? JSON.parse(metadataStr) : null;
 
@@ -542,7 +541,7 @@ async function initializeWalletConnect(): Promise<void> {
         // This prevents conflicts when user tries different wallets
         await wcService.clearAllSessionsForNewPairing();
 
-        const chainIds = WalletConnectConstants.CHAIN_IDS[network];
+        const chainIds = [resolveNetwork().chainId];
 
         const { uri, approval } = await wcService.connect({
             ccd: {

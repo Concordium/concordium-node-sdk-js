@@ -19,10 +19,12 @@ const WASM_FILENAME_JS = `${WASM_FILENAME}.js`;
 
 // Copy files to react native folder
 export const copyToFolder = (bundlerPath: string, outPath: string) =>
-    copyfiles(
-        [path.join(bundlerPath, 'index*'), path.join(bundlerPath, 'package.json'), outPath],
-        { up: bundlerPath.split(path.sep).length, flat: true },
-        () => {} // no-op
+    new Promise<void>((resolve, reject) =>
+        copyfiles(
+            [path.join(bundlerPath, 'index*'), path.join(bundlerPath, 'package.json'), outPath],
+            { up: bundlerPath.split(path.sep).length, flat: true },
+            (err) => (err ? reject(err) : resolve())
+        )
     );
 
 export const convertWasmToJs = async (outPath: string) => {

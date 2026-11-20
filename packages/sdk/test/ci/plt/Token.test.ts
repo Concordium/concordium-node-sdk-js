@@ -1,3 +1,4 @@
+import { SequenceNumber, SimpleAccountKeys, TransactionHash, buildAccountSigner } from '../../../src/index.js';
 import {
     Cbor,
     CborAccountAddress,
@@ -7,12 +8,18 @@ import {
     TokenMetadataUrl,
     TokenModuleAccountState,
     TokenModuleState,
+    TokenOperationType,
+    TokenPauseOperation,
     TokenTransfer,
+    createTokenUpdatePayload,
 } from '../../../src/pub/plt.js';
 import { AccountAddress, AccountInfo } from '../../../src/pub/types.js';
 
 const ACCOUNT_1 = AccountAddress.fromBase58('4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd');
 const ACCOUNT_2 = AccountAddress.fromBase58('3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB');
+const KEY_1 = '11'.repeat(32);
+const KEY_2 = '22'.repeat(32);
+const TRANSACTION_HASH = TransactionHash.fromHexString('00'.repeat(32));
 
 // Mock the gRPC client for validateTransfer tests
 jest.mock('../../../src/grpc/GRPCClient.js', () => {
@@ -555,6 +562,34 @@ describe('PLT Token update supply operation', () => {
         await expect(
             Token.burn(token, governanceAddress, amount, signer, undefined, { validate: true })
         ).rejects.toThrow(Token.PausedError);
+    });
+});
+
+describe('PLT Token.sendRaw', () => {
+    const signers: [string, SimpleAccountKeys][] = [
+        ['one credential with one key', { 0: { 0: KEY_1 } }],
+        ['one credential with two keys', { 0: { 0: KEY_1, 1: KEY_2 } }],
+        ['two credentials with one key each', { 0: { 0: KEY_1 }, 1: { 0: KEY_2 } }],
+    ];
+
+    it.each(signers)('should submit a signature for every key of a signer with %s', async (_, keys) => {
+        const token = createMockToken(8);
+        const sendTransaction = jest.fn().mockResolvedValue(TRANSACTION_HASH);
+        token.grpc.getNextAccountNonce = jest
+            .fn()
+            .mockResolvedValue({ nonce: SequenceNumber.create(1), allFinal: true });
+        token.grpc.sendTransaction = sendTransaction;
+
+        const operation: TokenPauseOperation = { [TokenOperationType.Pause]: {} };
+        const payload = createTokenUpdatePayload({ tokenId: token.info.id, operations: operation });
+
+        const hash = await Token.sendRaw(token, ACCOUNT_1, payload, buildAccountSigner(keys));
+
+        expect(hash).toBe(TRANSACTION_HASH);
+        const [{ signature }] = sendTransaction.mock.calls[0];
+        for (const [credential, credentialKeys] of Object.entries(keys)) {
+            expect(Object.keys(signature[credential])).toEqual(Object.keys(credentialKeys));
+        }
     });
 });
 

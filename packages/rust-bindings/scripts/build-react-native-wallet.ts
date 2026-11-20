@@ -8,5 +8,5 @@ const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 const walletBundlerPath = path.join(__dirname, '../lib/wallet/bundler');
 const walletOutPath = path.join(__dirname, '../lib/wallet/react-native');
 
-copyToFolder(walletBundlerPath, walletOutPath);
-convertWasmToJs(walletOutPath);
+await copyToFolder(walletBundlerPath, walletOutPath);
+await convertWasmToJs(walletOutPath);

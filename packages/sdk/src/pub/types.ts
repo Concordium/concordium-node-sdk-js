@@ -1,6 +1,7 @@
 import * as ContractName from '../types/ContractName.js';
 import * as CredentialRegistrationId from '../types/CredentialRegistrationId.js';
 import * as EntrypointName from '../types/EntrypointName.js';
+import * as GenesisHashPrefix from '../types/GenesisHashPrefix.js';
 import * as ModuleClient from '../types/ModuleClient.js';
 // To limit the exports meant only for internal use, we re-create the module exports.
 import * as AccountAddress from './types/AccountAddress.js';
@@ -46,6 +47,7 @@ export {
 export * from '../signHelpers.js';
 export * from '../versionedTypeHelpers.js';
 export * from '../accountHelpers.js';
+export * from '../networkHelpers.js';
 
 export { isHex, streamToList, unwrap } from '../util.js';
 
@@ -92,6 +94,7 @@ export {
     CcdAmount,
     TransactionExpiry,
     ModuleReference,
+    GenesisHashPrefix,
 };
 
 export * from '../types/cbor.js';

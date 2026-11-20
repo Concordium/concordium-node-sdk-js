@@ -8,16 +8,20 @@ import {
     ContractName,
     CredentialStatements,
     EntrypointName,
+    GenesisHashPrefix,
     InitContractInput,
     InitContractPayload,
     Parameter,
     Payload,
+    SchemaVersion,
     Transaction,
     UpdateContractInput,
     UpdateContractPayload,
     VerifiablePresentation,
+    getInitContractParameterSchema,
     getTransactionKindString,
     jsonUnwrapStringify,
+    networkToChainId,
     serializeAccountTransactionSignature,
     serializeInitContractParameters,
     serializeTypeValue,
@@ -29,6 +33,7 @@ import { MobileWallet } from '@walletconnect/modal-core';
 // eslint-disable-next-line import/no-named-as-default
 import SignClient from '@walletconnect/sign-client';
 import { ISignClient, ProposalTypes, SessionTypes, SignClientTypes } from '@walletconnect/types';
+import { Buffer } from 'buffer/';
 
 import {
     Network,
@@ -87,7 +92,8 @@ export type WalletConnectModalMobileWallet = MobileWallet & {
  *
  * @param network The {@linkcode Network} to connect to.
  * @param [mobileWallets] The list of mobile wallets to use for deep linking. Defaults to the concordium and cryptoX wallets for mobile for the specified `network`.
- * If `network` is anything but {@linkcode MAINNET} or {@linkcode TESTNET}, the default value is an empty list.
+ * The default is looked up by `network.name`, so if `network` is anything but {@linkcode MAINNET} or {@linkcode TESTNET}
+ * (by name), the default value is an empty list. For other networks, pass the wallets that support it.
  * @param [enableExplorer] Whether to enable the wallet connect explorer in the wallet connect modal. Defaults to `false`.
  *
  * @returns the corresponding {@linkcode WalletConnectModalConfig}
@@ -231,12 +237,30 @@ function serializeUpdateContractMessage(
     }
 }
 
+/** Smart contract module schema format compatible with WalletConnect wallets. */
+export type WalletConnectSchemaModule = {
+    type: 'module';
+    /** Base64 string value. */
+    value: string;
+    version?: SchemaVersion;
+};
+
+/** Smart contract parameter schema format compatible with WalletConnect wallets. */
+export type WalletConnectSchemaParameter = {
+    type: 'parameter';
+    /** Base64 string value. */
+    value: string;
+};
+
+/** Smart contract schema format compatible with WalletConnect wallets. */
+export type WalletConnectSchemaFormat = WalletConnectSchemaModule | WalletConnectSchemaParameter;
+
 /**
  * Convert schema into the object format expected by the Mobile crypto library (function 'parameter_to_json')
  * which decodes the parameter before presenting it to the user for approval.
  * @param schema The schema object.
  */
-function convertSchemaFormat(schema: Schema | undefined) {
+function convertSchemaFormat(schema: Schema | undefined): WalletConnectSchemaFormat | null {
     if (!schema) {
         return null;
     }
@@ -255,6 +279,45 @@ function convertSchemaFormat(schema: Schema | undefined) {
         default:
             throw new UnreachableCaseError('schema', schema);
     }
+}
+
+/**
+ * Converts the transaction schema to the format expected by WalletConnect.
+ *
+ * For InitContract transactions using a ModuleSchema, extracts the parameter
+ * TypeSchema for the specific init function. This allows the mobile wallet to
+ * decode and display the serialized init parameters without requiring the full
+ * module schema.
+ *
+ * Other transaction and schema types use the standard schema conversion.
+ */
+function convertTransactionSchemaFormat(
+    type: AccountTransactionType,
+    payload: SendTransactionPayload,
+    schema: Schema | undefined
+): WalletConnectSchemaFormat | null {
+    if (!schema) {
+        return null;
+    }
+
+    if (type === AccountTransactionType.InitContract && schema.type === 'ModuleSchema') {
+        // Currently, mobile wallets accepting transaction requests do not support module schemas
+        // for "init contract" transactions.
+        const initContractPayload = payload as InitContractPayload;
+
+        const parameterSchema = getInitContractParameterSchema(
+            Uint8Array.from(schema.value).buffer,
+            initContractPayload.initName,
+            schema.version
+        );
+
+        return {
+            type: 'parameter',
+            value: Buffer.from(parameterSchema).toString('base64'),
+        };
+    }
+
+    return convertSchemaFormat(schema);
 }
 
 /**
@@ -378,7 +441,7 @@ export class WalletConnectConnection implements WalletConnection {
             type: getTransactionKindString(type),
             sender: accountAddress,
             payload: accountTransactionPayloadToJson(serializePayloadParameters(type, payload, typedParams)),
-            schema: convertSchemaFormat(typedParams?.schema),
+            schema: convertTransactionSchemaFormat(type, payload, typedParams?.schema),
         };
         try {
             const { hash } = (await this.connector.client.request({
@@ -497,8 +560,35 @@ export class WalletConnectConnection implements WalletConnection {
     }
 }
 
-function getChainId({ name }: Network): string {
+/**
+ * The CAIP-2 chain ID used with WalletConnect for `network`: `ccd:<name>` by default, or
+ * `ccd:<genesis hash prefix>` when {@linkcode Network.chainIdFormat} is `'genesis'`.
+ *
+ * @param network The network to get the chain ID of.
+ * @returns The chain ID.
+ */
+export function getChainId({ name, genesisHash, chainIdFormat }: Network): string {
+    if (chainIdFormat === 'genesis') {
+        let prefix: GenesisHashPrefix.Type;
+        try {
+            prefix = GenesisHashPrefix.fromGenesisHash(genesisHash);
+        } catch {
+            throw new Error(`Invalid genesis hash: ${genesisHash}`);
+        }
+        return networkToChainId(prefix);
+    }
     return `${WALLET_CONNECT_SESSION_NAMESPACE}:${name}`;
+}
+
+/**
+ * Returns a copy of `network` whose WalletConnect chain ID is based on its genesis hash
+ * (`ccd:<genesis hash prefix>`) rather than its name. See {@linkcode Network.chainIdFormat}.
+ *
+ * @param network The network to use genesis-based chain IDs for.
+ * @returns The updated network.
+ */
+export function withGenesisChainId(network: Network): Network {
+    return { ...network, chainIdFormat: 'genesis' };
 }
 
 /**

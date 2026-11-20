@@ -8,6 +8,7 @@ import { ModalConstants } from '@/constants/modal.constants';
 import { dispatchConcordiumEvent } from '@/index';
 import { ServiceFactory } from '@/services';
 import type { HideModalFunction, ModalFunction, ShowModalFunction } from '@/types';
+import { resolveNetwork, walletDeepLink } from '@/utils/network';
 
 // Global variables for modal state management
 let scanModalElement: HTMLElement | null = null;
@@ -473,7 +474,7 @@ async function initializeWalletConnection(): Promise<void> {
  */
 async function initializeSDKManagedConnection(): Promise<void> {
     const projectId = localStorage.getItem(ModalConstants.LOCAL_STORAGE_FLAGS.SDK_PROJECT_ID);
-    const network = localStorage.getItem(ModalConstants.LOCAL_STORAGE_FLAGS.SDK_NETWORK) as 'mainnet' | 'testnet';
+    const network = localStorage.getItem(ModalConstants.LOCAL_STORAGE_FLAGS.SDK_NETWORK);
 
     if (!projectId || !network) {
         throw new Error('SDK project ID or network not found. Please call initWalletConnect() first.');
@@ -491,7 +492,7 @@ async function initializeSDKManagedConnection(): Promise<void> {
     const { WalletConnectConstants } = await import('@/constants/walletconnect.constants');
 
     // Get the chain ID for the network
-    const chainIds = WalletConnectConstants.CHAIN_IDS[network];
+    const chainIds = [resolveNetwork().chainId];
 
     // Generate WalletConnect URI by calling connect()
     const { uri, approval } = await wcService.connect({
@@ -591,9 +592,7 @@ export async function autoSendPresentationRequestIfConfigured(topic: string): Pr
         }
 
         // Get network configuration
-        const network = localStorage.getItem(ModalConstants.LOCAL_STORAGE_FLAGS.SDK_NETWORK) as 'mainnet' | 'testnet';
-        const chainId =
-            network === 'mainnet' ? import.meta.env.VITE_CHAIN_ID_MAINNET : import.meta.env.VITE_CHAIN_ID_TESTNET;
+        const { chainId } = resolveNetwork();
 
         // Get metadata from localStorage
         const metadataStr = localStorage.getItem('sdkWalletConnectMetadata');
@@ -1050,25 +1049,14 @@ async function checkForActiveSession(): Promise<any | null> {
  * @returns The deep link URL
  */
 function generateDeepLink(walletType: WalletTypeValues, uri: string): string | null {
-    const network = localStorage.getItem(ModalConstants.LOCAL_STORAGE_FLAGS.SDK_NETWORK) || 'testnet';
-    const ua = navigator.userAgent;
-    let deepLink: string | null = null;
-
     if (walletType === WALLET_TYPES.CONCORDIUM_WALLET) {
-        // Check device type for Concordium Wallet
-        if (/iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream) {
-            // iOS
-            deepLink = `cryptox${network}://wc?uri=${encodeURIComponent(uri)}&redirect=googlechrome://`;
-        } else if (/android/i.test(ua)) {
-            // Android
-            deepLink = `cryptox-wc-${network}://wc?uri=${encodeURIComponent(uri)}&go_back=true`;
-        }
+        // Network-specific wallet schemes; null when the network has none for this platform.
+        return walletDeepLink(resolveNetwork(), uri, navigator.userAgent);
     } else if (walletType === WALLET_TYPES.CONCORDIUM_ID) {
         // Concordium ID deep link format expected by the app
-        deepLink = `concordiumidapp://wc?uri=${encodeURIComponent(uri)}`;
+        return `concordiumidapp://wc?uri=${encodeURIComponent(uri)}`;
     }
-
-    return deepLink;
+    return null;
 }
 
 /**

@@ -4,6 +4,10 @@
 
 ### Added
 
+- `createUnsignedCredentialForExistingAccountV1` and `createUnsignedCredentialForExistingAccountV1NoSeed`, which create
+  an unsigned credential for an existing account using the version 1 algorithm. Unlike
+  `createUnsignedCredentialForExistingAccount`, the attribute commitment randomness is derived from the seed or supplied
+  by the caller instead of being generated at random.
 - `Network` can now also be a `GenesisHashPrefix.Type`: the first 32 lowercase hex characters of a chain's genesis block
   hash. This identifies any chain, including ones without a well-known name, and is written into DIDs as
   `did:ccd:<prefix>:…` (e.g. `did:ccd:4221332d34e1694168c2a0c0b3fd0f27:idp:0`), matching `ccd:<prefix>` chain IDs.

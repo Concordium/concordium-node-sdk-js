@@ -3,21 +3,30 @@
 import * as ed from '@concordium/web-sdk/shims/ed25519';
 import fs from 'fs';
 
-import { TransactionExpiry } from '../../src/index.js';
-import { getCredentialDeploymentSignDigest } from '../../src/serialization.js';
+import { AccountAddress, TransactionExpiry } from '../../src/index.js';
+import {
+    getCredentialDeploymentSignDigest,
+    getCredentialForExistingAccountSignDigest,
+} from '../../src/serialization.js';
 import {
     AttributeKey,
+    AttributesKeys,
     BlockItemKind,
     CredentialDeploymentPayload,
     IdentityInput,
     IdentityObjectV1,
     VerifyKey,
 } from '../../src/types.js';
+import { ConcordiumHdWallet } from '../../src/wasm/HdWallet.js';
 import {
     CredentialInput,
+    CredentialInputNoSeed,
+    buildSignedCredentialForExistingAccount,
     createCredentialDeploymentPayload,
     createCredentialPayload,
     createCredentialPayloadNoSeed,
+    createUnsignedCredentialForExistingAccountV1,
+    createUnsignedCredentialForExistingAccountV1NoSeed,
 } from '../../src/wasm/credentialDeploymentTransactions.js';
 import { deserializeTransaction } from '../../src/wasm/deserialization.js';
 import { serializeCredentialDeploymentTransactionForSubmission } from '../../src/wasm/serialization.js';
@@ -206,4 +215,71 @@ test('Test createCredentialTransactionNoSeed lastname with special characters', 
     expect(typeof cdi.arData[2].encIdCredPubShare).toEqual('string');
     expect(typeof cdi.arData[3].encIdCredPubShare).toEqual('string');
     expect(output.expiry.expiryEpochSeconds).toEqual(BigInt(expiry));
+});
+
+const existingAccountAddress = AccountAddress.fromBase58('4hXCdgNTxgM7LNm8nFJEfjDhEcyjjqQnPSRyBS9QgmHKQVxKRf');
+
+test('createUnsignedCredentialForExistingAccountV1NoSeed uses the supplied attribute randomness', () => {
+    const input: CredentialInputNoSeed = JSON.parse(
+        fs.readFileSync('./test/ci/resources/credential-input-no-seed.json').toString()
+    );
+
+    const { unsignedCdi: cdi, randomness } = createUnsignedCredentialForExistingAccountV1NoSeed(
+        input,
+        existingAccountAddress
+    );
+
+    const attributesRand = Object.entries(randomness.attributesRand);
+    expect(attributesRand.length).toBeGreaterThan(0);
+    for (const [key, value] of attributesRand) {
+        expect(value).toEqual((input.attributeRandomness as Record<string, string>)[key]);
+    }
+
+    expect(cdi.credId).toEqual(
+        '930e1e148d2a08b14ed3b5569d4768c96dbea5f540822ee38a6c52ca6c172be408ca4b78d6e2956cfad157bd02804c2c'
+    );
+    expect(cdi.credentialPublicKeys.keys[0]!.verifyKey).toEqual(
+        '3522291ef370e89424a2ed8a9e440963a783aec4e34377192360f763e1671d77'
+    );
+    expect(cdi.credentialPublicKeys.threshold).toEqual(1);
+    expect(cdi.revocationThreshold).toEqual(2);
+    expect(Object.keys(cdi.arData)).toEqual(['1', '2', '3']);
+});
+
+test('createUnsignedCredentialForExistingAccountV1 derives the attribute randomness from the seed and can be signed', async () => {
+    const revealedAttributes: AttributeKey[] = ['firstName'];
+    const idObject = JSON.parse(fs.readFileSync('./test/ci/resources/identity-object.json').toString()).value;
+    const input = createCredentialInput(revealedAttributes, idObject);
+
+    const { unsignedCdi: cdi, randomness } = createUnsignedCredentialForExistingAccountV1(
+        input,
+        existingAccountAddress
+    );
+
+    expect(cdi.credId).toEqual(
+        'b317d3fea7de56f8c96f6e72820c5cd502cc0eef8454016ee548913255897c6b52156cc60df965d3efb3f160eff6ced4'
+    );
+    expect(cdi.credentialPublicKeys.keys[0]!.verifyKey).toEqual(
+        '29723ec9a0b4ca16d5d548b676a1a0adbecdedc5446894151acb7699293d69b1'
+    );
+    expect(Object.keys(cdi.policy.revealedAttributes)).toEqual(revealedAttributes);
+
+    const wallet = ConcordiumHdWallet.fromHex(input.seedAsHex, input.net);
+    const attributesRand = Object.entries(randomness.attributesRand);
+    expect(attributesRand.length).toBeGreaterThan(0);
+    for (const [key, value] of attributesRand) {
+        expect(value).toEqual(
+            wallet.getAttributeCommitmentRandomness(0, 0, 1, AttributesKeys[key as AttributeKey]).toString('hex')
+        );
+    }
+
+    const digest = getCredentialForExistingAccountSignDigest(cdi, existingAccountAddress);
+    const signingKey = wallet.getAccountSigningKey(0, 0, 1).toString('hex');
+    const signature = Buffer.from(await ed.signAsync(digest, signingKey)).toString('hex');
+    expect(await ed.verifyAsync(signature, digest, cdi.credentialPublicKeys.keys[0]!.verifyKey)).toBe(true);
+
+    const signed = buildSignedCredentialForExistingAccount(cdi, [signature]);
+    expect(signed.credId).toEqual(cdi.credId);
+    // The signed proofs contain the signature count (1) followed by key index 0 and the signature.
+    expect(signed.proofs).toContain('0100' + signature);
 });

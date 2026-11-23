@@ -8,5 +8,5 @@ const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 const dappBundlerPath = path.join(__dirname, '../lib/dapp/bundler');
 const dappOutPath = path.join(__dirname, '../lib/dapp/react-native');
 
-copyToFolder(dappBundlerPath, dappOutPath);
-convertWasmToJs(dappOutPath);
+await copyToFolder(dappBundlerPath, dappOutPath);
+await convertWasmToJs(dappOutPath);

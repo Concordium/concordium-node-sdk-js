@@ -1,8 +1,17 @@
 import { ConcordiumGRPCClient } from '../../grpc/index.js';
+import { isSameNetwork, networkToString } from '../../networkHelpers.js';
 import { ArInfo, AttributeKey, HexString, IpInfo, Network } from '../../types.js';
 import { BlockHash, CredentialRegistrationId } from '../../types/index.js';
 import { bail } from '../../util.js';
-import { CredentialStatus, CredentialsInputsIdentity, DIDString, parseYearMonth } from '../../web3-id/index.js';
+import {
+    AccountCredentialDID,
+    CredentialStatus,
+    CredentialsInputsIdentity,
+    DIDString,
+    IdentityProviderDID,
+    parseDID,
+    parseYearMonth,
+} from '../../web3-id/index.js';
 import { VerifiableCredentialV1 } from './index.js';
 import { AtomicStatementV1 } from './proof.js';
 import { ZKProofV4 } from './types.js';
@@ -126,20 +135,21 @@ function parseAccountProofMetadata(cred: AccountCredential): {
     credId: CredentialRegistrationId.Type;
     issuer: number;
 } {
-    const _bail = () => bail('Failed to parse metedata from account credential proof');
-    const [, c] = cred.credentialSubject.id.match(/.*:cred:(.*)$/) ?? _bail();
-    const [, i] = cred.issuer.match(/.*:idp:(\d*)$/) ?? _bail();
-
-    const credId = CredentialRegistrationId.fromHexString(c);
-    const issuer = Number(i);
-
-    return { credId, issuer };
+    try {
+        const credId = AccountCredentialDID.fromJSON(cred.credentialSubject.id).credId;
+        const issuer = IdentityProviderDID.fromJSON(cred.issuer).index;
+        return { credId, issuer };
+    } catch {
+        return bail('Failed to parse metedata from account credential proof');
+    }
 }
 
 function parseIdentityProofMetadata(cred: IdentityCredential): number {
-    const _bail = () => bail('Failed to parse metedata from identity credential proof');
-    const [, i] = cred.issuer.match(/.*:idp:(\d*)$/) ?? _bail();
-    return Number(i);
+    try {
+        return IdentityProviderDID.fromJSON(cred.issuer).index;
+    } catch {
+        return bail('Failed to parse metedata from identity credential proof');
+    }
 }
 
 /** Contains the credential status and inputs required to verify a corresponding credential proof */
@@ -237,11 +247,16 @@ export async function verifyMetadata(
     network: Network,
     blockHash?: BlockHash.Type
 ): Promise<MetadataVerificationResult> {
-    const [, parsedNetwork] =
-        credential.credentialSubject.id.match(/did:ccd:(.*):.*:.*/) ?? bail('Failed to parse network from credential');
-    if (parsedNetwork.toLowerCase() !== network.toLowerCase()) {
+    let parsedNetwork: Network | undefined;
+    try {
+        parsedNetwork = parseDID(credential.credentialSubject.id).network;
+    } catch {
+        // handled below
+    }
+    if (parsedNetwork === undefined) return bail('Failed to parse network from credential');
+    if (!isSameNetwork(parsedNetwork, network)) {
         bail(
-            `Network found in credential (${parsedNetwork.toLowerCase()}) did not match expected network (${network.toLowerCase()})`
+            `Network found in credential (${networkToString(parsedNetwork)}) did not match expected network (${networkToString(network)})`
         );
     }
 

@@ -132,6 +132,8 @@ export function createCredentialDeploymentPayload(
  * @param credentialIndex the index of the credential to create, has to be in sequence and unused
  * @param revealedAttributes the attributes about the account holder that should be revealed on chain
  * @param address the account address to associated the credential with
+ * @see {@linkcode createUnsignedCredentialForExistingAccountV1} and
+ * {@linkcode createUnsignedCredentialForExistingAccountV1NoSeed} to supply the attribute commitment randomness.
  */
 export function createUnsignedCredentialForExistingAccount(
     identity: IdentityInput,
@@ -207,12 +209,10 @@ export type CredentialInputNoSeed = CredentialInputCommon & {
 };
 
 /**
- * Creates an unsigned credential for a new account, using the version 1 algorithm, which uses a seed to generate keys and commitments.
+ * Derives the secrets, keys and attribute commitment randomness of a {@linkcode CredentialInputNoSeed} from the seed
+ * in a {@linkcode CredentialInput}.
  */
-export function createCredentialPayload(
-    input: CredentialInput,
-    expiry: TransactionExpiry.Type
-): CredentialDeploymentPayload & CdiRandomness {
+function toNoSeedInput(input: CredentialInput): CredentialInputNoSeed {
     const wallet = ConcordiumHdWallet.fromHex(input.seedAsHex, input.net);
     const publicKey = wallet
         .getAccountPublicKey(input.ipInfo.ipIdentity, input.identityIndex, input.credNumber)
@@ -241,7 +241,7 @@ export function createCredentialPayload(
                 .toString('hex')
     );
 
-    const noSeedInput: CredentialInputNoSeed = {
+    return {
         ipInfo: input.ipInfo,
         globalContext: input.globalContext,
         arsInfos: input.arsInfos,
@@ -254,8 +254,35 @@ export function createCredentialPayload(
         revealedAttributes: input.revealedAttributes,
         credNumber: input.credNumber,
     };
+}
 
-    return createCredentialPayloadNoSeed(noSeedInput, expiry);
+/**
+ * Creates an unsigned credential using the version 1 algorithm. If `address` is given, the credential is created for
+ * that existing account, otherwise for a new account.
+ */
+function createUnsignedCdiV1(input: CredentialInputNoSeed, address?: AccountAddress.Type): UnsignedCdiWithRandomness {
+    const { sigRetrievelRandomness, ...other } = input;
+    const internalInput = {
+        ...other,
+        blindingRandomness: sigRetrievelRandomness,
+        ...(address !== undefined ? { address: AccountAddress.toBase58(address) } : {}),
+    };
+    const rawRequest = wasm.createUnsignedCredentialV1(JSON.stringify(internalInput));
+    try {
+        return JSON.parse(rawRequest);
+    } catch (e) {
+        throw new Error(rawRequest);
+    }
+}
+
+/**
+ * Creates an unsigned credential for a new account, using the version 1 algorithm, which uses a seed to generate keys and commitments.
+ */
+export function createCredentialPayload(
+    input: CredentialInput,
+    expiry: TransactionExpiry.Type
+): CredentialDeploymentPayload & CdiRandomness {
+    return createCredentialPayloadNoSeed(toNoSeedInput(input), expiry);
 }
 
 /**
@@ -265,22 +292,55 @@ export function createCredentialPayloadNoSeed(
     input: CredentialInputNoSeed,
     expiry: TransactionExpiry.Type
 ): CredentialDeploymentPayload & CdiRandomness {
-    const { sigRetrievelRandomness, ...other } = input;
-    const internalInput = {
-        ...other,
-        blindingRandomness: input.sigRetrievelRandomness,
-    };
-    const rawRequest = wasm.createUnsignedCredentialV1(JSON.stringify(internalInput));
-    let info: UnsignedCdiWithRandomness;
-    try {
-        info = JSON.parse(rawRequest);
-    } catch (e) {
-        throw new Error(rawRequest);
-    }
     return {
         expiry,
-        ...info,
+        ...createUnsignedCdiV1(input),
     };
+}
+
+/**
+ * Creates an unsigned credential for an existing account, using the version 1 algorithm, which uses a seed to generate
+ * keys and commitments. Unlike {@linkcode createUnsignedCredentialForExistingAccount}, the attribute commitment
+ * randomness is derived from the seed instead of being generated at random.
+ *
+ * Only the seed of the wallet holding the identity is needed; the keys of the existing account are not used. The
+ * account address is bound into the proofs, so the credential can only be deployed to that account.
+ *
+ * To deploy the credential, sign `getCredentialForExistingAccountSignDigest(unsignedCdi, address)` with the key(s) of
+ * the new credential, combine the signatures using {@linkcode buildSignedCredentialForExistingAccount}, and have the
+ * account owner submit the result in an update credentials transaction.
+ *
+ * @param input the input for creating the credential
+ * @param address the address of the existing account the credential is created for
+ * @returns the unsigned credential and the randomness used for its commitments
+ */
+export function createUnsignedCredentialForExistingAccountV1(
+    input: CredentialInput,
+    address: AccountAddress.Type
+): UnsignedCdiWithRandomness {
+    return createUnsignedCredentialForExistingAccountV1NoSeed(toNoSeedInput(input), address);
+}
+
+/**
+ * Creates an unsigned credential for an existing account, using the version 1 algorithm, but without requiring the seed
+ * to be provided directly. Unlike {@linkcode createUnsignedCredentialForExistingAccount}, the attribute commitment
+ * randomness is taken from `input.attributeRandomness` instead of being generated at random.
+ *
+ * The account address is bound into the proofs, so the credential can only be deployed to that account.
+ *
+ * To deploy the credential, sign `getCredentialForExistingAccountSignDigest(unsignedCdi, address)` with the key(s) of
+ * the new credential, combine the signatures using {@linkcode buildSignedCredentialForExistingAccount}, and have the
+ * account owner submit the result in an update credentials transaction.
+ *
+ * @param input the input for creating the credential
+ * @param address the address of the existing account the credential is created for
+ * @returns the unsigned credential and the randomness used for its commitments
+ */
+export function createUnsignedCredentialForExistingAccountV1NoSeed(
+    input: CredentialInputNoSeed,
+    address: AccountAddress.Type
+): UnsignedCdiWithRandomness {
+    return createUnsignedCdiV1(input, address);
 }
 
 export async function signCredentialTransaction(

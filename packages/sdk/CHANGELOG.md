@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 12.1.0
+
 ### Added
 
 - `createUnsignedCredentialForExistingAccountV1` and `createUnsignedCredentialForExistingAccountV1NoSeed`, which create
@@ -22,6 +24,7 @@
 
 ### Changed
 
+- Bumped `@concordium/rust-bindings` to 4.1.0.
 - `Network` is now `'Testnet' | 'Mainnet' | GenesisHashPrefix.Type`. Every function that takes a `Network` accepts a
   genesis hash prefix, and existing calls compile and behave as before. Code that checks a `Network` exhaustively must
   handle the genesis hash prefix case to compile.

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 4.1.0
+
 ### Added
 
 - `createUnsignedCredentialV1` accepts an optional `address`. When set, the credential is created for that existing

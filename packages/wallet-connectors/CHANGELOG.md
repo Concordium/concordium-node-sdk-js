@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.10.0]
+
 ### Added
 
 - Optional `chainIdFormat` on `Network`. Set it to `'genesis'` (or use the new `withGenesisChainId` helper) to identify
@@ -16,8 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Requires the `@concordium/web-sdk` release that adds `GenesisHashPrefix` and the network helpers, which are used to
-  compute genesis-based chain IDs.
+- Requires `@concordium/web-sdk` 12.1.0 or later in the 12.x series for the helpers that compute genesis-based chain IDs.
 
 ## [0.9.0]
 

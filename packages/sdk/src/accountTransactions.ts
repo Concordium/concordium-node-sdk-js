@@ -7,13 +7,14 @@ import {
 } from './deserialization.js';
 import { Cursor } from './deserializationHelpers.js';
 import { DelegationTargetTypeNumeric, Upward, isKnown } from './index.js';
+import * as LockCreateConfig from './plt/LockCreateConfig.js';
 import {
     PLT_LOCK_BALANCE_REFERENCE_COST,
     PLT_LOCK_CANCEL_BASE_COST,
     PLT_LOCK_CREATE_BASE_COST,
     PLT_LOCK_GRANT_COST,
 } from './plt/energyCost.js';
-import { Cbor, LockConfig, OperationType, TokenId, TokenOperationType } from './plt/index.js';
+import { Cbor, OperationType, TokenId, TokenOperationType } from './plt/index.js';
 import {
     AccountTransactionInput,
     ContractAddress,
@@ -955,11 +956,13 @@ function getOperationEnergyCost(operation: unknown): bigint {
         case OperationType.LockRelease in op:
             return LOCK_TRANSFER_COST;
         case OperationType.LockCreate in op: {
-            const { holders, tokens, grants } = LockConfig.getCreationComplexity(op.lockCreate as LockConfig.Type);
+            const { holders, tokens, roleAccounts } = LockCreateConfig.getCreationComplexity(
+                op.lockCreate as LockCreateConfig.Type
+            );
             return (
                 PLT_LOCK_CREATE_BASE_COST +
                 PLT_LOCK_BALANCE_REFERENCE_COST * BigInt(holders) * BigInt(tokens) +
-                PLT_LOCK_GRANT_COST * BigInt(grants)
+                PLT_LOCK_GRANT_COST * BigInt(roleAccounts)
             );
         }
         case OperationType.LockCancel in op:

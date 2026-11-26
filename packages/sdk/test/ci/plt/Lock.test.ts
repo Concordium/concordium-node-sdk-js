@@ -4,6 +4,7 @@ import {
     CborEpoch,
     Lock,
     LockConfig,
+    LockCreateConfig,
     LockId,
     LockInfo,
     TokenAmount,
@@ -83,16 +84,22 @@ describe('PLT Lock.create', () => {
             getNextAccountNonce: jest.fn().mockResolvedValue({ nonce: SequenceNumber.create(12) }),
             sendTransaction: jest.fn().mockResolvedValue('tx-hash'),
         };
-        const info = createLockInfo([LockConfig.SimpleV0Capability.Fund]);
+        const config = LockCreateConfig.simpleV0(
+            'any',
+            [CborAccountAddress.fromAccountAddress(ACCOUNT_1)],
+            futureEpoch(),
+            [],
+            [TOKEN_ID]
+        );
 
-        const payload = await Lock.create(grpc as never, ACCOUNT_1, info.config)
+        const payload = await Lock.create(grpc as never, ACCOUNT_1, config)
             .fund({ token: TOKEN_ID, amount: TokenAmount.create(10n, 0) })
             .payload();
 
         const expected = Payload.tokenUpdate(
             createTokenUpdatePayload({
                 operations: [
-                    { lockCreate: info.config },
+                    { lockCreate: config },
                     {
                         lockFund: {
                             token: TOKEN_ID,

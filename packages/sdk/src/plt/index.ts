@@ -7,6 +7,7 @@ export * from './Operation.js';
 
 export * as CborEpoch from './CborEpoch.js';
 export * as LockConfig from './LockConfig.js';
+export * as LockCreateConfig from './LockCreateConfig.js';
 export * as TokenId from './TokenId.js';
 export * as TokenModuleReference from './TokenModuleReference.js';
 export * as TokenMetadataUrl from './TokenMetadataUrl.js';

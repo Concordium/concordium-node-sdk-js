@@ -1,6 +1,14 @@
 import { AccountAddress, Payload } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
-import { CborAccountAddress, CborEpoch, Lock, LockConfig, Token, TokenAmount, TokenId } from '@concordium/web-sdk/plt';
+import {
+    CborAccountAddress,
+    CborEpoch,
+    Lock,
+    LockCreateConfig,
+    Token,
+    TokenAmount,
+    TokenId,
+} from '@concordium/web-sdk/plt';
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
 
@@ -68,20 +76,19 @@ const client = new ConcordiumGRPCNodeClient(
         // Read the wallet file to get the sender account and signer
         const [sender, signer] = parseKeysFile(cli.flags.walletFile);
 
-        // Build the lock configuration. Here the sender is granted all capabilities,
-        // but this can be adjusted to fit the desired access control model.
+        // The sender can fund as a holder and receives all explicit capabilities.
         // Use `recipients: 'any'` instead of the parsed address array to allow any eligible recipient.
-        const config = LockConfig.simpleV0(
+        const config = LockCreateConfig.simpleV0(
             recipients,
+            [CborAccountAddress.fromAccountAddress(sender)],
             expiry,
             [
                 {
                     account: CborAccountAddress.fromAccountAddress(sender),
                     roles: [
-                        LockConfig.SimpleV0Capability.Fund,
-                        LockConfig.SimpleV0Capability.Send,
-                        LockConfig.SimpleV0Capability.Release,
-                        LockConfig.SimpleV0Capability.Cancel,
+                        LockCreateConfig.SimpleV0Capability.Send,
+                        LockCreateConfig.SimpleV0Capability.Release,
+                        LockCreateConfig.SimpleV0Capability.Cancel,
                     ],
                 },
             ],
@@ -112,7 +119,13 @@ const client = new ConcordiumGRPCNodeClient(
         // The sender is still needed so the proposal can derive the predicted lock id from chain state.
         // Use `recipients: 'any'` instead of the parsed address array to allow any eligible recipient.
         const sender = AccountAddress.fromBase58(cli.flags.sender);
-        const config = LockConfig.simpleV0(recipients, expiry, [], [tokenId]);
+        const config = LockCreateConfig.simpleV0(
+            recipients,
+            [CborAccountAddress.fromAccountAddress(sender)],
+            expiry,
+            [],
+            [tokenId]
+        );
 
         const payload = await Lock.create(client, sender, config)
             .fund({ token: tokenId, amount: fundAmount })

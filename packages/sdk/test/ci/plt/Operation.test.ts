@@ -6,6 +6,7 @@ import {
     CborAccountAddress,
     CborEpoch,
     LockConfig,
+    LockCreateConfig,
     LockId,
     LockMetadata,
     OperationInput,
@@ -39,15 +40,11 @@ describe('PLT Operation', () => {
     const amount = TokenAmount.create(500n, 2);
     const lock = LockId.create(1n, 2n, 3n);
     const account = CborAccountAddress.fromAccountAddress(AccountAddress.fromBuffer(new Uint8Array(32).fill(0x15)));
-    const lockConfig = LockConfig.simpleV0(
+    const lockConfig = LockCreateConfig.simpleV0(
+        [account],
         [account],
         CborEpoch.fromEpochSeconds(10n),
-        [
-            {
-                account,
-                roles: [LockConfig.SimpleV0Capability.Fund, LockConfig.SimpleV0Capability.Send],
-            },
-        ],
+        [{ account, roles: [LockCreateConfig.SimpleV0Capability.Send] }],
         [token]
     );
     const metadataChecksum = new Uint8Array(32).fill(1);
@@ -125,7 +122,7 @@ describe('PLT Operation', () => {
         [
             'lockCreate',
             { [OperationType.LockCreate]: lockConfig },
-            '81a16a6c6f636b437265617465a16873696d706c655630a466657870697279c10a666772616e747381a265726f6c6573826466756e646473656e64676163636f756e74d99d73a201d99d71a101190397035820151515151515151515151515151515151515151515151515151515151515151566746f6b656e73816674546f6b656e6a726563697069656e747381d99d73a201d99d71a1011903970358201515151515151515151515151515151515151515151515151515151515151515',
+            '81a16a6c6f636b437265617465a16873696d706c655630a565726f6c657381a265726f6c6573816473656e64676163636f756e74d99d73a201d99d71a101190397035820151515151515151515151515151515151515151515151515151515151515151566657870697279c10a66746f6b656e73816674546f6b656e67686f6c6465727381d99d73a201d99d71a10119039703582015151515151515151515151515151515151515151515151515151515151515156a726563697069656e747381d99d73a201d99d71a1011903970358201515151515151515151515151515151515151515151515151515151515151515',
         ],
         [
             'lockCancel',
@@ -172,9 +169,9 @@ describe('PLT Operation', () => {
             [OperationType.LockCreate]: { simpleV0: { ...lockConfig.simpleV0, metadata } },
         });
 
-        expect(operations.toString()).toBe(
-            '81a16a6c6f636b437265617465a16873696d706c655630a566657870697279c10a666772616e747381a265726f6c6573826466756e646473656e64676163636f756e74d99d73a201d99d71a101190397035820151515151515151515151515151515151515151515151515151515151515151566746f6b656e73816674546f6b656e686d657461646174615826a2646e616d656d4d65746164617461206c6f636b666973737565726a436f6e636f726469756d6a726563697069656e747381d99d73a201d99d71a1011903970358201515151515151515151515151515151515151515151515151515151515151515'
-        );
+        expect(decodeOperations(operations)).toEqual([
+            { lockCreate: { simpleV0: { ...lockConfig.simpleV0, metadata } } },
+        ]);
     });
 
     it('encodes lockCreate and lockCancel unscoped operations', () => {
@@ -283,35 +280,82 @@ describe('PLT Operation', () => {
         );
     });
 
-    it('counts canonical grants, Fund unions, empty grants and case-insensitive tokens', () => {
-        const alias = CborAccountAddress.fromAccountAddress(AccountAddress.getAlias(account.address, 1));
-        const other = CborAccountAddress.fromAccountAddress(AccountAddress.fromBuffer(new Uint8Array(32).fill(0x16)));
-        const grants = [
-            { account, roles: [LockConfig.SimpleV0Capability.Send] },
-            { account: alias, roles: [LockConfig.SimpleV0Capability.Fund] },
-            { account: other, roles: [] },
-        ];
-        const tokens = ['ABC', 'abc', 'XYZ'].map(TokenId.fromString);
-        for (const entries of [grants, [...grants].reverse(), [...grants, grants[0]]]) {
+    describe('lock creation input compatibility', () => {
+        // The inner simpleV0 bytes are the fixed concordium-base lock_config.rs creation fixture.
+        const fixture =
+            '81a16a6c6f636b437265617465a16873696d706c655630a565726f6c657381a265726f6c6573816473656e64676163636f756e74d99d73a201d99d71a1011903970358200102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f2066657870697279c11a6b93277066746f6b656e738162745467686f6c6465727381d99d73a201d99d71a1011903970358200102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f206a726563697069656e747363616e79';
+        const holder = CborAccountAddress.fromAccountAddress(
+            AccountAddress.fromBuffer(Uint8Array.from({ length: 32 }, (_, i) => i + 1))
+        );
+        const creation = {
+            simpleV0: {
+                recipients: 'any' as const,
+                holders: [holder],
+                expiry: CborEpoch.fromEpochSeconds(1804806000n),
+                roles: [{ account: holder, roles: [LockCreateConfig.SimpleV0Capability.Send] }],
+                tokens: [TokenId.fromString('tT')],
+            },
+        };
+        const operation = { lockCreate: creation };
+
+        it('decodes the pinned Rust creation fixture through the public operation codec', () => {
+            expect(decodeOperations(Cbor.fromHexString(fixture))).toMatchObject([operation]);
+        });
+
+        it('encodes the pinned Rust creation fixture through the public operation codec', () => {
+            expect(encodeOperations(operation).toString()).toBe(fixture);
+        });
+
+        it('round-trips opaque metadata bytes', () => {
+            const metadata = Uint8Array.from([0xff, 0x00, 0x81]);
+            const withMetadata = { lockCreate: { simpleV0: { ...creation.simpleV0, metadata } } };
+            const encoded = encodeOperations(withMetadata);
+            expect(decodeOperations(encoded)).toMatchObject([withMetadata]);
+        });
+
+        it('rejects legacy grants on decoding', () => {
+            const legacy = LockConfig.simpleV0('any', creation.simpleV0.expiry, [], [TokenId.fromString('tT')]);
+            expect(() => decodeOperation(Cbor.encode({ lockCreate: legacy }))).toThrow(/grants/);
+        });
+
+        it('ignores a configuration memo on decoding', () => {
+            const simpleV0 = { ...creation.simpleV0, tokens: ['tT'], memo: new Uint8Array([1]) };
+            expect(decodeOperation(Cbor.encode({ lockCreate: { simpleV0 } }))).toMatchObject(operation);
+            expect(decodeOperation(Cbor.encode({ lockCreate: { simpleV0 } }))).not.toHaveProperty(
+                'lockCreate.simpleV0.memo'
+            );
+        });
+
+        it('rejects an unknown explicit capability on decoding', () => {
+            const simpleV0 = {
+                ...creation.simpleV0,
+                tokens: ['tT'],
+                roles: [{ account: holder, roles: ['unknown'] }],
+            };
+            expect(() => decodeOperation(Cbor.encode({ lockCreate: { simpleV0 } }))).toThrow(/capabilities/);
+        });
+
+        it('prices distinct aliased holders, role accounts and case-insensitive tokens', () => {
+            const alias = CborAccountAddress.fromAccountAddress(AccountAddress.getAlias(holder.address, 1));
+            const other = CborAccountAddress.fromAccountAddress(AccountAddress.fromBuffer(new Uint8Array(32).fill(7)));
+            const recipient = CborAccountAddress.fromAccountAddress(
+                AccountAddress.fromBuffer(new Uint8Array(32).fill(8))
+            );
+            const simpleV0 = {
+                ...creation.simpleV0,
+                holders: [holder, alias],
+                roles: [
+                    { account: alias, roles: [LockCreateConfig.SimpleV0Capability.Send] },
+                    { account: other, roles: [LockCreateConfig.SimpleV0Capability.Cancel] },
+                ],
+                recipients: [recipient],
+                tokens: [TokenId.fromString('ABC'), TokenId.fromString('abc')],
+            };
             const input = createTokenUpdateInput({
-                operations: {
-                    lockCreate: LockConfig.simpleV0('any', CborEpoch.fromEpochSeconds(10n), entries, tokens),
-                },
+                operations: { lockCreate: { simpleV0 } },
             });
-            expect(new TokenUpdateHandler().getBaseEnergyCost(input)).toBe(1420n);
-        }
-        for (const [entries, ids, cost] of [
-            [[], [], 100n],
-            [grants, [], 120n],
-            [[], tokens, 100n],
-        ] as const) {
-            const input = createTokenUpdateInput({
-                operations: {
-                    lockCreate: LockConfig.simpleV0('any', CborEpoch.fromEpochSeconds(10n), [...entries], [...ids]),
-                },
-            });
-            expect(new TokenUpdateHandler().getBaseEnergyCost(input)).toBe(300n + cost);
-        }
+            expect(new TokenUpdateHandler().getBaseEnergyCost(input)).toBe(300n + 620n);
+        });
     });
 
     it('does not change TokenUpdate transaction type value', () => {

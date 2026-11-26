@@ -14,6 +14,7 @@ import { TransactionKindString } from '../types/blockItemSummary.js';
 import { SequenceNumber } from '../types/index.js';
 import { LockCreatedEvent, TransactionEventTag } from '../types/transactionEvent.js';
 import * as LockConfig from './LockConfig.js';
+import type * as LockCreateConfig from './LockCreateConfig.js';
 import * as Token from './Token.js';
 import { createTokenUpdateInput } from './TokenOperation.js';
 import {
@@ -239,7 +240,7 @@ class LockCreateProposal {
     public constructor(
         private readonly grpc: ConcordiumGRPCClient,
         private readonly sender: AccountAddress.Type,
-        private readonly config: LockConfig.Type,
+        private readonly config: LockCreateConfig.Type,
         private readonly creationOrder: bigint | number = 0n
     ) {}
 
@@ -486,7 +487,7 @@ export async function sendOperations(
 export function create(
     grpc: ConcordiumGRPCClient,
     sender: AccountAddress.Type,
-    config: LockConfig.Type
+    config: LockCreateConfig.Type
 ): CreateProposal {
     return new LockCreateProposal(grpc, sender, config);
 }

@@ -1,164 +1,108 @@
-import { Buffer } from 'buffer/index.js';
+import {
+    Cbor,
+    CborAccountAddress,
+    CborEpoch,
+    LockId,
+    LockMetadata,
+    TokenAmount,
+    TokenId,
+} from '../../../src/pub/plt.js';
+import { AccountAddress } from '../../../src/pub/types.js';
 
-import { Cbor, CborAccountAddress, CborEpoch, LockConfig, LockMetadata, TokenId } from '../../../src/pub/plt.ts';
-import { AccountAddress } from '../../../src/pub/types.ts';
+// output_fixture in concordium-base lock_config.rs at 7a495454a.
+const OUTPUT_FIXTURE =
+    'a765726f6c657381a265726f6c6573826466756e646473656e64676163636f756e74d99d73a201d99d71a1011903970358200102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f2066657870697279c11a6b93277066746f6b656e738162745467686f6c6465727381d99d73a201d99d71a1011903970358200102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f206776617269616e746873696d706c6556306776657273696f6e006a726563697069656e747363616e79';
+const holder = CborAccountAddress.fromAccountAddress(
+    AccountAddress.fromBuffer(Uint8Array.from({ length: 32 }, (_, i) => i + 1))
+);
+const lock = LockId.create(10001n, 5n, 0n);
+const funds = [
+    { account: holder, amounts: [{ token: TokenId.fromString('tT'), amount: TokenAmount.create(12300n, 2) }] },
+];
+const v0 = {
+    version: 0,
+    variant: 'simpleV0',
+    recipients: 'any',
+    holders: [holder],
+    expiry: CborEpoch.fromEpochSeconds(1804806000n),
+    roles: [{ account: holder, roles: ['fund', 'send'] }],
+    tokens: ['tT'],
+};
+const { version, ...unversioned } = v0;
+const typedV0 = { ...unversioned, version, tokens: [TokenId.fromString('tT')] };
 
-describe('PLT LockConfig', () => {
-    const account = CborAccountAddress.fromAccountAddress(AccountAddress.fromBuffer(new Uint8Array(32).fill(0x15)));
-    const token = TokenId.fromString('tToken');
-    const config = LockConfig.simpleV0(
-        [account],
-        CborEpoch.fromEpochSeconds(10n),
-        [{ account, roles: [LockConfig.SimpleV0Capability.Fund, LockConfig.SimpleV0Capability.Send] }],
-        [token]
-    );
-
-    it('decodes CBOR values directly', () => {
-        expect(
-            LockConfig.fromCBORValue({
-                simpleV0: {
-                    recipients: [account],
-                    expiry: CborEpoch.fromEpochSeconds(10n),
-                    grants: [],
-                    tokens: [token.value],
-                },
-            })
-        ).toEqual(LockConfig.simpleV0([account], CborEpoch.fromEpochSeconds(10n), [], [token]));
+describe.each([
+    ['LockConfig', (config: unknown) => Cbor.decode(Cbor.encode(config), 'LockConfig')],
+    ['LockInfo', (config: unknown) => Cbor.decode(Cbor.encode({ lock, config, funds }), 'LockInfo').config],
+] as const)('PLT %s configuration reads', (_, decodeConfig) => {
+    it('preserves opaque metadata bytes', () => {
+        const metadata = Uint8Array.of(0xff, 0x00, 0x81);
+        expect(decodeConfig({ ...v0, metadata })).toMatchObject({ ...typedV0, metadata });
     });
 
-    it('decodes CBOR bytes directly and through generic dispatch', () => {
-        const fixture =
-            'a16873696d706c655630a466657870697279c10a666772616e747381a265726f6c6573826466756e646473656e64676163636f756e74d99d73a201d99d71a101190397035820151515151515151515151515151515151515151515151515151515151515151566746f6b656e73816674546f6b656e6a726563697069656e747381d99d73a201d99d71a1011903970358201515151515151515151515151515151515151515151515151515151515151515';
-        const bytes = Cbor.fromHexString(fixture).bytes;
-
-        expect(LockConfig.fromCBOR(bytes)).toEqual(config);
-        const decoded = Cbor.decode(Cbor.fromHexString(fixture), 'LockConfig');
-        expect(decoded).toEqual(config);
-        expect(Buffer.from(Cbor.encode(decoded).bytes).toString('hex')).toBe(fixture);
+    it('exposes typed recipients and metadata bytes for the metadata helper', () => {
+        const value = { name: 'Vesting lock', issuer: 'Concordium' };
+        const metadata = LockMetadata.encode(value);
+        const decoded = decodeConfig({ ...v0, recipients: [holder], metadata });
+        expect(decoded).toMatchObject({ ...typedV0, recipients: [holder], metadata });
+        if ('data' in decoded || decoded.metadata === undefined) throw new Error('Expected v0 metadata');
+        expect(LockMetadata.decode(decoded.metadata)).toEqual(value);
     });
 
-    it('decodes and re-encodes the fixed complete simpleV0 fixture', () => {
-        const fixture =
-            'a16873696d706c655630a6646d656d6f42010266657870697279c10a666772616e74738066746f6b656e73816674546f6b656e686d657461646174615825a2646e616d656c56657374696e67206c6f636b666973737565726a436f6e636f726469756d6a726563697069656e747381d99d73a201d99d71a1011903970358201515151515151515151515151515151515151515151515151515151515151515';
-        const decoded = Cbor.decode(Cbor.fromHexString(fixture), 'LockConfig');
-
-        expect(decoded).toEqual(
-            LockConfig.simpleV0(
-                [account],
-                CborEpoch.fromEpochSeconds(10n),
-                [],
-                [token],
-                new Uint8Array([1, 2]),
-                LockMetadata.encode({ name: 'Vesting lock', issuer: 'Concordium' })
-            )
-        );
-        expect(Buffer.from(Cbor.encode(decoded).bytes).toString('hex')).toBe(fixture);
-    });
-
-    it('decodes and re-encodes the fixed any-recipient fixture', () => {
-        const fixture =
-            'a16873696d706c655630a466657870697279c10a666772616e74738066746f6b656e73816674546f6b656e6a726563697069656e747363616e79';
-        const decoded = Cbor.decode(Cbor.fromHexString(fixture), 'LockConfig');
-
-        expect(decoded).toEqual(LockConfig.simpleV0('any', CborEpoch.fromEpochSeconds(10n), [], [token]));
-        expect(Buffer.from(Cbor.encode(decoded).bytes).toString('hex')).toBe(fixture);
-    });
-
-    it('round-trips typed metadata and preserves invalid opaque metadata for helper rejection', () => {
-        const metadata = LockMetadata.encode({
-            name: 'Vesting lock',
-            description: 'Tokens locked',
-            issuer: 'Concordium',
-        });
-        const decoded = Cbor.decode(
-            Cbor.encode(
-                LockConfig.simpleV0([account], CborEpoch.fromEpochSeconds(10n), [], [token], undefined, metadata)
-            ),
-            'LockConfig'
-        );
-        expect(LockMetadata.decode(decoded.simpleV0.metadata!)).toEqual({
-            name: 'Vesting lock',
-            description: 'Tokens locked',
-            issuer: 'Concordium',
-        });
-
-        const invalid = new Uint8Array([0x01]);
-        const invalidDecoded = Cbor.decode(
-            Cbor.encode(
-                LockConfig.simpleV0([account], CborEpoch.fromEpochSeconds(10n), [], [token], undefined, invalid)
-            ),
-            'LockConfig'
-        );
-        expect(invalidDecoded.simpleV0.metadata).toEqual(invalid);
-        expect(() => LockMetadata.decode(invalidDecoded.simpleV0.metadata!)).toThrow(/Invalid LockMetadata/);
-    });
-
-    it('constructs complete simpleV0 configurations with default and explicit optional fields', () => {
-        expect(LockConfig.simpleV0([account], CborEpoch.fromEpochSeconds(10n), [], [token])).toEqual({
-            simpleV0: {
-                recipients: [account],
-                expiry: CborEpoch.fromEpochSeconds(10n),
-                grants: [],
-                tokens: [token],
-                memo: undefined,
-                metadata: undefined,
-            },
-        });
-        expect(
-            LockConfig.simpleV0(
-                [account],
-                CborEpoch.fromEpochSeconds(10n),
-                [],
-                [token],
-                new Uint8Array([1, 2]),
-                new Uint8Array([3])
-            )
-        ).toEqual({
-            simpleV0: {
-                recipients: [account],
-                expiry: CborEpoch.fromEpochSeconds(10n),
-                grants: [],
-                tokens: [token],
-                memo: new Uint8Array([1, 2]),
-                metadata: new Uint8Array([3]),
-            },
+    it('preserves an unfamiliar v0 variant', () => {
+        expect(decodeConfig({ ...v0, variant: 'futureVariant' })).toMatchObject({
+            ...typedV0,
+            variant: 'futureVariant',
         });
     });
 
-    it('rejects invalid variants and payload shapes', () => {
-        const valid = { recipients: [account], expiry: CborEpoch.fromEpochSeconds(10n), grants: [], tokens: [] };
-        for (const value of [[], { unknown: valid }, { simpleV0: valid, unknown: null }, { simpleV0: [] }]) {
-            expect(() => Cbor.decode(Cbor.encode(value), 'LockConfig')).toThrow();
-        }
+    it('preserves an unfamiliar v0 capability', () => {
+        const roles = [{ account: holder, roles: ['fund', 'futureCapability'] }];
+        expect(decodeConfig({ ...v0, roles })).toMatchObject({ ...typedV0, roles });
     });
 
-    it('rejects missing required fields', () => {
-        const valid = { recipients: [account], expiry: CborEpoch.fromEpochSeconds(10n), grants: [], tokens: [] };
-        for (const field of ['recipients', 'expiry', 'grants', 'tokens'] as const) {
-            const { [field]: _, ...invalid } = valid;
-            expect(() => Cbor.decode(Cbor.encode({ simpleV0: invalid }), 'LockConfig')).toThrow();
-        }
+    it('exposes a wide version as a number without converting the original decoded data', () => {
+        const data = new Map<unknown, unknown>([
+            ['version', 9_007_199_254_740_993n],
+            [1, holder],
+        ]);
+        expect(decodeConfig(data)).toEqual({ version: 9_007_199_254_740_992, data });
     });
 
-    it('rejects invalid simpleV0 fields', () => {
-        const valid = { recipients: [account], expiry: CborEpoch.fromEpochSeconds(10n), grants: [], tokens: [] };
-        const invalidValues = [
-            { ...valid, recipients: 'everybody' },
-            { ...valid, recipients: 1 },
-            { ...valid, recipients: ['not-an-account'] },
-            { ...valid, expiry: 10 },
-            { ...valid, grants: 'no' },
-            { ...valid, grants: [{}] },
-            { ...valid, grants: [{ account: 'not-an-account', roles: [] }] },
-            { ...valid, grants: [{ account, roles: 'fund' }] },
-            { ...valid, grants: [{ account, roles: ['unknown'] }] },
-            { ...valid, tokens: 'no' },
-            { ...valid, tokens: [1] },
-            { ...valid, metadata: {} },
-            { ...valid, memo: 'memo' },
-        ];
-        for (const invalid of invalidValues) {
-            expect(() => Cbor.decode(Cbor.encode({ simpleV0: invalid }), 'LockConfig')).toThrow();
-        }
+    it.each([
+        ['missing version', unversioned],
+        ['nonnumeric version', { ...v0, version: '0' }],
+        ['non-string capability', { ...v0, roles: [{ account: holder, roles: ['fund', 42] }] }],
+        ['untagged expiry', { ...v0, expiry: 10 }],
+        ['invalid metadata', { ...v0, metadata: 'not bytes' }],
+    ])('rejects malformed output: %s', (_, config) => {
+        expect(() => decodeConfig(config)).toThrow();
+    });
+});
+
+describe('PLT pinned v0 output and future configuration reads', () => {
+    it('decodes the pinned Rust v0 fixture standalone', () => {
+        expect(Cbor.decode(Cbor.fromHexString(OUTPUT_FIXTURE), 'LockConfig')).toMatchObject(typedV0);
+    });
+
+    it('decodes the pinned Rust v0 fixture inside LockInfo', () => {
+        // The three-entry map starts with config; append the entries from the two-entry lock/funds map.
+        const envelope = Cbor.encode({ lock, funds }).toString().slice(2);
+        const nested = Cbor.fromHexString(`a366636f6e666967${OUTPUT_FIXTURE}${envelope}`);
+        expect(Cbor.decode(nested, 'LockInfo')).toMatchObject({ lock, funds, config: typedV0 });
+    });
+
+    const data = { version: 7, roles: null, controller: { owner: holder } };
+    const expected = { version: 7, data };
+
+    it('exposes a future version as a number with normal CBOR-decoded data', () => {
+        const decoded = Cbor.decode(Cbor.encode(data), 'LockConfig');
+        expect(decoded).toMatchObject(expected);
+    });
+
+    it('keeps the lock ID and funds readable with a future configuration', () => {
+        const decoded = Cbor.decode(Cbor.encode({ lock, config: data, funds }), 'LockInfo');
+        expect(decoded).toMatchObject({ lock, config: expected });
+        expect(decoded.funds).toEqual(funds);
     });
 });

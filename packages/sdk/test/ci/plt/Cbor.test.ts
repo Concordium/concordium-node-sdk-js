@@ -2,9 +2,7 @@ import { CborAccountAddress, CborMemo } from '../../../src/plt/index.ts';
 import {
     Cbor,
     CborEpoch,
-    LockConfig,
     LockId,
-    LockMetadata,
     TokenAddDenyListOperation,
     TokenAdminRole,
     TokenAmount,
@@ -196,46 +194,25 @@ describe('PLT Cbor', () => {
         const token = TokenId.fromString('USDT');
         const expiry = TransactionExpiry.fromEpochSeconds(1_700_000_000n);
 
-        test('decodes and re-encodes the canonical { lock, config, funds } fixture', () => {
-            // Independent fixture, including tagged simpleV0 and nested metadata bytes.
-            const fixture =
-                'a3646c6f636bd99fd88319271105006566756e647381a2676163636f756e74d99d73a201d99d71a1011903970358200102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f2067616d6f756e747381a265746f6b656e62745466616d6f756e74c4822219300c66636f6e666967a16873696d706c655630a566657870697279c11a6b932770666772616e747381a265726f6c6573826466756e646473656e64676163636f756e74d99d73a201d99d71a1011903970358200102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f2066746f6b656e7381627454686d657461646174615848a4646e616d656c56657374696e67206c6f636b666973737565726a436f6e636f726469756d6776657273696f6e016b6465736372697074696f6e6d546f6b656e73206c6f636b65646a726563697069656e747381d99d73a201d99d71a1011903970358200102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20';
-            const decoded = Cbor.decode(Cbor.fromHexString(fixture), 'LockInfo');
-            expect(decoded.lock).toEqual(LockId.create(10001n, 5n, 0n));
-            expect(decoded.funds).toHaveLength(1);
-            expect(decoded.config.simpleV0.recipients).not.toBe('any');
-            expect(LockMetadata.decode(decoded.config.simpleV0.metadata!)).toMatchObject({ name: 'Vesting lock' });
-            expect(Cbor.toHexString(Cbor.encode(decoded))).toBe(fixture);
-        });
-
-        test('preserves metadata inside the configuration payload', () => {
-            const metadata = LockMetadata.encode({ name: 'Lock info metadata', issuer: 'Concordium' });
-            const config = LockConfig.simpleV0(
-                [account],
-                CborEpoch.fromTransactionExpiry(expiry),
-                [],
-                [token],
-                undefined,
-                metadata
-            );
-            const decoded = Cbor.decode(Cbor.encode({ lock, config, funds: [] }), 'LockInfo');
-            expect(LockMetadata.decode(decoded.config.simpleV0.metadata!)).toEqual({
-                name: 'Lock info metadata',
-                issuer: 'Concordium',
-            });
-        });
-
-        test('rejects malformed envelopes and nested values', () => {
+        test('rejects malformed envelopes', () => {
             expect(() => Cbor.decode(Cbor.encode([]), 'LockInfo')).toThrow(/Invalid CBOR data/);
             expect(() => Cbor.decode(Cbor.encode({ funds: [] }), 'LockInfo')).toThrow(/missing or invalid 'lock'/);
             expect(() => Cbor.decode(Cbor.encode({ lock, funds: 'invalid' }), 'LockInfo')).toThrow(
                 /'funds' must be an array/
             );
             expect(() => Cbor.decode(Cbor.encode({ lock, funds: [] }), 'LockInfo')).toThrow(/invalid 'config'/);
-            expect(() => Cbor.decode(Cbor.encode({ lock, config: {}, funds: [] }), 'LockInfo')).toThrow(
-                /simpleV0 variant/
-            );
-            const config = LockConfig.simpleV0([account], CborEpoch.fromTransactionExpiry(expiry), [], [token]);
+        });
+
+        test('rejects malformed fund entries', () => {
+            const config = {
+                version: 0,
+                variant: 'simpleV0',
+                recipients: [account],
+                holders: [account],
+                expiry: CborEpoch.fromTransactionExpiry(expiry),
+                roles: [{ account, roles: ['fund'] }],
+                tokens: [token],
+            };
             expect(() => Cbor.decode(Cbor.encode({ lock, config, funds: [{}] }), 'LockInfo')).toThrow(
                 /invalid 'account'/
             );

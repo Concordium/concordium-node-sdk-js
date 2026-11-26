@@ -16,7 +16,7 @@ export type Type = {
 };
 
 /**
- * Encode typed lock metadata to raw CBOR bytes suitable for `LockConfig.simpleV0.metadata`.
+ * Encode typed lock metadata as opaque CBOR bytes for `LockCreateConfig.simpleV0.metadata`.
  *
  * @param metadata Typed lock metadata.
  * @returns Raw CBOR bytes encoding the metadata map.
@@ -35,7 +35,7 @@ export function encode(metadata: Type): Uint8Array {
 /**
  * Decode typed lock metadata from raw CBOR bytes.
  *
- * @param rawMetadata Raw CBOR bytes from `LockConfig.simpleV0.metadata` or `LockInfo.config.simpleV0.metadata`.
+ * @param rawMetadata Raw CBOR bytes from a v0 lock configuration's `metadata` field.
  * @returns Typed lock metadata.
  * @throws If the raw bytes do not decode to an object, or if known fields have invalid types.
  */

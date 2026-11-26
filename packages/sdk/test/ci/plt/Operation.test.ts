@@ -5,7 +5,6 @@ import {
     Cbor,
     CborAccountAddress,
     CborEpoch,
-    LockConfig,
     LockCreateConfig,
     LockId,
     LockMetadata,
@@ -314,7 +313,9 @@ describe('PLT Operation', () => {
         });
 
         it('rejects legacy grants on decoding', () => {
-            const legacy = LockConfig.simpleV0('any', creation.simpleV0.expiry, [], [TokenId.fromString('tT')]);
+            const legacy = {
+                simpleV0: { recipients: 'any', expiry: creation.simpleV0.expiry, grants: [], tokens: ['tT'] },
+            };
             expect(() => decodeOperation(Cbor.encode({ lockCreate: legacy }))).toThrow(/grants/);
         });
 

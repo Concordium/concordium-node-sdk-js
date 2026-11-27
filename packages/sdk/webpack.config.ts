@@ -6,13 +6,12 @@ import webpack from 'webpack';
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
-function configFor(target: 'web' | 'node' | 'react-native'): webpack.Configuration {
-    const t = target === 'react-native' ? 'web' : target;
+function configFor(target: 'web' | 'node'): webpack.Configuration {
     const entry = resolve(__dirname, './src/index.ts');
 
     const config: webpack.Configuration = {
         mode: 'production',
-        target: t,
+        target,
         cache: {
             type: 'filesystem',
             cacheDirectory: resolve(__dirname, '.webpack-cache'),
@@ -66,11 +65,7 @@ function configFor(target: 'web' | 'node' | 'react-native'): webpack.Configurati
         config.output = { ...config.output, library: { type: 'commonjs2' } }; // To support legacy versions of nodeJS.
     }
 
-    if (target === 'react-native') {
-        config.resolve!.conditionNames = ['react-native', 'browser', 'module', 'require'];
-    }
-
     return config;
 }
 
-export default [configFor('web'), configFor('node'), configFor('react-native')];
+export default [configFor('web'), configFor('node')];

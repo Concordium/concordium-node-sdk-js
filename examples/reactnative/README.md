@@ -1,5 +1,21 @@
 This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
 
+## Native wallet derivation
+
+In a Hermes app with the New Architecture and React Native 0.76 or later, use
+the packed SDK's async entrypoint to derive keys:
+
+```ts
+import { ConcordiumHdWallet } from '@concordium/web-sdk/react-native';
+
+const wallet = ConcordiumHdWallet.fromSeedPhrase(importedPhrase, 'Testnet');
+const publicKey = await wallet.getAccountPublicKey(providerIndex, identityIndex, credentialCounter);
+```
+
+This example project uses React Native 0.72 and exercises the synchronous SDK.
+See the [native SDK build instructions](../../packages/react-native/README.md)
+for the companion Hermes app and packed SDK.
+
 # Getting Started
 
 >**Note**: Make sure you have completed the [React Native - Environment Setup](https://reactnative.dev/docs/environment-setup) instructions till "Creating a new application" step, before proceeding.

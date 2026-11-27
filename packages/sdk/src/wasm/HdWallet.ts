@@ -1,23 +1,18 @@
 import * as wasm from '@concordium/rust-bindings/wallet';
-import { mnemonicToSeedSync, validateMnemonic } from '@scure/bip39';
-import { wordlist } from '@scure/bip39/wordlists/english';
 import { Buffer } from 'buffer/index.js';
 
 import { getKeyDerivationNetwork } from '../networkHelpers.js';
 import { AttributesKeys, CryptographicParameters, Network } from '../types.js';
 import type * as ContractAddress from '../types/ContractAddress.js';
 import { isHex } from '../util.js';
+import { seedFromPhrase } from './seedPhrase.js';
 
 /**
  * Class for Hierarchical Deterministic key derivation for Concordium identities and accounts.
  */
 export class ConcordiumHdWallet {
     static fromSeedPhrase(seedPhrase: string, network: Network): ConcordiumHdWallet {
-        if (!validateMnemonic(seedPhrase, wordlist)) {
-            throw new Error('Invalid seed phrase.');
-        }
-        const seedAsHex = Buffer.from(mnemonicToSeedSync(seedPhrase)).toString('hex');
-        return new ConcordiumHdWallet(seedAsHex, network);
+        return new ConcordiumHdWallet(seedFromPhrase(seedPhrase), network);
     }
 
     static fromHex(seedAsHex: string, network: Network): ConcordiumHdWallet {

@@ -112,7 +112,7 @@ function requestContextToJSON(context: Context): ContextJSON {
     };
 }
 
-type RequestAnchorInput = {
+export type RequestAnchorInput = {
     context: ContextJSON;
     subjectClaims: SubjectClaims[];
     publicInfo?: Record<string, HexString>;

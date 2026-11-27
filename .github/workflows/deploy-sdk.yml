@@ -90,6 +90,7 @@ jobs:
             packages/sdk/lib
             packages/sdk/src
             packages/sdk/package.json
+            packages/sdk/react-native.js
             packages/sdk/README.md
 
       - name: Store typedoc
@@ -98,8 +99,52 @@ jobs:
           name: typedoc-build
           path: typedoc
 
+  build-native:
+    runs-on: macos-15
+    env:
+      ANDROID_NDK_VERSION: 27.1.12297006
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: 'recursive'
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: packages/react-native/module/package-lock.json
+
+      - name: Install Rust and mobile targets
+        run: |
+          rustup toolchain install 1.89 --profile minimal
+          rustup target add --toolchain 1.89 \
+            aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios \
+            aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android
+          cargo +1.89 install cargo-ndk --version 3.5.4 --locked
+
+      - name: Install the Android NDK
+        run: |
+          sdkmanager "ndk;$ANDROID_NDK_VERSION"
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/$ANDROID_NDK_VERSION" >> "$GITHUB_ENV"
+
+      - name: Test the native wallet bindings
+        run: cargo +1.89 test --release --locked --manifest-path packages/react-native/rust/Cargo.toml
+
+      - name: Build Android and iOS artifacts
+        run: |
+          node packages/react-native/scripts/build.mjs ios,android
+          tar -czf native-sdk.tgz -C packages/sdk \
+            android ConcordiumNative.podspec lib/react-native \
+            lib/esm/react-native/nativeBridge.js lib/esm/react-native/nativeBridge.d.ts
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: native-sdk
+          path: native-sdk.tgz
+          if-no-files-found: error
+
   upload-release:
-    needs: build
+    needs: [build, build-native]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -144,9 +189,19 @@ jobs:
           cache: yarn
           registry-url: 'https://registry.npmjs.org'
 
+      - name: Get and stage native artifacts
+        uses: actions/download-artifact@v8
+        with:
+          name: native-sdk
+
+      - name: Pack and verify the npm release
+        run: |
+          tar -xzf native-sdk.tgz -C packages/sdk
+          yarn workspace @concordium/web-sdk pack --out ../../web-sdk.tgz
+          node packages/react-native/scripts/verify-package.mjs web-sdk.tgz
+
       - name: Publish to NPM
         run: |
-          yarn workspace @concordium/web-sdk pack --out ../../web-sdk.tgz
           NPM_AUTH_TOKEN="" npm publish ./web-sdk.tgz --tag ${{ steps.determine_npm_tag.outputs.npm_tag }} --access public --provenance
 
       - name: Create a GitHub release

@@ -1,0 +1,41 @@
+{
+  "name": "@concordium/react-native",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Concordium SDK native bindings for React Native",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Concordium/concordium-node-sdk-js"
+  },
+  "author": "Concordium Software",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "react-native": "./lib/index.js",
+  "scripts": {
+    "build:ios": "ubrn build ios --release --and-generate && npm run build:js",
+    "build:android": "ubrn build android --release --and-generate && npm run build:js",
+    "build:js": "tsc"
+  },
+  "codegenConfig": {
+    "name": "ConcordiumNativeSpec",
+    "type": "modules",
+    "jsSrcsDir": "src",
+    "android": {
+      "javaPackageName": "com.concordium.sdk.reactnative"
+    }
+  },
+  "dependencies": {
+    "uniffi-bindgen-react-native": "0.29.3-1"
+  },
+  "peerDependencies": {
+    "react-native": ">=0.76"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.10",
+    "react": "18.3.1",
+    "react-native": "0.76.9",
+    "typescript": "5.8.3"
+  },
+  "homepage": "https://github.com/Concordium/concordium-node-sdk-js"
+}

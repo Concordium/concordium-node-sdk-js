@@ -2,6 +2,37 @@
 
 ## Unreleased
 
+### Added
+
+- Native React Native wallet operations through `@concordium/web-sdk/react-native`
+  and the root export `Native`. The async APIs cover mnemonic setup, identity
+  issuance and recovery, HD derivation, account credentials, identity and Web3 ID
+  proofs, contract schemas, and public validator-key fixtures. The SDK release
+  includes the iOS and Android UniFFI libraries, and the release workflow
+  verifies the npm tarball before publishing.
+- The React Native identity quickstart shows how to fetch Testnet provider
+  information and chain cryptographic parameters.
+
+### Changed
+
+- The `/react-native` entry point now loads independently of the legacy
+  WASM-to-JavaScript bindings, so native-only apps can build with stock Metro
+  and the default Node heap. The SDK root continues to expose the synchronous
+  APIs.
+- React Native bundles provide UTF-8 encoding and decoding internally. Apps
+  can import the SDK without installing a UTF-8 polyfill or patching globals.
+- The WASM and UniFFI bindings share Rust helpers for credential, proof, and
+  contract schema operations.
+
+### Fixed
+
+- Make the SDK's namespace re-exports compatible with Metro in React Native
+  0.76.
+- Preserve integer attributes as `bigint` when creating or verifying a native
+  V1 presentation.
+- Return errors for invalid credential key or signature inputs and failed
+  Web3 ID proof creation in the shared Rust code.
+
 ## 12.1.0
 
 ### Added

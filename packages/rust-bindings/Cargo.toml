@@ -11,7 +11,7 @@ opt-level = 3
 
 [workspace.dependencies]
 anyhow = "1.0"
-concordium_rust_bindings_common = { path = "./packages/common" }
+concordium_rust_bindings_common = { path = "./packages/common", default-features = false }
 either = "1.6"
 hex = "0.4"
 rand = { version = "0.8" }

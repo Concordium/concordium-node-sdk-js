@@ -5,9 +5,13 @@ version = "0.1.0"
 edition.workspace = true
 
 [dependencies]
-wasm-bindgen.workspace = true
+wasm-bindgen = { workspace = true, optional = true }
 
 [lib]
 name = "concordium_rust_bindings_common"
 # crate-type = ["lib"]
 path = "src/lib.rs"
+
+[features]
+default = ["wasm"]
+wasm = ["dep:wasm-bindgen"]

@@ -9,23 +9,27 @@ edition.workspace = true
 [dependencies]
 serde.workspace = true
 serde_json.workspace = true
-wasm-bindgen.workspace = true
+wasm-bindgen = { workspace = true, optional = true }
 anyhow.workspace = true
 hex.workspace = true
 either.workspace = true
 thiserror.workspace = true
 rand.workspace = true
-getrandom.workspace = true
-serde-wasm-bindgen.workspace = true
+getrandom = { workspace = true, optional = true }
+serde-wasm-bindgen = { workspace = true, optional = true }
 concordium_base.workspace = true
 ed25519_hd_key_derivation.workspace = true
 key_derivation.workspace = true
 wallet_library.workspace = true
-concordium_rust_bindings_common.workspace = true
+concordium_rust_bindings_common = { workspace = true, default-features = false }
 chrono = "0.4.35" # patch version needs to to be locked for compatibility reasons
 serde_with = "3.0"
 
 [lib]
 name = "concordium_rust_bindings_wallet"
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "rlib"]
 path = "src/lib.rs"
+
+[features]
+default = ["wasm"]
+wasm = ["dep:wasm-bindgen", "dep:serde-wasm-bindgen", "dep:getrandom", "concordium_rust_bindings_common/wasm"]

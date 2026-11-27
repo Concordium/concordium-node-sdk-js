@@ -18,14 +18,23 @@
     "type": "module",
     "main": "lib/min/concordium.node.min.js",
     "browser": "lib/min/concordium.web.min.js",
-    "react-native": "lib/min/concordium.react-native.min.js",
+    "react-native": "lib/min/react-native/index.js",
     "cdn": "lib/min/concordium.web.min.js",
     "types": "lib/esm/index.d.ts",
     "exports": {
         ".": {
+            "react-native": {
+                "types": "./lib/esm/index.react-native.d.ts",
+                "default": "./lib/min/react-native/index.js"
+            },
             "types": "./lib/esm/index.d.ts",
             "bun": "./src/index.ts",
             "default": "./lib/esm/index.js"
+        },
+        "./react-native": {
+            "types": "./lib/esm/pub/react-native.d.ts",
+            "react-native": "./lib/min/react-native/pub/react-native.js",
+            "default": "./lib/esm/pub/react-native.js"
         },
         "./nodejs": {
             "types": "./lib/esm/pub/nodejs.d.ts",
@@ -36,11 +45,14 @@
         },
         "./extensions/*": {
             "types": "./lib/esm/extensions/*.d.ts",
+            "react-native": "./lib/min/react-native/extensions/*.js",
             "bun": "./src/extensions/*.ts",
             "default": "./lib/esm/extensions/*.js"
         },
+        "./package.json": "./package.json",
         "./*": {
             "types": "./lib/esm/pub/*.d.ts",
+            "react-native": "./lib/min/react-native/pub/*.js",
             "bun": "./src/pub/*.ts",
             "default": "./lib/esm/pub/*.js"
         },
@@ -54,10 +66,15 @@
     "files": [
         "/src/**/*",
         "/lib/esm/**/*",
-        "/lib/min/**/*"
+        "/lib/min/**/*",
+        "/lib/react-native/**/*",
+        "/android/**/*",
+        "/ConcordiumNative.podspec",
+        "/react-native.js"
     ],
     "devDependencies": {
         "@babel/plugin-transform-private-methods": "^7.25.9",
+        "@exodus/bytes": "^1.16.0",
         "@protobuf-ts/plugin": "^2.9.1",
         "@size-limit/preset-big-lib": "^11.2.0",
         "@testing-library/react-native": "^12.3.1",
@@ -66,6 +83,7 @@
         "@types/json-bigint": "^1.0.1",
         "@types/node": "^20.12.13",
         "@types/uuid": "^8.3.4",
+        "esbuild": "^0.25.0",
         "eslint": "8",
         "glob": "^10.3.10",
         "grpc-tools": "^1.11.2",
@@ -96,13 +114,15 @@
         "test-rn": "yarn test -c jest.config.react-native.ts",
         "test-web": "yarn test -c jest.config.web.ts",
         "test-ci": "yarn test ./test/ci && yarn test-rn ./test/ci && yarn test-web ./test/ci",
-        "build": "yarn clean && yarn mkdirp src/grpc-api && yarn generate && yarn build-dev && yarn webpack",
+        "build": "yarn clean && yarn mkdirp src/grpc-api && yarn generate && yarn build-dev && yarn webpack && yarn build:metro && yarn build:native",
         "build-dev": "tsc -p tsconfig.build.json",
+        "build:metro": "node scripts/build-metro.js",
         "webpack": "tsx ../../node_modules/webpack-cli/bin/cli.js --config webpack.config.ts",
         "typecheck": "tsc -p tsconfig.json",
-        "clean": "rimraf -- lib src/grpc-api",
+        "clean": "rimraf -- lib src/grpc-api android ConcordiumNative.podspec",
         "size": "tsc -p tsconfig.build.json && size-limit",
-        "size:no-build": "size-limit"
+        "size:no-build": "size-limit",
+        "build:native": "node ../react-native/scripts/build.mjs"
     },
     "dependencies": {
         "@concordium/rust-bindings": "workspace:^",
@@ -126,5 +146,13 @@
     "peerDependencies": {
         "@protobuf-ts/runtime-rpc": "^2.8.2",
         "cbor2": "^1.12.0"
+    },
+    "codegenConfig": {
+        "name": "ConcordiumNativeSpec",
+        "type": "modules",
+        "jsSrcsDir": "lib/react-native/spec",
+        "android": {
+            "javaPackageName": "com.concordium.sdk.reactnative"
+        }
     }
 }

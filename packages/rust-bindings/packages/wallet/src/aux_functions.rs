@@ -43,22 +43,24 @@ pub struct RandomnessWrapper<P: Pairing> {
     pub randomness: SigRetrievalRandomness<P>,
 }
 
-fn build_key_map(keys: &[VerifyKey]) -> BTreeMap<KeyIndex, VerifyKey> {
+fn build_key_map(keys: &[VerifyKey]) -> Result<BTreeMap<KeyIndex, VerifyKey>> {
     keys.iter()
         .enumerate()
-        .map(|(index, key)| (KeyIndex(index.try_into().unwrap()), key.clone()))
+        .map(|(index, key)| Ok((KeyIndex(index.try_into()?), key.clone())))
         .collect()
 }
 
-fn build_signature_map(signatures: &[String]) -> BTreeMap<KeyIndex, AccountOwnershipSignature> {
+fn build_signature_map(
+    signatures: &[String],
+) -> Result<BTreeMap<KeyIndex, AccountOwnershipSignature>> {
     signatures
         .iter()
         .enumerate()
-        .map(|(index, key)| {
-            (
-                KeyIndex(index.try_into().unwrap()),
-                base16_decode_string(key).unwrap(),
-            )
+        .map(|(index, signature)| {
+            Ok((
+                KeyIndex(index.try_into()?),
+                base16_decode_string(signature)?,
+            ))
         })
         .collect()
 }
@@ -227,7 +229,7 @@ pub fn generate_unsigned_credential_aux(input: &str) -> Result<JsonString> {
 
     let public_keys: Vec<VerifyKey> = try_get(&v, "publicKeys")?;
     let cred_key_info = CredentialPublicKeys {
-        keys: build_key_map(&public_keys),
+        keys: build_key_map(&public_keys)?,
         threshold: try_get(&v, "threshold")?,
     };
 
@@ -293,7 +295,7 @@ fn get_credential_deployment_info(
         proofs,
     };
 
-    let signature_map = build_signature_map(&signatures);
+    let signature_map = build_signature_map(&signatures)?;
     let proof_acc_sk = AccountOwnershipProof {
         sigs: signature_map,
     };
@@ -349,11 +351,15 @@ pub fn get_credential_deployment_details_aux(
 /// Given the bytes of a credential deployment (/AccountCredentialMessage),
 /// deserialize it and return as json.
 pub fn deserialize_credential_deployment_aux(input: &str) -> Result<JsonString> {
+    deserialize_credential_deployment_bytes(&hex::decode(input)?)
+}
+
+pub fn deserialize_credential_deployment_bytes(mut input: &[u8]) -> Result<JsonString> {
     let credential_message: AccountCredentialMessage<
         constants::IpPairing,
         constants::ArCurve,
         AttributeKind,
-    > = concordium_base::common::from_bytes(&mut hex::decode(input)?.as_slice())?;
+    > = concordium_base::common::from_bytes(&mut input)?;
     let cdi_json = json!(credential_message);
     Ok(cdi_json.to_string())
 }
@@ -473,7 +479,7 @@ pub fn create_web3_id_proof_aux(input: Web3IdProofInput) -> Result<JsonString> {
         &input.global_context,
         input.commitment_inputs.iter().map(Into::into),
     );
-    Ok(json!(presentation.unwrap()).to_string())
+    Ok(serde_json::to_string(&presentation?)?)
 }
 
 pub fn serialize_credential_deployment_payload_aux(
@@ -519,10 +525,17 @@ pub struct BakerKeys {
     aggregation_sign_key: BakerAggregationSignKey,
 }
 
-pub fn generate_baker_keys(sender: AccountAddress) -> Result<JsonString> {
+pub fn generate_baker_key_pairs(
+    sender: AccountAddress,
+) -> (BakerKeyPairs, ConfigureBakerKeysPayload) {
     let mut csprng = thread_rng();
     let keys = BakerKeyPairs::generate(&mut csprng);
     let keys_payload = ConfigureBakerKeysPayload::new(&keys, sender, &mut csprng);
+    (keys, keys_payload)
+}
+
+pub fn generate_baker_keys(sender: AccountAddress) -> Result<JsonString> {
+    let (keys, keys_payload) = generate_baker_key_pairs(sender);
     let output = BakerKeys {
         keys_payload,
         election_private_key: keys.election_sign,

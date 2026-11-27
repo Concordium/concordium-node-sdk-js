@@ -1,3 +1,6 @@
 {
-    "include": ["./**/*.config.js", "./.eslintrc.cjs", "./scripts/*.js"]
+    "compilerOptions": {
+        "allowJs": true
+    },
+    "include": ["./*.config.js", "./.eslintrc.cjs", "./scripts/*.js"]
 }

@@ -1,7 +1,9 @@
 import { Buffer } from 'buffer/index.js';
 
-import { AccountSigner } from '../../signHelpers.js';
-import { AccountAddress, BlockHash, SequenceNumber } from '../../types/index.js';
+import type { AccountSigner } from '../../signHelpers.js';
+import type * as AccountAddress from '../../types/AccountAddress.js';
+import * as BlockHash from '../../types/BlockHash.js';
+import type * as SequenceNumber from '../../types/SequenceNumber.js';
 import type { CredentialContextLabel, GivenContext } from './types.js';
 
 /**

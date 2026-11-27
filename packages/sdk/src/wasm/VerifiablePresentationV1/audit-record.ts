@@ -442,7 +442,7 @@ export type Anchor = {
     public?: Record<string, any>;
 };
 
-type VerificationAuditV1Input = {
+export type VerificationAuditV1Input = {
     record: VerificationAuditRecordV1;
     publicInfo?: Record<string, HexString>;
 };

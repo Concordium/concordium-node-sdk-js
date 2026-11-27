@@ -1,0 +1,21 @@
+name: concordium-native
+rust:
+  directory: ../rust
+  manifestPath: Cargo.toml
+bindings:
+  ts: src/generated
+turboModule:
+  entrypoint: src/native.ts
+android:
+  targets:
+    - arm64-v8a
+    - x86_64
+    - armeabi-v7a
+    - x86
+  cargoExtras: [--locked]
+ios:
+  targets:
+    - aarch64-apple-ios
+    - aarch64-apple-ios-sim
+    - x86_64-apple-ios
+  cargoExtras: [--locked]

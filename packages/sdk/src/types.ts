@@ -24,9 +24,11 @@ import type * as SequenceNumber from './types/SequenceNumber.js';
 import type * as Timestamp from './types/Timestamp.js';
 import type * as TransactionExpiry from './types/TransactionExpiry.js';
 import type * as TransactionHash from './types/TransactionHash.js';
+import type { AttributeKey } from './types/attributes.js';
 import type { RejectReason } from './types/rejectReason.js';
 import type { ContractTraceEvent } from './types/transactionEvent.js';
 
+export * from './types/attributes.js';
 export * from './types/NodeInfo.js';
 export * from './types/PeerInfo.js';
 export * from './types/blockItemSummary.js';
@@ -112,53 +114,6 @@ export type KeysMatching<T, V> = {
 export interface Versioned<T> {
     v: number;
     value: T;
-}
-
-export enum AttributesKeys {
-    firstName,
-    lastName,
-    sex,
-    dob,
-    countryOfResidence,
-    nationality,
-    idDocType,
-    idDocNo,
-    idDocIssuer,
-    idDocIssuedAt,
-    idDocExpiresAt,
-    nationalIdNo,
-    taxIdNo,
-    lei,
-    legalName,
-    legalCountry,
-    businessNumber,
-    registrationAuth,
-}
-
-export type Attributes = {
-    [P in keyof typeof AttributesKeys]: string;
-};
-export type AttributeKey = keyof Attributes;
-
-export enum AttributeKeyString {
-    firstName = 'firstName',
-    lastName = 'lastName',
-    sex = 'sex',
-    dob = 'dob',
-    countryOfResidence = 'countryOfResidence',
-    nationality = 'nationality',
-    idDocType = 'idDocType',
-    idDocNo = 'idDocNo',
-    idDocIssuer = 'idDocIssuer',
-    idDocIssuedAt = 'idDocIssuedAt',
-    idDocExpiresAt = 'idDocExpiresAt',
-    nationalIdNo = 'nationalIdNo',
-    taxIdNo = 'taxIdNo',
-    lei = 'lei',
-    legalName = 'legalName',
-    legalCountry = 'legalCountry',
-    businessNumber = 'businessNumber',
-    registrationAuth = 'registrationAuth',
 }
 
 export enum Sex {

@@ -9,12 +9,7 @@ module.exports = {
         ecmaVersion: 2020,
         sourceType: 'module',
         tsconfigRootDir: __dirname,
-        project: [
-            './packages/**/tsconfig.json',
-            './examples/wallet-connection/*/tsconfig.json',
-            './docs/**/tsconfig.json',
-            '**/tsconfig.eslint.json',
-        ],
+        project: './tsconfig.eslint.json',
     },
     plugins: ['@typescript-eslint', 'import'],
     rules: {
@@ -43,6 +38,26 @@ module.exports = {
         ],
     },
     overrides: [
+        // Select the project by file path so linting a workspace only loads its own config.
+        ...Object.entries({
+            docs: 'tsconfig.json',
+            'examples/nodejs': 'tsconfig.eslint.json',
+            'examples/reactnative': 'tsconfig.eslint.json',
+            'examples/wallet': 'tsconfig.eslint.json',
+            'examples/wallet-connection/contractupdate': 'tsconfig.json',
+            'examples/wallet-connection/proofs': 'tsconfig.json',
+            'examples/wallet-connection/sign-message': 'tsconfig.json',
+            'examples/wallet-connection/sponsoredTransactions': 'tsconfig.json',
+            'packages/ccd-js-gen': 'tsconfig.eslint.json',
+            'packages/react-components': 'tsconfig.json',
+            'packages/react-native/module': 'tsconfig.json',
+            'packages/rust-bindings': 'tsconfig.json',
+            'packages/sdk': 'tsconfig.json',
+            'packages/wallet-connectors': 'tsconfig.eslint.json',
+        }).map(([directory, tsconfig]) => ({
+            files: [`${directory}/**/*`],
+            parserOptions: { project: `./${directory}/${tsconfig}` },
+        })),
         {
             files: ['*.config.js'],
             rules: {

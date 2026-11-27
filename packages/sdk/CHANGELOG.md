@@ -59,7 +59,7 @@
 - **Breaking:** Create PLT locks with `LockCreateConfig.simpleV0`, using holders and explicit roles instead of grants.
   Creation energy estimates now match the node's holder, token, and role account counts.
 - **Breaking:** Lock queries return a versioned `LockConfig`. Use `LockConfig.isKnown` before accessing typed fields.
-  Readable unknown versions retain their numeric version and decoded data; opt-in validation rejects unsupported
+  Readable unknown versions retain their numeric version and decoded fields; opt-in validation rejects unsupported
   configurations.
 
 ## 13.0.0-alpha.2 (devnet-p11-3)

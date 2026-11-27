@@ -1,4 +1,3 @@
-import { buildAccountSigner } from '../../../src/index.js';
 import {
     Cbor,
     CborAccountAddress,
@@ -11,10 +10,9 @@ import {
     TokenAmount,
     TokenId,
     createTokenUpdatePayload,
-    decodeOperations,
 } from '../../../src/pub/plt.js';
-import { Payload, Transaction } from '../../../src/pub/transactions.js';
-import { AccountAddress, SequenceNumber, TransactionExpiry } from '../../../src/pub/types.js';
+import { Payload } from '../../../src/pub/transactions.js';
+import { AccountAddress, SequenceNumber } from '../../../src/pub/types.js';
 
 const ACCOUNT_1 = AccountAddress.fromBase58('4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd');
 const ACCOUNT_2 = AccountAddress.fromBase58('3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB');
@@ -132,7 +130,7 @@ describe('PLT Lock validation', () => {
 
     it('rejects cancellation validation for an unknown version even with a past expiry in its data', () => {
         const info = createLockInfo([]);
-        const config = { version: 7, data: { version: 7, expiry: pastEpoch() } };
+        const config = { version: 7, expiry: pastEpoch() };
         const lock = Lock.fromInfo(mockGrpc(), { ...info, config });
 
         expect(() => Lock.validateCancel(lock, ACCOUNT_1)).toThrow(Lock.UnsupportedConfigurationError);

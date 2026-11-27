@@ -2,6 +2,7 @@ import {
     Cbor,
     CborAccountAddress,
     CborEpoch,
+    LockConfig,
     LockId,
     LockMetadata,
     TokenAmount,
@@ -32,8 +33,11 @@ const { version, ...unversioned } = v0;
 const typedV0 = { ...unversioned, version, tokens: [TokenId.fromString('tT')] };
 
 describe.each([
-    ['LockConfig', (config: unknown) => Cbor.decode(Cbor.encode(config), 'LockConfig')],
-    ['LockInfo', (config: unknown) => Cbor.decode(Cbor.encode({ lock, config, funds }), 'LockInfo').config],
+    ['LockConfig', (config: unknown): LockConfig.Type => Cbor.decode(Cbor.encode(config), 'LockConfig')],
+    [
+        'LockInfo',
+        (config: unknown): LockConfig.Type => Cbor.decode(Cbor.encode({ lock, config, funds }), 'LockInfo').config,
+    ],
 ] as const)('PLT %s configuration reads', (_, decodeConfig) => {
     it('preserves opaque metadata bytes', () => {
         const metadata = Uint8Array.of(0xff, 0x00, 0x81);
@@ -45,7 +49,7 @@ describe.each([
         const metadata = LockMetadata.encode(value);
         const decoded = decodeConfig({ ...v0, recipients: [holder], metadata });
         expect(decoded).toMatchObject({ ...typedV0, recipients: [holder], metadata });
-        if ('data' in decoded || decoded.metadata === undefined) throw new Error('Expected v0 metadata');
+        if (!LockConfig.isKnown(decoded) || decoded.metadata === undefined) throw new Error('Expected v0 metadata');
         expect(LockMetadata.decode(decoded.metadata)).toEqual(value);
     });
 
@@ -61,15 +65,20 @@ describe.each([
         expect(decodeConfig({ ...v0, roles })).toMatchObject({ ...typedV0, roles });
     });
 
-    it('exposes a wide version as a number without converting the original decoded data', () => {
-        const data = new Map<unknown, unknown>([
-            ['version', 9_007_199_254_740_993n],
-            [1, holder],
-        ]);
-        expect(decodeConfig(data)).toEqual({ version: 9_007_199_254_740_992, data });
+    it('normalizes a wide version without converting nested decoded fields', () => {
+        const controller = new Map([[1, holder]]);
+        const config = { version: 9_007_199_254_740_993n, controller };
+        expect(decodeConfig(config)).toEqual({ ...config, version: Number(config.version) });
     });
 
     it.each([
+        [
+            'non-string top-level key',
+            new Map<unknown, unknown>([
+                ['version', 7],
+                [1, holder],
+            ]),
+        ],
         ['missing version', unversioned],
         ['nonnumeric version', { ...v0, version: '0' }],
         ['non-string capability', { ...v0, roles: [{ account: holder, roles: ['fund', 42] }] }],
@@ -93,16 +102,15 @@ describe('PLT pinned v0 output and future configuration reads', () => {
     });
 
     const data = { version: 7, roles: null, controller: { owner: holder } };
-    const expected = { version: 7, data };
 
     it('exposes a future version as a number with normal CBOR-decoded data', () => {
         const decoded = Cbor.decode(Cbor.encode(data), 'LockConfig');
-        expect(decoded).toMatchObject(expected);
+        expect(decoded).toEqual(data);
     });
 
     it('keeps the lock ID and funds readable with a future configuration', () => {
         const decoded = Cbor.decode(Cbor.encode({ lock, config: data, funds }), 'LockInfo');
-        expect(decoded).toMatchObject({ lock, config: expected });
+        expect(decoded).toMatchObject({ lock, config: data });
         expect(decoded.funds).toEqual(funds);
     });
 });

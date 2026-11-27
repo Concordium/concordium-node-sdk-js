@@ -46,11 +46,10 @@ export type V0 = {
 /** Configuration from a version this SDK does not interpret. */
 export type Unknown = {
     version: number;
-    /** The full CBOR-decoded configuration without v0 field conversion. */
-    data: unknown;
+    [key: string]: unknown;
 };
 
-/** Versioned output; only unknown versions have a `data` field. */
+/** Versioned output; unknown versions retain their decoded fields. */
 export type Type = Known | Unknown;
 
 /** Lock configurations with versions understood by this SDK. */
@@ -63,21 +62,19 @@ export function isKnown(config: Type): config is Known {
 
 /** Decode a lock configuration from a CBOR-decoded value. Throws if the version or a v0 field is invalid. */
 export function fromCBORValue(decoded: unknown): Type {
-    if (typeof decoded !== 'object' || decoded === null || Array.isArray(decoded)) {
-        throw new Error('Invalid lock config: expected a map');
+    if (typeof decoded !== 'object' || decoded === null || Array.isArray(decoded) || decoded instanceof Map) {
+        throw new Error('Invalid lock config: expected a map with string keys');
     }
-    const rawVersion =
-        decoded instanceof Map ? decoded.get('version') : 'version' in decoded ? decoded.version : undefined;
+    const fields = decoded as Record<string, unknown>;
+    const rawVersion = fields.version;
     if (typeof rawVersion !== 'number' && typeof rawVersion !== 'bigint') {
         throw new Error('Invalid lock config: expected a numeric version');
     }
     const version = Number(rawVersion);
     if (!Number.isFinite(version)) throw new Error('Invalid lock config: expected a finite version');
-    if (version !== 0) return { version, data: decoded };
+    if (version !== 0) return { ...fields, version };
 
-    const fields =
-        decoded instanceof Map ? Object.fromEntries([...decoded].filter(([key]) => typeof key === 'string')) : decoded;
-    const { variant, recipients, holders, expiry, roles, tokens, metadata } = fields as Record<string, unknown>;
+    const { variant, recipients, holders, expiry, roles, tokens, metadata } = fields;
     if (typeof variant !== 'string') throw new Error('Invalid v0 lock config: expected a variant string');
     if (recipients !== 'any' && !(Array.isArray(recipients) && recipients.every(CborAccountAddress.instanceOf))) {
         throw new Error('Invalid v0 lock config: invalid recipients');

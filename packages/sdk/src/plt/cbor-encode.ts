@@ -51,9 +51,9 @@ function toTokenOperation(operation: TokenOperationWithId): { token: TokenId.Typ
 export function operationValue(op: Operation): Operation {
     switch (true) {
         case 'lockCreate' in op: {
-            const { recipients, expiry, grants, tokens, memo, metadata } = (op as LockCreateOperation).lockCreate
+            const { recipients, holders, expiry, roles, tokens, metadata } = (op as LockCreateOperation).lockCreate
                 .simpleV0;
-            return { lockCreate: { simpleV0: { recipients, expiry, grants, tokens, memo, metadata } } };
+            return { lockCreate: { simpleV0: { recipients, holders, expiry, roles, tokens, metadata } } };
         }
         case 'lockCancel' in op: {
             const { lock, memo } = (op as LockCancelOperation).lockCancel;

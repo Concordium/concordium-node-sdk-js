@@ -4,7 +4,7 @@ import {
     CborAccountAddress,
     CborEpoch,
     Lock,
-    LockConfig,
+    LockCreateConfig,
     OperationType,
     TokenId,
     createTokenUpdatePayload,
@@ -28,7 +28,8 @@ const cli = meow(
     --help,              Displays this message
     --endpoint,      -e  Specify endpoint of a grpc2 interface of a Concordium node in the format "address:port". Defaults to 'localhost:20000'
     --secure,        -s  Whether to use tls or not. Defaults to false.
-    --wallet-file,   -w  A path to a wallet export file from a Concordium wallet. If not supplied, only transaction payload is created and serialized.
+    --wallet-file,   -w  A path to a wallet export file from a Concordium wallet. If not supplied, --holder must be provided and only the payload is created and serialized.
+    --holder,            Holder account address. Required when --wallet-file is omitted.
 `,
     {
         importMeta: import.meta,
@@ -36,6 +37,7 @@ const cli = meow(
             endpoint: { type: 'string', alias: 'e', default: 'localhost:20000' },
             secure: { type: 'boolean', alias: 's', default: false },
             walletFile: { type: 'string', alias: 'w' },
+            holder: { type: 'string' },
             recipient: { type: 'string', alias: 'r', isRequired: true, isMultiple: true },
             token: { type: 'string', alias: 't', isRequired: true, isMultiple: true },
             expiry: { type: 'number', alias: 'x', isRequired: true },
@@ -68,19 +70,18 @@ const client = new ConcordiumGRPCNodeClient(
         // Read the wallet file to get the sender account and signer
         const [sender, signer] = parseKeysFile(cli.flags.walletFile);
 
-        // Build the lock configuration. Here the sender is granted all capabilities,
-        // but this can be adjusted to fit the desired access control model.
-        const config = LockConfig.simpleV0(
+        // The sender can fund as a holder and receives all explicit capabilities.
+        const config = LockCreateConfig.simpleV0(
             recipients,
+            [CborAccountAddress.fromAccountAddress(sender)],
             expiry,
             [
                 {
                     account: CborAccountAddress.fromAccountAddress(sender),
                     roles: [
-                        LockConfig.SimpleV0Capability.Fund,
-                        LockConfig.SimpleV0Capability.Send,
-                        LockConfig.SimpleV0Capability.Release,
-                        LockConfig.SimpleV0Capability.Cancel,
+                        LockCreateConfig.SimpleV0Capability.Send,
+                        LockCreateConfig.SimpleV0Capability.Release,
+                        LockCreateConfig.SimpleV0Capability.Cancel,
                     ],
                 },
             ],
@@ -99,11 +100,22 @@ const client = new ConcordiumGRPCNodeClient(
             console.error(e);
         }
     } else {
+        if (cli.flags.holder === undefined) {
+            throw new Error('When --wallet-file is omitted, --holder must be provided.');
+        }
+
         // Or from a wallet perspective:
         // Build the lockCreate operation payload without submitting.
         // Use `recipients: 'any'` instead of an address array to allow any eligible recipient.
-        // The controller grants and token list should be configured to match the intended access model.
-        const config = LockConfig.simpleV0(recipients, expiry, [], tokenIds);
+        // Configure roles to match the intended access model before signing.
+        const holder = AccountAddress.fromBase58(cli.flags.holder);
+        const config = LockCreateConfig.simpleV0(
+            recipients,
+            [CborAccountAddress.fromAccountAddress(holder)],
+            expiry,
+            [],
+            tokenIds
+        );
 
         const payload = createTokenUpdatePayload({
             operations: { [OperationType.LockCreate]: config },

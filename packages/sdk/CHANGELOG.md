@@ -56,7 +56,11 @@
 
 - **Breaking:** Unscoped transaction construction now requires `additionalEnergy`, including explicit zero for operations with fully payload-derived costs. Use `createTokenUpdateInput` with `OperationInput`; each cancellation requires non-negative `balanceReferences` (including zero). `Lock.sendOperations` and proposal `.cancel(count)` require explicit counts.
 - Lock execution aligned with node implementation.
-- **Breaking:** Lock configurations no longer include the field `keepAlive`.
+- **Breaking:** Create PLT locks with `LockCreateConfig.simpleV0`, using holders and explicit roles instead of grants.
+  Creation energy estimates now match the node's holder, token, and role account counts.
+- **Breaking:** Lock queries return a versioned `LockConfig`. Use `LockConfig.isKnown` before accessing typed fields.
+  Readable unknown versions retain their numeric version and decoded fields; opt-in validation rejects unsupported
+  configurations.
 
 ## 13.0.0-alpha.2 (devnet-p11-3)
 

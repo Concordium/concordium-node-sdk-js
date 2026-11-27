@@ -1,9 +1,10 @@
 import { BlockHash } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
-import { Cbor, LockId } from '@concordium/web-sdk/plt';
+import { Cbor, LockConfig, LockId } from '@concordium/web-sdk/plt';
 import type { LockInfo, LockInfoResponse } from '@concordium/web-sdk/plt';
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
+import assert from 'node:assert';
 
 import { parseEndpoint } from '../shared/util.js';
 
@@ -66,8 +67,13 @@ const client = new ConcordiumGRPCNodeClient(
     const lockInfoResponse: LockInfoResponse = await client.getLockInfo(lockId, blockHash);
     const lockInfo: LockInfo = Cbor.decode(lockInfoResponse.lockInfo, 'LockInfo');
 
-    const config = lockInfo.config.simpleV0;
+    const { config } = lockInfo;
     console.log('Lock ID:', lockInfo.lock.toString());
+    console.log('Configuration version:', config.version);
+
+    assert(LockConfig.isKnown(config), 'Unkonwn lock config');
+
+    console.log('Variant:', config.variant);
     console.log(
         'Recipients:',
         config.recipients === 'any' ? 'any' : config.recipients.map((recipient) => recipient.toString())

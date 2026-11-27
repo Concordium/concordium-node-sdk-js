@@ -2,7 +2,7 @@ import type { UnscopedTokenUpdatePayload } from '../types.js';
 import * as Cbor from './Cbor.js';
 import * as CborAccountAddress from './CborAccountAddress.js';
 import * as CborMemo from './CborMemo.js';
-import * as LockConfig from './LockConfig.js';
+import * as LockCreateConfig from './LockCreateConfig.js';
 import * as LockId from './LockId.js';
 import * as TokenAmount from './TokenAmount.js';
 import * as TokenId from './TokenId.js';
@@ -48,7 +48,7 @@ type OperationGen<Type extends OperationType, T extends object> = {
 };
 
 /** Unscoped operation that creates a lock. */
-export type LockCreateOperation = OperationGen<OperationType.LockCreate, LockConfig.Type>;
+export type LockCreateOperation = OperationGen<OperationType.LockCreate, LockCreateConfig.Type>;
 
 /** Details for cancelling a lock. */
 export type LockCancel = {
@@ -319,7 +319,7 @@ function parseOperation(decoded: unknown): Operation | UnknownOperation {
             return { [type]: { token, ...(parsed as Record<string, object>)[key] } } as TokenOperationWithId;
         }
         case OperationType.LockCreate:
-            return { [type]: LockConfig.fromCBORValue(details) };
+            return { [type]: LockCreateConfig.fromCBORValue(details) };
         case OperationType.LockCancel:
             return { [type]: parseLockCancel(details) };
         case OperationType.LockFund:

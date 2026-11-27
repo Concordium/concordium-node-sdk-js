@@ -519,7 +519,7 @@ function validateCapability(
     capability: LockConfig.SimpleV0Capability
 ): LockConfig.V0 {
     const { config, lock: lockId } = lock.info;
-    if ('data' in config) throw new UnsupportedConfigurationError(lockId);
+    if (!LockConfig.isKnown(config)) throw new UnsupportedConfigurationError(lockId);
 
     const expired = config.expiry.expiry.expiryEpochSeconds * 1000n < BigInt(Date.now());
     if (expired && capability === LockConfig.SimpleV0Capability.Cancel) return config;

@@ -1,9 +1,10 @@
 import { BlockHash } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
-import { Cbor, LockId } from '@concordium/web-sdk/plt';
+import { Cbor, LockConfig, LockId } from '@concordium/web-sdk/plt';
 import type { LockInfo, LockInfoResponse } from '@concordium/web-sdk/plt';
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
+import assert from 'node:assert';
 
 import { parseEndpoint } from '../shared/util.js';
 
@@ -69,16 +70,15 @@ const client = new ConcordiumGRPCNodeClient(
     const { config } = lockInfo;
     console.log('Lock ID:', lockInfo.lock.toString());
     console.log('Configuration version:', config.version);
-    if ('data' in config) {
-        console.log('Configuration data:', config.data);
-    } else {
-        console.log('Variant:', config.variant);
-        console.log(
-            'Recipients:',
-            config.recipients === 'any' ? 'any' : config.recipients.map((recipient) => recipient.toString())
-        );
-        console.log('Expiry:', config.expiry.expiry.toString());
-    }
+
+    assert(LockConfig.isKnown(config), 'Unkonwn lock config');
+
+    console.log('Variant:', config.variant);
+    console.log(
+        'Recipients:',
+        config.recipients === 'any' ? 'any' : config.recipients.map((recipient) => recipient.toString())
+    );
+    console.log('Expiry:', config.expiry.expiry.toString());
     console.log('Funds:', JSON.stringify(lockInfo.funds, null, 2));
     // #endregion documentation-snippet
 })();

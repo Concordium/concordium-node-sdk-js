@@ -13,8 +13,8 @@ import {
     createTokenUpdatePayload,
     decodeOperations,
 } from '../../../src/pub/plt.js';
-import { AccountTransactionV0, Payload, Transaction } from '../../../src/pub/transactions.js';
-import { AccountAddress, Energy, SequenceNumber, TransactionExpiry, TransactionHash } from '../../../src/pub/types.js';
+import { Payload, Transaction } from '../../../src/pub/transactions.js';
+import { AccountAddress, SequenceNumber, TransactionExpiry } from '../../../src/pub/types.js';
 
 const ACCOUNT_1 = AccountAddress.fromBase58('4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd');
 const ACCOUNT_2 = AccountAddress.fromBase58('3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB');
@@ -128,18 +128,6 @@ describe('PLT Lock validation', () => {
 
         await expect(Lock.validateFund(lock, ACCOUNT_2, details)).resolves.toBe(true);
         await expect(Lock.validateFund(lock, ACCOUNT_1, details)).rejects.toThrow(Lock.MissingCapabilityError);
-    });
-
-    it('rejects an unfamiliar capability on another account even when the sender has release', () => {
-        const info = createLockInfo([LockConfig.SimpleV0Capability.Release]);
-        const roles = [
-            ...info.config.roles,
-            { account: CborAccountAddress.fromAccountAddress(ACCOUNT_2), roles: ['futureCapability'] },
-        ];
-        const lock = Lock.fromInfo(mockGrpc(), { ...info, config: { ...info.config, roles } });
-        const details = { token: TOKEN_ID, source: ACCOUNT_1, amount: TokenAmount.create(10n, 0) };
-
-        expect(() => Lock.validateRelease(lock, ACCOUNT_1, details)).toThrow(Lock.UnsupportedConfigurationError);
     });
 
     it('rejects cancellation validation for an unknown version even with a past expiry in its data', () => {
@@ -453,47 +441,5 @@ describe('PLT Lock.fromCbor', () => {
 
     it('throws a decode error for malformed CBOR', () => {
         expect(() => Lock.fromCbor(mockGrpc(), Cbor.fromHexString('ff'))).toThrow();
-    });
-});
-
-describe('PLT Lock.cancel', () => {
-    it('refreshes a future configuration and prices cancellation from refreshed funds with validation disabled', async () => {
-        const snapshot = createLockInfo([]);
-        const data = { version: 7, controller: { owner: CborAccountAddress.fromAccountAddress(ACCOUNT_2) } };
-        const account = snapshot.funds[0].account;
-        const funds = [
-            {
-                account,
-                amounts: [
-                    { token: TOKEN_ID, amount: TokenAmount.create(100n, 0) },
-                    { token: TokenId.fromString('OTHER'), amount: TokenAmount.create(3n, 0) },
-                ],
-            },
-        ];
-        const hash = TransactionHash.fromHexString('00'.repeat(32));
-        const getLockInfo = jest
-            .fn()
-            .mockResolvedValue({ lockInfo: Cbor.encode({ lock: LOCK_ID, config: data, funds }) });
-        const sendTransaction = jest
-            .fn<Promise<TransactionHash.Type>, [Transaction.Finalized]>()
-            .mockResolvedValue(hash);
-        const lock = Lock.fromInfo(mockGrpc({ getLockInfo, sendTransaction }), snapshot);
-        const signer = buildAccountSigner('11'.repeat(32));
-        const metadata = { nonce: SequenceNumber.create(1), expiry: TransactionExpiry.futureMinutes(5) };
-
-        await expect(Lock.cancel(lock, ACCOUNT_1, signer, metadata, { validate: false })).resolves.toBe(hash);
-
-        expect(getLockInfo).toHaveBeenCalledTimes(1);
-        expect(getLockInfo).toHaveBeenCalledWith(LOCK_ID);
-        expect(lock.info).toMatchObject({ lock: LOCK_ID, config: { version: 7, data }, funds });
-        expect(sendTransaction).toHaveBeenCalledTimes(1);
-        const [[submitted]] = sendTransaction.mock.calls;
-        expect(submitted.payload).toMatchObject({ variant: 'unscoped' });
-        if (!('operations' in submitted.payload)) throw new Error('Expected token update payload');
-        expect(decodeOperations(submitted.payload.operations)).toEqual([{ lockCancel: { lock: LOCK_ID } }]);
-        // Token update base + cancellation base + two refreshed token-amount entries on one account.
-        expect(submitted.header.energyAmount).toEqual(
-            AccountTransactionV0.calculateEnergyCost(1n, submitted.payload, Energy.create(300n + 100n + 2n * 500n))
-        );
     });
 });

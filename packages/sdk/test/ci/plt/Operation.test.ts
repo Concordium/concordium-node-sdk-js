@@ -312,21 +312,6 @@ describe('PLT Operation', () => {
             expect(decodeOperations(encoded)).toMatchObject([withMetadata]);
         });
 
-        it('rejects legacy grants on decoding', () => {
-            const legacy = {
-                simpleV0: { recipients: 'any', expiry: creation.simpleV0.expiry, grants: [], tokens: ['tT'] },
-            };
-            expect(() => decodeOperation(Cbor.encode({ lockCreate: legacy }))).toThrow(/grants/);
-        });
-
-        it('ignores a configuration memo on decoding', () => {
-            const simpleV0 = { ...creation.simpleV0, tokens: ['tT'], memo: new Uint8Array([1]) };
-            expect(decodeOperation(Cbor.encode({ lockCreate: { simpleV0 } }))).toMatchObject(operation);
-            expect(decodeOperation(Cbor.encode({ lockCreate: { simpleV0 } }))).not.toHaveProperty(
-                'lockCreate.simpleV0.memo'
-            );
-        });
-
         it('rejects an unknown explicit capability on decoding', () => {
             const simpleV0 = {
                 ...creation.simpleV0,

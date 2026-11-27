@@ -51,7 +51,15 @@ export type Unknown = {
 };
 
 /** Versioned output; only unknown versions have a `data` field. */
-export type Type = V0 | Unknown;
+export type Type = Known | Unknown;
+
+/** Lock configurations with versions understood by this SDK. */
+export type Known = V0;
+
+/** Check whether the SDK understands the version of a decoded lock configuration. */
+export function isKnown(config: Type): config is Known {
+    return config.version === 0;
+}
 
 /** Decode a lock configuration from a CBOR-decoded value. Throws if the version or a v0 field is invalid. */
 export function fromCBORValue(decoded: unknown): Type {
